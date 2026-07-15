@@ -1,0 +1,47 @@
+/* ZEN Kaizen — Typography scale (Base-16 desktop defaults, resolved to px).
+   Family is Inter throughout; mono faces for code. Weights: 400/500/700.
+   Display & Heading are tight-tracked; body is comfortable. */
+
+:root {
+  /* Weights */
+  --fw-regular: 400; /* @kind font */
+  --fw-medium: 500; /* @kind font */
+  --fw-bold: 600; /* @kind font */
+  --fw-heavy: 700; /* @kind font */
+
+  /* Font sizes (px) */
+  --fs-display-1: 52px; --fs-display-2: 46px; --fs-display-3: 46px; --fs-display-4: 40px;
+  --fs-heading-1: 36px; --fs-heading-2: 32px; --fs-heading-3: 28px; --fs-heading-4: 24px;
+  --fs-subheading: 18px;
+  --fs-body-lg: 18px; --fs-body: 16px; --fs-body-sm: 14px;
+  --fs-caption: 12px; --fs-caption-sm: 10px;
+  --fs-label: 14px;
+
+  /* Line heights */
+  --lh-tight: 1.1; /* @kind font */
+  --lh-snug: 1.25; /* @kind font */
+  --lh-normal: 1.5; /* @kind font */
+  --lh-relaxed: 1.6; /* @kind font */
+
+  /* Letter spacing */
+  --ls-display: -0.02em; /* @kind font */
+  --ls-heading: -0.01em; /* @kind font */
+  --ls-normal: 0; /* @kind font */
+  --ls-caps: 0.04em; /* @kind font */
+}
+
+/* ---- Type specimen helpers (used by cards & docs; opt-in) ---- */
+.zen-display-1 { font: var(--fw-bold) var(--fs-display-1)/var(--lh-tight) var(--font-display); letter-spacing: var(--ls-display); color: var(--color-text); }
+.zen-display-2 { font: var(--fw-bold) var(--fs-display-2)/var(--lh-tight) var(--font-display); letter-spacing: var(--ls-display); color: var(--color-text); }
+.zen-h1 { font: var(--fw-bold) var(--fs-heading-1)/var(--lh-snug) var(--font-heading); letter-spacing: var(--ls-heading); color: var(--color-text); }
+.zen-h2 { font: var(--fw-bold) var(--fs-heading-2)/var(--lh-snug) var(--font-heading); letter-spacing: var(--ls-heading); color: var(--color-text); }
+.zen-h3 { font: var(--fw-bold) var(--fs-heading-3)/var(--lh-snug) var(--font-heading); letter-spacing: var(--ls-heading); color: var(--color-text); }
+.zen-h4 { font: var(--fw-bold) var(--fs-heading-4)/var(--lh-snug) var(--font-heading); letter-spacing: var(--ls-heading); color: var(--color-text); }
+.zen-subheading { font: var(--fw-medium) var(--fs-subheading)/var(--lh-normal) var(--font-sans); color: var(--color-text); }
+.zen-body-lg { font: var(--fw-regular) var(--fs-body-lg)/var(--lh-relaxed) var(--font-sans); color: var(--color-text); }
+.zen-body { font: var(--fw-regular) var(--fs-body)/var(--lh-normal) var(--font-sans); color: var(--color-text); }
+.zen-body-sm { font: var(--fw-regular) var(--fs-body-sm)/var(--lh-normal) var(--font-sans); color: var(--color-text-muted); }
+.zen-caption { font: var(--fw-medium) var(--fs-caption)/var(--lh-normal) var(--font-sans); color: var(--color-text-subtle); }
+.zen-overline { font: var(--fw-bold) var(--fs-caption)/var(--lh-normal) var(--font-sans); letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--color-text-subtle); }
+.zen-mono { font: var(--fw-regular) var(--fs-body-sm)/var(--lh-normal) var(--font-mono); }
+.zen-code { font: var(--fw-regular) 11px/1.5 var(--font-dev); }

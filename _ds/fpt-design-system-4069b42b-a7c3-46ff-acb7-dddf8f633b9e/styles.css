@@ -1,0 +1,14 @@
+/* ============================================================
+   ZEN Kaizen Design System — global entry point.
+   Consumers link THIS file. It is an @import manifest only.
+   ============================================================ */
+
+/* Clean, component-facing token layer (px-resolved, friendly names) */
+@import "./tokens/fonts.css";
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/scale.css";
+
+/* Complete Figma Variable export — every collection & mode, full fidelity.
+   Color tokens are usable directly; FLOAT length tokens are unitless. */
+@import "./tokens/fig-tokens.css";

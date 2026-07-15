@@ -1,0 +1,98 @@
+/* FPT — Color system
+   A Radix-style 12-step system. Brand hue is "FPT" (a vivid orange).
+   Step usage: 1-2 app/page backgrounds · 3-5 component subtle/hover fills ·
+   6-8 borders · 9 solid brand · 10 hover · 11 accessible text · 12 strongest text.
+   Base scales below are resolved RGB (so specimen cards render standalone);
+   semantic aliases reference them and flip under [data-theme="dark"]. */
+
+:root {
+  /* ---- Brand: FPT (orange) ---- */
+  --fpt-1: rgb(254,252,251);  --fpt-2: rgb(255,247,242); --fpt-3: rgb(255,238,228);
+  --fpt-4: rgb(255,223,202);  --fpt-5: rgb(255,206,174); --fpt-6: rgb(255,186,144);
+  --fpt-7: rgb(251,162,108);  --fpt-8: rgb(246,133,64);  --fpt-9: rgb(243,101,35);
+  --fpt-10: rgb(224,84,20);   --fpt-11: rgb(173,57,2);   --fpt-12: rgb(85,35,10);
+
+  /* ---- Neutral: Gray ---- */
+  --gray-1: rgb(252,252,252); --gray-2: rgb(247,247,247); --gray-3: rgb(239,239,239);
+  --gray-4: rgb(234,234,234); --gray-5: rgb(226,226,226); --gray-6: rgb(219,219,219);
+  --gray-7: rgb(208,208,208); --gray-8: rgb(187,187,187); --gray-9: rgb(141,141,141);
+  --gray-10: rgb(126,126,126); --gray-11: rgb(92,92,92);  --gray-12: rgb(13,13,13);
+
+  /* ---- Support hues (step 9 solid + 3 subtle + 11 text) ---- */
+  --green-9: rgb(63,171,83);   --green-3: rgb(223,245,226);  --green-11: rgb(0,100,37);
+  --red-9: rgb(229,83,46);     --red-3: rgb(255,231,222);    --red-11: rgb(148,27,0);
+  --orange-9: rgb(237,128,2);  --orange-3: rgb(255,235,214);  --orange-11: rgb(161,82,0);
+  --yellow-9: rgb(255,186,26); --yellow-3: rgb(255,243,209);  --yellow-11: rgb(148,107,0);
+  --blue-9: rgb(10,133,255);   --blue-3: rgb(223,238,255);   --blue-11: rgb(0,78,152);
+
+  --white: #ffffff;
+  --black: rgb(1,1,1);
+
+  /* ===== Semantic aliases (the component-facing API) ===== */
+  /* Surfaces */
+  --color-bg: var(--gray-2);            /* app / page background */
+  --color-surface: var(--white);        /* cards, sheets, menus */
+  --color-surface-alt: var(--gray-1);   /* subtly raised surface */
+  --color-surface-sunken: var(--gray-3);/* inset wells, tracks */
+  --color-overlay: rgba(13,13,13,0.45); /* scrim behind modals */
+
+  /* Content */
+  --color-text: var(--gray-12);         /* primary text */
+  --color-text-muted: var(--gray-11);   /* secondary text */
+  --color-text-subtle: var(--gray-10);  /* tertiary / captions */
+  --color-text-disabled: var(--gray-8);
+  --color-text-on-accent: var(--white);
+
+  /* Borders */
+  --color-border: var(--gray-5);        /* default hairline */
+  --color-border-strong: var(--gray-7);
+  --color-border-pale: var(--gray-4);
+
+  /* Brand / accent */
+  --color-accent: var(--fpt-9);
+  --color-accent-hover: var(--fpt-10);
+  --color-accent-pressed: var(--fpt-11);
+  --color-accent-strong: var(--fpt-12);
+  --color-accent-text: var(--fpt-11);   /* accessible brand text on light */
+  --color-accent-bg: var(--fpt-3);      /* subtle brand fill */
+  --color-accent-bg-hover: var(--fpt-4);
+
+  /* Status */
+  --color-success: var(--green-9);  --color-success-bg: var(--green-3);  --color-success-text: var(--green-11);
+  --color-danger: var(--red-9);     --color-danger-bg: var(--red-3);     --color-danger-text: var(--red-11);
+  --color-warning: var(--yellow-9); --color-warning-bg: var(--yellow-3); --color-warning-text: var(--yellow-11);
+  --color-info: var(--blue-9);      --color-info-bg: var(--blue-3);      --color-info-text: var(--blue-11);
+
+  /* Focus */
+  --color-focus-ring: rgba(243,101,35,0.45);
+}
+
+:root[data-theme="dark"], .dark {
+  --color-bg: rgb(10,10,10);
+  --color-surface: rgb(23,23,23);
+  --color-surface-alt: rgb(31,31,31);
+  --color-surface-sunken: rgb(15,15,15);
+  --color-overlay: rgba(0,0,0,0.6);
+
+  --color-text: rgb(245,245,245);
+  --color-text-muted: rgb(168,168,168);
+  --color-text-subtle: rgb(130,130,130);
+  --color-text-disabled: rgb(82,82,82);
+  --color-text-on-accent: var(--white);
+
+  --color-border: rgb(42,42,42);
+  --color-border-strong: rgb(64,64,64);
+  --color-border-pale: rgb(33,33,33);
+
+  --color-accent: var(--fpt-9);
+  --color-accent-hover: rgb(255,130,74);
+  --color-accent-pressed: var(--fpt-8);
+  --color-accent-text: rgb(255,178,138);
+  --color-accent-bg: rgba(243,101,35,0.20);
+  --color-accent-bg-hover: rgba(243,101,35,0.28);
+
+  --color-success-bg: rgba(63,171,83,0.18);  --color-success-text: rgb(118,202,128);
+  --color-danger-bg: rgba(229,83,46,0.18);   --color-danger-text: rgb(255,145,118);
+  --color-warning-bg: rgba(255,186,26,0.16); --color-warning-text: rgb(226,176,84);
+  --color-info-bg: rgba(10,133,255,0.18);    --color-info-text: rgb(116,178,255);
+}
