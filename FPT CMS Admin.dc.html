@@ -265,7 +265,7 @@ class Component extends DCLogic {
     return [
       { type: 'item', id: 'dashboards', label: 'Dashboards', icon: 'home-01-line' },
       { type: 'cat', label: 'QUẢN LÝ SẢN PHẨM' },
-      { type: 'item', id: 'pdh-sku', label: 'Thông tin sản phẩm', icon: 'dots-grid-line' },
+      { type: 'item', id: 'pdh-sku', label: 'Quản lý sản phẩm', icon: 'dots-grid-line' },
       { type: 'item', id: 'cms-display', label: 'Thông tin checkout', icon: 'settings-01-line' },
       { type: 'item', id: 'cms-payment', label: 'Phương thức Thanh toán', icon: 'file-check-line' },
       { type: 'cat', label: 'QUẢN LÝ NỘI DUNG (CMS)' },
@@ -293,7 +293,7 @@ class Component extends DCLogic {
   }
   TITLES() {
     return {
-      'dashboards': 'Dashboards', 'pdh-sku': 'Thông tin sản phẩm (SKUs)', 'cms-display': 'Thông tin checkout',
+      'dashboards': 'Dashboards', 'pdh-sku': 'Quản lý sản phẩm (SKUs)', 'cms-display': 'Thông tin checkout',
       'cms-payment': 'Phương thức Thanh toán', 'pages': 'Quản lý Trang (Pages)', 'sections': 'Quản lý Sections',
       'blocks': 'Quản lý Blocks', 'landing': 'Landing Page (LDP)', 'cms-menu': 'Quản lý Menu',
       'banner': 'Quản lý Banner', 'cms-popup': 'Quản lý Popup', 'news': 'Quản lý Tin tức', 'faq': 'Quản lý FAQ',
@@ -8614,7 +8614,7 @@ class Component extends DCLogic {
 
   // ===== RBAC matrix =====
   RBAC() { return [
-    { group: 'QUẢN LÝ SẢN PHẨM', modules: ['Thông tin sản phẩm', 'Thông tin checkout'] },
+    { group: 'QUẢN LÝ SẢN PHẨM', modules: ['Quản lý sản phẩm', 'Thông tin checkout'] },
     { group: 'CẤU TRÚC TRANG', modules: ['Quản lý Trang (Pages)', 'Quản lý Sections', 'Quản lý Blocks', 'Landing Page (LDP)', 'Quản lý Menu'] },
     { group: 'MEDIA & QUẢNG BÁ', modules: ['Quản lý Banner', 'Quản lý Popup'] },
     { group: 'BÀI VIẾT & NỘI DUNG', modules: ['Quản lý Tin tức', 'Quản lý FAQ', 'Cấu hình Thông tin hay'] },
