@@ -705,6 +705,7 @@ class Component extends DCLogic {
             h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, 'Hiển thị:'),
             h('div', { style: { width: 130 } }, h(DS.Select, {
               label: '',
+              size: 'sm',
               options: [{ value: '10', label: '10 / trang' }, { value: '20', label: '20 / trang' }, { value: '50', label: '50 / trang' }],
               value: String(pageSize),
               onChange: v => this.setState({ skuPageSize: Number(v), skuPage: 1, skuSelected: {} })
@@ -1843,7 +1844,7 @@ class Component extends DCLogic {
   }
   listCard(...args) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    return h(DS.Card, { style: { padding: 0, overflow: 'hidden' } }, ...args);
+    return h(DS.Card, { style: { padding: 0, overflow: 'visible' } }, ...args);
   }
   empty(msg) {
     const h = React.createElement;
@@ -1895,7 +1896,7 @@ class Component extends DCLogic {
       h('span', { style: { fontSize: 13, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, 'Hiển thị ' + from + '–' + to + ' / ' + total + (label ? ' ' + label : '')),
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
         h('span', { style: { fontSize: 13, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, 'Hiển thị:'),
-        h(DS.Select, { value: String(sz), options: [{ value: '5', label: '5 / trang' }, { value: '10', label: '10 / trang' }, { value: '20', label: '20 / trang' }, { value: '50', label: '50 / trang' }], onChange: v => this.setState({ [key + '_pg']: 1, [key + '_sz']: +v }), style: { minWidth: 120 } }),
+        h(DS.Select, { size: 'sm', value: String(sz), options: [{ value: '5', label: '5 / trang' }, { value: '10', label: '10 / trang' }, { value: '20', label: '20 / trang' }, { value: '50', label: '50 / trang' }], onChange: v => this.setState({ [key + '_pg']: 1, [key + '_sz']: +v }), style: { minWidth: 120 } }),
         h(DS.Pagination, { page: pg, total: totalPages, onChange: p => this.setState({ [key + '_pg']: p }) })
       )
     );

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python3 -c ' *)",
       "Bash(git push *)",
-      "Bash(git remote *)"
+      "Bash(git remote *)",
+      "Bash(awk 'NR>=2350 && NR<=2400' \"/Users/minhtuandesign/Desktop/FPT CMS Content Management main/_ds/fpt-design-system-4069b42b-a7c3-46ff-acb7-dddf8f633b9e/_ds_bundle.js\")"
     ]
   }
 }
