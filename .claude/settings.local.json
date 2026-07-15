@@ -1,8 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -c ' *)"
-    ],
-    "defaultMode": "bypassPermissions"
+      "Bash(python3 -c ' *)",
+      "Bash(git push *)",
+      "Bash(git remote *)"
+    ]
   }
 }
