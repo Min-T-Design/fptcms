@@ -108,22 +108,35 @@ class Component extends DCLogic {
     checkoutOpen: 'global',
     inherit: { tdw: false, hifpt: true, fptvn: true },
     checkoutChannelSkus: {
-      global: { 'INT-GIGA': true, 'INT-SKY': true, 'INT-META': true },
+      global: { 'INT-GIGA': true, 'INT-SKY': true, 'INT-META': true, 'CAM-IQ3': true },
       tdw: { 'INT-GIGA': true, 'INT-SKY': true },
       hifpt: {}, fptvn: {},
     },
     checkoutCycles: {
-      global: [
-        { id: 1, period: '1 tháng', promo: 'Khách hàng thanh toán cước hàng tháng', on: true },
-        { id: 2, period: '3 tháng', promo: 'Thanh toán 3 tháng cước', on: true },
-        { id: 3, period: '6 tháng', promo: 'Tặng thêm 1 tháng cước', on: true },
-        { id: 4, period: '9 tháng', promo: 'Tặng thêm 2 tháng cước', on: false },
-      ],
-      tdw: [
-        { id: 1, period: '1 tháng', promo: 'Liên hệ hotline để được hỗ trợ', on: true },
-        { id: 2, period: '3 tháng', promo: '', on: true },
-      ],
-      hifpt: [], fptvn: [],
+      global: {
+        'INT-GIGA': { icon: 'zap-line', cycles: [
+          { id: 'g1', billingType: 'Trả trước', period: '1 tháng', tagline: 'Ưu đãi tháng đầu', offers: ['Khách hàng thanh toán cước hàng tháng'] },
+          { id: 'g2', billingType: 'Trả trước', period: '3 tháng', tagline: 'Tiết kiệm hơn', offers: ['Thanh toán 3 tháng cước'] },
+        ] },
+        'INT-SKY': { icon: 'zap-line', cycles: [
+          { id: 'g1', billingType: 'Trả sau', period: '6 tháng', tagline: 'Ưu đãi lớn', offers: ['Tặng thêm 1 tháng cước'] },
+        ] },
+        'INT-META': { icon: 'zap-line', cycles: [
+          { id: 'g1', billingType: 'Trả sau', period: '9 tháng', tagline: '', offers: ['Tặng thêm 2 tháng cước'] },
+        ] },
+        'CAM-IQ3': { icon: 'star-01-line', cycles: [
+          { id: 'g1', billingType: 'Trả trước', period: '3 tháng', tagline: 'Ưu đãi', offers: ['Ưu đãi Camera + Cloud 1 triệu đồng', 'Miễn phí lắp đặt Camera', 'Tặng 6 tháng Cloud'] },
+          { id: 'g2', billingType: 'Trả sau', period: '1 tháng', tagline: 'Đề xuất', offers: ['Ưu đãi 300k Camera'] },
+          { id: 'g3', billingType: 'Trả trước', period: '2 tháng', tagline: '', offers: [''] },
+        ] },
+      },
+      tdw: {
+        'INT-GIGA': { icon: 'zap-line', cycles: [
+          { id: 't1', billingType: 'Trả trước', period: '1 tháng', tagline: '', offers: ['Liên hệ hotline để được hỗ trợ'] },
+          { id: 't2', billingType: 'Trả trước', period: '3 tháng', tagline: '', offers: [''] },
+        ] },
+      },
+      hifpt: {}, fptvn: {},
     },
     checkoutMsg: {
       global: 'Xin vui lòng kiểm tra kỹ thông tin đơn hàng trước khi thanh toán.',
@@ -1629,7 +1642,7 @@ class Component extends DCLogic {
     const channelSkus = ((this.state.checkoutChannelSkus || {})[cid]) || {};
     const selectedCount = Object.values(channelSkus).filter(Boolean).length;
     const selectedSkus = allSkus.filter(s => !!channelSkus[s.code]);
-    const cycles = ((this.state.checkoutCycles || {})[cid]) || [];
+    const cyclesMap = ((this.state.checkoutCycles || {})[cid]) || {};
     const msg = ((this.state.checkoutMsg || {})[cid]) || '';
     const installNote = ((this.state.checkoutInstallNote || {})[cid]) || '';
     const isCustomChild = isChild && !isInherit;
@@ -1669,11 +1682,16 @@ class Component extends DCLogic {
           })
         )
       },
-      { key: 'code', header: 'Mã SKU', width: 115,
-        render: v => h('span', { style: { fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: 'var(--color-accent-text)', lineHeight: 1.5 } }, v)
+      { key: '_stt', header: 'STT', width: 40, align: 'center',
+        render: (_, s) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, filteredSkus.indexOf(s) + 1)
       },
-      { key: 'name', header: 'Tên gói cước', width: 175, render: v => h('span', { style: { lineHeight: 1.5, display: 'block' } }, v) },
-      { key: 'group', header: 'Loại DV', width: 105 },
+      { key: 'name', header: 'Tên gói cước', width: 190,
+        render: (v, s) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
+          h('span', { style: { fontWeight: 600, lineHeight: 1.4 } }, v),
+          h('span', { style: { fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: 'var(--color-accent-text)' } }, s.code)
+        )
+      },
+      { key: 'group', header: 'Loại gói bán', width: 105 },
       { key: 'devices', header: 'Thiết bị đi kèm',
         render: (v, s) => {
           const items = v && v !== '—' ? v.split(',').map(x => x.trim()) : [];
@@ -1708,42 +1726,78 @@ class Component extends DCLogic {
       },
     ];
 
-    const cycleCols = [
-      { key: 'on', header: 'Bật', width: 52, align: 'center',
-        render: (_, cy) => h(DS.Switch, {
-          checked: cy.on,
-          onChange: v => this.setState(st => ({
-            checkoutCycles: { ...st.checkoutCycles, [cid]: (st.checkoutCycles[cid] || []).map(c => c.id === cy.id ? { ...c, on: v } : c) }
-          }))
-        })
-      },
-      { key: 'period', header: 'Chu kỳ', width: 130,
-        render: (v, cy) => cy.isNew
-          ? h(DS.Input, { defaultValue: v || '', placeholder: 'VD: 12 tháng',
-              onChange: e => { const val = e && e.target ? e.target.value : e; this.setState(st => ({ checkoutCycles: { ...st.checkoutCycles, [cid]: (st.checkoutCycles[cid] || []).map(c => c.id === cy.id ? { ...c, period: val } : c) } })); }
-            })
-          : h('span', { style: { fontWeight: 600, fontSize: 13 } }, v)
-      },
-      { key: 'promo', header: 'Ưu đãi / Mô tả phụ',
-        render: (v, cy) => h(DS.Input, { defaultValue: v || '',
-          placeholder: isChild ? 'Để trống → kế thừa Global' : 'VD: Tặng thêm 1 tháng cước…',
-          onChange: e => { const val = e && e.target ? e.target.value : e; this.setState(st => ({ checkoutCycles: { ...st.checkoutCycles, [cid]: (st.checkoutCycles[cid] || []).map(c => c.id === cy.id ? { ...c, promo: val } : c) } })); }
-        })
-      },
-      { key: '_del', header: '', width: 44, align: 'center',
-        render: (_, cy) => h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm',
-          onClick: () => this.setState(st => ({ checkoutCycles: { ...st.checkoutCycles, [cid]: (st.checkoutCycles[cid] || []).filter(c => c.id !== cy.id) } }))
-        })
-      },
-    ];
+    const billingTypeOptions = ['Trả trước', 'Trả sau'];
+    const periodOptions = Array.from({ length: 36 }, (_, i) => (i + 1) + ' tháng');
+    const defaultCycle = () => ({ id: 'cy' + Date.now() + Math.random().toString(36).slice(2), billingType: '', period: '', tagline: '', offers: [''] });
+    const getProductEntry = code => cyclesMap[code] || { icon: this.PROMO_ICONS()[0], cycles: [defaultCycle()] };
+    const isFeaturedTag = t => (t || '').trim().toLowerCase() === 'đề xuất';
+    const focusSkus = (this.state.checkoutFocusSkus && this.state.checkoutFocusSkus[cid]) || (selectedSkus[0] ? [selectedSkus[0].code] : []);
+    const focusedSkus = selectedSkus.filter(s => focusSkus.includes(s.code));
+    const toggleFocus = code => this.setState(st => {
+      const cur = (st.checkoutFocusSkus && st.checkoutFocusSkus[cid]) || (selectedSkus[0] ? [selectedSkus[0].code] : []);
+      const next = cur.includes(code) ? cur.filter(c => c !== code) : [...cur, code];
+      return { checkoutFocusSkus: { ...st.checkoutFocusSkus, [cid]: next } };
+    });
+    const removeFromSelection = code => this.setState(st => ({
+      checkoutChannelSkus: { ...st.checkoutChannelSkus, [cid]: { ...(st.checkoutChannelSkus || {})[cid], [code]: false } },
+      checkoutFocusSkus: { ...st.checkoutFocusSkus, [cid]: ((st.checkoutFocusSkus && st.checkoutFocusSkus[cid]) || focusSkus).filter(c => c !== code) }
+    }));
+    const confirmRemoveSku = (code, name) => this.confirm(
+      'Bỏ chọn gói "' + name + '"?',
+      'Gói này sẽ bị bỏ khỏi danh sách áp dụng cho trang Checkout và không còn được cấu hình ưu đãi ở mục 2.',
+      () => { removeFromSelection(code); this.closeModal(); this.toast('success', 'Đã bỏ chọn', 'Gói "' + name + '" đã được bỏ khỏi danh sách.'); },
+      true
+    );
+
+    // ── Bộ chỉnh sửa chung: 1 lần chỉnh sẽ áp dụng đồng thời cho mọi gói đang được chọn (focusSkus) ──
+    const sharedDraft = (this.state.checkoutSharedDraft && this.state.checkoutSharedDraft[cid])
+      || (focusedSkus[0] ? getProductEntry(focusedSkus[0].code) : { icon: this.PROMO_ICONS()[0], cycles: [defaultCycle()] });
+    const applyDraft = draft => this.setState(st => {
+      const map = (st.checkoutCycles || {})[cid] || {};
+      const updatedMap = { ...map };
+      focusSkus.forEach(code => { updatedMap[code] = { icon: draft.icon, cycles: draft.cycles }; });
+      return {
+        checkoutSharedDraft: { ...st.checkoutSharedDraft, [cid]: draft },
+        checkoutCycles: { ...st.checkoutCycles, [cid]: updatedMap }
+      };
+    });
+    const updateDraft = patch => applyDraft({ ...sharedDraft, ...patch });
+    const updateDraftCycle = (cycleId, patch) => applyDraft({ ...sharedDraft, cycles: sharedDraft.cycles.map(c => c.id === cycleId ? { ...c, ...patch } : c) });
+    const addDraftCycle = () => applyDraft({ ...sharedDraft, cycles: [...sharedDraft.cycles, defaultCycle()] });
+    const removeDraftCycle = cycleId => applyDraft({ ...sharedDraft, cycles: sharedDraft.cycles.filter(c => c.id !== cycleId) });
+    const confirmRemoveDraftCycle = cycleId => this.confirm(
+      'Xóa chu kỳ này?',
+      'Chu kỳ và toàn bộ nội dung ưu đãi bên trong sẽ bị xóa, áp dụng cho ' + focusSkus.length + ' gói đang được chọn.',
+      () => { removeDraftCycle(cycleId); this.closeModal(); this.toast('success', 'Đã xóa', 'Chu kỳ đã được xóa.'); },
+      true
+    );
+    const updateDraftOfferLine = (cycleId, idx, val) => updateDraftCycle(cycleId, { offers: sharedDraft.cycles.find(c => c.id === cycleId).offers.map((o, i) => i === idx ? val : o) });
+    const addDraftOfferLine = cycleId => updateDraftCycle(cycleId, { offers: [...sharedDraft.cycles.find(c => c.id === cycleId).offers, ''] });
+    const removeDraftOfferLine = (cycleId, idx) => updateDraftCycle(cycleId, { offers: sharedDraft.cycles.find(c => c.id === cycleId).offers.filter((_, i) => i !== idx) });
+    const confirmRemoveDraftOfferLine = (cycleId, idx) => this.confirm(
+      'Xóa nội dung ưu đãi này?',
+      'Nội dung ưu đãi sẽ bị xóa khỏi chu kỳ này, áp dụng cho ' + focusSkus.length + ' gói đang được chọn.',
+      () => { removeDraftOfferLine(cycleId, idx); this.closeModal(); this.toast('success', 'Đã xóa', 'Nội dung ưu đãi đã được xóa.'); },
+      true
+    );
+    const saveSharedDraft = () => this.toast('success', 'Đã lưu', 'Đã lưu ưu đãi cho ' + focusedSkus.length + ' gói: ' + focusedSkus.map(s => s.code).join(', ') + '.');
+    const pickDraftIcon = () => this.openModal({
+      kind: 'form', title: 'Chọn icon hiển thị',
+      render: () => h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginTop: 4, width: 240, maxWidth: '100%' } },
+        this.PROMO_ICONS().map(name => h('button', { key: name, type: 'button', onClick: () => { updateDraft({ icon: name }); this.closeModal(); },
+          style: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 8, border: '1px solid var(--color-border)', background: sharedDraft.icon === name ? 'var(--color-accent-bg)' : 'var(--color-surface)', cursor: 'pointer' } },
+          h(DS.Icon, { name, size: 18, color: sharedDraft.icon === name ? 'var(--color-accent)' : 'var(--color-text-muted)' })
+        ))
+      )
+    });
 
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
 
-      // ── SKU Selection ──
+      // ── 1. Chọn Gói bán Áp dụng ──
       h('div', null,
         h('div', { style: { fontSize: 13.5, fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 } },
           h(DS.Icon, { name: 'tag-01-line', size: 16, color: 'var(--color-accent-text)' }),
-          'Chọn SKUs Gói cước Áp dụng',
+          '1. Chọn Gói bán Áp dụng',
           !isChild && h('span', { style: { color: 'var(--color-danger-text)', marginLeft: 4 } }, '*')
         ),
         h('p', { style: { fontSize: 12, color: 'var(--color-text-subtle)', margin: '0 0 10px' } },
@@ -1795,7 +1849,7 @@ class Component extends DCLogic {
                   selectedSkus.map(s => h(DS.Tag, {
                     key: s.code,
                     color: 'var(--color-accent)',
-                    onClose: e => { this.setState(st => ({ checkoutChannelSkus: { ...st.checkoutChannelSkus, [cid]: { ...(st.checkoutChannelSkus || {})[cid], [s.code]: false } } })); }
+                    onClose: e => confirmRemoveSku(s.code, s.name)
                   }, s.code))
                 )
               )
@@ -1806,12 +1860,93 @@ class Component extends DCLogic {
         )
       ),
 
-      // ── Thông điệp truyền thông ──
-      h('div', null,
-        h('div', { style: { fontSize: 13.5, fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 } },
-          h(DS.Icon, { name: 'announcement-01-line', size: 16, color: 'var(--color-accent-text)' }),
-          'Thông điệp truyền thông'
+      // ── 2. Cấu hình nội dung ưu đãi (chỉ hiện khi đã chọn ≥ 1 gói ở mục 1) ──
+      selectedSkus.length > 0 && h('div', null,
+        secTitle('settings-01-line', '2. Cấu hình nội dung ưu đãi'),
+        h('p', { style: { fontSize: 12, color: 'var(--color-text-subtle)', margin: '0 0 10px' } },
+          'Bấm chọn 1 hoặc nhiều gói bên trái — chỉnh sửa 1 lần bên phải sẽ áp dụng đồng thời cho tất cả các gói đang được chọn.'
         ),
+        h('div', { style: { display: 'flex', fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.03em', padding: '0 0 6px', gap: 14 } },
+          h('div', { style: { width: 190, flexShrink: 0 } }, 'Sản phẩm'),
+          h('div', { style: { flex: 1, display: 'flex', gap: 10, paddingLeft: 14 } },
+            h('div', { style: { width: 140, flexShrink: 0 } }, 'Gói tính cước'),
+            h('div', { style: { width: 120, flexShrink: 0 } }, 'Chu kỳ'),
+            h('div', { style: { width: 160, flexShrink: 0 } }, 'Tag line'),
+            h('div', { style: { flex: 1 } }, 'Nội dung ưu đãi')
+          )
+        ),
+        h('div', { style: { display: 'flex', gap: 14, alignItems: 'flex-start' } },
+
+          // ── Cột trái: các gói đã chọn (chip, có thể bấm để chỉnh sửa / bỏ chọn) ──
+          h('div', { style: { width: 190, flexShrink: 0, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: 14, display: 'flex', flexDirection: 'column', gap: 8, position: 'sticky', top: 8 } },
+            h('div', { style: { fontWeight: 800, fontSize: 14.5, lineHeight: 1.3, marginBottom: 2 } }, 'Các gói đã chọn'),
+            selectedSkus.map(s => {
+              const active = focusSkus.includes(s.code);
+              return h('div', {
+                key: s.code, onClick: () => toggleFocus(s.code),
+                style: { display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', borderRadius: 8, cursor: 'pointer',
+                  background: active ? 'var(--color-accent-bg)' : 'var(--color-surface)',
+                  border: '1px solid ' + (active ? 'var(--color-accent)' : 'var(--color-border)'), transition: 'background .15s' }
+              },
+                h('span', { style: { flex: 1, fontSize: 12.5, fontWeight: 600, lineHeight: 1.3, color: active ? 'var(--color-accent-text)' : 'var(--color-text)' } }, s.name),
+                h('button', { type: 'button', onClick: e => { e.stopPropagation(); confirmRemoveSku(s.code, s.name); },
+                  style: { border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', padding: 2, flexShrink: 0 } },
+                  h(DS.Icon, { name: 'x-close-line', size: 13, color: active ? 'var(--color-accent-text)' : 'var(--color-text-subtle)' })
+                )
+              );
+            })
+          ),
+
+          // ── Cột phải: 1 bộ chỉnh sửa duy nhất, áp dụng đồng thời cho mọi gói đang được chọn ──
+          h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 } },
+            focusedSkus.length === 0
+              ? h('div', { style: { padding: '30px 16px', textAlign: 'center', fontSize: 13, color: 'var(--color-text-subtle)', fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10 } },
+                  'Chọn 1 hoặc nhiều gói ở danh sách bên trái để chỉnh sửa.'
+                )
+              : h(DS.Card, { style: { padding: 0, overflow: 'hidden' } },
+                  h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-alt)' } },
+                    h('button', { type: 'button', onClick: pickDraftIcon,
+                      style: { width: 28, height: 28, borderRadius: 7, border: '1px solid var(--color-border)', background: 'var(--color-accent-bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } },
+                      h(DS.Icon, { name: sharedDraft.icon, size: 14, color: 'var(--color-accent)' })
+                    ),
+                    h('div', { style: { flex: 1, minWidth: 0, display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' } },
+                      h('span', { style: { fontSize: 11.5, fontWeight: 700, color: 'var(--color-text-subtle)', marginRight: 2 } }, 'Áp dụng cho:'),
+                      focusedSkus.map(s => h(DS.Badge, { key: s.code, theme: 'brand' }, s.code))
+                    ),
+                    h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', style: { flexShrink: 0 }, onClick: saveSharedDraft },
+                      'Lưu (' + focusedSkus.length + ' gói)'
+                    )
+                  ),
+                  sharedDraft.cycles.length > 0
+                    ? sharedDraft.cycles.map(cy => h('div', { key: cy.id, style: { display: 'flex', gap: 10, padding: '12px 14px', borderBottom: '1px solid var(--color-border)', alignItems: 'flex-start' } },
+                        h('div', { style: { width: 140, flexShrink: 0 } }, h(DS.Select, { options: billingTypeOptions, value: cy.billingType || '', placeholder: 'Chọn loại', onChange: val => updateDraftCycle(cy.id, { billingType: val }) })),
+                        h('div', { style: { width: 120, flexShrink: 0 } }, h(DS.Select, { options: periodOptions, value: cy.period || '', placeholder: 'Chọn chu kỳ', onChange: val => updateDraftCycle(cy.id, { period: val }) })),
+                        h('div', { style: { width: 160, flexShrink: 0 } }, h(DS.Input, {
+                          defaultValue: cy.tagline || '', placeholder: 'Nhập tag line',
+                          style: isFeaturedTag(cy.tagline) ? { color: 'var(--color-accent-text)', fontWeight: 700 } : undefined,
+                          onChange: e => updateDraftCycle(cy.id, { tagline: e && e.target ? e.target.value : e })
+                        })),
+                        h('div', { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 } },
+                          cy.offers.map((o, i) => h('div', { key: i, style: { display: 'flex', gap: 6 } },
+                            h(DS.Input, { containerStyle: { flex: 1, minWidth: 0 }, defaultValue: o, placeholder: 'Nhập nội dung ưu đãi mới…', onChange: e => updateDraftOfferLine(cy.id, i, e && e.target ? e.target.value : e) }),
+                            h(DS.IconButton, { icon: 'x-close-line', label: 'Xóa nội dung', level: 'tertiary', size: 'sm', onClick: () => confirmRemoveDraftOfferLine(cy.id, i) })
+                          )),
+                          h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { alignSelf: 'flex-start' }, onClick: () => addDraftOfferLine(cy.id) }, 'Thêm nội dung')
+                        ),
+                        h(DS.IconButton, { icon: 'trash-line', label: 'Xóa chu kỳ', level: 'tertiary', size: 'sm', onClick: () => confirmRemoveDraftCycle(cy.id) })
+                      ))
+                    : h('div', { style: { padding: '16px 14px', fontSize: 13, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, 'Chưa có chu kỳ nào.'),
+                  h('div', { style: { padding: '10px 14px', borderTop: sharedDraft.cycles.length > 0 ? '1px solid var(--color-border)' : 'none' } },
+                    h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', onClick: addDraftCycle }, 'Thêm chu kỳ')
+                  )
+                )
+          )
+        )
+      ),
+
+      // ── 3. Thông điệp truyền thông (chỉ hiện khi đã chọn ≥ 1 gói ở mục 1) ──
+      selectedSkus.length > 0 && h('div', null,
+        secTitle('announcement-01-line', '3. Thông điệp truyền thông'),
         h('p', { style: { fontSize: 12, color: 'var(--color-text-subtle)', margin: '0 0 6px' } },
           isChild
             ? 'Văn bản hiển thị dưới tóm tắt đơn hàng. Để trống → kế thừa Global.'
@@ -1824,26 +1959,9 @@ class Component extends DCLogic {
         })
       ),
 
-      // ── Chu kỳ thanh toán ──
-      h('div', null,
-        secTitle('settings-01-line', '1. Cấu hình chu kỳ thanh toán & Mô tả ưu đãi'),
-        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
-          cycles.length > 0
-            ? h('div', { className: 'fpt-drag-scroll', style: { overflowX: 'auto' } }, h(DS.Table, { dense: true, style: { border: 'none', borderRadius: 0, minWidth: 520 }, columns: cycleCols, data: cycles, rowKey: 'id' }))
-            : h('div', { style: { padding: '16px 12px', textAlign: 'center', fontSize: 13, color: 'var(--color-text-subtle)', fontStyle: 'italic' } },
-                isChild ? 'Chưa có chu kỳ riêng — để trống → kế thừa từ Global.' : 'Chưa có chu kỳ nào.')
-        ),
-        h('div', { style: { marginTop: 8 } },
-          h(DS.Button, {
-            level: 'secondary', size: 'sm', leadingIcon: 'plus-line',
-            onClick: () => { this.setState(st => { const cur = (st.checkoutCycles || {})[cid] || []; const nid = cur.length > 0 ? Math.max(...cur.map(c => c.id)) + 1 : 1; return { checkoutCycles: { ...st.checkoutCycles, [cid]: [...cur, { id: nid, period: '', promo: '', on: true, isNew: true }] } }; }); }
-          }, 'Thêm chu kỳ thanh toán')
-        )
-      ),
-
-      // ── Phí lắp đặt ──
-      h('div', null,
-        secTitle('tool-02-line', '3. Phí lắp đặt & Chú thích phụ'),
+      // ── 4. Phí lắp đặt & Chú thích phụ (chỉ hiện khi đã chọn ≥ 1 gói ở mục 1) ──
+      selectedSkus.length > 0 && h('div', null,
+        secTitle('tool-02-line', '4. Phí lắp đặt & Chú thích phụ'),
         h(DS.Input, {
           key: cid + '-install', defaultValue: installNote,
           placeholder: isChild ? 'Để trống → Kế thừa Global' : 'VD: Phí lắp đặt áp dụng khi khách hàng đăng ký lắp đặt dịch vụ Internet lần đầu tiên.',
