@@ -1519,6 +1519,7 @@ class Component extends DCLogic {
 
     // ---------- Checkout module ----------
   renderCheckout() {
+    if (this.state.ruleEditor !== undefined) return this.renderRuleEditor(this.state.ruleEditor);
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       h(DS.Tabs, { value: this.state.checkoutTab, onChange: v => this.setState({ checkoutTab: v }), items: [
@@ -1993,41 +1994,62 @@ class Component extends DCLogic {
   renderCheckoutRules() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const rules = this.CHECKOUT_RULES();
+    const bannerLabel = v => (!v || v === '— Không hiển thị —') ? h('span', { style: { color: 'var(--color-text-subtle)' } }, '—') : v;
     const columns = [
       { key: 'name', header: 'Tên quy tắc', render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
-      { key: 'channel', header: 'Kênh' },
-      { key: 'skus', header: 'SKUs', render: (_, r) => h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } }, r.skus.map(s => h(DS.Badge, { key: s, theme: 'brand' }, s))) },
-      { key: 'period', header: 'Thời gian' },
+      { key: 'channel', header: 'Kênh áp dụng' },
+      { key: 'skus', header: 'Gói bán áp dụng', render: (_, r) => h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } }, r.skus.map(s => h(DS.Badge, { key: s, theme: 'brand' }, s))) },
+      { key: 'period', header: 'Khoảng thời gian' },
       { key: 'priority', header: 'Ưu tiên', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.priority) },
+      { key: 'headerBanner', header: 'Header Banner', render: (_, r) => bannerLabel(r.headerBanner) },
+      { key: 'footerBanner', header: 'Footer Banner', render: (_, r) => bannerLabel(r.footerBanner) },
+      { key: 'popupCheckout', header: 'Popup Checkout', render: (_, r) => bannerLabel(r.popupCheckout) },
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: '', width: 80, align: 'right', render: (_, r) => h('div', { style: { display: 'flex', gap: 4, justifyContent: 'flex-end' } },
-        h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: () => this.openRuleDrawer(r) }),
-        h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => this.confirm('Xóa quy tắc?', 'Quy tắc "' + r.name + '" sẽ bị xóa khỏi hệ thống.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Quy tắc đã được xóa.'); }, true) })
-      ) },
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ ruleEditor: r }) },
+        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa quy tắc?', 'Quy tắc "' + r.name + '" sẽ bị xóa khỏi hệ thống.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Quy tắc đã được xóa.'); }, true) },
+      ]) },
     ];
-    return h(DS.Card, { style: { padding: 0, overflow: 'hidden' } },
-      h('div', { style: { display: 'flex', gap: 12, alignItems: 'center', padding: 16, borderBottom: '1px solid var(--color-border)' } },
-        h('div', { style: { flex: '1 1 280px', maxWidth: 320 } }, h(DS.Input, { placeholder: 'Tìm quy tắc…', leadingIcon: 'search-medium-line' })),
-        h('div', { style: { flex: 1 } }),
-        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openRuleDrawer(null) }, 'Thêm Quy tắc mới')
-      ),
-      h('div', { className: 'fpt-drag-scroll', style: { overflowX: 'auto' } }, h(DS.Table, { dense: true, style: { border: 'none', borderRadius: 0, minWidth: 640 }, columns, data: rules, rowKey: 'id' }))
+    return this.listCard(
+      this.toolbar(h('div', { style: { flex: '1 1 280px', maxWidth: 320 } }, h(DS.Input, { placeholder: 'Tìm quy tắc…', leadingIcon: 'search-medium-line' })), h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ruleEditor: null }) }, 'Thêm Quy tắc mới')),
+      this.tbl(columns, rules, 'id', r => this.openRuleDetail(r))
     );
   }
   CHECKOUT_RULES() {
     return [
-      { id: 1, name: 'Ưu đãi Combo Thể thao Hè 2026', channel: 'Global', skus: ['INT-SKY', 'SA-SMAX'], period: '01/06 – 31/08', priority: 10, status: 'active' },
-      { id: 2, name: 'Flash Sale Wi-Fi 7', channel: 'Website fpt.vn', skus: ['DEV-WIFI7'], period: '15/06 – 30/06', priority: 5, status: 'active' },
-      { id: 3, name: 'Popup Camera AI', channel: 'App HiFPT', skus: ['CAM-IQ4S'], period: 'Liên tục', priority: 3, status: 'draft' },
+      { id: 1, name: 'Ưu đãi Combo Thể thao Hè 2026', channel: 'Global', skus: ['INT-SKY', 'SA-SMAX'], period: '01/06 – 31/08', priority: 10, headerBanner: 'Banner Hero Hè 2026', footerBanner: '— Không hiển thị —', popupCheckout: 'Popup Flash Sale', status: 'active' },
+      { id: 2, name: 'Flash Sale Wi-Fi 7', channel: 'Website fpt.vn', skus: ['DEV-WIFI7'], period: '15/06 – 30/06', priority: 5, headerBanner: 'Banner Wi-Fi 7', footerBanner: 'Banner Wi-Fi 7', popupCheckout: '— Không hiển thị —', status: 'active' },
+      { id: 3, name: 'Popup Camera AI', channel: 'App HiFPT', skus: ['CAM-IQ4S'], period: 'Liên tục', priority: 3, headerBanner: '— Không hiển thị —', footerBanner: '— Không hiển thị —', popupCheckout: 'Popup Camera AI', status: 'draft' },
     ];
   }
-  openRuleDrawer(r) {
+  openRuleDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    this.openDrawer({ title: r.name, subtitle: 'Chi tiết Quy tắc Banner & Popup', width: 460,
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
+        this.detailRow('Tên quy tắc', r.name),
+        this.detailRow('Kênh áp dụng', r.channel),
+        this.detailRow('Gói bán áp dụng', h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } }, r.skus.map(s => h(DS.Badge, { key: s, theme: 'brand' }, s)))),
+        this.detailRow('Khoảng thời gian', r.period),
+        this.detailRow('Ưu tiên', String(r.priority)),
+        this.detailRow('Header Banner', r.headerBanner),
+        this.detailRow('Footer Banner', r.footerBanner),
+        this.detailRow('Popup Checkout', r.popupCheckout),
+        this.detailRow('Trạng thái', this.statusBadge(r.status))
+      ),
+      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
+        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.setState({ ruleEditor: r }); } }, 'Chỉnh sửa')
+      )
+    });
+  }
+  renderRuleEditor(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const isNew = !r; const back = () => this.setState({ ruleEditor: undefined });
     const skus = this.SKUS().filter(s => this.state.skuActive[s.code] !== false && s.status === 'active');
     const sectionTitle = t => h('div', { style: { fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--color-accent-text)', margin: '4px 0 10px' } }, t);
-    this.openDrawer({
-      title: r ? 'Sửa quy tắc' : 'Thêm quy tắc mới', subtitle: 'Quy tắc Banner & Popup trang Checkout', width: 620,
-      render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
+    return this.editorShell(
+      isNew ? 'Thêm quy tắc mới' : 'Chỉnh sửa quy tắc: ' + r.name, 'Quy tắc Banner & Popup trang Checkout', back,
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
         h('div', null, sectionTitle('1 · Thông tin & điều kiện'),
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
             h(DS.Input, { label: 'Tên quy tắc *', defaultValue: r ? r.name : '', placeholder: 'VD: Ưu đãi Combo Thể thao Hè 2026' }),
@@ -2052,22 +2074,20 @@ class Component extends DCLogic {
           )
         ),
         h(DS.Divider, null),
-        h('div', null, sectionTitle('2 · Banner đầu trang'), h(DS.Select, { label: '', options: ['— Không hiển thị —', 'Banner Hero Hè 2026', 'Banner Wi-Fi 7', 'Banner Camera AI'], defaultValue: '— Không hiển thị —' })),
-        h('div', null, sectionTitle('3 · Banner chân trang'), h(DS.Select, { label: '', options: ['— Không hiển thị —', 'Banner Hero Hè 2026', 'Banner Wi-Fi 7'], defaultValue: '— Không hiển thị —' })),
+        h('div', null, sectionTitle('2 · Banner đầu trang'), h(DS.Select, { label: '', options: ['— Không hiển thị —', 'Banner Hero Hè 2026', 'Banner Wi-Fi 7', 'Banner Camera AI'], defaultValue: r ? r.headerBanner : '— Không hiển thị —' })),
+        h('div', null, sectionTitle('3 · Banner chân trang'), h(DS.Select, { label: '', options: ['— Không hiển thị —', 'Banner Hero Hè 2026', 'Banner Wi-Fi 7'], defaultValue: r ? r.footerBanner : '— Không hiển thị —' })),
         h('div', null, sectionTitle('4 · Popup Checkout'),
           h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { flex: 1 } }, h(DS.Select, { label: 'Popup', options: ['— Không hiển thị —', 'Popup Flash Sale', 'Popup Camera AI'], defaultValue: '— Không hiển thị —' })),
+            h('div', { style: { flex: 1 } }, h(DS.Select, { label: 'Popup', options: ['— Không hiển thị —', 'Popup Flash Sale', 'Popup Camera AI'], defaultValue: r ? r.popupCheckout : '— Không hiển thị —' })),
             h('div', { style: { flex: 1 } }, h(DS.Select, { label: 'Kiểu kích hoạt', options: ['Exit Intent', 'Immediate', 'Trễ 15 giây', 'Trễ 30 giây'], defaultValue: 'Exit Intent' }))
           )
         ),
         h(DS.Divider, null),
         h('div', null, sectionTitle('5 · Trạng thái'), h(DS.Checkbox, { defaultChecked: r ? r.status === 'active' : true, label: 'Kích hoạt quy tắc hoạt động (Active)' }))
       ),
-      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Hủy'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'check-line', onClick: () => { this.closeDrawer(); this.toast('success', 'Đã lưu quy tắc', 'Quy tắc Banner & Popup đã được cập nhật.'); } }, 'Lưu Quy tắc')
-      )
-    });
+      () => { back(); this.toast('success', 'Đã lưu quy tắc', 'Quy tắc Banner & Popup đã được cập nhật.'); },
+      isNew ? 'Tạo Quy tắc' : 'Lưu Quy tắc'
+    );
   }
 
   // ---------- overlays ----------
