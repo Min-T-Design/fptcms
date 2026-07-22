@@ -1993,7 +1993,11 @@ class Component extends DCLogic {
 
   renderCheckoutRules() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const rules = this.CHECKOUT_RULES();
+    const q = (this.state.ruleSearch || '').toLowerCase();
+    const allRules = this.CHECKOUT_RULES();
+    const channelOptions = [{ value: 'all', label: 'Tất cả kênh' }, ...Array.from(new Set(allRules.map(r => r.channel))).map(c => ({ value: c, label: c }))];
+    const channelF = this.state.ruleChannelFilter || 'all';
+    const rules = allRules.filter(r => (channelF === 'all' || r.channel === channelF) && (!q || r.name.toLowerCase().includes(q)));
     const bannerLabel = v => (!v || v === '— Không hiển thị —') ? h('span', { style: { color: 'var(--color-text-subtle)' } }, '—') : v;
     const columns = [
       { key: 'name', header: 'Tên quy tắc', render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
@@ -2011,8 +2015,15 @@ class Component extends DCLogic {
       ]) },
     ];
     return this.listCard(
-      this.toolbar(h('div', { style: { flex: '1 1 280px', maxWidth: 320 } }, h(DS.Input, { placeholder: 'Tìm quy tắc…', leadingIcon: 'search-medium-line' })), h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ruleEditor: null }) }, 'Thêm Quy tắc mới')),
-      this.tbl(columns, rules, 'id', r => this.openRuleDetail(r))
+      this.toolbar(
+        h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'wrap', minWidth: 0 } },
+          this.search('Tìm quy tắc…', 'ruleSearch'),
+          h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: channelOptions, value: channelF, onChange: v => this.setState({ ruleChannelFilter: v, rules_pg: 1 }) }))
+        ),
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ruleEditor: null }) }, 'Thêm Quy tắc mới')
+      ),
+      rules.length ? this.tbl(columns, this.sliceData(rules, 'rules'), 'id', r => this.openRuleDetail(r)) : this.empty('Chưa có quy tắc nào.'),
+      rules.length ? this.renderPagBar(rules.length, 'rules', 'quy tắc') : null
     );
   }
   CHECKOUT_RULES() {
@@ -2044,8 +2055,16 @@ class Component extends DCLogic {
   }
   renderRuleEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ ruleEditor: undefined });
+    const isNew = !r; const back = () => this.setState({ ruleEditor: undefined, ruleSkuSelected: undefined, ruleSkuGroup: undefined, ruleSkuQ: undefined });
     const skus = this.SKUS().filter(s => this.state.skuActive[s.code] !== false && s.status === 'active');
+    const selectedSkus = this.state.ruleSkuSelected !== undefined ? this.state.ruleSkuSelected : (r ? r.skus : []);
+    const groupLabelMap = { Internet: 'Internet', Camera: 'Cam', 'Truyền hình': 'TV', Cloud: 'Cloud' };
+    const filterBtns = [{ id: 'all', label: 'Tất cả' }, ...Array.from(new Set(skus.map(s => s.group))).map(g => ({ id: g, label: groupLabelMap[g] || g }))];
+    const skuGroupF = this.state.ruleSkuGroup || 'all';
+    const skuQ = (this.state.ruleSkuQ || '').toLowerCase();
+    const filteredSkus = skus.filter(s => (skuGroupF === 'all' || s.group === skuGroupF) && (!skuQ || s.code.toLowerCase().includes(skuQ) || s.name.toLowerCase().includes(skuQ)));
+    const toggleSku = code => { const next = selectedSkus.includes(code) ? selectedSkus.filter(c => c !== code) : [...selectedSkus, code]; this.setState({ ruleSkuSelected: next }); };
+    const allChecked = filteredSkus.length > 0 && filteredSkus.every(s => selectedSkus.includes(s.code));
     const sectionTitle = t => h('div', { style: { fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--color-accent-text)', margin: '4px 0 10px' } }, t);
     return this.editorShell(
       isNew ? 'Thêm quy tắc mới' : 'Chỉnh sửa quy tắc: ' + r.name, 'Quy tắc Banner & Popup trang Checkout', back,
@@ -2063,12 +2082,25 @@ class Component extends DCLogic {
             ),
             h('div', null,
               h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'SKUs áp dụng * (≥ 1)'),
-              h('div', { className: 'fpt-scroll', style: { maxHeight: 140, overflow: 'auto', border: '1px solid var(--color-border)', borderRadius: 10, padding: 8 } },
-                skus.map(s => h('div', { key: s.code, style: { display: 'flex', alignItems: 'center', gap: 8, padding: '0 6px', minHeight: 44, borderRadius: 6, cursor: 'pointer' }, onClick: (e) => { const lbl = e.currentTarget.querySelector('label'); if (!lbl || !lbl.contains(e.target)) { const inp = e.currentTarget.querySelector('input[type="checkbox"]'); if (inp) inp.click(); } } },
-                  h(DS.Checkbox, { defaultChecked: r && r.skus.includes(s.code), label: '' }),
-                  h('span', { style: { fontFamily: 'monospace', fontSize: 11.5, color: 'var(--color-accent-text)', fontWeight: 600 } }, s.code),
-                  h('span', { style: { fontSize: 12.5 } }, s.name)
-                ))
+              h('div', { style: { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px' } },
+                h('div', { style: { marginBottom: 6 } },
+                  h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChecked, onChange: v => { const rest = selectedSkus.filter(c => !filteredSkus.some(s => s.code === c)); this.setState({ ruleSkuSelected: v ? [...rest, ...filteredSkus.map(s => s.code)] : rest }); } })
+                ),
+                h('div', { style: { marginBottom: 8 } },
+                  h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', size: 'sm', value: this.state.ruleSkuQ || '', onChange: e => this.setState({ ruleSkuQ: e.target ? e.target.value : e }) })
+                ),
+                h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
+                  filterBtns.map(f => h(DS.Tag, { key: f.id, selected: skuGroupF === f.id, onClick: () => this.setState({ ruleSkuGroup: f.id }) }, f.label))
+                ),
+                h('div', { className: 'fpt-scroll', style: { maxHeight: 320, overflow: 'auto' } },
+                  filteredSkus.length ? filteredSkus.map(s => h('div', { key: s.code, onClick: () => toggleSku(s.code), style: { display: 'flex', alignItems: 'center', gap: 8, padding: '0 6px', minHeight: 44, borderRadius: 6, cursor: 'pointer', background: selectedSkus.includes(s.code) ? 'var(--color-accent-bg)' : 'transparent' } },
+                    h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: selectedSkus.includes(s.code), onChange: () => toggleSku(s.code), label: '' })),
+                    h('span', { style: { fontFamily: 'monospace', fontSize: 11.5, color: 'var(--color-accent-text)', fontWeight: 600 } }, s.code),
+                    h('span', { style: { fontSize: 12.5 } }, s.name),
+                    h('span', { style: { flex: 1 } }),
+                    h(DS.Badge, { theme: 'neutral' }, s.group)
+                  )) : h('div', { style: { padding: '16px 6px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy SKU phù hợp.')
+                )
               )
             )
           )
