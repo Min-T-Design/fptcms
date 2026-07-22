@@ -87,7 +87,6 @@
 class Component extends DCLogic {
   state = {
     darkMode: false,
-    skuDirty: false,
     active: 'pdh-sku',
     channel: 'fpt-telecom',
     userMenu: false,
@@ -101,10 +100,9 @@ class Component extends DCLogic {
     drawer: null,
     modal: null,
     form: {},
-    // SKU module
-    skuSearch: '', skuType: 'all', skuGroup: 'all', skuStatus: 'all',
-    skuActive: {}, skuSelected: {}, skuPage: 1, skuPageSize: 10, skuDetailItem: null, skuDetailTab: 'chung', skuFaqModal: false, skuPreviewItem: null,
-    syncing: false,
+    // Nội dung gói bán module (theo kênh)
+    skuSearch: '', skuTypeFilter: 'all', pkgSelRows: {}, pkgVisMap: {},
+    skuActive: {},
     // Checkout module
     checkoutTab: 'config',
     checkoutOpen: 'global',
@@ -265,7 +263,7 @@ class Component extends DCLogic {
     return [
       { type: 'item', id: 'dashboards', label: 'Dashboards', icon: 'home-01-line' },
       { type: 'cat', label: 'QUẢN LÝ SẢN PHẨM' },
-      { type: 'item', id: 'pdh-sku', label: 'Quản lý sản phẩm', icon: 'dots-grid-line' },
+      { type: 'item', id: 'pdh-sku', label: 'Nội dung gói bán', icon: 'dots-grid-line' },
       { type: 'item', id: 'cms-display', label: 'Thông tin checkout', icon: 'settings-01-line' },
       { type: 'item', id: 'cms-payment', label: 'Phương thức Thanh toán', icon: 'file-check-line' },
       { type: 'cat', label: 'QUẢN LÝ NỘI DUNG (CMS)' },
@@ -293,7 +291,7 @@ class Component extends DCLogic {
   }
   TITLES() {
     return {
-      'dashboards': 'Dashboards', 'pdh-sku': 'Quản lý sản phẩm (SKUs)', 'cms-display': 'Thông tin checkout',
+      'dashboards': 'Dashboards', 'pdh-sku': 'Nội dung gói bán', 'cms-display': 'Thông tin checkout',
       'cms-payment': 'Phương thức Thanh toán', 'pages': 'Quản lý Trang (Pages)', 'sections': 'Quản lý Sections',
       'blocks': 'Quản lý Blocks', 'landing': 'Landing Page (LDP)', 'cms-menu': 'Quản lý Menu',
       'banner': 'Quản lý Banner', 'cms-popup': 'Quản lý Popup', 'news': 'Quản lý Tin tức', 'faq': 'Quản lý FAQ',
@@ -462,6 +460,9 @@ class Component extends DCLogic {
     return h('div', { style: { height: 60, flexShrink: 0, background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', position: 'relative', zIndex: 20 } },
       h('h1', { style: { fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-.01em' } }, this.TITLES()[this.state.active] || ''),
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 14 } },
+        this.state.active === 'pdh-sku' && h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 20, border: '1px solid var(--color-border)', background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } },
+          h(DS.Icon, { name: 'info-circle-line', size: 13, color: 'var(--color-text-subtle)' }), 'Dữ liệu đồng bộ từ hệ thống QLCS'
+        ),
         // channel selector
         h('div', { style: { position: 'relative' } },
           h('div', { onClick: (e) => { const r = e.currentTarget.getBoundingClientRect(); const dir = (window.innerHeight - r.bottom) < 240 ? 'up' : 'down'; this.setState(s => ({ channelMenu: !s.channelMenu, channelMenuDir: dir, userMenu: false })); }, style: { display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: 'var(--color-accent-bg)', border: '1px solid var(--color-accent)', borderRadius: 20, padding: '6px 14px', userSelect: 'none' } },
@@ -567,201 +568,309 @@ class Component extends DCLogic {
   }
 
   // ---------- SKU module ----------
+  // ---------- Quản lý sản phẩm (Nội dung gói bán theo kênh bán) ----------
+  PKG_CHANNELS() {
+    return this.CHANNELS().filter(c => c.id !== 'global');
+  }
+  PKG_TYPE_THEME(group) {
+    return { 'Internet': 'info', 'Camera': 'warning', 'Truyền hình': 'success', 'Cloud': 'brand' }[group] || 'neutral';
+  }
+  PKG_CHANNEL_THEME(channelId) {
+    return { 'fptvn': 'info', 'hifpt': 'brand', 'tdw': 'warning' }[channelId] || 'neutral';
+  }
+  PKG_QLCS_META(sku) {
+    if (!sku) return null;
+    const subGroup = { 'Internet': 'Cáp quang gia đình', 'Camera': 'An ninh & giám sát', 'Truyền hình': 'Giải trí trực tuyến', 'Cloud': 'Lưu trữ đám mây' }[sku.group] || '—';
+    const isDevice = sku.kind === 'Thiết bị';
+    return {
+      dichVu: sku.group || '—',
+      nhomDichVu: subGroup,
+      loaiGoiBan: sku.kind || '—',
+      tenRaw: (sku.name || '').replace(/[()]/g, '').replace(/\s+/g, ''),
+      giaToiThieu: sku.price || '—',
+      hinhThucQuanLy: isDevice ? 'Thiết bị lẻ' : 'Thuê bao dịch vụ',
+      goiTinhCuoc: isDevice ? 'Trả 1 lần' : 'Trả hàng tháng',
+      donViTinh: isDevice ? 'Cái' : 'Gói cước',
+    };
+  }
+  PRIV_ICONS() {
+    return ['star-01-line', 'stars-01-line', 'zap-line', 'check-circle-line', 'heart-line', 'truck-line', 'phone-call-line', 'message-chat-circle-line', 'file-check-line', 'lock-01-line', 'globe-01-line', 'settings-01-line', 'bell-01-line', 'marker-pin-01-line', 'download-01-line', 'mail-01-line', 'share-01-line', 'user-circle-line'];
+  }
+  PROMO_ICONS() { return ['star-01-line', 'stars-01-line', 'zap-line', 'check-circle-line', 'heart-line']; }
+  PKG_CONTENTS() {
+    return [
+      { id: 'INT-GIGA__fptvn', skuCode: 'INT-GIGA', channel: 'fptvn', status: 'active', packageType: 'Dịch vụ',
+        displayName: 'Internet Giga - Siêu tốc độ cho gia đình', slug: 'internet-giga',
+        tags: ['bestseller', 'recommended'], bundledFee: 'Miễn phí lắp đặt · Phí duy trì dịch vụ thêm 20.000đ/tháng',
+        attributes: [
+          { icon: 'zap-line', name: 'Tốc độ tải xuống', value: '150 Mbps', featured: true },
+          { icon: 'globe-01-line', name: 'Tốc độ tải lên', value: '150 Mbps', featured: true },
+          { icon: 'settings-01-line', name: 'Công nghệ', value: 'Cáp quang GPON', featured: true },
+          { icon: 'lock-01-line', name: 'Cam kết SLA', value: '99.5% uptime', featured: false },
+        ],
+        bundledProducts: [
+          { name: 'Modem Wi-Fi 6', mode: 'full', included: true },
+          { name: 'Fsafe – Bảo mật', mode: 'click', included: true },
+          { name: 'Ultra Fast – Chơi game', mode: 'hidden', included: false },
+        ],
+        privTitle: 'Đặc quyền khi đăng ký Internet Giga',
+        privileges: [
+          { icon: 'zap-line', title: 'Tốc độ vượt trội', content: 'Tốc độ 150Mbps ổn định, không bù giờ cao điểm' },
+          { icon: 'truck-line', title: 'Lắp đặt nhanh', content: 'Lắp đặt trong 24h tại khu vực nội thành' },
+          { icon: 'phone-call-line', title: 'Hỗ trợ 24/7', content: 'Tổng đài kỹ thuật hỗ trợ mọi lúc' },
+        ],
+        pkgDesc: '150Mbps ổn định cả giờ cao điểm\nModem Wi-Fi 6 miễn phí\nLắp đặt trong 24h\nBảo hành thiết bị trọn gói',
+        shortDesc: 'Gói Internet Giga mang đến tốc độ 150Mbps ổn định, phù hợp gia đình 3-4 thành viên dùng nhiều thiết bị cùng lúc.',
+        longDesc: 'Internet Giga là gói cước cáp quang phổ biến nhất của FPT Telecom, mang đến tốc độ tải xuống 150Mbps ổn định cả giờ cao điểm.\n\nGói cước đi kèm modem Wi-Fi 6 mới nhất, hỗ trợ phủ sóng toàn bộ không gian sống và tối ưu cho nhiều thiết bị kết nối cùng lúc.',
+        promoIcon: 'star-01-line',
+        promoList: ['Tặng modem Wi-Fi 6 trị giá 1.200.000đ', 'Miễn phí lắp đặt toàn quốc', 'Giảm 5% khi thanh toán online qua Visa/Mastercard/MoMo'],
+        gallery: [{ id: 1, alt: 'Modem Wi-Fi 6 đi kèm gói Internet Giga' }, { id: 2, alt: 'Gia đình sử dụng Internet Giga' }, { id: 3, alt: 'Kỹ thuật viên lắp đặt Internet Giga' }],
+        videos: [{ id: 1, title: 'Giới thiệu Internet Giga', url: 'https://youtu.be/demo-giga' }],
+        faqIds: [1, 2], midBanners: [{ id: 1, active: true }, { id: 2, active: false }],
+        createdAt: '02/05/2026 09:10', createdBy: 'Admin User', updatedAt: '20/05/2026 13:40', updatedBy: '24092 - Nguyễn' },
+      { id: 'INT-GIGA__hifpt', skuCode: 'INT-GIGA', channel: 'hifpt', status: 'active', packageType: 'Dịch vụ',
+        displayName: 'Internet Giga', slug: 'internet-giga',
+        tags: ['bestseller'], bundledFee: '', attributes: [], bundledProducts: [{ name: 'Modem Wi-Fi 6', mode: 'full', included: true }],
+        privTitle: 'Đặc quyền Internet Giga', privileges: [{ icon: 'zap-line', title: 'Tốc độ vượt trội', content: 'Tốc độ 150Mbps ổn định.' }],
+        pkgDesc: '150Mbps ổn định\nModem Wi-Fi 6 miễn phí',
+        shortDesc: 'Gói Internet Giga tốc độ 150Mbps.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [1], midBanners: [],
+        createdAt: '02/05/2026 09:10', createdBy: 'Admin User', updatedAt: '18/05/2026 10:05', updatedBy: 'Admin User' },
+      { id: 'INT-SKY__fptvn', skuCode: 'INT-SKY', channel: 'fptvn', status: 'active', packageType: 'Dịch vụ',
+        displayName: 'Internet Sky - Tốc độ Gigabit', slug: 'internet-sky',
+        tags: ['new'], bundledFee: '', attributes: [
+          { icon: 'zap-line', name: 'Tốc độ tải xuống', value: '1 Gbps', featured: true },
+          { icon: 'star-01-line', name: 'Ưu tiên băng thông', value: 'Có', featured: false },
+        ], bundledProducts: [{ name: 'Modem Wi-Fi 6', mode: 'full', included: true }, { name: 'FPT Play VIP', mode: 'click', included: false }],
+        privTitle: 'Đặc quyền Internet Sky',
+        privileges: [
+          { icon: 'zap-line', title: 'Tốc độ Gigabit', content: 'Tốc độ tải xuống lên đến 1Gbps.' },
+          { icon: 'star-01-line', title: 'Ưu tiên băng thông', content: 'Ưu tiên băng thông giờ cao điểm.' },
+        ],
+        pkgDesc: 'Tốc độ Gigabit 1Gbps\nƯu tiên băng thông giờ cao điểm',
+        shortDesc: 'Internet Sky mang tốc độ Gigabit cho trải nghiệm mượt mà.', longDesc: '', promoIcon: 'zap-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        createdAt: '28/04/2026 08:30', createdBy: 'FI-25128', updatedAt: '20/05/2026 14:00', updatedBy: '24092 - Nguyễn' },
+      { id: 'INT-SKY__tdw', skuCode: 'INT-SKY', channel: 'tdw', status: 'inactive', packageType: 'Dịch vụ',
+        displayName: 'Internet Sky', slug: 'internet-sky',
+        tags: [], bundledFee: '', attributes: [], bundledProducts: [], privTitle: '', privileges: [],
+        pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        createdAt: '28/04/2026 08:31', createdBy: 'FI-25128', updatedAt: '28/04/2026 08:31', updatedBy: 'FI-25128' },
+      { id: 'INT-META__fptvn', skuCode: 'INT-META', channel: 'fptvn', status: 'active', packageType: 'Dịch vụ',
+        displayName: 'Internet Meta - Chuẩn Wi-Fi 6E', slug: 'internet-meta',
+        tags: ['new', 'recommended'], bundledFee: '', attributes: [{ icon: 'stars-01-line', name: 'Chuẩn Wi-Fi', value: 'Wi-Fi 6E', featured: true }], bundledProducts: [{ name: 'Thiết bị Wi-Fi 6E', mode: 'full', included: true }],
+        privTitle: 'Đặc quyền Internet Meta', privileges: [{ icon: 'stars-01-line', title: 'Công nghệ mới nhất', content: 'Chuẩn Wi-Fi 6E băng tần 6GHz.' }],
+        pkgDesc: 'Chuẩn Wi-Fi 6E băng tần 6GHz\nThiết bị đi kèm miễn phí',
+        shortDesc: 'Internet Meta tích hợp thiết bị Wi-Fi 6E thế hệ mới.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        createdAt: '19/05/2026 09:00', createdBy: 'Admin User', updatedAt: '19/05/2026 09:15', updatedBy: 'Admin User' },
+      { id: 'CAM-IQ3__fptvn', skuCode: 'CAM-IQ3', channel: 'fptvn', status: 'active', packageType: 'Thiết bị',
+        displayName: 'FPT Camera IQ3 - An ninh thông minh', slug: 'fpt-camera-iq3',
+        tags: ['bestseller'], bundledFee: 'Tặng kèm thẻ nhớ 32GB',
+        attributes: [
+          { icon: 'check-circle-line', name: 'Độ phân giải', value: 'Full HD 2MP', featured: true },
+          { icon: 'globe-01-line', name: 'Góc nhìn', value: '130 độ', featured: true },
+        ],
+        bundledProducts: [{ name: 'Camera IQ3 Full HD', mode: 'full', included: true }, { name: 'Cloud 7 ngày miễn phí', mode: 'full', included: true }],
+        privTitle: 'Đặc quyền Camera IQ3',
+        privileges: [
+          { icon: 'check-circle-line', title: 'Full HD sắc nét', content: 'Độ phân giải Full HD, góc rộng 130 độ.' },
+          { icon: 'phone-call-line', title: 'Cảnh báo tức thời', content: 'Nhận cảnh báo qua App HiFPT khi có chuyển động.' },
+        ],
+        pkgDesc: 'Full HD, góc rộng 130 độ\nCảnh báo chuyển động tức thời\nTặng thẻ nhớ 32GB',
+        shortDesc: 'Camera an ninh Full HD, góc rộng, cảnh báo chuyển động tức thời.', longDesc: '',
+        promoIcon: 'star-01-line', promoList: ['Tặng thẻ nhớ 32GB', 'Giảm 10% cho đơn hàng đầu tiên qua ZaloPay'],
+        videos: [], faqIds: [], midBanners: [{ id: 1, active: true }],
+        createdAt: '20/05/2026 09:30', createdBy: 'FI-25128', updatedAt: '20/05/2026 09:30', updatedBy: 'FI-25128' },
+      { id: 'CAM-IQ3__hifpt', skuCode: 'CAM-IQ3', channel: 'hifpt', status: 'active', packageType: 'Thiết bị',
+        displayName: 'FPT Camera IQ3', slug: 'fpt-camera-iq3',
+        tags: [], bundledFee: '', attributes: [], bundledProducts: [], privTitle: '', privileges: [],
+        pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        createdAt: '20/05/2026 09:31', createdBy: 'FI-25128', updatedAt: '20/05/2026 09:31', updatedBy: 'FI-25128' },
+      { id: 'SA-SMAX__fptvn', skuCode: 'SA-SMAX', channel: 'fptvn', status: 'active', packageType: 'Combo',
+        displayName: 'FPT Play SMax - Giải trí không giới hạn', slug: 'fpt-play-smax',
+        tags: ['recommended'], bundledFee: '', attributes: [{ icon: 'star-01-line', name: 'Kho nội dung', value: 'HBO, K+, FPT Play', featured: true }], bundledProducts: [{ name: 'FPT Play Box (tặng kèm)', mode: 'full', included: true }],
+        privTitle: 'Đặc quyền FPT Play SMax', privileges: [{ icon: 'star-01-line', title: 'Kho nội dung khổng lồ', content: 'HBO, K+, FPT Play và nhiều kênh khác.' }],
+        pkgDesc: 'Kho nội dung HBO, K+, FPT Play\nTặng kèm FPT Play Box',
+        shortDesc: 'FPT Play SMax - trải nghiệm giải trí đỉnh cao.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        createdAt: '18/05/2026 15:30', createdBy: '24092 - Nguyễn', updatedAt: '18/05/2026 15:30', updatedBy: '24092 - Nguyễn' },
+      { id: 'DEV-WIFI7__fptvn', skuCode: 'DEV-WIFI7', channel: 'fptvn', status: 'draft', packageType: 'Thiết bị',
+        displayName: 'Router Wi-Fi 7 - Chuẩn kết nối tương lai', slug: 'router-wifi-7',
+        tags: ['new'], bundledFee: '', attributes: [{ icon: 'zap-line', name: 'Chuẩn Wi-Fi', value: 'Wi-Fi 7', featured: true }], bundledProducts: [], privTitle: '', privileges: [],
+        pkgDesc: 'Chuẩn Wi-Fi 7 tốc độ vượt trội', shortDesc: 'Router Wi-Fi 7 tốc độ vượt trội, sẵn sàng cho tương lai.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        createdAt: '16/05/2026 14:22', createdBy: 'FI-25128', updatedAt: '16/05/2026 14:22', updatedBy: 'FI-25128' },
+      { id: 'INT-LUX500__tdw', skuCode: 'INT-LUX500', channel: 'tdw', status: 'active', packageType: 'Dịch vụ',
+        displayName: 'Internet LUX 500', slug: 'internet-lux-500',
+        tags: [], bundledFee: '', attributes: [], bundledProducts: [], privTitle: '', privileges: [],
+        pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        createdAt: '18/05/2026 16:20', createdBy: 'Admin User', updatedAt: '18/05/2026 16:20', updatedBy: 'Admin User' },
+    ];
+  }
+  seedPkgForm(r) {
+    return {
+      attributes: r && r.attributes ? r.attributes.map(x => ({ ...x })) : [],
+      bundledProducts: r && r.bundledProducts ? r.bundledProducts.map(x => ({ ...x })) : [],
+      privileges: r && r.privileges ? r.privileges.map(x => ({ ...x })) : [],
+      promoList: r && r.promoList ? [...r.promoList] : [],
+      gallery: r && r.gallery ? r.gallery.map(x => ({ ...x })) : [],
+      videos: r && r.videos ? r.videos.map(x => ({ ...x })) : [],
+      faqIds: r && r.faqIds ? [...r.faqIds] : [],
+      midBanners: r && r.midBanners ? r.midBanners.map(x => ({ ...x })) : [],
+    };
+  }
+  openSkuEditor(r) {
+    this.setState({ skuEditor: r, skuEditorTab: 'attrs', pkgForm: this.seedPkgForm(r) });
+  }
+
   renderSku() {
+    if (this.state.skuEditor !== undefined) return this.renderSkuEditor(this.state.skuEditor);
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const { skuSearch, skuType, skuGroup, skuStatus, skuActive, skuSelected, skuPage, skuPageSize } = this.state;
-    if (this.state.skuDetailItem) return this.renderSkuDetail();
-    const all = this.SKUS();
-    const filtered = all.filter(s => {
-      if (skuSearch && !(s.code + ' ' + s.name).toLowerCase().includes(skuSearch.toLowerCase())) return false;
-      if (skuType !== 'all' && s.kind !== skuType) return false;
-      if (skuGroup !== 'all' && s.group !== skuGroup) return false;
-      if (skuStatus !== 'all' && s.status !== skuStatus) return false;
-      return true;
+    const q = (this.state.skuSearch || '').toLowerCase();
+    const typeF = this.state.skuTypeFilter || 'all';
+    const channelF = this.state.skuChannelFilter || 'all';
+    const skuByCode = new Map(this.SKUS().map(s => [s.code, s]));
+    const channelMap = new Map(this.PKG_CHANNELS().map(c => [c.id, c]));
+    const all = this.PKG_CONTENTS();
+    const data = all.filter(r => {
+      const sku = skuByCode.get(r.skuCode);
+      const matchQ = !q || (r.displayName + ' ' + r.skuCode + ' ' + (sku ? sku.name : '')).toLowerCase().includes(q);
+      const matchType = typeF === 'all' || (sku && sku.group === typeF);
+      const matchChannel = channelF === 'all' || r.channel === channelF;
+      return matchQ && matchType && matchChannel;
     });
-    const total = all.length, active = all.filter(s => s.status === 'active').length, inactive = all.length - active;
-
-    // Pagination
-    const pageSize = skuPageSize || 10;
-    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-    const safePage = Math.min(skuPage || 1, totalPages);
-    const pageStart = (safePage - 1) * pageSize;
-    const pageData = filtered.slice(pageStart, pageStart + pageSize);
-
-    // Selection
-    const selectedCodes = Object.keys(skuSelected).filter(k => skuSelected[k]);
-    const selectedCount = selectedCodes.length;
-    const allPageSelected = pageData.length > 0 && pageData.every(r => skuSelected[r.code]);
-    const somePageSelected = !allPageSelected && pageData.some(r => skuSelected[r.code]);
-
-    const toggleSelectAll = () => {
-      const cur = this.state.skuSelected;
-      const allSel = pageData.length > 0 && pageData.every(r => cur[r.code]);
-      const next = { ...cur };
-      if (!allSel) { pageData.forEach(r => { next[r.code] = true; }); }
-      else { pageData.forEach(r => { delete next[r.code]; }); }
-      this.setState({ skuSelected: next });
-    };
-    const toggleRow = (code) => {
-      this.setState(s => ({ skuSelected: { ...s.skuSelected, [code]: !s.skuSelected[code] } }));
-    };
-    const bulkActivate = (activate) => {
-      const codes = Object.keys(this.state.skuSelected).filter(k => this.state.skuSelected[k]);
-      if (!codes.length) return;
-      const next = { ...this.state.skuActive };
-      codes.forEach(code => { next[code] = activate; });
-      this.setState({ skuActive: next, skuSelected: {} });
-      this.toast(
-        activate ? 'success' : 'neutral',
-        activate ? 'Đã kích hoạt ' + codes.length + ' SKU' : 'Đã hủy kích hoạt ' + codes.length + ' SKU',
-        activate ? 'Các SKU đã chọn hiển thị trong cấu hình CMS.' : 'Các SKU đã chọn bị ẩn khỏi cấu hình CMS.'
-      );
-    };
-
-    const stat = (label, value, color) => h(DS.Card, { style: { padding: 16, flex: 1 } },
-      h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: 4 } }, label),
-      h('div', { style: { fontSize: 26, fontWeight: 800, color } }, value));
+    const sliced = this.sliceData(data, 'pkg');
+    const selRows = this.state.pkgSelRows || {};
+    const selCount = Object.values(selRows).filter(Boolean).length;
+    const allSel = data.length > 0 && data.every(r => selRows[r.id]);
+    const isVisible = r => (this.state.pkgVisMap || {})[r.id] !== undefined ? !!(this.state.pkgVisMap || {})[r.id] : r.status === 'active';
 
     const columns = [
-      { key: '_sel', header: h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(DS.Checkbox, { checked: allPageSelected, indeterminate: somePageSelected, onChange: toggleSelectAll, label: '' })), width: 44, align: 'center',
-        render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(DS.Checkbox, { checked: !!skuSelected[r.code], onChange: () => toggleRow(r.code), label: '' })) },
-      { key: 'code', header: 'Mã SKU', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, fontWeight: 600, color: 'var(--color-accent-text)' } }, r.code) },
-      { key: 'name', header: 'Tên SKU', render: (_, r) => h('span', { onClick: () => this.openSkuDetail(r), style: { fontWeight: 600, cursor: 'pointer', color: 'var(--color-text)' } }, r.name) },
-      { key: 'kind', header: 'Loại', render: (_, r) => h(DS.Badge, { theme: r.kind === 'Thiết bị' ? 'info' : 'neutral' }, r.kind) },
-      { key: 'group', header: 'Dịch vụ' },
-      { key: 'price', header: 'Đơn giá tối thiểu', align: 'right', render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.price) },
-      { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'updated', header: 'C\u1eadp nh\u1eadt', width: 155,
-        render: (_, r) => h(DS.Tooltip, { label: (r.updatedAt || '\u2014') + ' b\u1edfi ' + (r.updatedBy || '\u2014'), placement: 'top' },
-          h('div', { style: { cursor: 'default', lineHeight: 1.45 } },
-            h('div', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedAt || '\u2014'),
-            h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 148 } }, r.updatedBy || '\u2014')
-          )
-        )
-      },
-      { key: 'active', header: 'K\u00edch ho\u1ea1t', align: 'center', width: 84,
-        render: (_, r) => h(DS.Switch, { checked: !!skuActive[r.code], size: 'sm', onChange: v => { this.setState(s => ({ skuActive: { ...s.skuActive, [r.code]: v } })); this.toast(v ? 'success' : 'neutral', v ? '\u0110\u00e3 k\u00edch ho\u1ea1t' : '\u0110\u00e3 t\u1eaft', r.code + (v ? ' hi\u1ec3n th\u1ecb trong c\u1ea5u h\u00ecnh CMS.' : ' b\u1ecb \u1ea9n kh\u1ecfi c\u1ea5u h\u00ecnh CMS.')); } })
-      },
-      { key: 'act', header: 'Thao t\u00e1c', align: 'center', width: 80,
-        render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'center' } },
-          h(DS.IconButton, { icon: 'eye-line', label: 'Xem nhanh', level: 'tertiary', size: 'sm', onClick: (e) => { e.stopPropagation(); this.setState({ skuPreviewItem: r }); } }),
-          h(DS.IconButton, { icon: 'edit-01-line', label: 'Ch\u1ec9nh s\u1eeda', level: 'tertiary', size: 'sm', onClick: (e) => { e.stopPropagation(); this.openSkuDetail(r); } })
-        )
-      },
+      { key: 'chk',
+        header: h('div', { style: { display: 'flex', justifyContent: 'center' } },
+          h(DS.Checkbox, { checked: allSel, onChange: v => { if (v) { const nr = {}; data.forEach(r => { nr[r.id] = true; }); this.setState({ pkgSelRows: nr }); } else { this.setState({ pkgSelRows: {} }); } }, label: '' })
+        ),
+        width: 40, align: 'center',
+        render: (_, r) => h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+          h(DS.Checkbox, { checked: !!selRows[r.id], onChange: v => this.setState(s => ({ pkgSelRows: { ...s.pkgSelRows, [r.id]: v } })), label: '' })
+        ) },
+      { key: 'name', header: 'Tên hiển thị',
+        render: (_, r) => {
+          const sku = skuByCode.get(r.skuCode);
+          return h('div', null,
+            h('span', { style: { fontWeight: 600 } }, r.displayName || (sku ? sku.name : r.skuCode)),
+            h('div', { style: { fontFamily: 'monospace', fontSize: 11.5, color: 'var(--color-accent-text)', marginTop: 2, fontWeight: 500 } },
+              r.skuCode)
+          );
+        } },
+      { key: 'type', header: 'Loại gói bán', width: 130,
+        render: (_, r) => { const sku = skuByCode.get(r.skuCode); return h(DS.Badge, { theme: this.PKG_TYPE_THEME(sku && sku.group) }, sku ? sku.group : '—'); } },
+      { key: 'price', header: 'Giá tối thiểu', width: 120, align: 'right',
+        render: (_, r) => { const sku = skuByCode.get(r.skuCode); return h('span', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, sku ? sku.price : '—'); } },
+      { key: 'channel', header: 'Kênh bán', width: 120,
+        render: (_, r) => { const c = channelMap.get(r.channel); return h(DS.Badge, { theme: this.PKG_CHANNEL_THEME(r.channel) }, c ? c.name : r.channel); } },
+      { key: 'status', header: 'Trạng thái', width: 84, align: 'center',
+        render: (_, r) => {
+          const isOn = isVisible(r);
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-' + r.id + '-' + (isOn ? 1 : 0), size: 'sm', defaultChecked: isOn, onChange: v => {
+              this.setState(s => ({ pkgVisMap: { ...s.pkgVisMap, [r.id]: v } }));
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã kích hoạt' : 'Đã tắt hiển thị', r.displayName || r.skuCode);
+            } })
+          );
+        } },
+      { key: 'updatedAt', header: 'Thời gian cập nhật', width: 140,
+        render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
+      { key: 'updatedBy', header: 'Người cập nhật', width: 140,
+        render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedBy || '—') },
+      { key: 'act', header: 'Thao tác nhanh', width: 90, align: 'right',
+        render: (_, r) => this.rowActions([
+          { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openSkuEditor(r) },
+          { icon: 'trash-line', label: 'Xóa', onClick: () => {
+            const c = channelMap.get(r.channel);
+            this.confirm('Xóa nội dung gói bán?', '"' + (r.displayName || r.skuCode) + '" trên kênh ' + (c ? c.name : r.channel) + ' sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa nội dung gói bán.'); }, true);
+          } },
+        ]) },
     ];
 
-    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-      h('div', { style: { display: 'flex', gap: 14 } },
-        stat('Tổng mã SKU', total, 'var(--color-text)'),
-        stat('SKU Hoạt động', active, 'var(--color-success-text)'),
-        stat('SKU Không hoạt động', inactive, 'var(--color-text-subtle)')
-      ),
-      h(DS.Card, { style: { padding: 0 } },
-        // Filter bar
-        h('div', { style: { display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap', padding: 16, borderBottom: '1px solid var(--color-border)' } },
-          h('div', { style: { flex: '1 1 240px', minWidth: 200 } }, h(DS.Input, { placeholder: 'Tìm theo mã / tên SKU…', leadingIcon: 'search-medium-line', value: skuSearch, onChange: e => this.setState({ skuSearch: e.target ? e.target.value : e, skuPage: 1, skuSelected: {} }) })),
-          h('div', { style: { width: 150 } }, h(DS.Select, { label: '', options: [{ value: 'all', label: 'Tất cả loại' }, { value: 'Thiết bị', label: 'Thiết bị' }, { value: 'Dịch vụ', label: 'Dịch vụ' }], value: skuType, onChange: v => this.setState({ skuType: v, skuPage: 1, skuSelected: {} }) })),
-          h('div', { style: { width: 160 } }, h(DS.Select, { label: '', options: [{ value: 'all', label: 'Tất cả dịch vụ' }, 'Internet', 'Truyền hình', 'Camera', 'Cloud'], value: skuGroup, onChange: v => this.setState({ skuGroup: v, skuPage: 1, skuSelected: {} }) })),
-          h('div', { style: { width: 160 } }, h(DS.Select, { label: '', options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }], value: skuStatus, onChange: v => this.setState({ skuStatus: v, skuPage: 1, skuSelected: {} }) })),
-          h('div', { style: { flex: 1 } }),
-          h(DS.Button, { level: 'secondary', leadingIcon: 'upload-cloud-line', loading: this.state.syncing, onClick: () => { this.setState({ syncing: true }); setTimeout(() => { this.setState({ syncing: false }); this.toast('success', 'Đồng bộ hoàn tất', 'Đã kéo dữ liệu SKU mới nhất từ Product Hub (QLCS).'); }, 1400); } }, 'Sync'),
-          h(DS.Button, { level: 'secondary', leadingIcon: 'download-01-line', onClick: () => this.toast('success', 'Đang xuất Excel', 'File danh sách SKU đang được tạo.') }, 'Export')
-        ),
-        this.filterChipsBar([
-          skuSearch && this.filterChip('Tìm: ' + skuSearch, 'neutral', () => this.setState({ skuSearch: '', skuPage: 1, skuSelected: {} })),
-          skuType !== 'all' && this.filterChip('Loại: ' + skuType, 'brand', () => this.setState({ skuType: 'all', skuPage: 1, skuSelected: {} })),
-          skuGroup !== 'all' && this.filterChip('Dịch vụ: ' + skuGroup, 'info', () => this.setState({ skuGroup: 'all', skuPage: 1, skuSelected: {} })),
-          skuStatus !== 'all' && this.filterChip(skuStatus === 'active' ? 'Hoạt động' : 'Ngừng hoạt động', skuStatus === 'active' ? 'success' : 'neutral', () => this.setState({ skuStatus: 'all', skuPage: 1, skuSelected: {} })),
-        ]),
-        // Bulk actions toolbar (always visible)
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', borderBottom: '1px solid var(--color-border)', background: selectedCount > 0 ? 'var(--color-accent-bg)' : 'var(--color-surface)', transition: 'background .2s cubic-bezier(.2,0,0,1)', minHeight: 44 } },
-          h('span', { style: { fontSize: 13, fontWeight: 500, color: 'var(--color-text-muted)', marginRight: 4, flexShrink: 0 } }, 'Thao tác nhanh:'),
-          h(DS.Button, {
-            size: 'sm', level: 'secondary', leadingIcon: 'check-line',
-            onClick: () => bulkActivate(true),
-            style: selectedCount === 0 ? { opacity: 0.38, pointerEvents: 'none' } : {}
-          }, 'Kích hoạt'),
-          h(DS.Button, {
-            size: 'sm', level: 'tertiary',
-            onClick: () => bulkActivate(false),
-            style: selectedCount === 0 ? { opacity: 0.38, pointerEvents: 'none' } : {}
-          }, 'Hủy kích hoạt'),
-          selectedCount > 0 && h('span', { style: { fontSize: 12.5, color: 'var(--color-accent-text)', fontWeight: 600, marginLeft: 4 } }, '— Đã chọn ' + selectedCount + ' SKU'),
-          h('div', { style: { flex: 1 } }),
-          selectedCount > 0 && h('button', { onClick: () => this.setState({ skuSelected: {} }), style: { background: 'none', border: 'none', cursor: 'pointer', fontSize: 12.5, color: 'var(--color-text-subtle)', padding: '4px 8px', borderRadius: 6 } }, 'Bỏ chọn tất cả')
-        ),
-        // Table
-        pageData.length > 0
-          ? h('div', { className: 'fpt-drag-scroll', style: { overflowX: 'auto' } }, h(DS.Table, { dense: true, style: { border: 'none', borderRadius: 0 }, columns, data: pageData, rowKey: 'code', onRowClick: (r) => this.openSkuDetail(r) }))
-          : h('div', { style: { padding: 50, textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13.5 } }, 'Không tìm thấy SKU phù hợp với bộ lọc.'),
-        // Footer: info + page size + pagination
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: '1px solid var(--color-border)', flexWrap: 'wrap' } },
-          h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', flex: 1, minWidth: 180 } },
-            filtered.length > 0
-              ? 'Hiển thị ' + (pageStart + 1) + '\u2013' + Math.min(pageStart + pageSize, filtered.length) + ' / ' + filtered.length + ' SKU · Read-only từ Product Hub'
-              : 'Không có kết quả'
+    const selData = data.filter(r => selRows[r.id]);
+    const allSelVisible = selData.length > 0 && selData.every(isVisible);
+    const bulkBar = selCount > 0 ? h('div', { style: { position: 'fixed', bottom: 40, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', alignItems: 'center', gap: 6, padding: '10px 10px 10px 20px', background: 'var(--color-surface)', border: '1px solid var(--color-border-strong)', borderRadius: 100, boxShadow: '0 8px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08)', animation: 'fptScaleIn .18s cubic-bezier(.2,0,0,1)', whiteSpace: 'nowrap' } },
+      h('span', { style: { fontSize: 13, fontWeight: 600, color: 'var(--fpt-11)', paddingRight: 6 } }, selCount + ' nội dung được chọn'),
+      h('div', { style: { width: 1, height: 20, background: 'var(--color-border)', margin: '0 2px' } }),
+      h(DS.Button, {
+        size: 'sm', level: 'secondary',
+        onClick: () => {
+          const next = !allSelVisible;
+          const m = { ...(this.state.pkgVisMap || {}) };
+          selData.forEach(r => { m[r.id] = next; });
+          this.setState({ pkgVisMap: m });
+          this.toast(next ? 'success' : 'neutral', next ? 'Đã kích hoạt' : 'Đã tắt hiển thị', selCount + ' nội dung.');
+        }
+      }, allSelVisible ? 'Tắt hiển thị' : 'Kích hoạt'),
+      h(DS.Button, { size: 'sm', level: 'secondary', onClick: () => this.confirm('Xóa ' + selCount + ' nội dung?', 'Các nội dung gói bán đã chọn sẽ bị xóa vĩnh viễn.', () => { this.closeModal(); this.setState({ pkgSelRows: {} }); this.toast('success', 'Đã xóa', 'Xóa thành công.'); }, true) }, 'Xóa'),
+      h(DS.Button, { size: 'sm', level: 'tertiary', onClick: () => this.setState({ pkgSelRows: {} }) }, 'Bỏ chọn'),
+    ) : null;
+
+    const typeOptions = [{ value: 'all', label: 'Loại gói bán' }, ...Array.from(new Set(this.SKUS().map(s => s.group))).map(g => ({ value: g, label: g }))];
+    const channelOptions = [{ value: 'all', label: 'Kênh bán' }, ...this.PKG_CHANNELS().map(c => ({ value: c.id, label: c.name }))];
+
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+      this.listCard(
+        this.toolbar(
+          h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
+            this.search('Tìm kiếm tên gói bán, tên hiển thị…', 'skuSearch'),
+            h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: typeOptions, value: typeF, onChange: v => this.setState({ skuTypeFilter: v, pkg_pg: 1 }) })),
+            h('div', { style: { width: 180, flexShrink: 0 } }, h(DS.Select, { options: channelOptions, value: channelF, onChange: v => this.setState({ skuChannelFilter: v, pkg_pg: 1 }) }))
           ),
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
-            h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, 'Hiển thị:'),
-            h('div', { style: { width: 130 } }, h(DS.Select, {
-              label: '',
-              size: 'sm',
-              options: [{ value: '10', label: '10 / trang' }, { value: '20', label: '20 / trang' }, { value: '50', label: '50 / trang' }],
-              value: String(pageSize),
-              onChange: v => this.setState({ skuPageSize: Number(v), skuPage: 1, skuSelected: {} })
-            }))
-          ),
-          totalPages > 1 && h(DS.Pagination, {
-            page: safePage,
-            total: totalPages,
-            onChange: p => this.setState({ skuPage: p, skuSelected: {} })
-          })
-        )
-      ),
-      // ── SKU Preview Panel ──
-      this.state.skuPreviewItem && h('div', { style: { position: 'fixed', top: 0, right: 0, width: 360, height: '100vh', background: 'var(--color-surface)', borderLeft: '1px solid var(--color-border)', boxShadow: '-8px 0 32px rgba(0,0,0,.12)', zIndex: 300, display: 'flex', flexDirection: 'column', overflow: 'hidden' } },
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-alt)' } },
-          h('div', { style: { flex: 1 } },
-            h('div', { style: { fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: 'var(--color-accent-text)' } }, this.state.skuPreviewItem.code),
-            h('div', { style: { fontSize: 12.5, color: 'var(--color-text)', fontWeight: 600, marginTop: 2 } }, this.state.skuPreviewItem.name)
-          ),
-          h(DS.IconButton, { icon: 'x-circle-line', label: '\u0110\u00f3ng', level: 'tertiary', size: 'sm', onClick: () => this.setState({ skuPreviewItem: null }) })
-        ),
-        h('div', { style: { flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 } },
-          h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
-            this.statusBadge(this.state.skuPreviewItem.status),
-            h(DS.Badge, { theme: this.state.skuPreviewItem.kind === 'Thi\u1ebft b\u1ecb' ? 'info' : 'neutral' }, this.state.skuPreviewItem.kind)
-          ),
-          h(DS.Divider, null),
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
-            h('div', null,
-              h('div', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 } }, 'Nh\u00f3m d\u1ecbch v\u1ee5'),
-              h('div', { style: { fontSize: 13.5, color: 'var(--color-text)' } }, this.state.skuPreviewItem.group || '\u2014')
-            ),
-            h('div', null,
-              h('div', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 } }, '\u0110\u01a0n gi\u00e1 t\u1ed1i thi\u1ec3u'),
-              h('div', { style: { fontSize: 13.5, color: 'var(--color-text)', fontWeight: 600 } }, this.state.skuPreviewItem.price || '\u2014')
-            ),
-            h('div', null,
-              h('div', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 } }, 'C\u1eadp nh\u1eadt'),
-              h('div', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, (this.state.skuPreviewItem.updatedAt || '\u2014') + ' b\u1edfi ' + (this.state.skuPreviewItem.updatedBy || '\u2014'))
+          h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 } },
+            h(DS.Button, { level: 'secondary', onClick: () => this.toast('success', 'Đã đồng bộ', 'Dữ liệu gói bán đã được đồng bộ mới nhất từ hệ thống QLCS.') },
+              h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 7 } },
+                h('svg', { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flexShrink: 0 } },
+                  h('polyline', { points: '23 4 23 10 17 10' }),
+                  h('polyline', { points: '1 20 1 14 7 14' }),
+                  h('path', { d: 'M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15' })
+                ),
+                'Sync'
+              )
             )
-          ),
-          h(DS.Divider, null),
-          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--color-surface-alt)', borderRadius: 8 } },
-            h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'K\u00edch ho\u1ea1t CMS'),
-            h(DS.Switch, { checked: !!skuActive[this.state.skuPreviewItem.code], size: 'sm', onChange: v => { this.setState(s => ({ skuActive: { ...s.skuActive, [s.skuPreviewItem.code]: v } })); this.toast(v ? 'success' : 'neutral', v ? '\u0110\u00e3 k\u00edch ho\u1ea1t' : '\u0110\u00e3 t\u1eaft', this.state.skuPreviewItem.code); } })
           )
         ),
-        h('div', { style: { padding: '12px 16px', borderTop: '1px solid var(--color-border)', display: 'flex', gap: 8 } },
-          h(DS.Button, { level: 'tertiary', style: { flex: 1 }, onClick: () => this.setState({ skuPreviewItem: null }) }, '\u0110\u00f3ng'),
-          h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', style: { flex: 1 }, onClick: () => { const item = this.state.skuPreviewItem; this.setState({ skuPreviewItem: null }); this.openSkuDetail(item); } }, 'Ch\u1ec9nh s\u1eeda \u2192')
-        )
-      )
+        this.filterChipsBar([
+          q && this.filterChip('Tìm: ' + this.state.skuSearch, 'neutral', () => this.setState({ skuSearch: '', pkg_pg: 1 })),
+          typeF !== 'all' && this.filterChip('Loại gói bán: ' + typeF, 'brand', () => this.setState({ skuTypeFilter: 'all', pkg_pg: 1 })),
+        ]),
+        data.length ? this.tbl(columns, sliced, 'id', r => this.openSkuDetail(r)) : this.empty('Không tìm thấy nội dung gói bán phù hợp.'),
+        data.length ? this.renderPagBar(data.length, 'pkg', 'nội dung') : null
+      ),
+      bulkBar
     );
   }
+
   openSkuDetail(r) {
-    this.setState({ skuDetailItem: r, skuDetailTab: 'chung' });
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const sku = this.SKUS().find(s => s.code === r.skuCode);
+    const ch = this.PKG_CHANNELS().find(c => c.id === r.channel);
+    const TAG_LABEL = { bestseller: 'Bán chạy', new: 'Mới', recommended: 'Khuyên dùng' };
+    this.openDrawer({
+      title: r.displayName || r.skuCode, subtitle: 'Nội dung gói bán · ' + (ch ? ch.name : r.channel), width: 480,
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
+        this.detailRow('Gói bán từ PDH', sku ? (sku.name + ' (' + sku.code + ')') : r.skuCode),
+        this.detailRow('Loại gói bán', r.packageType || '—'),
+        this.detailRow('Giá tối thiểu', sku ? sku.price : '—'),
+        this.detailRow('Kênh bán', ch ? ch.name : r.channel),
+        this.detailRow('Tên hiển thị trên kênh', r.displayName),
+        this.detailRow('URL Slug', 'fpt.vn/' + (r.slug || '—')),
+        this.detailRow('Trạng thái hiển thị', this.statusBadge(r.status)),
+        this.detailRow('Tag nổi bật', (r.tags || []).length ? r.tags.map(t => TAG_LABEL[t] || t).join(', ') : '—'),
+        this.detailRow('Đặc tính nổi bật', (r.attributes || []).length ? r.attributes.length + ' đặc tính' : '—'),
+        this.detailRow('Mô tả ngắn', r.shortDesc),
+        this.detailRow('Đặc quyền', (r.privileges || []).length ? r.privileges.length + ' đặc quyền' : '—'),
+        this.detailRow('FAQ đính kèm', (r.faqIds || []).length ? r.faqIds.length + ' câu hỏi' : '—'),
+        this.detailRow('Ngày tạo', r.createdAt + ' · ' + r.createdBy),
+        this.detailRow('Cập nhật lần cuối', r.updatedAt + ' · ' + r.updatedBy)
+      ),
+      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
+        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openSkuEditor(r); } }, 'Chỉnh sửa')
+      )
+    });
   }
 
   openSkuConfig(sku, activeTab) {
@@ -863,477 +972,537 @@ class Component extends DCLogic {
     });
   }
 
-  renderSkuDetail() {
+  // ---------- shared editor building blocks ----------
+  richTextBox(defaultValue, rows, placeholder) {
+    const h = React.createElement;
+    const info = () => this.toast('info', 'Định dạng văn bản', 'Trình soạn thảo rich text đầy đủ (TipTap/Quill) sẽ được tích hợp ở bản chính thức.');
+    const btn = (label, style) => h('button', { key: label, type: 'button', onClick: info,
+      style: Object.assign({ minWidth: 28, height: 26, borderRadius: 5, fontSize: 11.5, fontWeight: 600, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text)', padding: '0 7px', fontFamily: 'inherit' }, style) }, label);
+    return h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+      h('div', { style: { display: 'flex', gap: 4, padding: '6px 10px', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)', flexWrap: 'wrap', alignItems: 'center' } },
+        btn('B', { fontWeight: 800 }), btn('I', { fontStyle: 'italic' }), btn('U', { textDecoration: 'underline' }), btn('S', { textDecoration: 'line-through' }),
+        h('div', { style: { width: 1, height: 16, background: 'var(--color-border)', margin: '0 2px' } }),
+        btn('Trái'), btn('Giữa'), btn('Phải'),
+        h('div', { style: { width: 1, height: 16, background: 'var(--color-border)', margin: '0 2px' } }),
+        btn('Link'), btn('Ảnh')
+      ),
+      h('textarea', { defaultValue: defaultValue || '', rows: rows || 6, placeholder: placeholder || 'Nhập nội dung…',
+        style: { width: '100%', border: 'none', background: 'var(--color-surface)', color: 'var(--color-text)', padding: '12px 14px', fontSize: 13.5, resize: 'vertical', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' } })
+    );
+  }
+
+  renderSkuEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const r = this.state.skuDetailItem;
-    const tab = this.state.skuDetailTab;
-    const isCmsActive = !!this.state.skuActive[r.code];
-    const roField = (label, value, span) => h('div', { style: span ? { gridColumn: 'span ' + span } : {} },
-      h('div', { style: { fontSize: 11.5, fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.04em', lineHeight: 1.2 } }, label),
-      h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '8px 12px', fontSize: 13.5, color: 'var(--color-text-subtle)', lineHeight: 1.4, fontWeight: 500, minHeight: 38 } }, value || '—')
-    );
-    const secTitle = (t) => h('div', { style: { fontSize: 14, fontWeight: 700, color: 'var(--color-text)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 } },
-      h(DS.Icon, { name: 'chevron-right-01-line', size: 16, color: 'var(--color-accent)' }), t
-    );
+    const isNew = !r;
+    const back = () => this.setState({ skuEditor: undefined });
+    const ch = r ? this.PKG_CHANNELS().find(c => c.id === r.channel) : null;
+    const tab = this.state.skuEditorTab || 'attrs';
     const tabs = [
-      { value: 'chung', label: 'Th\u00f4ng tin s\u1ea3n ph\u1ea9m', icon: 'info-circle-line' },
-      { value: 'dactinh', label: '\u0110\u1eb7c t\u00ednh & TB \u0111i k\u00e8m', icon: 'dots-grid-line' },
-      { value: 'content', label: 'Qu\u1ea3n l\u00fd Content', icon: 'image-line' },
-      { value: 'faq', label: 'FAQ', icon: 'file-check-line' },
+      { value: 'attrs', label: 'Đặc tính, Thiết bị & Đặc quyền', icon: 'star-01-line' },
+      { value: 'content', label: 'Quản lý Content', icon: 'file-doc-line' },
+      { value: 'faq', label: 'FAQ', icon: 'message-chat-circle-line' },
     ];
     let tabContent;
-    if (tab === 'chung') tabContent = this.renderSkuTabChung(r, roField, secTitle);
-    else if (tab === 'dactinh') tabContent = this.renderSkuTabDactinh(r, secTitle);
-    else if (tab === 'content') tabContent = this.renderSkuTabContent(r, secTitle);
-    else tabContent = this.renderSkuTabFaq(r, secTitle);
+    if (tab === 'attrs') tabContent = this.renderSkuEditorAttrs(r);
+    else if (tab === 'content') tabContent = this.renderSkuEditorContent(r);
+    else tabContent = this.renderSkuEditorFaq(r);
+
+    const onSave = () => {
+      const label = isNew ? 'Nội dung mới' : (r.displayName || r.skuCode);
+      back();
+      this.toast('success', isNew ? 'Đã tạo nội dung gói bán' : 'Đã lưu nội dung gói bán', label + ' đã được cập nhật.');
+    };
+
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, animation: 'fptContentIn .22s cubic-bezier(.2,0,0,1)' } },
-      // Document header card
-      h(DS.Card, { style: { padding: '14px 20px' } },
-        // Breadcrumb row
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 12 } },
-          h('span', { onClick: () => this.setState({ skuDetailItem: null }), style: { cursor: 'pointer', color: 'var(--color-accent-text)', fontWeight: 500 } }, 'Danh s\u00e1ch m\u00e3 SKU'),
-          h(DS.Icon, { name: 'chevron-right-01-line', size: 14 }),
-          h('span', { style: { fontFamily: 'monospace', fontWeight: 600 } }, r.code)
+      h('div', { style: { position: 'sticky', top: -24, zIndex: 40, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
+        h(DS.Button, { level: 'tertiary', leadingIcon: 'arrow-left-line', size: 'sm', onClick: back }, 'Quay lại'),
+        h('div', { style: { width: 1, height: 18, background: 'var(--color-border)', margin: '0 2px' } }),
+        h('div', { style: { minWidth: 0 } },
+          h('div', { style: { fontWeight: 700, fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, isNew ? 'Tạo nội dung gói bán mới' : (r.displayName || r.skuCode)),
+          !isNew && h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, (ch ? ch.name : r.channel) + ' · ' + r.skuCode)
         ),
-        // Identity + actions
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
-          h('div', { style: { flex: 1, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', minWidth: 0 } },
-            h('span', { style: { fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 } }, 'SKU:'),
-            h('span', { style: { fontFamily: 'monospace', fontSize: 15, fontWeight: 700, color: 'var(--color-accent-text)' } }, r.code),
-            h('span', { style: { color: 'var(--color-border-strong)' } }, '\u2014'),
-            h('span', { style: { fontSize: 15, fontWeight: 600 } }, r.name),
-            this.statusBadge(r.status)
-          ),
-          h('div', { style: { display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' } },
-            h(DS.Button, { size: 'sm', level: 'tertiary', onClick: () => this.setState({ skuDetailItem: null }) }, '\u2190 Qu\u1ea3y l\u1ea1i'),
-            isCmsActive
-              ? h(DS.Button, { size: 'sm', level: 'secondary', onClick: () => { const nx = { ...this.state.skuActive, [r.code]: false }; this.setState({ skuActive: nx }); this.toast('neutral', '\u0110\u00e3 h\u1ee7y k\u00edch ho\u1ea1t', r.code + ' b\u1ecb \u1ea9n kh\u1ecfi c\u1ea5u h\u00ecnh CMS.'); } }, 'H\u1ee7y k\u00edch ho\u1ea1t (Shift+F12)')
-              : h(DS.Button, { size: 'sm', level: 'secondary', leadingIcon: 'check-line', onClick: () => { const nx = { ...this.state.skuActive, [r.code]: true }; this.setState({ skuActive: nx }); this.toast('success', '\u0110\u00e3 k\u00edch ho\u1ea1t', r.code + ' hi\u1ec3n th\u1ecb trong c\u1ea5u h\u00ecnh CMS.'); } }, 'K\u00edch ho\u1ea1t (F12)'),
-            h(DS.Button, { size: 'sm', level: 'primary', leadingIcon: 'check-line', onClick: () => this.toast('success', 'L\u01b0u SKU', r.code + ' \u2014 \u0111\u00e3 c\u1eadp nh\u1eadt.') }, 'L\u01b0u SKU (F4)')
-          )
-        ),
-        // timestamp
-        h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border-pale)' } },
-          'C\u1eadp nh\u1eadt l\u1ea7n cu\u1ed1i: ', h('strong', null, r.updatedAt || '\u2014'), ' b\u1edfi ', h('strong', null, r.updatedBy || 'Admin User')
-        )
+        h('div', { style: { flex: 1 } }),
+        !isNew && this.statusBadge(r.status),
+        h(DS.Button, { level: 'tertiary', size: 'sm', onClick: back }, 'Hủy'),
+        h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', onClick: onSave }, isNew ? 'Tạo nội dung' : 'Lưu nội dung')
       ),
-      // Tab body
       h(DS.Card, { style: { padding: 0 } },
-        h(DS.Tabs, { value: tab, onChange: v => this.setState({ skuDetailTab: v, skuDirty: false }), items: tabs }),
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 18, padding: '10px 24px', borderBottom: '1px solid var(--color-border)', fontSize: 13, color: 'var(--color-text-muted)', flexWrap: 'wrap' } },
-          h('span', null, 'Loại SP: ', h('strong', { style: { color: 'var(--color-text)' } }, r.kind)),
-          h('span', { style: { opacity: .3 } }, '|'),
-          h('span', null, 'Danh mục: ', h('strong', { style: { color: 'var(--color-text)' } }, r.group)),
-          h('span', { style: { opacity: .3 } }, '|'),
-          h('span', null, 'Mã: ', h('strong', { style: { fontFamily: 'monospace', color: 'var(--color-accent-text)' } }, r.code))
-        ),
-        h('div', { key: tab, className: 'fpt-tab-content', style: { padding: '24px 24px 0' }, onInput: () => this.setState({ skuDirty: true }), onChange: () => this.setState({ skuDirty: true }) },
-        tabContent,
-        tab !== 'chung' && h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '16px 24px 24px', borderTop: '1px solid var(--color-border)', marginTop: 24 } },
-          h(DS.Button, {
-            level: 'primary',
-            leadingIcon: 'check-line',
-            disabled: !this.state.skuDirty,
-            onClick: () => { this.toast('success', 'L\u01b0u SKU', r.code + ' \u2014 \u0111\u00e3 c\u1eadp nh\u1eadt.'); this.setState({ skuDirty: false }); }
-          }, 'L\u01b0u SKU (F4)')
-        )
-      )
-      ),
-    );
-  }
-
-  renderSkuTabChung(r, roField, secTitle) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const hthuc = r.kind === 'Thi\u1ebft b\u1ecb' ? 'Thi\u1ebft b\u1ecb l\u1ebb' : 'D\u1ecbch v\u1ee5 thu\u00ea bao';
-    const cuoc = r.kind === 'Thi\u1ebft b\u1ecb' ? 'Tr\u1ea3 1 l\u1ea7n' : 'Thu\u00ea bao th\u00e1ng';
-    const dvt = r.kind === 'Thi\u1ebft b\u1ecb' ? 'C\u00e1i' : 'G\u00f3i';
-    return h('div', null,
-
-      secTitle('1. Th\u00f4ng tin s\u1ea3n ph\u1ea9m (QLCS)'),
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 20 } },
-        roField('D\u1ecbch v\u1ee5', r.group),
-        roField('Nh\u00f3m d\u1ecbch v\u1ee5', 'Basic Net'),
-        roField('Lo\u1ea1i s\u1ea3n ph\u1ea9m', r.kind),
-        roField('T\u00ean SKU (t\u00ean raw t\u1eeb QLCS)', r.name),
-        roField('Gi\u00e1 t\u1ed1i thi\u1ec3u', r.price),
-        roField('H\u00ecnh th\u1ee9c qu\u1ea3n l\u00fd', hthuc),
-        roField('G\u00f3i t\u00ednh c\u01b0\u1edbc', cuoc),
-        roField('\u0110\u01a1n v\u1ecb t\u00ednh', dvt)
-      ),
-      h('div', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', padding: '12px 0', borderTop: '1px solid var(--color-border-pale)' } },
-        'C\u1eadp nh\u1eadt l\u1ea7n cu\u1ed1i: ',
-        h('strong', { style: { color: 'var(--color-text)' } }, r.updatedAt || '\u2014'),
-        ' b\u1edfi ',
-        h('strong', { style: { color: 'var(--color-text)' } }, r.updatedBy || 'Admin User')
+        h(DS.Tabs, { value: tab, onChange: v => this.setState({ skuEditorTab: v }), items: tabs }),
+        h('div', { key: tab, className: 'fpt-tab-content', style: { padding: 24 } }, tabContent)
       )
     );
   }
 
-  renderSkuTabDactinh(r, secTitle) {
+  lockedField(label, value) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    return this.field(label, h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, padding: '0 14px', height: 'var(--control-h-md)', background: 'var(--color-surface-sunken)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 14, fontWeight: 600, boxSizing: 'border-box' } },
+      h(DS.Icon, { name: 'lock-01-line', size: 13, color: 'var(--color-text-subtle)' }), value
+    ), true);
+  }
 
-    // ── data ──
-    const isDevice = r.kind === 'Thi\u1ebft b\u1ecb';
-    const attrs = isDevice
-      ? [
-          { attr: 'Chu\u1ea9n Wi-Fi',        val: 'Wi-Fi 6 (802.11ax)' },
-          { attr: 'T\u1ed1c \u0111\u1ed9 WiFi',   val: '1800 Mbps'          },
-          { attr: 'S\u1ed1 c\u1ed5ng LAN',   val: '4 c\u1ed5ng GE'          },
-          { attr: 'Ngu\u1ed3n \u0111i\u1ec7n', val: '12V DC'              },
-        ]
-      : [
-          { attr: 'T\u1ed1c \u0111\u1ed9 download',       val: r.name.includes('1Gbps') ? '1 Gbps' : '100 Mbps' },
-          { attr: 'T\u1ed1c \u0111\u1ed9 upload',         val: '50 Mbps'            },
-          { attr: 'Lo\u1ea1i \u0111\u01b0\u1eddng truy\u1ec1n', val: 'C\u00e1p quang FTTH' },
-          { attr: 'IP t\u0129nh',                           val: 'Kh\u00f4ng'         },
-        ];
+  // ---------- Tab 1 helper: Thông tin sản phẩm (QLCS) subsection (part of "Đặc tính, Thiết bị & Đặc quyền") ----------
+  qlcsField(label, value) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    return this.field(label, h(DS.Input, { value: value || '—', disabled: true }));
+  }
+  renderSkuEditorInfo(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const sku = r ? this.SKUS().find(s => s.code === r.skuCode) : null;
+    const meta = this.PKG_QLCS_META(sku) || {};
+    const open = this.state.pkgQlcsInfoOpen !== false;
 
-    const companions = !isDevice ? [
-      { idx: 1, code: 'CAM-1D-ONLY',  qlcs: '1D FPT Camera Only', display: 'Camera FPT 1 ng\u00e0y', type: 'Main',     show: true,  icon: 'image-line' },
-      { idx: 2, code: 'CAM-1D',       qlcs: '1D FPT Camera',      display: '',                         type: 'Required', show: true,  icon: 'image-line' },
-      { idx: 3, code: 'CAM-14D-MOT',  qlcs: '14D \u2013 Motion', display: '',                         type: 'Extra',    show: false, icon: 'image-line' },
-      { idx: 4, code: 'STB-HD81',     qlcs: '\u0110\u1ea7u thu HD FPT', display: '\u0110\u1ea7u thu HD FPT', type: 'Main', show: true, icon: 'image-line' },
-    ] : [];
-
-    const thBadge = (t) => ({ Main: 'brand', Required: 'warning', Extra: 'success' }[t] || 'neutral');
-
-    const inputBase = { border: '1px solid var(--color-border)', borderRadius: 8, padding: '9px 12px', fontSize: 14, background: 'var(--color-surface)', color: 'var(--color-text)', outline: 'none', width: '100%', boxSizing: 'border-box', fontFamily: 'inherit', minHeight: 38, lineHeight: '1.5' };
-
-    return h('div', null,
-
-      // ════ Đặc tính sản phẩm ════
-      h('div', { style: { marginBottom: 24 } },
-
-        // header
-        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: 'var(--color-text)' } },
-            h('span', { style: { color: 'var(--color-text-muted)' } }, '\u2022'),
-            '\u0110\u1eb7c t\u00ednh s\u1ea3n ph\u1ea9m'
-          ),
-          h(DS.Badge, { theme: 'brand' }, 'V\u1eadn h\u00e0nh t\u1ef1 qu\u1ea3n l\u00fd')
-        ),
-
-        // action buttons
-        h('div', { style: { display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' } },
-          h(DS.Button, { size: 'sm', level: 'secondary', leadingIcon: 'settings-01-line', onClick: () => this.toast('info', '\u00c1p d\u1ee5ng Template', 'T\u00ednh n\u0103ng \u0111ang ph\u00e1t tri\u1ec3n.') }, '\u00c1p d\u1ee5ng Template'),
-          h(DS.Button, { size: 'sm', level: 'secondary', leadingIcon: 'edit-01-line', onClick: () => this.toast('info', 'Sao ch\u00e9p t\u1eeb SP kh\u00e1c', 'T\u00ednh n\u0103ng \u0111ang ph\u00e1t tri\u1ec3n.') }, 'Sao ch\u00e9p t\u1eeb SP kh\u00e1c'),
-          h(DS.Button, { size: 'sm', level: 'secondary', leadingIcon: 'download-01-line', onClick: () => this.toast('info', 'Import Excel', 'T\u00ednh n\u0103ng \u0111ang ph\u00e1t tri\u1ec3n.') }, 'Import Excel'),
-          h(DS.Button, { size: 'sm', level: 'secondary', leadingIcon: 'upload-cloud-line', onClick: () => this.toast('info', 'T\u1ea3i file m\u1eabu', 'T\u00ednh n\u0103ng \u0111ang ph\u00e1t tri\u1ec3n.') }, 'T\u1ea3i file m\u1eabu')
-        ),
-
-        // nhóm đặc tính row
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' } },
-          h('span', { style: { fontSize: 13, fontWeight: 600, color: 'var(--color-text)', whiteSpace: 'nowrap' } }, 'Nh\u00f3m \u0111\u1eb7c t\u00ednh:'),
-          h('div', { style: { minWidth: 220 } }, h(DS.Select, { options: ['Th\u00f4ng s\u1ed1 Router/Modem', 'Th\u00f4ng s\u1ed1 C\u00e1p quang', 'Th\u00f4ng s\u1ed1 Camera'], defaultValue: 'Th\u00f4ng s\u1ed1 Router/Modem' })),
-          !isDevice && h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--color-text-muted)', fontStyle: 'italic' } },
-            h(DS.Icon, { name: 'info-circle-line', size: 13, color: 'var(--color-text-muted)' }),
-            h('span', null,
-              'D\u1ecbch v\u1ee5 kh\u00f4ng d\u00f9ng N\u1ed5i b\u1eadt \u2014 xem ',
-              h('strong', { style: { fontStyle: 'normal' } }, '\u01afu \u0111\u00e3i & \u0110\u1eb7c quy\u1ec1n'),
-              ' \u1edf Tab Qu\u1ea3n l\u00fd Content.'
-            )
-          )
-        ),
-
-        // attr rows (no separate header)
-        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
-          attrs.map((a, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '28px 220px 1fr 44px', gap: 8, alignItems: 'center', padding: '7px 10px', borderBottom: i < attrs.length - 1 ? '1px solid var(--color-border-pale)' : 'none', background: 'var(--color-surface)' } },
-            h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 15, cursor: 'grab', textAlign: 'center', userSelect: 'none', lineHeight: 1 } }, '\u2261'),
-            h('input', { type: 'text', defaultValue: a.attr, style: Object.assign({}, inputBase, { background: 'var(--color-surface-alt)' }) }),
-            h('input', { type: 'text', defaultValue: a.val,  style: inputBase }),
-            h('div', { style: { display: 'flex', justifyContent: 'center' } },
-              h(DS.IconButton, { icon: 'trash-line', label: 'X\u00f3a', level: 'tertiary', size: 'sm' })
-            )
-          )),
-          // add row
-          h('div', { style: { padding: '9px 12px', textAlign: 'center', borderTop: attrs.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
-            h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: () => this.toast('info', 'Th\u00eam \u0111\u1eb7c t\u00ednh', 'Th\u00eam d\u00f2ng thu\u1ed9c t\u00ednh m\u1edbi.') }, 'Th\u00eam d\u00f2ng thu\u1ed9c t\u00ednh m\u1edbi')
-          )
-        ),
-
-        // info note
-        h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 5, marginTop: 8, fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.5 } },
-          h(DS.Icon, { name: 'info-circle-line', size: 14, color: 'var(--color-text-muted)' }),
-          h('span', null, 'VH t\u1ef1 c\u1eadp nh\u1eadt \u0111\u1eb7c t\u00ednh. H\u1ec7 th\u1ed1ng h\u1ed7 tr\u1ee3 import file Excel ho\u1eb7c \u00e1p d\u1ee5ng template \u0111\u1ec3 nh\u1eadp nhanh.')
-        )
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      h('div', { style: { fontSize: 14 } },
+        h('span', { style: { color: 'var(--color-text-muted)' } }, 'Loại gói bán: '),
+        h('span', { style: { fontWeight: 700 } }, r ? r.packageType : '—')
       ),
-
       h(DS.Divider, null),
-
-      // ════ Thiết bị đi kèm ════
-      h('div', { style: { marginTop: 20 } },
-
-        // header
-        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: 'var(--color-text)' } },
-            h('span', { style: { color: 'var(--color-text-muted)' } }, '\u2022'),
-            'Thi\u1ebft b\u1ecb \u0111i k\u00e8m'
-          ),
-          h(DS.Badge, { theme: 'neutral' }, 'D\u1eef li\u1ec7u QLCS \u00b7 Read-only')
+      h('div', { style: { display: 'flex', gap: 8, alignItems: 'flex-start', padding: 14, background: 'var(--color-accent-bg)', border: '1px solid var(--color-accent)', borderRadius: 'var(--radius-base)' } },
+        h(DS.Icon, { name: 'info-circle-line', size: 16, color: 'var(--color-accent)', style: { marginTop: 1, flexShrink: 0 } }),
+        h('div', null,
+          h('div', { style: { fontSize: 13.5, fontWeight: 700, color: 'var(--color-accent-text)', marginBottom: 2 } }, 'Dữ liệu đồng bộ từ hệ thống QLCS'),
+          h('div', { style: { fontSize: 12.5, color: 'var(--color-accent-text)' } }, 'Thông tin cơ bản của gói bán được quản lý tập trung tại QLCS. Chỉ xem — không chỉnh sửa trực tiếp trên CMS.')
+        )
+      ),
+      h('div', null,
+        h('button', {
+          type: 'button', onClick: () => this.setState({ pkgQlcsInfoOpen: !open }),
+          style: { display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: '4px 0', marginBottom: 12, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: 'var(--color-text)', fontFamily: 'inherit' }
+        },
+          h(DS.Icon, { name: 'chevron-down-line', size: 15, color: 'var(--color-text-subtle)', style: { transform: open ? 'none' : 'rotate(-90deg)', transition: 'transform .15s' } }),
+          'Thông tin sản phẩm (QLCS)'
         ),
+        open && h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 } },
+          this.qlcsField('Dịch vụ', meta.dichVu),
+          this.qlcsField('Nhóm dịch vụ', meta.nhomDichVu),
+          this.qlcsField('Loại gói bán', meta.loaiGoiBan),
+          this.qlcsField('Tên gói bán (tên raw từ QLCS)', meta.tenRaw),
+          this.qlcsField('Giá tối thiểu', meta.giaToiThieu),
+          this.qlcsField('Hình thức quản lý', meta.hinhThucQuanLy),
+          this.qlcsField('Gói tính cước', meta.goiTinhCuoc),
+          this.qlcsField('Đơn vị tính', meta.donViTinh)
+        )
+      )
+    );
+  }
 
-        // description
-        h('div', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', marginBottom: 10, lineHeight: 1.6 } },
-          'Danh s\u00e1ch thi\u1ebft b\u1ecb \u0111\u01b0\u1ee3c b\u00e1n / l\u1eafp \u0111\u1eb7t k\u00e8m theo SKU n\u00e0y. D\u1eef li\u1ec7u \u0111\u01b0\u1ee3c \u0111\u1ed3ng b\u1ed9 t\u1ef1 \u0111\u1ed9ng t\u1eeb h\u1ec7 th\u1ed1ng PDH/QLCS \u2014 kh\u00f4ng ch\u1ec9nh s\u1eeda tr\u1ef1c ti\u1ebfp t\u1ea1i \u0111\u00e2y.'
-        ),
-
-        // yellow banner
-        h(DS.Alert, { theme: 'warning', title: 'L\u01b0u \u00fd v\u1ec1 d\u1eef li\u1ec7u', style: { marginBottom: 12 } },
-          'C\u1ed9t T\u00ean QLCS (raw) l\u00e0 d\u1eef li\u1ec7u g\u1ed1c t\u1eeb h\u1ec7 th\u1ed1ng \u2014 kh\u00f4ng ch\u1ec9nh s\u1eeda. C\u00e1c c\u1ed9t \u1ea2nh, T\u00ean hi\u1ec3n th\u1ecb web v\u00e0 Hi\u1ec3n th\u1ecb web do VH t\u1ef1 qu\u1ea3n l\u00fd tr\u00ean CMS.'
-        ),
-
-        companions.length === 0
-          ? h('div', { style: { padding: 24, textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13.5, background: 'var(--color-surface-alt)', borderRadius: 10, border: '1px solid var(--color-border-pale)' } },
-              'SKU n\u00e0y kh\u00f4ng c\u00f3 thi\u1ebft b\u1ecb \u0111i k\u00e8m.'
-            )
+  // ---------- Tab 1 helpers: Đặc tính, Thiết bị & Đặc quyền ----------
+  renderPkgAttributes(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const items = this.state.pkgForm.attributes || [];
+    const update = (i, key, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, attributes: s.pkgForm.attributes.map((it, j) => j === i ? { ...it, [key]: val } : it) } }));
+    const remove = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, attributes: s.pkgForm.attributes.filter((_, j) => j !== i) } }));
+    const add = () => this.setState(s => ({ pkgForm: { ...s.pkgForm, attributes: [...s.pkgForm.attributes, { group: '', icon: 'star-01-line', name: '', value: '', featured: false }] } }));
+    const featuredCount = items.filter(it => it.featured).length;
+    const toggleFeatured = (i) => {
+      if (!items[i].featured && featuredCount >= 3) { this.toast('warning', 'Đã đạt giới hạn', 'Chỉ chọn tối đa 3 thông số nổi bật.'); return; }
+      update(i, 'featured', !items[i].featured);
+    };
+    const move = (from, to) => {
+      if (to < 0 || to >= items.length) return;
+      const next = items.slice(); const [it] = next.splice(from, 1); next.splice(to, 0, it);
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, attributes: next } }));
+    };
+    return h('div', null,
+      h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
+        h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Đặc tính sản phẩm'),
+        h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Nổi bật: ' + featuredCount + ' / 3')
+      ),
+      h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+        items.length === 0
+          ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic' } }, 'Chưa có đặc tính nào.')
+          : items.map((it, i) => h('div', {
+              key: i, draggable: true,
+              onDragStart: e => { e.dataTransfer.effectAllowed = 'move'; this.setState({ pkgAttrDragIdx: i }); },
+              onDragOver: e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.setState({ pkgAttrDragOverIdx: i }); },
+              onDragLeave: () => this.setState({ pkgAttrDragOverIdx: undefined }),
+              onDrop: e => { e.preventDefault(); const from = this.state.pkgAttrDragIdx; if (from !== undefined && from !== i) move(from, i); this.setState({ pkgAttrDragIdx: undefined, pkgAttrDragOverIdx: undefined }); },
+              onDragEnd: () => this.setState({ pkgAttrDragIdx: undefined, pkgAttrDragOverIdx: undefined }),
+              style: { display: 'grid', gridTemplateColumns: '20px 36px 1fr 1fr 1fr 70px 32px', gap: 8, alignItems: 'center', padding: '8px 14px', borderBottom: i < items.length - 1 ? '1px solid var(--color-border-pale)' : 'none', background: this.state.pkgAttrDragOverIdx === i ? 'var(--color-accent-bg)' : 'transparent', opacity: this.state.pkgAttrDragIdx === i ? 0.4 : 1, transition: 'all .12s' }
+            },
+              h(DS.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
+              h('div', { style: { width: 32, height: 32, borderRadius: 6, background: 'var(--color-accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(DS.Icon, { name: it.icon || 'star-01-line', size: 15, color: 'var(--color-accent)' })),
+              h(DS.Input, { value: it.group, placeholder: 'Nhóm đặc tính…', onChange: e => update(i, 'group', e && e.target ? e.target.value : e) }),
+              h(DS.Input, { value: it.name, placeholder: 'Tên thông số…', onChange: e => update(i, 'name', e && e.target ? e.target.value : e) }),
+              h(DS.Input, { value: it.value, placeholder: 'Giá trị…', onChange: e => update(i, 'value', e && e.target ? e.target.value : e) }),
+              h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(DS.Checkbox, { label: 'Nổi bật', checked: it.featured, onChange: () => toggleFeatured(i) })),
+              h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => remove(i) })
+            )),
+        h('div', { style: { padding: '9px 12px', textAlign: 'center', borderTop: items.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
+          h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add }, '+ Thêm đặc tính')
+        )
+      )
+    );
+  }
+  renderPkgBundled(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const bundled = this.state.pkgForm.bundledProducts || [];
+    const updBundled = (i, key, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, bundledProducts: s.pkgForm.bundledProducts.map((it, j) => j === i ? { ...it, [key]: val } : it) } }));
+    const rmBundled = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, bundledProducts: s.pkgForm.bundledProducts.filter((_, j) => j !== i) } }));
+    const addBundled = () => this.setState(s => ({ pkgForm: { ...s.pkgForm, bundledProducts: [...s.pkgForm.bundledProducts, { name: '', mode: 'full', included: true }] } }));
+    const modeOpts = [{ value: 'full', label: 'Hiển thị toàn bộ' }, { value: 'click', label: 'Chỉ hiện khi click' }, { value: 'hidden', label: 'Ẩn' }];
+    return h('div', null,
+      h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 8 } }, 'Sản phẩm đi kèm'),
+      h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+        bundled.length === 0
+          ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic' } }, 'Chưa có sản phẩm nào trong gói.')
           : h('div', null,
-              // table
-              h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', marginBottom: 10 } },
-                // header
-                h('div', { style: { display: 'grid', gridTemplateColumns: '28px 52px 116px 1fr 1.6fr 90px 104px', gap: 12, alignItems: 'center', padding: '7px 14px', borderBottom: '1px solid var(--color-border)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em' } },
-                  h('span', { style: { textAlign: 'center', color: 'var(--color-text-muted)' } }, '#'),
-                  h('span', { style: { color: 'var(--color-text-muted)' } }, '\u1ea2NH'),
-                  h('span', { style: { color: 'var(--color-text-muted)' } }, 'M\u00c3 SKU'),
-                  h('span', { style: { color: 'var(--color-text-muted)' } }, 'T\u00caN QLCS (RAW)'),
-                  h('span', { style: { color: 'var(--color-text-muted)' } }, 'T\u00caN HI\u1ec2N TH\u1eca WEB'),
-                  h('span', { style: { color: 'var(--color-text-muted)', background: 'var(--color-surface-alt)', padding: '2px 6px', borderRadius: 4, fontSize: 10 } }, 'PH\u00c2N LO\u1ea0I'),
-                  h('span', { style: { color: 'var(--color-text-muted)', background: 'var(--color-surface-alt)', padding: '2px 6px', borderRadius: 4, fontSize: 10 } }, 'HI\u1ec2N TH\u1eca WEB')
+              h('div', { style: { display: 'grid', gridTemplateColumns: '28px 48px 1.4fr 1fr 96px 40px', gap: 10, alignItems: 'center', padding: '7px 14px', borderBottom: '1px solid var(--color-border)', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--color-text-muted)', background: 'var(--color-surface-alt)' } },
+                h('span', null, '#'), h('span', null, 'Ảnh'), h('span', null, 'Tên hiển thị web'), h('span', null, 'Phương thức hiển thị'), h('span', { style: { textAlign: 'center' } }, 'Nhận trong gói'), h('span', null, '')
+              ),
+              bundled.map((it, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '28px 48px 1.4fr 1fr 96px 40px', gap: 10, alignItems: 'center', padding: '8px 14px', borderBottom: i < bundled.length - 1 ? '1px solid var(--color-border-pale)' : 'none' } },
+                h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', textAlign: 'center' } }, i + 1),
+                h('div', { onClick: () => this.toast('info', 'Chọn ảnh SKU', 'Chọn ảnh minh hoạ cho sản phẩm.'), style: { width: 38, height: 32, background: 'var(--color-surface-alt)', border: '1px dashed var(--color-border)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' } }, h(DS.Icon, { name: 'image-line', size: 14, color: 'var(--color-text-subtle)' })),
+                h(DS.Input, { value: it.name, placeholder: 'Tên hiển thị web…', onChange: e => updBundled(i, 'name', e && e.target ? e.target.value : e) }),
+                h(DS.Select, { options: modeOpts, value: it.mode, onChange: v => updBundled(i, 'mode', v) }),
+                h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(DS.Checkbox, { checked: it.included, onChange: v => updBundled(i, 'included', v), label: '' })),
+                h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => rmBundled(i) })
+              ))
+            ),
+        h('div', { style: { padding: '9px 12px', textAlign: 'center', borderTop: bundled.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
+          h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: addBundled }, '+ Thêm sản phẩm')
+        )
+      ),
+      h('div', { style: { marginTop: 12 } }, this.field('Phí đi kèm', h(DS.Input, { defaultValue: r ? r.bundledFee : '', placeholder: 'VD: Miễn phí lắp đặt · Phí duy trì 20.000đ/tháng' })))
+    );
+  }
+  renderPkgPriv(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const items = this.state.pkgForm.privileges || [];
+    const update = (i, key, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: s.pkgForm.privileges.map((it, j) => j === i ? { ...it, [key]: val } : it) } }));
+    const remove = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: s.pkgForm.privileges.filter((_, j) => j !== i) } }));
+    const add = () => {
+      if (items.length >= 10) { this.toast('warning', 'Đã đạt giới hạn', 'Tối đa 10 đặc quyền.'); return; }
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: [...s.pkgForm.privileges, { icon: 'star-01-line', title: '', content: '' }] } }));
+    };
+    const pickIcon = (i) => this.openModal({
+      kind: 'form', title: 'Chọn icon đặc quyền',
+      render: () => h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 8, marginTop: 4, width: 320, maxWidth: '100%' } },
+        this.PRIV_ICONS().map(name => h('button', { key: name, type: 'button', onClick: () => { update(i, 'icon', name); this.closeModal(); },
+          style: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 8, border: '1px solid var(--color-border)', background: (items[i] && items[i].icon === name) ? 'var(--color-accent-bg)' : 'var(--color-surface)', cursor: 'pointer' } },
+          h(DS.Icon, { name, size: 18, color: (items[i] && items[i].icon === name) ? 'var(--color-accent)' : 'var(--color-text-muted)' })
+        ))
+      )
+    });
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
+      this.field('Tiêu đề chung đặc quyền', h(DS.Input, { defaultValue: r ? r.privTitle : '', placeholder: 'VD: Đặc quyền khi đăng ký Internet Giga' }), true),
+      h('div', null,
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
+          h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Danh sách đặc quyền'),
+          h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, items.length + ' / 10')
+        ),
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+          items.length === 0
+            ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic' } }, 'Chưa có đặc quyền nào.')
+            : items.map((it, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '28px 44px 1fr 1.4fr 40px', gap: 10, alignItems: 'center', padding: '10px 14px', borderBottom: i < items.length - 1 ? '1px solid var(--color-border-pale)' : 'none' } },
+                h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', textAlign: 'center' } }, i + 1),
+                h('button', { type: 'button', onClick: () => pickIcon(i), style: { width: 36, height: 36, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-accent-bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(DS.Icon, { name: it.icon || 'star-01-line', size: 17, color: 'var(--color-accent)' })),
+                h(DS.Input, { value: it.title, placeholder: 'Tiêu đề đặc quyền…', onChange: e => update(i, 'title', e && e.target ? e.target.value : e) }),
+                h(DS.Input, { value: it.content, placeholder: 'Nội dung đặc quyền…', onChange: e => update(i, 'content', e && e.target ? e.target.value : e) }),
+                h(DS.IconButton, { icon: 'x-circle-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => remove(i) })
+              )),
+          h('div', { style: { padding: '9px 12px', textAlign: 'center', borderTop: items.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
+            h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add, disabled: items.length >= 10 }, '+ Thêm Đặc Quyền')
+          )
+        )
+      ),
+      h(DS.Divider, null),
+      this.uploadBox('Hình ảnh đặc quyền (tối đa 1 ảnh)', 'JPG / PNG')
+    );
+  }
+
+  renderPkgWebSettings(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const isNew = !r;
+    const ch = r ? this.PKG_CHANNELS().find(c => c.id === r.channel) : null;
+    const chOpts = this.PKG_CHANNELS().map(c => ({ value: c.id, label: c.name }));
+    return h('div', null,
+      h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 12 } }, 'Cài đặt web'),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Tình trạng hiển thị (Đang hiện)'),
+          h(DS.Switch, { defaultChecked: !r || r.status === 'active', onChange: () => {} })
+        ),
+        isNew ? this.field('Kênh bán', h(DS.Select, { options: chOpts, defaultValue: chOpts[0] && chOpts[0].value }), true)
+              : this.lockedField('Kênh bán', ch ? ch.name : r.channel),
+        this.field('Tên hiển thị web', h(DS.Input, { defaultValue: r ? r.displayName : '', placeholder: 'VD: Internet Giga - Siêu tốc độ cho gia đình' }), true),
+        this.field('Đường dẫn URL Slug', h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', overflow: 'hidden', background: 'var(--color-surface)', height: 'var(--control-h-md)', boxSizing: 'border-box' } },
+          h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 10px', fontSize: 13, color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)', background: 'var(--color-surface-alt)', whiteSpace: 'nowrap' } }, 'fpt.vn/'),
+          h('input', { defaultValue: r ? r.slug : '', placeholder: 'internet-giga', style: { flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit' } })
+        ), true),
+        this.field('Tag nổi bật', h('div', { style: { display: 'flex', gap: 16, flexWrap: 'wrap' } },
+          h(DS.Checkbox, { label: 'Bán chạy', defaultChecked: r ? (r.tags || []).includes('bestseller') : false }),
+          h(DS.Checkbox, { label: 'Mới', defaultChecked: r ? (r.tags || []).includes('new') : false }),
+          h(DS.Checkbox, { label: 'Khuyên dùng', defaultChecked: r ? (r.tags || []).includes('recommended') : false })
+        ))
+      )
+    );
+  }
+  renderPkgImages(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const gallery = this.state.pkgForm.gallery || [];
+    const updAlt = (i, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, gallery: s.pkgForm.gallery.map((it, j) => j === i ? { ...it, alt: val } : it) } }));
+    const rmImg = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, gallery: s.pkgForm.gallery.filter((_, j) => j !== i) } }));
+    const addImg = () => {
+      if (gallery.length >= 15) { this.toast('warning', 'Đã đạt giới hạn', 'Tối đa 15 ảnh trong thư viện.'); return; }
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, gallery: [...s.pkgForm.gallery, { id: Date.now(), alt: '' }] } }));
+    };
+    const move = (from, to) => {
+      if (to < 0 || to >= gallery.length) return;
+      const next = gallery.slice(); const [it] = next.splice(from, 1); next.splice(to, 0, it);
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, gallery: next } }));
+    };
+    const midBanners = this.state.pkgForm.midBanners || [];
+    const toggleActive = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, midBanners: s.pkgForm.midBanners.map((b, j) => j === i ? { ...b, active: !b.active } : b) } }));
+    const removeMid = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, midBanners: s.pkgForm.midBanners.filter((_, j) => j !== i) } }));
+    const addMid = () => this.setState(s => ({ pkgForm: { ...s.pkgForm, midBanners: [...s.pkgForm.midBanners, { id: Date.now(), active: true }] } }));
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 24 } },
+      h('div', null,
+        h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Gallery ảnh sản phẩm'),
+        h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Tối đa 15 ảnh · JPG/PNG · kéo thả để sắp xếp · nhập Alt Text cho SEO'),
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+          gallery.length === 0
+            ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic' } }, 'Chưa có ảnh nào trong gallery.')
+            : gallery.map((g, i) => h('div', {
+                key: g.id, draggable: true,
+                onDragStart: e => { e.dataTransfer.effectAllowed = 'move'; this.setState({ pkgGalleryDragIdx: i }); },
+                onDragOver: e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.setState({ pkgGalleryDragOverIdx: i }); },
+                onDragLeave: () => this.setState({ pkgGalleryDragOverIdx: undefined }),
+                onDrop: e => { e.preventDefault(); const from = this.state.pkgGalleryDragIdx; if (from !== undefined && from !== i) move(from, i); this.setState({ pkgGalleryDragIdx: undefined, pkgGalleryDragOverIdx: undefined }); },
+                onDragEnd: () => this.setState({ pkgGalleryDragIdx: undefined, pkgGalleryDragOverIdx: undefined }),
+                style: { display: 'grid', gridTemplateColumns: '20px 48px 1fr 40px', gap: 10, alignItems: 'center', padding: '8px 14px', borderBottom: i < gallery.length - 1 ? '1px solid var(--color-border-pale)' : 'none', background: this.state.pkgGalleryDragOverIdx === i ? 'var(--color-accent-bg)' : 'transparent', opacity: this.state.pkgGalleryDragIdx === i ? 0.4 : 1, transition: 'all .12s' }
+              },
+                h(DS.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
+                h('div', { style: { width: 38, height: 32, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(DS.Icon, { name: 'image-line', size: 14, color: 'var(--color-text-subtle)' })),
+                h(DS.Input, { value: g.alt, placeholder: 'Alt Text (SEO)…', onChange: e => updAlt(i, e && e.target ? e.target.value : e) }),
+                h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => rmImg(i) })
+              )),
+          h('div', { style: { padding: '9px 12px', textAlign: 'center', borderTop: gallery.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
+            h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: addImg, disabled: gallery.length >= 15 }, '+ Thêm ảnh (' + gallery.length + '/15)')
+          )
+        )
+      ),
+      h(DS.Divider, null),
+      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 } },
+        this.uploadBox('Ảnh Thumbnail', 'Tỉ lệ 1:1 · ≤1MB'),
+        this.uploadBox('Top banner', 'Tỉ lệ 16:9 · ≤2MB')
+      ),
+      h(DS.Divider, null),
+      h('div', null,
+        h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Banner giữa trang (Mid-page banner)'),
+        h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Tỉ lệ 32:9 · ≤2MB/ảnh · chèn giữa nội dung trang gói bán'),
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+          midBanners.length === 0
+            ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic' } }, 'Chưa có banner giữa trang.')
+            : h('div', null,
+                h('div', { style: { display: 'grid', gridTemplateColumns: '28px 60px 1fr 90px 40px', gap: 10, alignItems: 'center', padding: '7px 14px', borderBottom: '1px solid var(--color-border)', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--color-text-muted)', background: 'var(--color-surface-alt)' } },
+                  h('span', null, '#'), h('span', null, 'Ảnh'), h('span', null, ''), h('span', { style: { textAlign: 'center' } }, 'Hoạt động'), h('span', null, '')
                 ),
-                // rows
-                companions.map((d, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '28px 52px 116px 1fr 1.6fr 90px 104px', gap: 12, alignItems: 'center', padding: '8px 14px', borderBottom: i < companions.length - 1 ? '1px solid var(--color-border-pale)' : 'none', background: 'var(--color-surface)', fontSize: 13 } },
-                  h('span', { style: { textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12 } }, d.idx),
-                  h('div', { style: { width: 42, height: 34, background: 'var(--gray-12, #1e1e1e)', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, position: 'relative', overflow: 'hidden' } },
-                    h(DS.Icon, { name: d.icon, size: 16, color: '#fff' })
-                  ),
-                  h('span', { style: { fontFamily: 'JetBrains Mono, monospace', fontSize: 11.5, color: 'var(--color-accent-text)', fontWeight: 600 } }, d.code),
-                  h('span', { style: { color: 'var(--color-text-muted)', fontSize: 12.5 } }, d.qlcs),
-                  h('input', { type: 'text', defaultValue: d.display, placeholder: 'Nh\u1eadp t\u00ean hi\u1ec3n th\u1ecb web...', style: Object.assign({}, inputBase, { fontSize: 12.5, background: 'var(--color-surface-alt)' }) }),
-                  h('div', { style: { display: 'flex', alignItems: 'center' } }, h(DS.Badge, { theme: thBadge(d.type) }, d.type)),
-                  h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
-                    h(DS.Checkbox, { checked: d.show, onChange: () => {}, label: d.show ? 'Hi\u1ec7n' : '\u1ea8n' })
-                  )
+                midBanners.map((b, i) => h('div', { key: b.id, style: { display: 'grid', gridTemplateColumns: '28px 60px 1fr 90px 40px', gap: 10, alignItems: 'center', padding: '8px 14px', borderBottom: i < midBanners.length - 1 ? '1px solid var(--color-border-pale)' : 'none' } },
+                  h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', textAlign: 'center' } }, i + 1),
+                  h('div', { style: { width: 52, height: 32, background: 'linear-gradient(135deg,var(--fpt-4),var(--fpt-8))', borderRadius: 6 } }),
+                  h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, 'Banner giữa trang ' + (i + 1)),
+                  h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(DS.Switch, { size: 'sm', checked: b.active, onChange: () => toggleActive(i) })),
+                  h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => removeMid(i) })
                 ))
               ),
-              // legend
-              h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--color-text-muted)', flexWrap: 'wrap', marginBottom: 8 } },
-                h('span', { style: { fontWeight: 700 } }, 'Ph\u00e2n lo\u1ea1i:'),
-                h(DS.Badge, { theme: 'brand' }, 'Main'), h('span', null, '\u2014 Thi\u1ebft b\u1ecb ch\u00ednh \u0111i k\u00e8m SKU'),
-                h('span', { style: { color: 'var(--color-border)' } }, '|'),
-                h(DS.Badge, { theme: 'warning' }, 'Required'), h('span', null, '\u2014 B\u1eaft bu\u1ed9c, kh\u00f4ng t\u00e1ch r\u1eddi'),
-                h('span', { style: { color: 'var(--color-border)' } }, '|'),
-                h(DS.Badge, { theme: 'success' }, 'Extra'), h('span', null, '\u2014 Tu\u1ef3 ch\u1ecdn th\u00eam')
-              ),
-              // lock note
-              h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 5, fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.5 } },
-                h('span', null, h(DS.Icon, { name: 'lock-01-line', size: 14, color: 'var(--color-text-muted)' })),
-                h('span', null,
-                  '\u0110\u1ec3 th\u00eam / s\u1eeda / xo\u00e1 h\u00e0ng, thao t\u00e1c tr\u1ef1c ti\u1ebfp tr\u00ean ',
-                  h('strong', null, 'PDH / QLCS'),
-                  '. CMS ch\u1ec9 l\u01b0u: \u1ea2nh, T\u00ean hi\u1ec3n th\u1ecb web, Hi\u1ec3n th\u1ecb web.'
-                )
-              )
-            )
-      ),
-    );
-  }
-
-    renderSkuTabContent(r, secTitle) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    return h('div', null,
-      secTitle('1. C\u00e0i \u0111\u1eb7t web'),
-      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 } },
-        h('div', { style: { gridColumn: 'span 2' } }, h(DS.Input, { label: 'T\u00ean hi\u1ec3n th\u1ecb web *', defaultValue: r.name, placeholder: 'T\u00ean hi\u1ec3n th\u1ecb tr\u00ean website' })),
-        h('div', null,
-          h('div', { style: { fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginBottom: 8 } }, 'T\u00ecnh tr\u1ea1ng hi\u1ec3n th\u1ecb'),
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 } },
-            h(DS.Switch, { defaultChecked: r.status === 'active', onChange: () => {} }),
-            h('span', { style: { fontSize: 13, color: r.status === 'active' ? 'var(--color-success-text)' : 'var(--color-text-muted)' } }, r.status === 'active' ? '\u0110ang hi\u1ec7n' : '\u0110ang \u1ea9n')
-          )
-        ),
-        h(DS.Input, { label: 'URL slug *', placeholder: r.code.toLowerCase() }),
-        h('div', { style: { gridColumn: 'span 2' } }, h(DS.Input, { label: 'Tag n\u1ed5i b\u1eadt', placeholder: 'HOT, NEW, SALE\u2026' }))
-      ),
-      h(DS.Divider, null),
-      h('div', { style: { margin: '20px 0 24px' } },
-        secTitle('2. H\u00ecnh \u1ea3nh s\u1ea3n ph\u1ea9m'),
-        h('div', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Gallery \u1ea3nh s\u1ea3n ph\u1ea9m \u2014 t\u1ed1i \u0111a 15 \u1ea3nh \u00b7 k\u00e9o \u0111\u1ec3 s\u1eafp x\u1ebfp'),
-        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 10, padding: 14, background: 'var(--color-surface-alt)', border: '1px dashed var(--color-border)', borderRadius: 10, marginBottom: 16 } },
-          ...[1,2,3].map(n => h('div', { key: n, style: { aspectRatio: '1', borderRadius: 8, background: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: 12, position: 'relative', cursor: 'move', gap: 4 } },
-            h(DS.Icon, { name: 'image-line', size: 22, color: 'var(--color-text-muted)' }),
-            h('span', null, '\u1ea2nh ' + n),
-            n === 1 && h('span', { style: { position: 'absolute', top: 4, right: 4, fontSize: 10, background: 'var(--color-accent)', color: '#fff', borderRadius: 4, padding: '1px 6px', fontWeight: 600 } }, 'Ch\u00ednh')
-          )),
-          h('div', { style: { aspectRatio: '1', borderRadius: 8, border: '2px dashed var(--color-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: 12, gap: 4 } },
-            h(DS.Icon, { name: 'plus-line', size: 20, color: 'var(--color-text-muted)' }),
-            h('span', null, 'Th\u00eam \u1ea3nh')
-          )
-        ),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 } },
-          ...['Thumb image (\u22641MB)', 'Banner \u0111\u1ea7u trang (\u22641MB)', 'Banner gi\u1eefa trang (\u22641MB)'].map((lbl, i) =>
-            h('div', { key: i },
-              h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 8 } }, lbl),
-              h('div', { style: { border: '2px dashed var(--color-border)', padding: 24, textAlign: 'center', borderRadius: 10, cursor: 'pointer', color: 'var(--color-text-muted)', background: 'var(--color-surface-alt)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 } },
-                h(DS.Icon, { name: 'image-line', size: 24, color: 'var(--color-text-muted)' }),
-                h('span', { style: { fontSize: 13 } }, '+ Upload ' + (i === 0 ? 'Thumb' : 'Banner'))
-              )
-            )
+          h('div', { style: { padding: '9px 12px', textAlign: 'center', borderTop: midBanners.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
+            h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: addMid }, '+ Upload Ảnh')
           )
         )
-      ),
-      h(DS.Divider, null),
-      h('div', { style: { margin: '20px 0 24px' } },
-        secTitle('3. M\u00f4 t\u1ea3 s\u1ea3n ph\u1ea9m'),
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-          h(DS.Textarea, { label: 'M\u00f4 t\u1ea3 ng\u1eafn', placeholder: 'T\u00f3m t\u1eaft \u0111i\u1ec3m n\u1ed5i b\u1eadt\u2026', rows: 3 }),
-          h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 8 } }, 'M\u00f4 t\u1ea3 d\u00e0i (Rich text)'),
-            h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
-              h('div', { style: { display: 'flex', gap: 4, padding: '6px 10px', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)', flexWrap: 'wrap' } },
-                ...['B','I','U','H1','H2','List','Link'].map(t => h('button', { key: t, style: { background: 'none', border: '1px solid var(--color-border)', borderRadius: 5, padding: '3px 8px', fontSize: 12, cursor: 'pointer', color: 'var(--color-text)', fontFamily: 'inherit' } }, t))
-              ),
-              h('textarea', { style: { width: '100%', minHeight: 160, border: 'none', background: 'var(--color-surface)', color: 'var(--color-text)', padding: '12px 14px', fontSize: 13.5, resize: 'vertical', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }, placeholder: 'Nh\u1eadp n\u1ed9i dung m\u00f4 t\u1ea3 chi ti\u1ebft s\u1ea3n ph\u1ea9m\u2026' })
-            )
-          )
-        )
-      ),
-      h(DS.Divider, null),
-      h('div', { style: { margin: '20px 0 24px' } },
-        secTitle('4. \u0110\u1eb7c quy\u1ec1n & \u01afu \u0111\u00e3i'),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 } },
-          h(DS.Textarea, { label: '\u0110\u1eb7c quy\u1ec1n', placeholder: 'VD: H\u1ed7 tr\u1ee3 k\u1ef9 thu\u1eadt 24/7, B\u1ea3o h\u00e0nh 2 n\u0103m\u2026', rows: 3 }),
-          h(DS.Input, { label: '\u01afu \u0111\u00e3i \u0111\u1eb7c bi\u1ec7t', placeholder: 'COD: 5% gi\u1ea3m; Online: 10% gi\u1ea3m' })
-        )
-      ),
-      h(DS.Divider, null),
-      h('div', { style: { margin: '20px 0 24px' } },
-        secTitle('5. Khuy\u1ebfn m\u00e3i theo ph\u01b0\u01a1ng th\u1ee9c thanh to\u00e1n'),
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, padding: 14, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
-            h('div', { style: { width: 40, height: 40, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } }, h(DS.Icon, { name: 'file-check-line', size: 18, color: 'var(--color-text-muted)' })),
-            h('div', { style: { flexShrink: 0, width: 180 } }, h(DS.Select, { options: ['Visa / Mastercard', 'VNPAY', 'MoMo', 'ZaloPay', 'Tr\u1ea3 g\u00f3p 0%', 'COD'], defaultValue: 'Visa / Mastercard' })),
-            h('div', { style: { flex: 1 } }, h(DS.Input, { defaultValue: 'Gi\u1ea3m 5%, Tr\u1ea3 g\u00f3p 0% 12 th\u00e1ng', placeholder: 'Nh\u1eadp \u01b0u \u0111\u00e3i...' })),
-            h(DS.IconButton, { icon: 'trash-line', label: 'X\u00f3a', level: 'tertiary', size: 'sm' })
-          ),
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
-            h('div', { style: { width: 40, height: 40, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } }, h(DS.Icon, { name: 'phone-call-line', size: 18, color: 'var(--color-text-muted)' })),
-            h('div', { style: { flexShrink: 0, width: 180 } }, h(DS.Select, { options: ['MoMo', 'Visa / Mastercard', 'VNPAY', 'ZaloPay'], defaultValue: 'MoMo' })),
-            h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Ho\u00e0n ti\u1ec1n 1%...' })),
-            h(DS.IconButton, { icon: 'trash-line', label: 'X\u00f3a', level: 'tertiary', size: 'sm' })
-          ),
-          h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: () => this.toast('info', 'Th\u00eam PTTT', 'Th\u00eam d\u00f2ng ph\u01b0\u01a1ng th\u1ee9c thanh to\u00e1n m\u1edbi.'), style: { alignSelf: 'flex-start' } }, 'Th\u00eam ph\u01b0\u01a1ng th\u1ee9c thanh to\u00e1n')
-        )
-      ),
-      h(DS.Divider, null),
-      h('div', { style: { margin: '20px 0 24px' } },
-        h('div', { style: { background: 'var(--color-accent-bg)', border: '1px solid var(--color-accent)', borderRadius: 10, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-accent-text)', fontWeight: 700, fontSize: 13 } },
-            h(DS.Icon, { name: 'settings-01-line', size: 16, color: 'var(--color-accent-text)' }),
-            'Qu\u1ea3n l\u00fd Mapping T\u1eadp trung'
-          ),
-          h('p', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.6 } },
-            'T\u00ednh n\u0103ng c\u1ea5u h\u00ecnh Tag-based Mapping v\u00e0 Kh\u1ed1i \u201cTh\u00f4ng tin hay & B\u00e0i vi\u1ebft li\u00ean quan\u201d \u0111\u00e3 \u0111\u01b0\u1ee3c chuy\u1ec3n sang m\u1ee5c qu\u1ea3n l\u00fd t\u1eadp trung. Vi\u1ec7c n\u00e0y gi\u00fap V\u1eadn h\u00e0nh d\u1ec5 d\u00e0ng thi\u1ebft l\u1eadp ma tr\u1eadn li\u00ean k\u1ebft gi\u1eefa h\u00e0ng lo\u1ea1t SKU v\u00e0 b\u00e0i vi\u1ebft/FAQ qua c\u00e1c tag chung.'
-          ),
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 12.5, borderTop: '1px solid var(--color-border-pale)', paddingTop: 10 } },
-            h('span', { style: { color: 'var(--color-text-muted)', fontWeight: 500 } }, 'Tags li\u00ean k\u1ebft SKU (ch\u1ec9 \u0111\u1ecdc):'),
-            h(DS.Badge, { theme: 'neutral' }, r.group),
-            h(DS.Badge, { theme: 'neutral' }, r.kind),
-            h(DS.Badge, { theme: 'neutral' }, r.code)
-          )
-        )
-      ),
-     
-    );
-  }
-
-  renderSkuTabFaq(r, secTitle) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const faqGroups = [
-      { id: 'g1', name: 'C\u00e2u h\u1ecfi th\u01b0\u1eddng g\u1eb7p v\u1ec1 ' + (r.kind === 'Thi\u1ebft b\u1ecb' ? 'Thi\u1ebft b\u1ecb' : 'D\u1ecbch v\u1ee5'), items: [
-        { id: 1, q: r.kind === 'Thi\u1ebft b\u1ecb' ? 'Modem c\u00f3 h\u1ed7 tr\u1ee3 WiFi 6 kh\u00f4ng?' : 'G\u00f3i ' + r.name + ' c\u00f3 nh\u1eefng \u01b0u \u0111\u00e3i g\u00ec?', a: r.kind === 'Thi\u1ebft b\u1ecb' ? 'Modem h\u1ed7 tr\u1ee3 chu\u1ea9n WiFi 6 (802.11ax) t\u1ed1c \u0111\u1ed9 1800 Mbps.' : 'G\u00f3i c\u01b0\u1edbc bao g\u1ed3m t\u1ea5t c\u1ea3 \u01b0u \u0111\u00e3i theo ch\u01b0\u01a1ng tr\u00ecnh hi\u1ec7n h\u00e0nh c\u1ee7a FPT.', synced: true, updatedAt: '14/05/2026', updatedBy: 'Admin User' },
-        { id: 2, q: r.kind === 'Thi\u1ebft b\u1ecb' ? 'B\u1ea3o h\u00e0nh bao l\u00e2u?' : 'Th\u1eddi gian l\u1eafp \u0111\u1eb7t m\u1ea5t bao l\u00e2u?', a: r.kind === 'Thi\u1ebft b\u1ecb' ? 'Modem \u0111\u01b0\u1ee3c b\u1ea3o h\u00e0nh 24 th\u00e1ng t\u1ea1i trung t\u00e2m b\u1ea3o h\u00e0nh FPT.' : 'Th\u1eddi gian l\u1eafp \u0111\u1eb7t th\u00f4ng th\u01b0\u1eddng t\u1eeb 3-5 ng\u00e0y l\u00e0m vi\u1ec7c.', synced: false, updatedAt: '10/05/2026', updatedBy: 'Admin User' }
-      ]},
-      { id: 'g2', name: 'Kh\u1eafc ph\u1ee5c s\u1ef1 c\u1ed1', items: [
-        { id: 3, q: r.kind === 'Thi\u1ebft b\u1ecb' ? 'WiFi b\u1ecb m\u1ea5t k\u1ebft n\u1ed1i th\u1ec9nh tho\u1ea3ng, ph\u1ea3i l\u00e0m g\u00ec?' : 'T\u00f4i mu\u1ed1n n\u00e2ng/h\u1ea1 g\u00f3i sau khi \u0111\u0103ng k\u00fd?', a: r.kind === 'Thi\u1ebft b\u1ecb' ? 'Kh\u1edfi \u0111\u1ed9ng l\u1ea1i modem b\u1eb1ng c\u00e1ch r\u00fat ngu\u1ed3n 30 gi\u00e2y r\u1ed3i c\u1eafm l\u1ea1i. Li\u00ean h\u1ec7 hotline 19006600 n\u1ebfu c\u1ea7n.' : 'Li\u00ean h\u1ec7 hotline 19006600 ho\u1eb7c App HiFPT \u0111\u1ec3 thay \u0111\u1ed5i g\u00f3i c\u01b0\u1edbc.', synced: true, updatedAt: '08/05/2026', updatedBy: '\u0110\u1ed7 Li\u00ean Th\u1ea3o' }
-      ]}
-    ];
-    const libraryFaqs = [
-      { cat: 'C\u00e2u h\u1ecfi v\u1ec1 Thi\u1ebft b\u1ecb', items: [
-        { id: 'f1', q: 'C\u00e1ch k\u1ebft n\u1ed1i modem v\u1edbi thi\u1ebft b\u1ecb kh\u00e1c?', a: 'K\u1ebft n\u1ed1i qua WiFi ho\u1eb7c d\u00e2y LAN...' },
-        { id: 'f2', q: 'L\u00e0m sao \u0111\u1ed5i m\u1eadt kh\u1ea9u WiFi?', a: 'Truy c\u1eadp 192.168.1.1 tr\u00ean tr\u00ecnh duy\u1ec7t...' }
-      ]},
-      { cat: 'Thanh to\u00e1n c\u01b0\u1edbc', items: [
-        { id: 'f3', q: 'L\u00e0m th\u1ebf n\u00e0o \u0111\u1ec3 thanh to\u00e1n c\u01b0\u1edbc online?', a: 'Thanh to\u00e1n qua App FPT Play, MoMo, ZaloPay...' }
-      ]}
-    ];
-    const faqModal = this.state.skuFaqModal;
-    const faqItem = (item, groupLen, idx) => h('div', { key: item.id, style: { borderBottom: idx < groupLen - 1 ? '1px solid var(--color-border-pale)' : 'none' } },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--color-surface)' } },
-        h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)', minWidth: 18, textAlign: 'center', fontWeight: 600 } }, idx + 1),
-        h('div', { style: { flex: 1 } }, h(DS.Input, { defaultValue: item.q })),
-        h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, color: item.synced ? 'var(--color-success-text)' : 'var(--color-warning-text)', whiteSpace: 'nowrap', fontWeight: 600, flexShrink: 0 } },
-          h(DS.Icon, { name: item.synced ? 'check-circle-line' : 'clock-line', size: 13 }),
-          item.synced ? '\u0110\u00e3 sync' : 'Ch\u01b0a l\u01b0u'
-        ),
-        h(DS.IconButton, { icon: 'trash-line', label: 'G\u1ee1', level: 'tertiary', size: 'sm', onClick: () => this.toast('neutral', '\u0110\u00e3 g\u1ee1 FAQ', 'C\u00e2u h\u1ecfi \u0111\u00e3 \u0111\u01b0\u1ee3c g\u1ee1 kh\u1ecfi SKU n\u00e0y.') })
-      ),
-      h('div', { style: { padding: '0 16px 12px 44px' } },
-        h(DS.Textarea, { defaultValue: item.a, rows: 2 }),
-        h('div', { style: { fontSize: 10.5, color: 'var(--color-text-muted)', marginTop: 4 } }, 'C\u1eadp nh\u1eadt l\u1ea7n cu\u1ed1i: ' + item.updatedAt + ' \u00b7 ' + item.updatedBy)
       )
     );
+  }
+  renderPkgVideo(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const items = this.state.pkgForm.videos || [];
+    const update = (i, key, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, videos: s.pkgForm.videos.map((it, j) => j === i ? { ...it, [key]: val } : it) } }));
+    const remove = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, videos: s.pkgForm.videos.filter((_, j) => j !== i) } }));
+    const add = () => {
+      if (items.length >= 3) { this.toast('warning', 'Đã đạt giới hạn', 'Tối đa 3 video.'); return; }
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, videos: [...s.pkgForm.videos, { id: Date.now(), title: '', url: '' }] } }));
+    };
     return h('div', null,
-      h('div', { style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 } },
-        h('div', null,
-          h('div', { style: { fontSize: 14, fontWeight: 700, marginBottom: 4 } }, 'FAQ \u0111\u00ednh k\u00e8m SKU'),
-          h('div', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, 'C\u00e2u h\u1ecfi th\u01b0\u1eddng g\u1eb7p hi\u1ec3n th\u1ecb tr\u00ean trang s\u1ea3n ph\u1ea9m c\u1ee7a SKU n\u00e0y')
-        ),
-        h(DS.Badge, { theme: 'success' }, '\u0110\u1ed3ng b\u1ed9 2 chi\u1ec1u v\u1edbi Qu\u1ea3n l\u00fd B\u00e0i vi\u1ebft & FAQ \u2014 ch\u1ec9nh s\u1eeda \u1edf \u0111\u00e2y s\u1ebd c\u1eadp nh\u1eadt th\u01b0 vi\u1ec7n')
+      h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
+        h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Video sản phẩm'),
+        h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, items.length + ' / 3')
       ),
-      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 14 } },
-        faqGroups.map(group => h('div', { key: group.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)' } },
-            h(DS.Icon, { name: 'file-doc-line', size: 16, color: 'var(--color-text-muted)' }),
-            h('span', { style: { fontWeight: 600, fontSize: 13, flex: 1 } }, group.name),
-            h('span', { style: { fontSize: 11, color: 'var(--color-text-muted)', background: 'var(--color-surface)', padding: '2px 8px', borderRadius: 10 } }, group.items.length + ' c\u00e2u h\u1ecfi'),
-            h('a', { href: '#', onClick: e => { e.preventDefault(); this.toast('info', 'M\u1edf th\u01b0 vi\u1ec7n', 'Chuy\u1ec3n \u0111\u1ebfn module Qu\u1ea3n l\u00fd FAQ.'); }, style: { fontSize: 11, color: 'var(--color-accent-text)', textDecoration: 'none', fontWeight: 600 } }, '\u2197 M\u1edf th\u01b0 vi\u1ec7n')
+      h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Nhúng URL (YouTube/Vimeo) hoặc tải file .mp4 dưới 20MB'),
+      items.length === 0 ? h('div', { style: { padding: 20, textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10, marginBottom: 10 } }, 'Chưa có video nào.') : null,
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 10 } },
+        items.map((it, i) => h('div', { key: it.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
+          h('div', { style: { display: 'flex', gap: 10, alignItems: 'center' } },
+            h(DS.Icon, { name: 'upload-cloud-line', size: 18, color: 'var(--color-text-muted)' }),
+            h('div', { style: { flex: 1 } }, h(DS.Input, { value: it.url, placeholder: 'URL video (YouTube/Vimeo) hoặc tải .mp4…', onChange: e => update(i, 'url', e && e.target ? e.target.value : e) })),
+            h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => remove(i) })
           ),
-          group.items.map((item, i) => faqItem(item, group.items.length, i))
+          h(DS.Input, { value: it.title, placeholder: 'Tiêu đề hiển thị của video…', onChange: e => update(i, 'title', e && e.target ? e.target.value : e) }),
+          this.uploadBox('Thumbnail video (tuỳ chọn)', 'JPG / PNG')
         ))
       ),
-      h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
-        h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', onClick: () => this.setState({ skuFaqModal: true }) }, 'Th\u00eam c\u00e2u h\u1ecfi t\u1eeb th\u01b0 vi\u1ec7n'),
-        h(DS.Button, { level: 'tertiary', leadingIcon: 'edit-01-line', onClick: () => this.toast('info', 'T\u1ea1o c\u00e2u h\u1ecfi m\u1edbi', 'T\u00ednh n\u0103ng \u0111ang ph\u00e1t tri\u1ec3n.') }, 'T\u1ea1o c\u00e2u h\u1ecfi m\u1edbi & th\u00eam v\u00e0o th\u01b0 vi\u1ec7n')
-      ),
-      h(DS.Modal, { open: faqModal, onClose: () => this.setState({ skuFaqModal: false }), title: 'Th\u00eam c\u00e2u h\u1ecfi t\u1eeb th\u01b0 vi\u1ec7n FAQ', description: 'Ch\u1ecdn c\u00e2u h\u1ecfi theo danh m\u1ee5c \u0111\u1ec3 g\u1eafn v\u00e0o SKU n\u00e0y' },
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-          h(DS.Input, { placeholder: 'T\u00ecm c\u00e2u h\u1ecfi theo t\u1eeb kho\u00e1...', leadingIcon: 'search-medium-line' }),
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, maxHeight: 340, overflowY: 'auto' } },
-            libraryFaqs.map(cat => h('div', { key: cat.cat },
-              h('div', { style: { fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--color-text-muted)', fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 } },
-                h(DS.Icon, { name: 'file-doc-line', size: 13 }), cat.cat
-              ),
-              h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                cat.items.map(item => h('label', { key: item.id, style: { display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--color-border)', cursor: 'pointer', background: 'var(--color-surface)' } },
-                  h(DS.Checkbox, { label: '' }),
-                  h('div', { style: { flex: 1 } },
-                    h('div', { style: { fontSize: 13, fontWeight: 500 } }, item.q),
-                    h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 } }, item.a)
-                  )
-                ))
-              )
-            ))
+      h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add, disabled: items.length >= 3 }, '+ Thêm video')
+    );
+  }
+  renderSkuEditorAttrs(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
+      this.renderSkuEditorInfo(r),
+      h(DS.Divider, null),
+      this.renderPkgAttributes(r),
+      h(DS.Divider, null), this.renderPkgBundled(r),
+      h(DS.Divider, { label: 'ĐẶC QUYỀN' }), this.renderPkgPriv(r),
+      h(DS.Divider, null), this.renderPkgWebSettings(r),
+      h(DS.Divider, { label: 'HÌNH ẢNH SẢN PHẨM & BANNER' }), this.renderPkgImages(r),
+      h(DS.Divider, null), this.renderPkgVideo(r)
+    );
+  }
+
+  // ---------- Tab 2: Quản lý Content ----------
+  renderSkuEditorContent(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const promoList = this.state.pkgForm.promoList || [];
+    const promoIcon = this.state.pkgPromoIcon !== undefined ? this.state.pkgPromoIcon : (r ? r.promoIcon : this.PROMO_ICONS()[0]);
+    const pickPromoIcon = () => this.openModal({
+      kind: 'form', title: 'Chọn icon Quà tặng',
+      render: () => h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginTop: 4, width: 220, maxWidth: '100%' } },
+        this.PROMO_ICONS().map(name => h('button', { key: name, type: 'button', onClick: () => { this.setState({ pkgPromoIcon: name }); this.closeModal(); },
+          style: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 8, border: '1px solid var(--color-border)', background: promoIcon === name ? 'var(--color-accent-bg)' : 'var(--color-surface)', cursor: 'pointer' } },
+          h(DS.Icon, { name, size: 18, color: promoIcon === name ? 'var(--color-accent)' : 'var(--color-text-muted)' })
+        ))
+      )
+    });
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 24 } },
+      h('div', null,
+        h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 12 } }, 'Mô tả sản phẩm'),
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
+          this.field('Mô tả gói bán', h(DS.Textarea, { defaultValue: r ? r.pkgDesc : '', rows: 4, placeholder: 'Mỗi dòng là 1 gạch đầu dòng — VD:\n150Mbps ổn định cả giờ cao điểm\nModem Wi-Fi 6 miễn phí' })),
+          h('div', null,
+            h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả ngắn'),
+            h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Hiển thị tóm tắt trên danh sách gói / thẻ sản phẩm.'),
+            this.richTextBox(r ? r.shortDesc : '', 5, 'Nhập mô tả ngắn…')
           ),
-          h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 14, borderTop: '1px solid var(--color-border)' } },
-            h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, '0 c\u00e2u h\u1ecfi \u0111\u01b0\u1ee3c ch\u1ecdn th\u00eam'),
-            h('div', { style: { display: 'flex', gap: 10 } },
-              h(DS.Button, { level: 'tertiary', onClick: () => this.setState({ skuFaqModal: false }) }, 'H\u1ee7y'),
-              h(DS.Button, { level: 'primary', onClick: () => { this.setState({ skuFaqModal: false }); this.toast('success', '\u0110\u00e3 th\u00eam FAQ', 'C\u00e2u h\u1ecfi \u0111\u00e3 \u0111\u01b0\u1ee3c g\u1eafn v\u00e0o SKU n\u00e0y.'); } }, 'Th\u00eam v\u00e0o SKU \u2192')
-            )
+          h('div', null,
+            h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả dài'),
+            h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Nội dung chi tiết hiển thị trên trang chi tiết gói bán.'),
+            this.richTextBox(r ? r.longDesc : '', 12, 'Nhập nội dung mô tả chi tiết…')
           )
+        )
+      ),
+      h(DS.Divider, null),
+      h('div', null,
+        h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 12 } }, 'Ưu đãi sản phẩm'),
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+          this.field('Icon Quà tặng Frontend', h('button', { type: 'button', onClick: pickPromoIcon, style: { width: 44, height: 44, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-accent-bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+            h(DS.Icon, { name: promoIcon || this.PROMO_ICONS()[0], size: 20, color: 'var(--color-accent)' })
+          )),
+          this.field('Danh sách Ưu đãi & Quà tặng', h(DS.Textarea, {
+            defaultValue: promoList.join('\n'), rows: 5, placeholder: 'Mỗi dòng 1 ưu đãi — VD:\nTặng modem Wi-Fi 6 trị giá 1.200.000đ\nMiễn phí lắp đặt toàn quốc',
+            onBlur: e => this.setState(s => ({ pkgForm: { ...s.pkgForm, promoList: (e.target ? e.target.value : e).split('\n').map(x => x.trim()).filter(Boolean) } }))
+          }))
         )
       )
     );
   }
+
+  // ---------- Tab 3: FAQ ----------
+  renderSkuEditorFaq(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const faqIds = this.state.pkgForm.faqIds || [];
+    const drafts = this.state.pkgFaqDrafts || [];
+    const allFaqs = this.FAQS().concat(drafts);
+    const selected = faqIds.map(id => allFaqs.find(f => f.id === id)).filter(Boolean);
+    const remove = (id) => this.setState(s => ({ pkgForm: { ...s.pkgForm, faqIds: s.pkgForm.faqIds.filter(x => x !== id) } }));
+    const move = (from, to) => {
+      if (to < 0 || to >= faqIds.length) return;
+      const next = faqIds.slice(); const [id] = next.splice(from, 1); next.splice(to, 0, id);
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, faqIds: next } }));
+    };
+    const openPicker = () => {
+      this.setState({ pkgFaqPickerSel: [...faqIds], pkgFaqPickerQ: '', pkgFaqCreating: false, pkgFaqNewQ: '', pkgFaqNewA: '' });
+      this.openModal({ kind: 'form', title: 'Đính kèm FAQ từ thư viện', description: 'Chọn câu hỏi để hiển thị trên trang gói bán', render: () => this.pkgFaqPickerModal() });
+    };
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+      h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 } },
+        h('div', null,
+          h('div', { style: { fontSize: 13, fontWeight: 700 } }, 'FAQ đính kèm'),
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Câu hỏi thường gặp hiển thị trên trang gói bán · kéo thả để sắp xếp')
+        ),
+        h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: openPicker }, 'Chọn từ Ngân hàng FAQ')
+      ),
+      selected.length === 0
+        ? h('div', { style: { padding: 24, textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10 } }, 'Chưa có câu hỏi nào được đính kèm.')
+        : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+            selected.map((f, i) => h('div', {
+                key: f.id, draggable: true,
+                onDragStart: e => { e.dataTransfer.effectAllowed = 'move'; this.setState({ pkgFaqDragIdx: i }); },
+                onDragOver: e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.setState({ pkgFaqDragOverIdx: i }); },
+                onDragLeave: () => this.setState({ pkgFaqDragOverIdx: undefined }),
+                onDrop: e => { e.preventDefault(); const from = this.state.pkgFaqDragIdx; if (from !== undefined && from !== i) move(from, i); this.setState({ pkgFaqDragIdx: undefined, pkgFaqDragOverIdx: undefined }); },
+                onDragEnd: () => this.setState({ pkgFaqDragIdx: undefined, pkgFaqDragOverIdx: undefined }),
+                style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1px solid ' + (this.state.pkgFaqDragOverIdx === i ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 10, background: this.state.pkgFaqDragOverIdx === i ? 'var(--color-accent-bg)' : 'transparent', opacity: this.state.pkgFaqDragIdx === i ? 0.4 : 1, transition: 'all .12s' }
+              },
+              h(DS.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
+              h('div', { style: { flex: 1 } },
+                h('div', { style: { fontSize: 13, fontWeight: 600 } }, f.q),
+                h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 } }, f.a)
+              ),
+              h(DS.IconButton, { icon: 'x-circle-line', label: 'Gỡ', level: 'tertiary', size: 'sm', onClick: () => remove(f.id) })
+            ))
+          )
+    );
+  }
+  pkgFaqPickerModal() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const q = (this.state.pkgFaqPickerQ || '').toLowerCase();
+    const sel = this.state.pkgFaqPickerSel || [];
+    const drafts = this.state.pkgFaqDrafts || [];
+    const all = this.FAQS().concat(drafts).filter(f => !q || (f.q + ' ' + f.cat).toLowerCase().includes(q));
+    const cats = Array.from(new Set(all.map(f => f.cat)));
+    const toggle = (id) => this.setState(s => ({ pkgFaqPickerSel: (s.pkgFaqPickerSel || []).includes(id) ? s.pkgFaqPickerSel.filter(x => x !== id) : [...(s.pkgFaqPickerSel || []), id] }));
+    const creating = !!this.state.pkgFaqCreating;
+    const createNew = () => {
+      const qtext = (this.state.pkgFaqNewQ || '').trim(); const atext = (this.state.pkgFaqNewA || '').trim();
+      if (!qtext || !atext) { this.toast('warning', 'Thiếu thông tin', 'Nhập đầy đủ câu hỏi và câu trả lời.'); return; }
+      const id = 'draft-' + Date.now();
+      const draft = { id, cat: 'Câu hỏi mới', q: qtext, a: atext, lang: 'Tiếng Việt', order: 1, status: 'active' };
+      this.setState(s => ({ pkgFaqDrafts: [...(s.pkgFaqDrafts || []), draft], pkgFaqPickerSel: [...(s.pkgFaqPickerSel || []), id], pkgFaqCreating: false, pkgFaqNewQ: '', pkgFaqNewA: '' }));
+      this.toast('success', 'Đã thêm vào thư viện FAQ', 'Câu hỏi mới đã được tạo và chọn.');
+    };
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4, width: 520, maxWidth: '100%' } },
+      h('div', { style: { display: 'flex', gap: 8 } },
+        h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Tìm câu hỏi theo từ khoá…', leadingIcon: 'search-medium-line', value: this.state.pkgFaqPickerQ || '', onChange: e => this.setState({ pkgFaqPickerQ: e && e.target ? e.target.value : e }) })),
+        h(DS.Button, { level: 'secondary', leadingIcon: 'edit-01-line', size: 'sm', onClick: () => this.setState({ pkgFaqCreating: !creating }) }, 'Tạo câu hỏi mới')
+      ),
+      creating && h('div', { style: { border: '1px dashed var(--color-accent)', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--color-accent-bg)' } },
+        h(DS.Input, { placeholder: 'Nhập câu hỏi mới…', value: this.state.pkgFaqNewQ || '', onChange: e => this.setState({ pkgFaqNewQ: e && e.target ? e.target.value : e }) }),
+        h(DS.Textarea, { placeholder: 'Nhập câu trả lời…', rows: 2, value: this.state.pkgFaqNewA || '', onChange: e => this.setState({ pkgFaqNewA: e && e.target ? e.target.value : e }) }),
+        h(DS.Button, { level: 'primary', size: 'sm', onClick: createNew, style: { alignSelf: 'flex-start' } }, 'Thêm vào thư viện & chọn')
+      ),
+      h('div', { className: 'fpt-scroll', style: { maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 } },
+        cats.length === 0 ? h('div', { style: { textAlign: 'center', padding: 32, color: 'var(--color-text-muted)', fontSize: 13 } }, 'Không tìm thấy câu hỏi') :
+        cats.map(cat => h('div', { key: cat },
+          h('div', { style: { fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--color-text-muted)', fontWeight: 700, marginBottom: 8 } }, cat),
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+            all.filter(f => f.cat === cat).map(f => h('label', { key: f.id, onClick: () => toggle(f.id), style: { display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderRadius: 8, border: sel.includes(f.id) ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)', background: sel.includes(f.id) ? 'var(--color-accent-bg)' : 'var(--color-surface)', cursor: 'pointer' } },
+              h(DS.Checkbox, { checked: sel.includes(f.id), onChange: () => toggle(f.id), label: '' }),
+              h('div', { style: { flex: 1 } },
+                h('div', { style: { fontSize: 13, fontWeight: 500 } }, f.q),
+                h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 } }, f.a)
+              )
+            ))
+          )
+        ))
+      ),
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTop: '1px solid var(--color-border)' } },
+        h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, sel.length + ' câu hỏi được chọn'),
+        h('div', { style: { display: 'flex', gap: 10 } },
+          h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy'),
+          h(DS.Button, { level: 'primary', onClick: () => { this.setState(s => ({ pkgForm: { ...s.pkgForm, faqIds: [...sel] } })); this.closeModal(); this.toast('success', 'Đã đính kèm FAQ', sel.length + ' câu hỏi đã được gắn vào gói bán.'); } }, 'Xác nhận (' + sel.length + ')')
+        )
+      )
+    );
+  }
+
 
     // ---------- Checkout module ----------
   renderCheckout() {
@@ -8615,7 +8784,7 @@ class Component extends DCLogic {
 
   // ===== RBAC matrix =====
   RBAC() { return [
-    { group: 'QUẢN LÝ SẢN PHẨM', modules: ['Quản lý sản phẩm', 'Thông tin checkout'] },
+    { group: 'QUẢN LÝ SẢN PHẨM', modules: ['Nội dung gói bán', 'Thông tin checkout'] },
     { group: 'CẤU TRÚC TRANG', modules: ['Quản lý Trang (Pages)', 'Quản lý Sections', 'Quản lý Blocks', 'Landing Page (LDP)', 'Quản lý Menu'] },
     { group: 'MEDIA & QUẢNG BÁ', modules: ['Quản lý Banner', 'Quản lý Popup'] },
     { group: 'BÀI VIẾT & NỘI DUNG', modules: ['Quản lý Tin tức', 'Quản lý FAQ', 'Cấu hình Thông tin hay'] },
