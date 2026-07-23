@@ -618,7 +618,9 @@ class Component extends DCLogic {
     return [
       { id: 'INT-GIGA__fptvn', skuCode: 'INT-GIGA', channel: 'fptvn', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet Giga - Siêu tốc độ cho gia đình', slug: 'internet-giga',
-        tags: ['bestseller', 'recommended'], bundledFee: 'Miễn phí lắp đặt · Phí duy trì dịch vụ thêm 20.000đ/tháng',
+        tags: ['bestseller', 'recommended'], tagText: 'HOT', tagColor: '#ef4444', tagTextColor: '#ffffff',
+        priceTooltip: 'Mức giá bao gồm VAT và có thể được thay đổi theo khu vực và thời điểm. Giá chưa bao gồm phí thuê thiết bị đầu cuối, phí thu tiền tận nhà và các dịch vụ gia tăng khác.',
+        bundledFee: 'Miễn phí lắp đặt · Phí duy trì dịch vụ thêm 20.000đ/tháng',
         attributes: [
           { icon: 'zap-line', name: 'Tốc độ tải xuống', value: '150 Mbps', featured: true },
           { icon: 'globe-01-line', name: 'Tốc độ tải lên', value: '150 Mbps', featured: true },
@@ -638,7 +640,7 @@ class Component extends DCLogic {
         ],
         pkgDesc: '150Mbps ổn định cả giờ cao điểm\nModem Wi-Fi 6 miễn phí\nLắp đặt trong 24h\nBảo hành thiết bị trọn gói',
         shortDesc: 'Gói Internet Giga mang đến tốc độ 150Mbps ổn định, phù hợp gia đình 3-4 thành viên dùng nhiều thiết bị cùng lúc.',
-        longDesc: 'Internet Giga là gói cước cáp quang phổ biến nhất của FPT Telecom, mang đến tốc độ tải xuống 150Mbps ổn định cả giờ cao điểm.\n\nGói cước đi kèm modem Wi-Fi 6 mới nhất, hỗ trợ phủ sóng toàn bộ không gian sống và tối ưu cho nhiều thiết bị kết nối cùng lúc.',
+        longDesc: 'Tốc độ 150Mbps ổn định: Duy trì tốc độ tải xuống/tải lên 150Mbps kể cả vào giờ cao điểm, đáp ứng nhu cầu gia đình 3-4 thành viên dùng nhiều thiết bị cùng lúc.\nModem Wi-Fi 6 miễn phí: Trang bị modem Wi-Fi 6 đời mới, phủ sóng ổn định toàn bộ không gian sống và tối ưu cho nhiều thiết bị kết nối đồng thời.\nCam kết chất lượng dịch vụ 99.5%: Cam kết SLA uptime 99.5%, đảm bảo đường truyền luôn sẵn sàng cho công việc và giải trí.\nHỗ trợ kỹ thuật 24/7: Đội ngũ kỹ thuật viên FPT Telecom trực hỗ trợ mọi lúc, xử lý sự cố nhanh chóng.',
         promoIcon: 'star-01-line',
         promoList: ['Tặng modem Wi-Fi 6 trị giá 1.200.000đ', 'Miễn phí lắp đặt toàn quốc', 'Giảm 5% khi thanh toán online qua Visa/Mastercard/MoMo'],
         gallery: [{ id: 1, alt: 'Modem Wi-Fi 6 đi kèm gói Internet Giga' }, { id: 2, alt: 'Gia đình sử dụng Internet Giga' }, { id: 3, alt: 'Kỹ thuật viên lắp đặt Internet Giga' }],
@@ -647,14 +649,20 @@ class Component extends DCLogic {
         createdAt: '02/05/2026 09:10', createdBy: 'Admin User', updatedAt: '20/05/2026 13:40', updatedBy: '24092 - Nguyễn' },
       { id: 'INT-GIGA__hifpt', skuCode: 'INT-GIGA', channel: 'hifpt', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet Giga', slug: 'internet-giga',
-        tags: ['bestseller'], bundledFee: '', attributes: [], bundledProducts: [{ name: 'Modem Wi-Fi 6', mode: 'full', included: true }],
+        tags: ['bestseller'], tagText: 'HOT', tagColor: '#ef4444', tagTextColor: '#ffffff',
+        priceTooltip: 'Mức giá bao gồm VAT và có thể được thay đổi theo khu vực và thời điểm. Giá chưa bao gồm phí thuê thiết bị đầu cuối, phí thu tiền tận nhà và các dịch vụ gia tăng khác.',
+        bundledFee: '', attributes: [], bundledProducts: [{ name: 'Modem Wi-Fi 6', mode: 'full', included: true }],
         privTitle: 'Đặc quyền Internet Giga', privileges: ['Tốc độ vượt trội – Tốc độ 150Mbps ổn định.'],
         pkgDesc: '150Mbps ổn định\nModem Wi-Fi 6 miễn phí',
-        shortDesc: 'Gói Internet Giga tốc độ 150Mbps.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [1], midBanners: [],
+        shortDesc: 'Gói Internet Giga tốc độ 150Mbps.',
+        longDesc: 'Tốc độ 150Mbps ổn định: Duy trì tốc độ 150Mbps ổn định, phù hợp nhu cầu gia đình sử dụng hàng ngày.\nModem Wi-Fi 6 miễn phí: Trang bị modem Wi-Fi 6 đi kèm, không phát sinh phí thuê thiết bị.',
+        promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [1], midBanners: [],
         createdAt: '02/05/2026 09:10', createdBy: 'Admin User', updatedAt: '18/05/2026 10:05', updatedBy: 'Admin User' },
       { id: 'INT-SKY__fptvn', skuCode: 'INT-SKY', channel: 'fptvn', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet Sky - Tốc độ Gigabit', slug: 'internet-sky',
-        tags: ['new'], bundledFee: '', attributes: [
+        tags: ['new'], tagText: 'MỚI', tagColor: '#10b981', tagTextColor: '#ffffff',
+        priceTooltip: 'Mức giá bao gồm VAT và có thể được thay đổi theo khu vực và thời điểm. Giá chưa bao gồm phí thuê thiết bị đầu cuối, phí thu tiền tận nhà và các dịch vụ gia tăng khác.',
+        bundledFee: '', attributes: [
           { icon: 'zap-line', name: 'Tốc độ tải xuống', value: '1 Gbps', featured: true },
           { icon: 'star-01-line', name: 'Ưu tiên băng thông', value: 'Có', featured: false },
         ], bundledProducts: [{ name: 'Modem Wi-Fi 6', mode: 'full', included: true }, { name: 'FPT Play VIP', mode: 'click', included: false }],
@@ -664,23 +672,32 @@ class Component extends DCLogic {
           'Ưu tiên băng thông – Ưu tiên băng thông giờ cao điểm.',
         ],
         pkgDesc: 'Tốc độ Gigabit 1Gbps\nƯu tiên băng thông giờ cao điểm',
-        shortDesc: 'Internet Sky mang tốc độ Gigabit cho trải nghiệm mượt mà.', longDesc: '', promoIcon: 'zap-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        shortDesc: 'Internet Sky mang tốc độ Gigabit cho trải nghiệm mượt mà.',
+        longDesc: 'Tốc độ Gigabit 1Gbps: Tốc độ tải xuống lên đến 1Gbps, đáp ứng nhu cầu streaming 4K, chơi game và làm việc trực tuyến không giật lag.\nƯu tiên băng thông giờ cao điểm: Luôn duy trì tốc độ ổn định ngay cả vào khung giờ sử dụng cao điểm trong ngày.',
+        promoIcon: 'zap-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '28/04/2026 08:30', createdBy: 'FI-25128', updatedAt: '20/05/2026 14:00', updatedBy: '24092 - Nguyễn' },
       { id: 'INT-SKY__tdw', skuCode: 'INT-SKY', channel: 'tdw', status: 'inactive', packageType: 'Dịch vụ',
         displayName: 'Internet Sky', slug: 'internet-sky',
-        tags: [], bundledFee: '', attributes: [], bundledProducts: [], privTitle: '', privileges: [],
+        tags: [], tagText: '', tagColor: '#ef4444', tagTextColor: '#ffffff', priceTooltip: '',
+        bundledFee: '', attributes: [], bundledProducts: [], privTitle: '', privileges: [],
         pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '28/04/2026 08:31', createdBy: 'FI-25128', updatedAt: '28/04/2026 08:31', updatedBy: 'FI-25128' },
       { id: 'INT-META__fptvn', skuCode: 'INT-META', channel: 'fptvn', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet Meta - Chuẩn Wi-Fi 6E', slug: 'internet-meta',
-        tags: ['new', 'recommended'], bundledFee: '', attributes: [{ icon: 'stars-01-line', name: 'Chuẩn Wi-Fi', value: 'Wi-Fi 6E', featured: true }], bundledProducts: [{ name: 'Thiết bị Wi-Fi 6E', mode: 'full', included: true }],
+        tags: ['new', 'recommended'], tagText: 'MỚI', tagColor: '#10b981', tagTextColor: '#ffffff',
+        priceTooltip: 'Mức giá bao gồm VAT và có thể được thay đổi theo khu vực và thời điểm. Giá chưa bao gồm phí thuê thiết bị đầu cuối, phí thu tiền tận nhà và các dịch vụ gia tăng khác.',
+        bundledFee: '', attributes: [{ icon: 'stars-01-line', name: 'Chuẩn Wi-Fi', value: 'Wi-Fi 6E', featured: true }], bundledProducts: [{ name: 'Thiết bị Wi-Fi 6E', mode: 'full', included: true }],
         privTitle: 'Đặc quyền Internet Meta', privileges: ['Công nghệ mới nhất – Chuẩn Wi-Fi 6E băng tần 6GHz.'],
         pkgDesc: 'Chuẩn Wi-Fi 6E băng tần 6GHz\nThiết bị đi kèm miễn phí',
-        shortDesc: 'Internet Meta tích hợp thiết bị Wi-Fi 6E thế hệ mới.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        shortDesc: 'Internet Meta tích hợp thiết bị Wi-Fi 6E thế hệ mới.',
+        longDesc: 'Chuẩn Wi-Fi 6E băng tần 6GHz: Công nghệ Wi-Fi 6E mới nhất với băng tần 6GHz, giảm nhiễu sóng và tăng tốc độ kết nối vượt trội.\nThiết bị đi kèm miễn phí: Trang bị thiết bị Wi-Fi 6E chính hãng miễn phí, không phát sinh chi phí thuê thiết bị hàng tháng.',
+        promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '19/05/2026 09:00', createdBy: 'Admin User', updatedAt: '19/05/2026 09:15', updatedBy: 'Admin User' },
       { id: 'CAM-IQ3__fptvn', skuCode: 'CAM-IQ3', channel: 'fptvn', status: 'active', packageType: 'Thiết bị',
         displayName: 'FPT Camera IQ3 - An ninh thông minh', slug: 'fpt-camera-iq3',
-        tags: ['bestseller'], bundledFee: 'Tặng kèm thẻ nhớ 32GB',
+        tags: ['bestseller'], tagText: 'HOT', tagColor: '#ef4444', tagTextColor: '#ffffff',
+        priceTooltip: 'Giá đã bao gồm VAT, chưa bao gồm phí lắp đặt (nếu có) và có thể thay đổi theo khu vực.',
+        bundledFee: 'Tặng kèm thẻ nhớ 32GB',
         attributes: [
           { icon: 'image-line', name: 'Độ phân giải', value: '2MP (1920x1080)', featured: true },
           { icon: 'eye-line', name: 'Góc quan sát', value: '110°', featured: true },
@@ -702,7 +719,8 @@ class Component extends DCLogic {
         createdAt: '20/05/2026 09:30', createdBy: 'FI-25128', updatedAt: '20/05/2026 09:30', updatedBy: 'FI-25128' },
       { id: 'CAM-IQ3__hifpt', skuCode: 'CAM-IQ3', channel: 'hifpt', status: 'active', packageType: 'Thiết bị',
         displayName: 'FPT Camera IQ3', slug: 'fpt-camera-iq3',
-        tags: [], bundledFee: '',
+        tags: [], tagText: '', tagColor: '#ef4444', tagTextColor: '#ffffff', priceTooltip: '',
+        bundledFee: '',
         attributes: [
           { icon: 'image-line', name: 'Độ phân giải', value: '2MP (1920x1080)', featured: true },
           { icon: 'eye-line', name: 'Góc quan sát', value: '110°', featured: true },
@@ -720,7 +738,9 @@ class Component extends DCLogic {
         createdAt: '20/05/2026 09:31', createdBy: 'FI-25128', updatedAt: '20/05/2026 09:31', updatedBy: 'FI-25128' },
       { id: 'SA-SMAX__fptvn', skuCode: 'SA-SMAX', channel: 'fptvn', status: 'active', packageType: 'SA',
         displayName: 'FPT Play SMax - Giải trí không giới hạn', slug: 'fpt-play-smax',
-        tags: ['recommended'], bundledFee: '',
+        tags: ['recommended'], tagText: 'ĐỀ XUẤT', tagColor: '#3b82f6', tagTextColor: '#ffffff',
+        priceTooltip: 'Mức giá bao gồm VAT và có thể được thay đổi theo khu vực và thời điểm. Giá chưa bao gồm phí thuê thiết bị đầu cuối, phí thu tiền tận nhà và các dịch vụ gia tăng khác.',
+        bundledFee: '',
         attributes: [
           { icon: 'stars-01-line', name: 'Kho nội dung', value: 'HBO, K+, FPT Play, VTV Cab', featured: true },
           { icon: 'user-circle-line', name: 'Số thiết bị xem cùng lúc', value: 'Tối đa 2 thiết bị', featured: false },
@@ -737,11 +757,14 @@ class Component extends DCLogic {
           'Không quảng cáo – Trải nghiệm xem phim liền mạch, không gián đoạn',
         ],
         pkgDesc: 'Kho nội dung HBO, K+, FPT Play\nTặng kèm FPT Play Box',
-        shortDesc: 'FPT Play SMax - trải nghiệm giải trí đỉnh cao.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        shortDesc: 'FPT Play SMax - trải nghiệm giải trí đỉnh cao.',
+        longDesc: 'Kho nội dung khổng lồ: Trọn bộ kênh HBO, K+, FPT Play và VTV Cab cùng hàng ngàn phim, show giải trí bản quyền.\nXem đa thiết bị: Đăng nhập cùng lúc trên tối đa 2 thiết bị — Smart TV, điện thoại, máy tính bảng.\nChất lượng Full HD/4K: Trải nghiệm hình ảnh sắc nét Full HD hoặc 4K tùy nội dung, không quảng cáo gián đoạn.',
+        promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '18/05/2026 15:30', createdBy: '24092 - Nguyễn', updatedAt: '18/05/2026 15:30', updatedBy: '24092 - Nguyễn' },
       { id: 'DEV-WIFI7__fptvn', skuCode: 'DEV-WIFI7', channel: 'fptvn', status: 'draft', packageType: 'Thiết bị',
         displayName: 'Router Wi-Fi 7 - Chuẩn kết nối tương lai', slug: 'router-wifi-7',
-        tags: ['new'], bundledFee: '',
+        tags: ['new'], tagText: 'MỚI', tagColor: '#10b981', tagTextColor: '#ffffff', priceTooltip: '',
+        bundledFee: '',
         attributes: [
           { icon: 'zap-line', name: 'Chuẩn Wi-Fi', value: 'Wi-Fi 7 (802.11be)', featured: true },
           { icon: 'bar-chart-square-02-line', name: 'Tốc độ tối đa', value: 'Lên đến 5 Gbps', featured: true },
@@ -760,7 +783,8 @@ class Component extends DCLogic {
         createdAt: '16/05/2026 14:22', createdBy: 'FI-25128', updatedAt: '16/05/2026 14:22', updatedBy: 'FI-25128' },
       { id: 'INT-LUX500__tdw', skuCode: 'INT-LUX500', channel: 'tdw', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet LUX 500', slug: 'internet-lux-500',
-        tags: [], bundledFee: '', attributes: [], bundledProducts: [], privTitle: '', privileges: [],
+        tags: [], tagText: '', tagColor: '#ef4444', tagTextColor: '#ffffff', priceTooltip: '',
+        bundledFee: '', attributes: [], bundledProducts: [], privTitle: '', privileges: [],
         pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '18/05/2026 16:20', createdBy: 'Admin User', updatedAt: '18/05/2026 16:20', updatedBy: 'Admin User' },
     ];
@@ -1054,7 +1078,22 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     return this.field(label, h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, padding: '0 14px', height: 'var(--control-h-md)', background: 'var(--color-surface-sunken)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 14, fontWeight: 600, boxSizing: 'border-box' } },
       h(DS.Icon, { name: 'lock-01-line', size: 13, color: 'var(--color-text-subtle)' }), value
-    ), true);
+    ));
+  }
+  // ---------- shared collapsible section header (expand/collapse to keep long editors manageable) ----------
+  collapsibleSection(stateKey, title, content) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const open = this.state[stateKey] !== false;
+    return h('div', null,
+      h('button', {
+        type: 'button', onClick: () => this.setState({ [stateKey]: !open }),
+        style: { display: 'flex', alignItems: 'center', gap: 6, width: '100%', background: 'none', border: 'none', padding: 0, marginBottom: open ? 12 : 0, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: 'var(--color-text)', fontFamily: 'inherit', textAlign: 'left' }
+      },
+        h(DS.Icon, { name: 'chevron-down-line', size: 15, color: 'var(--color-text-subtle)', style: { transform: open ? 'none' : 'rotate(-90deg)', transition: 'transform .15s', flexShrink: 0 } }),
+        title
+      ),
+      open && content
+    );
   }
 
   // ---------- Tab 1 helper: Thông tin sản phẩm (QLCS) subsection (part of "Đặc tính, Thiết bị & Đặc quyền") ----------
@@ -1211,27 +1250,54 @@ class Component extends DCLogic {
 
   renderPkgWebSettings(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r;
-    const ch = r ? this.PKG_CHANNELS().find(c => c.id === r.channel) : null;
-    const chOpts = this.PKG_CHANNELS().map(c => ({ value: c.id, label: c.name }));
-    return h('div', null,
-      h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 12 } }, 'Cài đặt web'),
-      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
-          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Tình trạng hiển thị (Đang hiện)'),
-          h(DS.Switch, { defaultChecked: !r || r.status === 'active', onChange: () => {} })
+    const sku = r ? this.SKUS().find(s => s.code === r.skuCode) : null;
+    const presets = ['#ef4444', '#ff6b00', '#10b981', '#3b82f6'];
+    const tagLabel = this.state.pkgTagText !== undefined ? this.state.pkgTagText : (r ? (r.tagText || '') : '');
+    const tagBg = this.state.pkgTagColor !== undefined ? this.state.pkgTagColor : (r && r.tagColor) || presets[0];
+    const tagTextColor = this.state.pkgTagTextColor !== undefined ? this.state.pkgTagTextColor : (r && r.tagTextColor) || '#ffffff';
+    const isPreset = c => tagBg === c && tagTextColor === '#ffffff';
+    return this.collapsibleSection('pkgSecWebOpen', 'Cài đặt web', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
+          this.lockedField('Giá bán', sku ? sku.price : '—'),
+          this.lockedField('Tên hiển thị web', r ? r.displayName : '—')
         ),
-        isNew ? this.field('Kênh bán', h(DS.Select, { options: chOpts, defaultValue: chOpts[0] && chOpts[0].value }), true)
-              : this.lockedField('Kênh bán', ch ? ch.name : r.channel),
-        this.field('Tên hiển thị web', h(DS.Input, { defaultValue: r ? r.displayName : '', placeholder: 'VD: Internet Giga - Siêu tốc độ cho gia đình' }), true),
-        this.field('Đường dẫn URL Slug', h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', overflow: 'hidden', background: 'var(--color-surface)', height: 'var(--control-h-md)', boxSizing: 'border-box' } },
-          h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 10px', fontSize: 13, color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)', background: 'var(--color-surface-alt)', whiteSpace: 'nowrap' } }, 'fpt.vn/'),
-          h('input', { defaultValue: r ? r.slug : '', placeholder: 'internet-giga', style: { flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit' } })
-        ), true),
-        this.field('Tag nổi bật', h('div', { style: { display: 'flex', gap: 16, flexWrap: 'wrap' } },
-          h(DS.Checkbox, { label: 'Bán chạy', defaultChecked: r ? (r.tags || []).includes('bestseller') : false }),
-          h(DS.Checkbox, { label: 'Mới', defaultChecked: r ? (r.tags || []).includes('new') : false }),
-          h(DS.Checkbox, { label: 'Khuyên dùng', defaultChecked: r ? (r.tags || []).includes('recommended') : false })
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14 } },
+          h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 10 } },
+            h('span', { style: { fontWeight: 700, fontSize: 13 } }, 'Tag nổi bật ', h('span', { style: { fontWeight: 400, color: 'var(--color-text-muted)', fontSize: 11.5 } }, '(gắn trên Banner/Card sản phẩm ngoài Web/App)')),
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--color-text-muted)' } },
+              'Xem trước:',
+              h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '5px 14px', borderRadius: 6, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.5px', background: tagBg, color: tagTextColor } },
+                tagLabel.trim() || 'TAG'
+              )
+            )
+          ),
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+            h(DS.Input, { value: tagLabel, placeholder: 'Nhập tên Tag (VD: HOT, NEW, BÁN CHẠY, SALE…)', onChange: e => this.setState({ pkgTagText: e && e.target ? e.target.value : e }) }),
+            h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' } },
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Bộ màu mặc định:'),
+                presets.map(c => h('button', { key: c, type: 'button', title: c, onClick: () => this.setState({ pkgTagColor: c, pkgTagTextColor: '#ffffff' }),
+                  style: { width: 26, height: 26, borderRadius: 7, background: c, border: 'none', cursor: 'pointer', boxShadow: isPreset(c) ? '0 0 0 2px var(--color-surface), 0 0 0 4px ' + c : 'none', flexShrink: 0 } }))
+              ),
+              h('div', { style: { width: 1, height: 20, background: 'var(--color-border)' } }),
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Màu chữ:'),
+                h('label', { title: 'Chọn màu chữ tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: tagTextColor } },
+                  h('input', { type: 'color', value: tagTextColor, onChange: e => this.setState({ pkgTagTextColor: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
+                )
+              ),
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Màu nền:'),
+                h('label', { title: 'Chọn màu nền tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: tagBg } },
+                  h('input', { type: 'color', value: tagBg, onChange: e => this.setState({ pkgTagColor: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
+                )
+              )
+            )
+          )
+        ),
+        this.field('Nội dung Tooltip ghi chú giá', h('div', null,
+          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginBottom: 4 } }, 'Nội dung hiển thị khi khách hàng hover hoặc click vào icon (ⓘ) bên cạnh giá trên Website/App.'),
+          h(DS.Textarea, { defaultValue: r ? (r.priceTooltip || '') : '', rows: 3, placeholder: 'VD: Mức giá bao gồm VAT và có thể được thay đổi theo khu vực và thời điểm…' })
         ))
       )
     );
@@ -1378,40 +1444,48 @@ class Component extends DCLogic {
     });
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 24 } },
       this.renderPkgWebSettings(r),
-      h(DS.Divider, { label: 'HÌNH ẢNH SẢN PHẨM & BANNER' }),
-      this.renderPkgImages(r),
       h(DS.Divider, null),
-      this.renderPkgMidBanner(r),
+      this.collapsibleSection('pkgSecMediaOpen', 'Hình ảnh sản phẩm & Banner', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
+        this.renderPkgImages(r),
+        this.renderPkgMidBanner(r)
+      )),
       h(DS.Divider, null),
-      h('div', null,
-        h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 12 } }, 'Mô tả sản phẩm'),
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-          !isDevice && this.field('Mô tả gói bán', h(DS.Textarea, { defaultValue: r ? r.pkgDesc : '', rows: 4, placeholder: 'Mỗi dòng là 1 gạch đầu dòng — VD:\n150Mbps ổn định cả giờ cao điểm\nModem Wi-Fi 6 miễn phí' })),
-          h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả ngắn'),
-            h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Hiển thị tóm tắt trên danh sách gói / thẻ sản phẩm.'),
-            this.richTextBox(r ? r.shortDesc : '', 5, 'Nhập mô tả ngắn…')
-          ),
-          h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả dài'),
-            h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Nội dung chi tiết hiển thị trên trang chi tiết gói bán.'),
-            this.richTextBox(r ? r.longDesc : '', 12, 'Nhập nội dung mô tả chi tiết…')
-          )
-        )
+      this.collapsibleSection('pkgSecDescOpen', 'Mô tả sản phẩm',
+        isDevice
+          ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
+              h('div', null,
+                h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả ngắn'),
+                h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Hiển thị dưới giá bán thiết bị.'),
+                h(DS.Textarea, { defaultValue: r ? r.shortDesc : '', rows: 4, placeholder: 'Tóm tắt điểm nổi bật tổng quan sản phẩm thiết bị…' })
+              ),
+              h('div', null,
+                h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả dài'),
+                h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Rich text — bài viết đánh giá / chi tiết kỹ thuật.'),
+                this.richTextBox(r ? r.longDesc : '', 12, 'Nhập nội dung mô tả chi tiết sản phẩm thiết bị, tính năng công nghệ, hướng dẫn lắp đặt…')
+              )
+            )
+          : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
+              this.field('Mô tả card gói', h(DS.Textarea, { defaultValue: r ? r.pkgDesc : '', rows: 4, placeholder: 'Mỗi ý 1 dòng — VD:\n150Mbps ổn định cả giờ cao điểm\nModem Wi-Fi 6 miễn phí' })),
+              h('div', null,
+                h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, flexWrap: 'wrap', gap: 6 } },
+                  h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Thông tin chi tiết'),
+                  h('span', { style: { fontSize: 11, color: 'var(--color-text-muted)' } }, 'Cú pháp: [Tiêu đề nổi bật]: [Nội dung chi tiết]')
+                ),
+                h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Mỗi dòng hiển thị 1 mục checklist (✓) trên trang chi tiết gói bán.'),
+                h(DS.Textarea, { defaultValue: r ? r.longDesc : '', rows: 8, placeholder: 'Trang bị sẵn Modem Wi-Fi 6 băng tần kép: Trang bị modem Wi-Fi 6 đời mới nhất giúp kết nối ổn định…', style: { fontFamily: 'var(--font-mono, ui-monospace, monospace)' } })
+              )
+            )
       ),
       h(DS.Divider, null),
-      h('div', null,
-        h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 12 } }, 'Ưu đãi sản phẩm'),
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-          this.field('Icon Quà tặng Frontend', h('button', { type: 'button', onClick: pickPromoIcon, style: { width: 44, height: 44, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-accent-bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
-            h(DS.Icon, { name: promoIcon || this.PROMO_ICONS()[0], size: 20, color: 'var(--color-accent)' })
-          )),
-          this.field('Danh sách Ưu đãi & Quà tặng', h(DS.Textarea, {
-            defaultValue: promoList.join('\n'), rows: 5, placeholder: 'Mỗi dòng 1 ưu đãi — VD:\nTặng modem Wi-Fi 6 trị giá 1.200.000đ\nMiễn phí lắp đặt toàn quốc',
-            onBlur: e => this.setState(s => ({ pkgForm: { ...s.pkgForm, promoList: (e.target ? e.target.value : e).split('\n').map(x => x.trim()).filter(Boolean) } }))
-          }))
-        )
-      )
+      this.collapsibleSection('pkgSecPromoOpen', 'Ưu đãi sản phẩm', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+        this.field('Icon Quà tặng Frontend', h('button', { type: 'button', onClick: pickPromoIcon, style: { width: 44, height: 44, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-accent-bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+          h(DS.Icon, { name: promoIcon || this.PROMO_ICONS()[0], size: 20, color: 'var(--color-accent)' })
+        )),
+        this.field('Danh sách Ưu đãi & Quà tặng', h(DS.Textarea, {
+          defaultValue: promoList.join('\n'), rows: 5, placeholder: 'Mỗi dòng 1 ưu đãi — VD:\nTặng modem Wi-Fi 6 trị giá 1.200.000đ\nMiễn phí lắp đặt toàn quốc',
+          onBlur: e => this.setState(s => ({ pkgForm: { ...s.pkgForm, promoList: (e.target ? e.target.value : e).split('\n').map(x => x.trim()).filter(Boolean) } }))
+        }))
+      ))
     );
   }
 
