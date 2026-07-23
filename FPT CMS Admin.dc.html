@@ -101,7 +101,7 @@ class Component extends DCLogic {
     modal: null,
     form: {},
     // Nội dung gói bán module (theo kênh)
-    skuSearch: '', skuTypeFilter: 'all', pkgSelRows: {}, pkgVisMap: {},
+    skuSearch: '', skuTypeFilter: 'all',
     skuActive: {},
     // Checkout module
     checkoutTab: 'config',
@@ -737,7 +737,6 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.skuSearch || '').toLowerCase();
     const typeF = this.state.skuTypeFilter || 'all';
-    const channelF = this.state.skuChannelFilter || 'all';
     const skuByCode = new Map(this.SKUS().map(s => [s.code, s]));
     const channelMap = new Map(this.PKG_CHANNELS().map(c => [c.id, c]));
     const all = this.PKG_CONTENTS();
@@ -745,25 +744,15 @@ class Component extends DCLogic {
       const sku = skuByCode.get(r.skuCode);
       const matchQ = !q || (r.displayName + ' ' + r.skuCode + ' ' + (sku ? sku.name : '')).toLowerCase().includes(q);
       const matchType = typeF === 'all' || (sku && sku.group === typeF);
-      const matchChannel = channelF === 'all' || r.channel === channelF;
-      return matchQ && matchType && matchChannel;
+      return matchQ && matchType;
     });
     const sliced = this.sliceData(data, 'pkg');
-    const selRows = this.state.pkgSelRows || {};
-    const selCount = Object.values(selRows).filter(Boolean).length;
-    const allSel = data.length > 0 && data.every(r => selRows[r.id]);
-    const isVisible = r => (this.state.pkgVisMap || {})[r.id] !== undefined ? !!(this.state.pkgVisMap || {})[r.id] : r.status === 'active';
+    const pkgPg = this.state.pkg_pg || 1; const pkgSz = this.state.pkg_sz || 10;
 
     const columns = [
-      { key: 'chk',
-        header: h('div', { style: { display: 'flex', justifyContent: 'center' } },
-          h(DS.Checkbox, { checked: allSel, onChange: v => { if (v) { const nr = {}; data.forEach(r => { nr[r.id] = true; }); this.setState({ pkgSelRows: nr }); } else { this.setState({ pkgSelRows: {} }); } }, label: '' })
-        ),
-        width: 40, align: 'center',
-        render: (_, r) => h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
-          h(DS.Checkbox, { checked: !!selRows[r.id], onChange: v => this.setState(s => ({ pkgSelRows: { ...s.pkgSelRows, [r.id]: v } })), label: '' })
-        ) },
-      { key: 'name', header: 'Tên hiển thị',
+      { key: 'stt', header: 'STT', width: 56, align: 'center',
+        render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (pkgPg - 1) * pkgSz + sliced.indexOf(r) + 1) },
+      { key: 'name', header: 'Tên hiển thị', width: 340,
         render: (_, r) => {
           const sku = skuByCode.get(r.skuCode);
           return h('div', null,
@@ -772,27 +761,15 @@ class Component extends DCLogic {
               r.skuCode)
           );
         } },
-      { key: 'type', header: 'Loại gói bán', width: 130,
+      { key: 'type', header: 'Loại gói bán', width: 140,
         render: (_, r) => { const sku = skuByCode.get(r.skuCode); return h(DS.Badge, { theme: this.PKG_TYPE_THEME(sku && sku.group) }, sku ? sku.group : '—'); } },
-      { key: 'price', header: 'Giá tối thiểu', width: 120, align: 'right',
+      { key: 'price', header: 'Giá tối thiểu', width: 130, align: 'right',
         render: (_, r) => { const sku = skuByCode.get(r.skuCode); return h('span', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, sku ? sku.price : '—'); } },
-      { key: 'channel', header: 'Kênh bán', width: 120,
-        render: (_, r) => { const c = channelMap.get(r.channel); return h(DS.Badge, { theme: this.PKG_CHANNEL_THEME(r.channel) }, c ? c.name : r.channel); } },
-      { key: 'status', header: 'Trạng thái', width: 84, align: 'center',
-        render: (_, r) => {
-          const isOn = isVisible(r);
-          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
-            h(DS.Switch, { key: 'sw-' + r.id + '-' + (isOn ? 1 : 0), size: 'sm', defaultChecked: isOn, onChange: v => {
-              this.setState(s => ({ pkgVisMap: { ...s.pkgVisMap, [r.id]: v } }));
-              this.toast(v ? 'success' : 'neutral', v ? 'Đã kích hoạt' : 'Đã tắt hiển thị', r.displayName || r.skuCode);
-            } })
-          );
-        } },
-      { key: 'updatedAt', header: 'Thời gian cập nhật', width: 140,
+      { key: 'updatedAt', header: 'Thời gian cập nhật', width: 150,
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
-      { key: 'updatedBy', header: 'Người cập nhật', width: 140,
+      { key: 'updatedBy', header: 'Người cập nhật', width: 150,
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedBy || '—') },
-      { key: 'act', header: 'Thao tác nhanh', width: 90, align: 'right',
+      { key: 'act', header: 'Thao tác nhanh', width: 110, align: 'right',
         render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openSkuEditor(r) },
           { icon: 'trash-line', label: 'Xóa', onClick: () => {
@@ -802,35 +779,14 @@ class Component extends DCLogic {
         ]) },
     ];
 
-    const selData = data.filter(r => selRows[r.id]);
-    const allSelVisible = selData.length > 0 && selData.every(isVisible);
-    const bulkBar = selCount > 0 ? h('div', { style: { position: 'fixed', bottom: 40, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', alignItems: 'center', gap: 6, padding: '10px 10px 10px 20px', background: 'var(--color-surface)', border: '1px solid var(--color-border-strong)', borderRadius: 100, boxShadow: '0 8px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08)', animation: 'fptScaleIn .18s cubic-bezier(.2,0,0,1)', whiteSpace: 'nowrap' } },
-      h('span', { style: { fontSize: 13, fontWeight: 600, color: 'var(--fpt-11)', paddingRight: 6 } }, selCount + ' nội dung được chọn'),
-      h('div', { style: { width: 1, height: 20, background: 'var(--color-border)', margin: '0 2px' } }),
-      h(DS.Button, {
-        size: 'sm', level: 'secondary',
-        onClick: () => {
-          const next = !allSelVisible;
-          const m = { ...(this.state.pkgVisMap || {}) };
-          selData.forEach(r => { m[r.id] = next; });
-          this.setState({ pkgVisMap: m });
-          this.toast(next ? 'success' : 'neutral', next ? 'Đã kích hoạt' : 'Đã tắt hiển thị', selCount + ' nội dung.');
-        }
-      }, allSelVisible ? 'Tắt hiển thị' : 'Kích hoạt'),
-      h(DS.Button, { size: 'sm', level: 'secondary', onClick: () => this.confirm('Xóa ' + selCount + ' nội dung?', 'Các nội dung gói bán đã chọn sẽ bị xóa vĩnh viễn.', () => { this.closeModal(); this.setState({ pkgSelRows: {} }); this.toast('success', 'Đã xóa', 'Xóa thành công.'); }, true) }, 'Xóa'),
-      h(DS.Button, { size: 'sm', level: 'tertiary', onClick: () => this.setState({ pkgSelRows: {} }) }, 'Bỏ chọn'),
-    ) : null;
-
     const typeOptions = [{ value: 'all', label: 'Loại gói bán' }, ...Array.from(new Set(this.SKUS().map(s => s.group))).map(g => ({ value: g, label: g }))];
-    const channelOptions = [{ value: 'all', label: 'Kênh bán' }, ...this.PKG_CHANNELS().map(c => ({ value: c.id, label: c.name }))];
 
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
       this.listCard(
         this.toolbar(
           h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
             this.search('Tìm kiếm tên gói bán, tên hiển thị…', 'skuSearch'),
-            h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: typeOptions, value: typeF, onChange: v => this.setState({ skuTypeFilter: v, pkg_pg: 1 }) })),
-            h('div', { style: { width: 180, flexShrink: 0 } }, h(DS.Select, { options: channelOptions, value: channelF, onChange: v => this.setState({ skuChannelFilter: v, pkg_pg: 1 }) }))
+            h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: typeOptions, value: typeF, onChange: v => this.setState({ skuTypeFilter: v, pkg_pg: 1 }) }))
           ),
           h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 } },
             h(DS.Button, { level: 'secondary', onClick: () => this.toast('success', 'Đã đồng bộ', 'Dữ liệu gói bán đã được đồng bộ mới nhất từ hệ thống QLCS.') },
@@ -851,8 +807,7 @@ class Component extends DCLogic {
         ]),
         data.length ? this.tbl(columns, sliced, 'id', r => this.openSkuDetail(r)) : this.empty('Không tìm thấy nội dung gói bán phù hợp.'),
         data.length ? this.renderPagBar(data.length, 'pkg', 'nội dung') : null
-      ),
-      bulkBar
+      )
     );
   }
 
@@ -1850,7 +1805,7 @@ class Component extends DCLogic {
                   selectedSkus.map(s => h(DS.Tag, {
                     key: s.code,
                     color: 'var(--color-accent)',
-                    onClose: e => confirmRemoveSku(s.code, s.name)
+                    onClose: e => { removeFromSelection(s.code); this.toast('success', 'Đã bỏ chọn', 'Gói "' + s.name + '" đã được bỏ khỏi danh sách.'); }
                   }, s.code))
                 )
               )
