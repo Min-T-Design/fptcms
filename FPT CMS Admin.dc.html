@@ -588,6 +588,13 @@ class Component extends DCLogic {
   PKG_TYPE_THEME(group) {
     return { 'Internet': 'info', 'Camera': 'warning', 'Truyền hình': 'success', 'Cloud': 'brand' }[group] || 'neutral';
   }
+  // Loại gói bán điều khiển sự khác biệt của trang chỉnh sửa: Dịch vụ (Internet…) / Thiết bị (SKU vật lý) / SA (gói bổ sung độc lập)
+  PKG_IS_DEVICE(r) {
+    return !!(r && r.packageType === 'Thiết bị');
+  }
+  PKG_SHOW_BUNDLED(r) {
+    return !!(r && r.packageType === 'Dịch vụ');
+  }
   PKG_CHANNEL_THEME(channelId) {
     return { 'fptvn': 'info', 'hifpt': 'brand', 'tdw': 'warning' }[channelId] || 'neutral';
   }
@@ -605,9 +612,6 @@ class Component extends DCLogic {
       goiTinhCuoc: isDevice ? 'Trả 1 lần' : 'Trả hàng tháng',
       donViTinh: isDevice ? 'Cái' : 'Gói cước',
     };
-  }
-  PRIV_ICONS() {
-    return ['star-01-line', 'stars-01-line', 'zap-line', 'check-circle-line', 'heart-line', 'truck-line', 'phone-call-line', 'message-chat-circle-line', 'file-check-line', 'lock-01-line', 'globe-01-line', 'settings-01-line', 'bell-01-line', 'marker-pin-01-line', 'download-01-line', 'mail-01-line', 'share-01-line', 'user-circle-line'];
   }
   PROMO_ICONS() { return ['star-01-line', 'stars-01-line', 'zap-line', 'check-circle-line', 'heart-line']; }
   PKG_CONTENTS() {
@@ -697,7 +701,7 @@ class Component extends DCLogic {
         tags: [], bundledFee: '', attributes: [], bundledProducts: [], privTitle: '', privileges: [],
         pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '20/05/2026 09:31', createdBy: 'FI-25128', updatedAt: '20/05/2026 09:31', updatedBy: 'FI-25128' },
-      { id: 'SA-SMAX__fptvn', skuCode: 'SA-SMAX', channel: 'fptvn', status: 'active', packageType: 'Combo',
+      { id: 'SA-SMAX__fptvn', skuCode: 'SA-SMAX', channel: 'fptvn', status: 'active', packageType: 'SA',
         displayName: 'FPT Play SMax - Giải trí không giới hạn', slug: 'fpt-play-smax',
         tags: ['recommended'], bundledFee: '', attributes: [{ icon: 'star-01-line', name: 'Kho nội dung', value: 'HBO, K+, FPT Play', featured: true }], bundledProducts: [{ name: 'FPT Play Box (tặng kèm)', mode: 'full', included: true }],
         privTitle: 'Đặc quyền FPT Play SMax', privileges: [{ icon: 'star-01-line', title: 'Kho nội dung khổng lồ', content: 'HBO, K+, FPT Play và nhiều kênh khác.' }],
@@ -1055,12 +1059,18 @@ class Component extends DCLogic {
   }
 
   // ---------- Tab 1 helpers: Đặc tính, Thiết bị & Đặc quyền ----------
+  pkgSectionBadge(kind, text) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const locked = kind === 'locked';
+    return h('span', { style: { display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: locked ? 600 : 700, color: locked ? 'var(--color-text-subtle)' : 'var(--color-warning-text, var(--color-warning))', background: locked ? 'var(--color-surface-sunken)' : 'var(--color-warning-bg, rgba(245,158,11,0.08))', border: '1px solid ' + (locked ? 'var(--color-border)' : 'var(--color-warning)'), borderRadius: 6, padding: '4px 10px' } },
+      text
+    );
+  }
   renderPkgAttributes(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const isDevice = this.PKG_IS_DEVICE(r);
     const items = this.state.pkgForm.attributes || [];
     const update = (i, key, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, attributes: s.pkgForm.attributes.map((it, j) => j === i ? { ...it, [key]: val } : it) } }));
-    const remove = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, attributes: s.pkgForm.attributes.filter((_, j) => j !== i) } }));
-    const add = () => this.setState(s => ({ pkgForm: { ...s.pkgForm, attributes: [...s.pkgForm.attributes, { group: '', icon: 'star-01-line', name: '', value: '', featured: false }] } }));
     const featuredCount = items.filter(it => it.featured).length;
     const toggleFeatured = (i) => {
       if (!items[i].featured && featuredCount >= 3) { this.toast('warning', 'Đã đạt giới hạn', 'Chỉ chọn tối đa 3 thông số nổi bật.'); return; }
@@ -1071,10 +1081,14 @@ class Component extends DCLogic {
       const next = items.slice(); const [it] = next.splice(from, 1); next.splice(to, 0, it);
       this.setState(s => ({ pkgForm: { ...s.pkgForm, attributes: next } }));
     };
+    const gridCols = isDevice ? '20px 1fr 1fr 70px' : '20px 1fr 1fr';
     return h('div', null,
-      h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
-        h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Đặc tính sản phẩm'),
-        h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Nổi bật: ' + featuredCount + ' / 3')
+      h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+          h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Đặc tính sản phẩm'),
+          this.pkgSectionBadge('locked', 'Đồng bộ từ QLCS')
+        ),
+        isDevice && h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Nổi bật: ' + featuredCount + ' / 3')
       ),
       h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
         items.length === 0
@@ -1086,19 +1100,13 @@ class Component extends DCLogic {
               onDragLeave: () => this.setState({ pkgAttrDragOverIdx: undefined }),
               onDrop: e => { e.preventDefault(); const from = this.state.pkgAttrDragIdx; if (from !== undefined && from !== i) move(from, i); this.setState({ pkgAttrDragIdx: undefined, pkgAttrDragOverIdx: undefined }); },
               onDragEnd: () => this.setState({ pkgAttrDragIdx: undefined, pkgAttrDragOverIdx: undefined }),
-              style: { display: 'grid', gridTemplateColumns: '20px 36px 1fr 1fr 1fr 70px 32px', gap: 8, alignItems: 'center', padding: '8px 14px', borderBottom: i < items.length - 1 ? '1px solid var(--color-border-pale)' : 'none', background: this.state.pkgAttrDragOverIdx === i ? 'var(--color-accent-bg)' : 'transparent', opacity: this.state.pkgAttrDragIdx === i ? 0.4 : 1, transition: 'all .12s' }
+              style: { display: 'grid', gridTemplateColumns: gridCols, gap: 8, alignItems: 'center', padding: '8px 14px', borderBottom: i < items.length - 1 ? '1px solid var(--color-border-pale)' : 'none', background: this.state.pkgAttrDragOverIdx === i ? 'var(--color-accent-bg)' : 'transparent', opacity: this.state.pkgAttrDragIdx === i ? 0.4 : 1, transition: 'all .12s' }
             },
-              h(DS.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
-              h('div', { style: { width: 32, height: 32, borderRadius: 6, background: 'var(--color-accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(DS.Icon, { name: it.icon || 'star-01-line', size: 15, color: 'var(--color-accent)' })),
-              h(DS.Input, { value: it.group, placeholder: 'Nhóm đặc tính…', onChange: e => update(i, 'group', e && e.target ? e.target.value : e) }),
-              h(DS.Input, { value: it.name, placeholder: 'Tên thông số…', onChange: e => update(i, 'name', e && e.target ? e.target.value : e) }),
-              h(DS.Input, { value: it.value, placeholder: 'Giá trị…', onChange: e => update(i, 'value', e && e.target ? e.target.value : e) }),
-              h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(DS.Checkbox, { label: 'Nổi bật', checked: it.featured, onChange: () => toggleFeatured(i) })),
-              h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => remove(i) })
-            )),
-        h('div', { style: { padding: '9px 12px', textAlign: 'center', borderTop: items.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
-          h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add }, '+ Thêm đặc tính')
-        )
+              h(DS.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 }, title: 'Kéo để sắp xếp vị trí' }),
+              h(DS.Input, { value: it.name, disabled: true }),
+              h(DS.Input, { value: it.value, disabled: true }),
+              isDevice && h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(DS.Checkbox, { label: 'Nổi bật', checked: it.featured, onChange: () => toggleFeatured(i) }))
+            ))
       )
     );
   }
@@ -1106,32 +1114,29 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const bundled = this.state.pkgForm.bundledProducts || [];
     const updBundled = (i, key, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, bundledProducts: s.pkgForm.bundledProducts.map((it, j) => j === i ? { ...it, [key]: val } : it) } }));
-    const rmBundled = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, bundledProducts: s.pkgForm.bundledProducts.filter((_, j) => j !== i) } }));
-    const addBundled = () => this.setState(s => ({ pkgForm: { ...s.pkgForm, bundledProducts: [...s.pkgForm.bundledProducts, { name: '', mode: 'full', included: true }] } }));
     const modeOpts = [{ value: 'full', label: 'Hiển thị toàn bộ' }, { value: 'click', label: 'Chỉ hiện khi click' }, { value: 'hidden', label: 'Ẩn' }];
     return h('div', null,
-      h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 8 } }, 'Sản phẩm đi kèm'),
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 } },
+        h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Sản phẩm đi kèm'),
+        this.pkgSectionBadge('locked', 'Đồng bộ từ QLCS/PDH')
+      ),
+      h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Danh sách sản phẩm đồng bộ tự động — chỉ chỉnh sửa: Ảnh, Tên hiển thị web, Phương thức hiển thị, Hiển thị.'),
       h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
         bundled.length === 0
           ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic' } }, 'Chưa có sản phẩm nào trong gói.')
           : h('div', null,
-              h('div', { style: { display: 'grid', gridTemplateColumns: '28px 48px 1.4fr 1fr 96px 40px', gap: 10, alignItems: 'center', padding: '7px 14px', borderBottom: '1px solid var(--color-border)', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--color-text-muted)', background: 'var(--color-surface-alt)' } },
-                h('span', null, '#'), h('span', null, 'Ảnh'), h('span', null, 'Tên hiển thị web'), h('span', null, 'Phương thức hiển thị'), h('span', { style: { textAlign: 'center' } }, 'Nhận trong gói'), h('span', null, '')
+              h('div', { style: { display: 'grid', gridTemplateColumns: '28px 48px 1.4fr 1fr 96px', gap: 10, alignItems: 'center', padding: '7px 14px', borderBottom: '1px solid var(--color-border)', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--color-text-muted)', background: 'var(--color-surface-alt)' } },
+                h('span', null, '#'), h('span', null, 'Ảnh'), h('span', null, 'Tên hiển thị web'), h('span', null, 'Phương thức hiển thị'), h('span', { style: { textAlign: 'center' } }, 'Hiển thị')
               ),
-              bundled.map((it, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '28px 48px 1.4fr 1fr 96px 40px', gap: 10, alignItems: 'center', padding: '8px 14px', borderBottom: i < bundled.length - 1 ? '1px solid var(--color-border-pale)' : 'none' } },
+              bundled.map((it, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '28px 48px 1.4fr 1fr 96px', gap: 10, alignItems: 'center', padding: '8px 14px', borderBottom: i < bundled.length - 1 ? '1px solid var(--color-border-pale)' : 'none' } },
                 h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', textAlign: 'center' } }, i + 1),
                 h('div', { onClick: () => this.toast('info', 'Chọn ảnh SKU', 'Chọn ảnh minh hoạ cho sản phẩm.'), style: { width: 38, height: 32, background: 'var(--color-surface-alt)', border: '1px dashed var(--color-border)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' } }, h(DS.Icon, { name: 'image-line', size: 14, color: 'var(--color-text-subtle)' })),
                 h(DS.Input, { value: it.name, placeholder: 'Tên hiển thị web…', onChange: e => updBundled(i, 'name', e && e.target ? e.target.value : e) }),
                 h(DS.Select, { options: modeOpts, value: it.mode, onChange: v => updBundled(i, 'mode', v) }),
-                h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(DS.Checkbox, { checked: it.included, onChange: v => updBundled(i, 'included', v), label: '' })),
-                h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => rmBundled(i) })
+                h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(DS.Switch, { size: 'sm', checked: it.included, onChange: v => updBundled(i, 'included', v) }))
               ))
-            ),
-        h('div', { style: { padding: '9px 12px', textAlign: 'center', borderTop: bundled.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
-          h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: addBundled }, '+ Thêm sản phẩm')
-        )
-      ),
-      h('div', { style: { marginTop: 12 } }, this.field('Phí đi kèm', h(DS.Input, { defaultValue: r ? r.bundledFee : '', placeholder: 'VD: Miễn phí lắp đặt · Phí duy trì 20.000đ/tháng' })))
+            )
+      )
     );
   }
   renderPkgPriv(r) {
@@ -1141,18 +1146,11 @@ class Component extends DCLogic {
     const remove = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: s.pkgForm.privileges.filter((_, j) => j !== i) } }));
     const add = () => {
       if (items.length >= 10) { this.toast('warning', 'Đã đạt giới hạn', 'Tối đa 10 đặc quyền.'); return; }
-      this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: [...s.pkgForm.privileges, { icon: 'star-01-line', title: '', content: '' }] } }));
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: [...s.pkgForm.privileges, { title: '', content: '' }] } }));
     };
-    const pickIcon = (i) => this.openModal({
-      kind: 'form', title: 'Chọn icon đặc quyền',
-      render: () => h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 8, marginTop: 4, width: 320, maxWidth: '100%' } },
-        this.PRIV_ICONS().map(name => h('button', { key: name, type: 'button', onClick: () => { update(i, 'icon', name); this.closeModal(); },
-          style: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 8, border: '1px solid var(--color-border)', background: (items[i] && items[i].icon === name) ? 'var(--color-accent-bg)' : 'var(--color-surface)', cursor: 'pointer' } },
-          h(DS.Icon, { name, size: 18, color: (items[i] && items[i].icon === name) ? 'var(--color-accent)' : 'var(--color-text-muted)' })
-        ))
-      )
-    });
+    const pickImage = (i) => this.toast('info', 'Chọn ảnh đặc quyền', 'Mở hộp thoại tải ảnh cho đặc quyền này (demo).');
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginTop: -6 } }, this.pkgSectionBadge('editable', 'Vận hành tự quản lý')),
       this.field('Tiêu đề chung đặc quyền', h(DS.Input, { defaultValue: r ? r.privTitle : '', placeholder: 'VD: Đặc quyền khi đăng ký Internet Giga' }), true),
       h('div', null,
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
@@ -1164,13 +1162,13 @@ class Component extends DCLogic {
             ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic' } }, 'Chưa có đặc quyền nào.')
             : items.map((it, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '28px 44px 1fr 1.4fr 40px', gap: 10, alignItems: 'center', padding: '10px 14px', borderBottom: i < items.length - 1 ? '1px solid var(--color-border-pale)' : 'none' } },
                 h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', textAlign: 'center' } }, i + 1),
-                h('button', { type: 'button', onClick: () => pickIcon(i), style: { width: 36, height: 36, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-accent-bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(DS.Icon, { name: it.icon || 'star-01-line', size: 17, color: 'var(--color-accent)' })),
+                h('div', { onClick: () => pickImage(i), title: 'Chọn ảnh đặc quyền', style: { width: 36, height: 36, borderRadius: 8, border: '1px dashed var(--color-border-strong)', background: 'var(--color-surface-alt)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(DS.Icon, { name: 'image-line', size: 16, color: 'var(--color-text-subtle)' })),
                 h(DS.Input, { value: it.title, placeholder: 'Tiêu đề đặc quyền…', onChange: e => update(i, 'title', e && e.target ? e.target.value : e) }),
                 h(DS.Input, { value: it.content, placeholder: 'Nội dung đặc quyền…', onChange: e => update(i, 'content', e && e.target ? e.target.value : e) }),
                 h(DS.IconButton, { icon: 'x-circle-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => remove(i) })
               )),
-          h('div', { style: { padding: '9px 12px', textAlign: 'center', borderTop: items.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
-            h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add, disabled: items.length >= 10 }, '+ Thêm Đặc Quyền')
+          h('div', { style: { padding: '9px 12px', textAlign: 'left', borderTop: items.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
+            h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add, disabled: items.length >= 10 }, 'Thêm Đặc Quyền')
           )
         )
       ),
@@ -1208,6 +1206,7 @@ class Component extends DCLogic {
   }
   renderPkgImages(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const isDevice = this.PKG_IS_DEVICE(r);
     const gallery = this.state.pkgForm.gallery || [];
     const updAlt = (i, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, gallery: s.pkgForm.gallery.map((it, j) => j === i ? { ...it, alt: val } : it) } }));
     const rmImg = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, gallery: s.pkgForm.gallery.filter((_, j) => j !== i) } }));
@@ -1220,12 +1219,8 @@ class Component extends DCLogic {
       const next = gallery.slice(); const [it] = next.splice(from, 1); next.splice(to, 0, it);
       this.setState(s => ({ pkgForm: { ...s.pkgForm, gallery: next } }));
     };
-    const midBanners = this.state.pkgForm.midBanners || [];
-    const toggleActive = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, midBanners: s.pkgForm.midBanners.map((b, j) => j === i ? { ...b, active: !b.active } : b) } }));
-    const removeMid = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, midBanners: s.pkgForm.midBanners.filter((_, j) => j !== i) } }));
-    const addMid = () => this.setState(s => ({ pkgForm: { ...s.pkgForm, midBanners: [...s.pkgForm.midBanners, { id: Date.now(), active: true }] } }));
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 24 } },
-      h('div', null,
+      isDevice && h('div', null,
         h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Gallery ảnh sản phẩm'),
         h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Tối đa 15 ảnh · JPG/PNG · kéo thả để sắp xếp · nhập Alt Text cho SEO'),
         h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
@@ -1245,40 +1240,49 @@ class Component extends DCLogic {
                 h(DS.Input, { value: g.alt, placeholder: 'Alt Text (SEO)…', onChange: e => updAlt(i, e && e.target ? e.target.value : e) }),
                 h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => rmImg(i) })
               )),
-          h('div', { style: { padding: '9px 12px', textAlign: 'center', borderTop: gallery.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
-            h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: addImg, disabled: gallery.length >= 15 }, '+ Thêm ảnh (' + gallery.length + '/15)')
+          h('div', { style: { padding: '9px 12px', textAlign: 'left', borderTop: gallery.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
+            h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: addImg, disabled: gallery.length >= 15 }, 'Thêm ảnh (' + gallery.length + '/15)')
           )
         )
       ),
-      h(DS.Divider, null),
-      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 } },
-        this.uploadBox('Ảnh Thumbnail', 'Tỉ lệ 1:1 · ≤1MB'),
-        this.uploadBox('Top banner', 'Tỉ lệ 16:9 · ≤2MB')
-      ),
-      h(DS.Divider, null),
-      h('div', null,
-        h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Banner giữa trang (Mid-page banner)'),
-        h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Tỉ lệ 32:9 · ≤2MB/ảnh · chèn giữa nội dung trang gói bán'),
-        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
-          midBanners.length === 0
-            ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic' } }, 'Chưa có banner giữa trang.')
-            : h('div', null,
-                h('div', { style: { display: 'grid', gridTemplateColumns: '28px 60px 1fr 90px 40px', gap: 10, alignItems: 'center', padding: '7px 14px', borderBottom: '1px solid var(--color-border)', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--color-text-muted)', background: 'var(--color-surface-alt)' } },
-                  h('span', null, '#'), h('span', null, 'Ảnh'), h('span', null, ''), h('span', { style: { textAlign: 'center' } }, 'Hoạt động'), h('span', null, '')
-                ),
-                midBanners.map((b, i) => h('div', { key: b.id, style: { display: 'grid', gridTemplateColumns: '28px 60px 1fr 90px 40px', gap: 10, alignItems: 'center', padding: '8px 14px', borderBottom: i < midBanners.length - 1 ? '1px solid var(--color-border-pale)' : 'none' } },
-                  h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', textAlign: 'center' } }, i + 1),
-                  h('div', { style: { width: 52, height: 32, background: 'linear-gradient(135deg,var(--fpt-4),var(--fpt-8))', borderRadius: 6 } }),
-                  h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, 'Banner giữa trang ' + (i + 1)),
-                  h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(DS.Switch, { size: 'sm', checked: b.active, onChange: () => toggleActive(i) })),
-                  h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => removeMid(i) })
-                ))
-              ),
-          h('div', { style: { padding: '9px 12px', textAlign: 'center', borderTop: midBanners.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
-            h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: addMid }, '+ Upload Ảnh')
-          )
+      isDevice && h(DS.Divider, null),
+      h('div', { style: { display: 'grid', gridTemplateColumns: isDevice ? '1fr' : '200px 1fr', gap: 16, alignItems: 'start' } },
+        this.uploadBox('Ảnh card gói', 'Tỉ lệ 1:1 · ≤1MB'),
+        !isDevice && h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+          this.uploadBox('Banner đầu trang - Desktop (16:9)', '≤2MB'),
+          this.uploadBox('Banner đầu trang - Mobile (1:1)', '≤2MB')
         )
       )
+    );
+  }
+  // ---------- Tab 2 helper: Banner giữa trang (Mid-page banner) ----------
+  renderPkgMidBanner(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const midBanners = this.state.pkgForm.midBanners || [];
+    const toggleActive = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, midBanners: s.pkgForm.midBanners.map((b, j) => j === i ? { ...b, active: !b.active } : b) } }));
+    const removeMid = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, midBanners: s.pkgForm.midBanners.filter((_, j) => j !== i) } }));
+    const addMid = () => this.setState(s => ({ pkgForm: { ...s.pkgForm, midBanners: [...s.pkgForm.midBanners, { id: Date.now(), active: true }] } }));
+    return h('div', null,
+      h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Banner giữa trang (Mid-page banner)'),
+      h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Mỗi banner có ảnh Desktop và Mobile riêng · ≤2MB/ảnh · chèn giữa nội dung trang gói bán'),
+      midBanners.length === 0
+        ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10, marginBottom: 10 } }, 'Chưa có banner giữa trang.')
+        : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 10 } },
+            midBanners.map((b, i) => h('div', { key: b.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
+              h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                h('span', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Banner giữa trang ' + (i + 1)),
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+                  h(DS.Switch, { size: 'sm', checked: b.active, onChange: () => toggleActive(i) }),
+                  h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => removeMid(i) })
+                )
+              ),
+              h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+                this.uploadBox('Desktop (32:9)', '≤2MB'),
+                this.uploadBox('Mobile (1:1)', '≤2MB')
+              )
+            ))
+          ),
+      h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: addMid }, 'Thêm banner giữa trang')
     );
   }
   renderPkgVideo(r) {
@@ -1308,26 +1312,27 @@ class Component extends DCLogic {
           this.uploadBox('Thumbnail video (tuỳ chọn)', 'JPG / PNG')
         ))
       ),
-      h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add, disabled: items.length >= 3 }, '+ Thêm video')
+      h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add, disabled: items.length >= 3 }, 'Thêm video')
     );
   }
   renderSkuEditorAttrs(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const isDevice = this.PKG_IS_DEVICE(r);
+    const showBundled = this.PKG_SHOW_BUNDLED(r);
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
       this.renderSkuEditorInfo(r),
       h(DS.Divider, null),
       this.renderPkgAttributes(r),
-      h(DS.Divider, null), this.renderPkgBundled(r),
+      showBundled && h(DS.Divider, null), showBundled && this.renderPkgBundled(r),
       h(DS.Divider, { label: 'ĐẶC QUYỀN' }), this.renderPkgPriv(r),
-      h(DS.Divider, null), this.renderPkgWebSettings(r),
-      h(DS.Divider, { label: 'HÌNH ẢNH SẢN PHẨM & BANNER' }), this.renderPkgImages(r),
-      h(DS.Divider, null), this.renderPkgVideo(r)
+      isDevice && h(DS.Divider, { label: 'VIDEO SẢN PHẨM' }), isDevice && this.renderPkgVideo(r)
     );
   }
 
   // ---------- Tab 2: Quản lý Content ----------
   renderSkuEditorContent(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const isDevice = this.PKG_IS_DEVICE(r);
     const promoList = this.state.pkgForm.promoList || [];
     const promoIcon = this.state.pkgPromoIcon !== undefined ? this.state.pkgPromoIcon : (r ? r.promoIcon : this.PROMO_ICONS()[0]);
     const pickPromoIcon = () => this.openModal({
@@ -1340,10 +1345,16 @@ class Component extends DCLogic {
       )
     });
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 24 } },
+      this.renderPkgWebSettings(r),
+      h(DS.Divider, { label: 'HÌNH ẢNH SẢN PHẨM & BANNER' }),
+      this.renderPkgImages(r),
+      h(DS.Divider, null),
+      this.renderPkgMidBanner(r),
+      h(DS.Divider, null),
       h('div', null,
         h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 12 } }, 'Mô tả sản phẩm'),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-          this.field('Mô tả gói bán', h(DS.Textarea, { defaultValue: r ? r.pkgDesc : '', rows: 4, placeholder: 'Mỗi dòng là 1 gạch đầu dòng — VD:\n150Mbps ổn định cả giờ cao điểm\nModem Wi-Fi 6 miễn phí' })),
+          !isDevice && this.field('Mô tả gói bán', h(DS.Textarea, { defaultValue: r ? r.pkgDesc : '', rows: 4, placeholder: 'Mỗi dòng là 1 gạch đầu dòng — VD:\n150Mbps ổn định cả giờ cao điểm\nModem Wi-Fi 6 miễn phí' })),
           h('div', null,
             h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả ngắn'),
             h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Hiển thị tóm tắt trên danh sách gói / thẻ sản phẩm.'),
