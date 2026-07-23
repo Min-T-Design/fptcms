@@ -632,9 +632,9 @@ class Component extends DCLogic {
         ],
         privTitle: 'Đặc quyền khi đăng ký Internet Giga',
         privileges: [
-          { icon: 'zap-line', title: 'Tốc độ vượt trội', content: 'Tốc độ 150Mbps ổn định, không bù giờ cao điểm' },
-          { icon: 'truck-line', title: 'Lắp đặt nhanh', content: 'Lắp đặt trong 24h tại khu vực nội thành' },
-          { icon: 'phone-call-line', title: 'Hỗ trợ 24/7', content: 'Tổng đài kỹ thuật hỗ trợ mọi lúc' },
+          'Tốc độ vượt trội – Tốc độ 150Mbps ổn định, không bù giờ cao điểm',
+          'Lắp đặt nhanh – Lắp đặt trong 24h tại khu vực nội thành',
+          'Hỗ trợ 24/7 – Tổng đài kỹ thuật hỗ trợ mọi lúc',
         ],
         pkgDesc: '150Mbps ổn định cả giờ cao điểm\nModem Wi-Fi 6 miễn phí\nLắp đặt trong 24h\nBảo hành thiết bị trọn gói',
         shortDesc: 'Gói Internet Giga mang đến tốc độ 150Mbps ổn định, phù hợp gia đình 3-4 thành viên dùng nhiều thiết bị cùng lúc.',
@@ -648,7 +648,7 @@ class Component extends DCLogic {
       { id: 'INT-GIGA__hifpt', skuCode: 'INT-GIGA', channel: 'hifpt', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet Giga', slug: 'internet-giga',
         tags: ['bestseller'], bundledFee: '', attributes: [], bundledProducts: [{ name: 'Modem Wi-Fi 6', mode: 'full', included: true }],
-        privTitle: 'Đặc quyền Internet Giga', privileges: [{ icon: 'zap-line', title: 'Tốc độ vượt trội', content: 'Tốc độ 150Mbps ổn định.' }],
+        privTitle: 'Đặc quyền Internet Giga', privileges: ['Tốc độ vượt trội – Tốc độ 150Mbps ổn định.'],
         pkgDesc: '150Mbps ổn định\nModem Wi-Fi 6 miễn phí',
         shortDesc: 'Gói Internet Giga tốc độ 150Mbps.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [1], midBanners: [],
         createdAt: '02/05/2026 09:10', createdBy: 'Admin User', updatedAt: '18/05/2026 10:05', updatedBy: 'Admin User' },
@@ -660,8 +660,8 @@ class Component extends DCLogic {
         ], bundledProducts: [{ name: 'Modem Wi-Fi 6', mode: 'full', included: true }, { name: 'FPT Play VIP', mode: 'click', included: false }],
         privTitle: 'Đặc quyền Internet Sky',
         privileges: [
-          { icon: 'zap-line', title: 'Tốc độ Gigabit', content: 'Tốc độ tải xuống lên đến 1Gbps.' },
-          { icon: 'star-01-line', title: 'Ưu tiên băng thông', content: 'Ưu tiên băng thông giờ cao điểm.' },
+          'Tốc độ Gigabit – Tốc độ tải xuống lên đến 1Gbps.',
+          'Ưu tiên băng thông – Ưu tiên băng thông giờ cao điểm.',
         ],
         pkgDesc: 'Tốc độ Gigabit 1Gbps\nƯu tiên băng thông giờ cao điểm',
         shortDesc: 'Internet Sky mang tốc độ Gigabit cho trải nghiệm mượt mà.', longDesc: '', promoIcon: 'zap-line', promoList: [], videos: [], faqIds: [], midBanners: [],
@@ -674,7 +674,7 @@ class Component extends DCLogic {
       { id: 'INT-META__fptvn', skuCode: 'INT-META', channel: 'fptvn', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet Meta - Chuẩn Wi-Fi 6E', slug: 'internet-meta',
         tags: ['new', 'recommended'], bundledFee: '', attributes: [{ icon: 'stars-01-line', name: 'Chuẩn Wi-Fi', value: 'Wi-Fi 6E', featured: true }], bundledProducts: [{ name: 'Thiết bị Wi-Fi 6E', mode: 'full', included: true }],
-        privTitle: 'Đặc quyền Internet Meta', privileges: [{ icon: 'stars-01-line', title: 'Công nghệ mới nhất', content: 'Chuẩn Wi-Fi 6E băng tần 6GHz.' }],
+        privTitle: 'Đặc quyền Internet Meta', privileges: ['Công nghệ mới nhất – Chuẩn Wi-Fi 6E băng tần 6GHz.'],
         pkgDesc: 'Chuẩn Wi-Fi 6E băng tần 6GHz\nThiết bị đi kèm miễn phí',
         shortDesc: 'Internet Meta tích hợp thiết bị Wi-Fi 6E thế hệ mới.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '19/05/2026 09:00', createdBy: 'Admin User', updatedAt: '19/05/2026 09:15', updatedBy: 'Admin User' },
@@ -682,14 +682,18 @@ class Component extends DCLogic {
         displayName: 'FPT Camera IQ3 - An ninh thông minh', slug: 'fpt-camera-iq3',
         tags: ['bestseller'], bundledFee: 'Tặng kèm thẻ nhớ 32GB',
         attributes: [
-          { icon: 'check-circle-line', name: 'Độ phân giải', value: 'Full HD 2MP', featured: true },
-          { icon: 'globe-01-line', name: 'Góc nhìn', value: '130 độ', featured: true },
+          { icon: 'image-line', name: 'Độ phân giải', value: '2MP (1920x1080)', featured: true },
+          { icon: 'eye-line', name: 'Góc quan sát', value: '110°', featured: true },
+          { icon: 'stars-01-line', name: 'Hỗ trợ ban đêm', value: 'Có (IR 30m)', featured: true },
+          { icon: 'globe-01-line', name: 'Loại kết nối', value: 'WIFI / LAN', featured: false },
+          { icon: 'lock-01-line', name: 'Chống nước', value: 'IP67', featured: false },
+          { icon: 'upload-cloud-line', name: 'Lưu trữ', value: 'Cloud + Thẻ nhớ tối đa 128GB', featured: false },
         ],
         bundledProducts: [{ name: 'Camera IQ3 Full HD', mode: 'full', included: true }, { name: 'Cloud 7 ngày miễn phí', mode: 'full', included: true }],
         privTitle: 'Đặc quyền Camera IQ3',
         privileges: [
-          { icon: 'check-circle-line', title: 'Full HD sắc nét', content: 'Độ phân giải Full HD, góc rộng 130 độ.' },
-          { icon: 'phone-call-line', title: 'Cảnh báo tức thời', content: 'Nhận cảnh báo qua App HiFPT khi có chuyển động.' },
+          'Full HD sắc nét – Độ phân giải Full HD, góc rộng 130 độ.',
+          'Cảnh báo tức thời – Nhận cảnh báo qua App HiFPT khi có chuyển động.',
         ],
         pkgDesc: 'Full HD, góc rộng 130 độ\nCảnh báo chuyển động tức thời\nTặng thẻ nhớ 32GB',
         shortDesc: 'Camera an ninh Full HD, góc rộng, cảnh báo chuyển động tức thời.', longDesc: '',
@@ -698,19 +702,60 @@ class Component extends DCLogic {
         createdAt: '20/05/2026 09:30', createdBy: 'FI-25128', updatedAt: '20/05/2026 09:30', updatedBy: 'FI-25128' },
       { id: 'CAM-IQ3__hifpt', skuCode: 'CAM-IQ3', channel: 'hifpt', status: 'active', packageType: 'Thiết bị',
         displayName: 'FPT Camera IQ3', slug: 'fpt-camera-iq3',
-        tags: [], bundledFee: '', attributes: [], bundledProducts: [], privTitle: '', privileges: [],
+        tags: [], bundledFee: '',
+        attributes: [
+          { icon: 'image-line', name: 'Độ phân giải', value: '2MP (1920x1080)', featured: true },
+          { icon: 'eye-line', name: 'Góc quan sát', value: '110°', featured: true },
+          { icon: 'stars-01-line', name: 'Hỗ trợ ban đêm', value: 'Có (IR 30m)', featured: true },
+          { icon: 'globe-01-line', name: 'Loại kết nối', value: 'WIFI / LAN', featured: false },
+          { icon: 'lock-01-line', name: 'Chống nước', value: 'IP67', featured: false },
+          { icon: 'upload-cloud-line', name: 'Lưu trữ', value: 'Cloud + Thẻ nhớ tối đa 128GB', featured: false },
+        ],
+        bundledProducts: [], privTitle: 'Đặc quyền Camera IQ3',
+        privileges: [
+          'Full HD sắc nét – Độ phân giải Full HD, góc rộng 110°',
+          'Cảnh báo tức thời – Nhận cảnh báo qua App HiFPT khi có chuyển động',
+        ],
         pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '20/05/2026 09:31', createdBy: 'FI-25128', updatedAt: '20/05/2026 09:31', updatedBy: 'FI-25128' },
       { id: 'SA-SMAX__fptvn', skuCode: 'SA-SMAX', channel: 'fptvn', status: 'active', packageType: 'SA',
         displayName: 'FPT Play SMax - Giải trí không giới hạn', slug: 'fpt-play-smax',
-        tags: ['recommended'], bundledFee: '', attributes: [{ icon: 'star-01-line', name: 'Kho nội dung', value: 'HBO, K+, FPT Play', featured: true }], bundledProducts: [{ name: 'FPT Play Box (tặng kèm)', mode: 'full', included: true }],
-        privTitle: 'Đặc quyền FPT Play SMax', privileges: [{ icon: 'star-01-line', title: 'Kho nội dung khổng lồ', content: 'HBO, K+, FPT Play và nhiều kênh khác.' }],
+        tags: ['recommended'], bundledFee: '',
+        attributes: [
+          { icon: 'stars-01-line', name: 'Kho nội dung', value: 'HBO, K+, FPT Play, VTV Cab', featured: true },
+          { icon: 'user-circle-line', name: 'Số thiết bị xem cùng lúc', value: 'Tối đa 2 thiết bị', featured: false },
+          { icon: 'eye-line', name: 'Chất lượng hình ảnh', value: 'Full HD / 4K (tùy nội dung)', featured: false },
+          { icon: 'globe-01-line', name: 'Nền tảng hỗ trợ', value: 'Smart TV, điện thoại, web', featured: false },
+          { icon: 'calendar-line', name: 'Thời hạn gói', value: '12 tháng', featured: false },
+          { icon: 'file-doc-line', name: 'Hình thức thanh toán', value: 'Trả trước hàng tháng', featured: false },
+        ],
+        bundledProducts: [{ name: 'FPT Play Box (tặng kèm)', mode: 'full', included: true }],
+        privTitle: 'Đặc quyền FPT Play SMax',
+        privileges: [
+          'Kho nội dung khổng lồ – HBO, K+, FPT Play và nhiều kênh khác',
+          'Xem đa thiết bị – Đăng nhập cùng lúc trên TV, điện thoại, máy tính bảng',
+          'Không quảng cáo – Trải nghiệm xem phim liền mạch, không gián đoạn',
+        ],
         pkgDesc: 'Kho nội dung HBO, K+, FPT Play\nTặng kèm FPT Play Box',
         shortDesc: 'FPT Play SMax - trải nghiệm giải trí đỉnh cao.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '18/05/2026 15:30', createdBy: '24092 - Nguyễn', updatedAt: '18/05/2026 15:30', updatedBy: '24092 - Nguyễn' },
       { id: 'DEV-WIFI7__fptvn', skuCode: 'DEV-WIFI7', channel: 'fptvn', status: 'draft', packageType: 'Thiết bị',
         displayName: 'Router Wi-Fi 7 - Chuẩn kết nối tương lai', slug: 'router-wifi-7',
-        tags: ['new'], bundledFee: '', attributes: [{ icon: 'zap-line', name: 'Chuẩn Wi-Fi', value: 'Wi-Fi 7', featured: true }], bundledProducts: [], privTitle: '', privileges: [],
+        tags: ['new'], bundledFee: '',
+        attributes: [
+          { icon: 'zap-line', name: 'Chuẩn Wi-Fi', value: 'Wi-Fi 7 (802.11be)', featured: true },
+          { icon: 'bar-chart-square-02-line', name: 'Tốc độ tối đa', value: 'Lên đến 5 Gbps', featured: true },
+          { icon: 'globe-01-line', name: 'Số băng tần', value: 'Tri-band (2.4/5/6GHz)', featured: true },
+          { icon: 'share-01-line', name: 'Cổng kết nối', value: '4x LAN Gigabit', featured: false },
+          { icon: 'marker-pin-01-line', name: 'Vùng phủ sóng', value: 'Tối đa 250m²', featured: false },
+          { icon: 'check-circle-line', name: 'Bảo hành', value: '24 tháng chính hãng', featured: false },
+        ],
+        bundledProducts: [], privTitle: 'Đặc quyền Router Wi-Fi 7',
+        privileges: [
+          'Tốc độ vượt trội – Chuẩn Wi-Fi 7 mới nhất, băng thông lên đến 5Gbps',
+          'Phủ sóng rộng – Tối ưu cho nhà 2-3 tầng, giảm điểm chết sóng',
+          'Bảo hành chính hãng – 24 tháng, đổi mới trong 30 ngày đầu nếu lỗi',
+        ],
         pkgDesc: 'Chuẩn Wi-Fi 7 tốc độ vượt trội', shortDesc: 'Router Wi-Fi 7 tốc độ vượt trội, sẵn sàng cho tương lai.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '16/05/2026 14:22', createdBy: 'FI-25128', updatedAt: '16/05/2026 14:22', updatedBy: 'FI-25128' },
       { id: 'INT-LUX500__tdw', skuCode: 'INT-LUX500', channel: 'tdw', status: 'active', packageType: 'Dịch vụ',
@@ -724,7 +769,7 @@ class Component extends DCLogic {
     return {
       attributes: r && r.attributes ? r.attributes.map(x => ({ ...x })) : [],
       bundledProducts: r && r.bundledProducts ? r.bundledProducts.map(x => ({ ...x })) : [],
-      privileges: r && r.privileges ? r.privileges.map(x => ({ ...x })) : [],
+      privileges: r && r.privileges ? [...r.privileges] : [],
       promoList: r && r.promoList ? [...r.promoList] : [],
       gallery: r && r.gallery ? r.gallery.map(x => ({ ...x })) : [],
       videos: r && r.videos ? r.videos.map(x => ({ ...x })) : [],
@@ -1081,7 +1126,7 @@ class Component extends DCLogic {
       const next = items.slice(); const [it] = next.splice(from, 1); next.splice(to, 0, it);
       this.setState(s => ({ pkgForm: { ...s.pkgForm, attributes: next } }));
     };
-    const gridCols = isDevice ? '20px 1fr 1fr 70px' : '20px 1fr 1fr';
+    const gridCols = isDevice ? '20px 32px 1fr 1fr 90px' : '20px 32px 1fr 1fr';
     return h('div', null,
       h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
@@ -1103,9 +1148,15 @@ class Component extends DCLogic {
               style: { display: 'grid', gridTemplateColumns: gridCols, gap: 8, alignItems: 'center', padding: '8px 14px', borderBottom: i < items.length - 1 ? '1px solid var(--color-border-pale)' : 'none', background: this.state.pkgAttrDragOverIdx === i ? 'var(--color-accent-bg)' : 'transparent', opacity: this.state.pkgAttrDragIdx === i ? 0.4 : 1, transition: 'all .12s' }
             },
               h(DS.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 }, title: 'Kéo để sắp xếp vị trí' }),
+              h('div', { title: 'Icon đồng bộ từ QLCS', style: { width: 32, height: 32, borderRadius: 6, background: 'var(--color-accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } }, h(DS.Icon, { name: it.icon || 'star-01-line', size: 15, color: 'var(--color-accent)' })),
               h(DS.Input, { value: it.name, disabled: true }),
               h(DS.Input, { value: it.value, disabled: true }),
-              isDevice && h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(DS.Checkbox, { label: 'Nổi bật', checked: it.featured, onChange: () => toggleFeatured(i) }))
+              isDevice && (() => {
+                const locked = !it.featured && featuredCount >= 3;
+                return h('div', { style: { display: 'flex', justifyContent: 'center' } },
+                  h(DS.Checkbox, { label: 'Nổi bật', checked: it.featured, disabled: locked, onChange: () => toggleFeatured(i) })
+                );
+              })()
             ))
       )
     );
@@ -1142,38 +1193,19 @@ class Component extends DCLogic {
   renderPkgPriv(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const items = this.state.pkgForm.privileges || [];
-    const update = (i, key, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: s.pkgForm.privileges.map((it, j) => j === i ? { ...it, [key]: val } : it) } }));
-    const remove = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: s.pkgForm.privileges.filter((_, j) => j !== i) } }));
-    const add = () => {
-      if (items.length >= 10) { this.toast('warning', 'Đã đạt giới hạn', 'Tối đa 10 đặc quyền.'); return; }
-      this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: [...s.pkgForm.privileges, { title: '', content: '' }] } }));
-    };
-    const pickImage = (i) => this.toast('info', 'Chọn ảnh đặc quyền', 'Mở hộp thoại tải ảnh cho đặc quyền này (demo).');
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginTop: -6 } }, this.pkgSectionBadge('editable', 'Vận hành tự quản lý')),
       this.field('Tiêu đề chung đặc quyền', h(DS.Input, { defaultValue: r ? r.privTitle : '', placeholder: 'VD: Đặc quyền khi đăng ký Internet Giga' }), true),
       h('div', null,
-        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
-          h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Danh sách đặc quyền'),
-          h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, items.length + ' / 10')
-        ),
-        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
-          items.length === 0
-            ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic' } }, 'Chưa có đặc quyền nào.')
-            : items.map((it, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '28px 44px 1fr 1.4fr 40px', gap: 10, alignItems: 'center', padding: '10px 14px', borderBottom: i < items.length - 1 ? '1px solid var(--color-border-pale)' : 'none' } },
-                h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', textAlign: 'center' } }, i + 1),
-                h('div', { onClick: () => pickImage(i), title: 'Chọn ảnh đặc quyền', style: { width: 36, height: 36, borderRadius: 8, border: '1px dashed var(--color-border-strong)', background: 'var(--color-surface-alt)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(DS.Icon, { name: 'image-line', size: 16, color: 'var(--color-text-subtle)' })),
-                h(DS.Input, { value: it.title, placeholder: 'Tiêu đề đặc quyền…', onChange: e => update(i, 'title', e && e.target ? e.target.value : e) }),
-                h(DS.Input, { value: it.content, placeholder: 'Nội dung đặc quyền…', onChange: e => update(i, 'content', e && e.target ? e.target.value : e) }),
-                h(DS.IconButton, { icon: 'x-circle-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => remove(i) })
-              )),
-          h('div', { style: { padding: '9px 12px', textAlign: 'left', borderTop: items.length > 0 ? '1px solid var(--color-border-pale)' : 'none' } },
-            h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add, disabled: items.length >= 10 }, 'Thêm Đặc Quyền')
-          )
-        )
+        h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Danh sách đặc quyền'),
+        h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Mỗi dòng tương ứng hiển thị 1 tích (✓) trên trang.'),
+        h(DS.Textarea, {
+          defaultValue: items.join('\n'), rows: 6, placeholder: 'VD:\nTốc độ vượt trội\nLắp đặt nhanh trong 24h\nHỗ trợ 24/7',
+          onBlur: e => this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: (e.target ? e.target.value : e).split('\n').map(x => x.trim()).filter(Boolean) } }))
+        })
       ),
-      h(DS.Divider, null),
-      this.uploadBox('Hình ảnh đặc quyền (tối đa 1 ảnh)', 'JPG / PNG')
+      this.PKG_SHOW_BUNDLED(r) && h(DS.Divider, null),
+      this.PKG_SHOW_BUNDLED(r) && this.uploadBox('Hình ảnh đặc quyền (tối đa 1 ảnh)', 'JPG / PNG')
     );
   }
 
