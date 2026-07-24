@@ -2553,7 +2553,7 @@ class Component extends DCLogic {
   LDP_TPL_DATA() {
     return [
       { id: 'camera',     label: 'LDP Camera AI',         icon: 'image-line',     hdrBg: '#fff4ed', hdrColor: '#c2410c', sections: 8,   desc: 'Giới thiệu & Bán FPT Camera AI + gói Cloud',        tags: ['product'] },
-      { id: 'campaign',   label: 'LDP Campaign Wi-Fi 7',  icon: 'zap-line',       hdrBg: '#eff6ff', hdrColor: '#1d4ed8', sections: 9,  desc: 'Chiến dịch ưu đãi Wi-Fi 7, thu lead Lux/Ultra Fast',  tags: ['internet'] },
+      { id: 'campaign',   label: 'LDP Campaign Wi-Fi 7',  icon: 'zap-line',       hdrBg: '#eff6ff', hdrColor: '#1d4ed8', sections: 10, desc: 'Chiến dịch ưu đãi Wi-Fi 7, thu lead Lux/Ultra Fast',  tags: ['internet'] },
       { id: 'internet',   label: 'LDP Internet',          icon: 'globe-01-line',  hdrBg: '#fff7ed', hdrColor: '#ea580c', sections: 11,  desc: 'Cáp quang cá nhân / gia đình, thu lead',              tags: ['internet'] },
       { id: 'sa',         label: 'LDP SA (FPT Play)',     icon: 'star-01-line',   hdrBg: '#f5f3ff', hdrColor: '#6d28d9', sections: 10,  desc: 'Dịch vụ giải trí FPT Play / SA',                      tags: ['entertainment'] },
       { id: 'thulead',    label: 'LDP Thu Lead',          icon: 'file-check-line',hdrBg: '#ecfdf5', hdrColor: '#065f46', sections: 10,   desc: 'Tối ưu chuyển đổi thu thập lead',                     tags: ['lead'] },
@@ -2598,6 +2598,7 @@ class Component extends DCLogic {
         { id: 'camp-hero',     name: 'Hero Wi-Fi 7 (Countdown)',              desc: 'Headline, Wi-Fi 7, bộ đếm ngược thời gian kết thúc ưu đãi, form nhanh',    type: 'Hero',       emoji: '⚡',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
         { id: 'camp-countdown', name: 'Dải Countdown độc lập (Case 2)',       desc: 'Section độc lập · Ưu đãi theo thời gian, bộ đếm giờ ngược, CTA',                    type: 'Countdown', emoji: '⏰',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
         { id: 'camp-usp',      name: 'USP Công nghệ Wi-Fi 7',                 desc: 'Tốc độ băng thông, độ trễ cực thấp, Multi-Link Operation (MLO)',             type: 'Features',   emoji: '✨',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
+        { id: 'camp-highlights', name: 'Công nghệ nổi bật của Wi-Fi 7',       desc: 'Tiêu đề section, lưới 6 thẻ công nghệ (icon cố định, tiêu đề, mô tả) và nút CTA', type: 'Highlights', emoji: '📶',  ec: 'rgba(59,130,246,0.15)',  tc: '#3b82f6' },
         { id: 'camp-products', name: 'Các gói cước Wi-Fi 7',                  desc: 'Gói Lux 500, Lux 800 trang bị AP & Router thế hệ Wi-Fi 7',                   type: 'Products',   emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
         { id: 'camp-compare',  name: 'Bảng so sánh thế hệ Wi-Fi',            desc: 'Bảng đối chiếu thông số giữa Wi-Fi 5, Wi-Fi 6 và Wi-Fi 7',                   type: 'Comparison', emoji: '📊',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
         { id: 'camp-targets',  name: 'Đối tượng mục tiêu',                   desc: 'Gợi ý sử dụng: Gamer/Streamer, Hộ gia đình đông người, Biệt thự',           type: 'Targets',    emoji: '🎯',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
@@ -5152,7 +5153,7 @@ class Component extends DCLogic {
       h('div', { style: { width: 32, height: 32, background: 'var(--color-accent)', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 } }, String(n)),
       h('div', { style: { display: 'flex', flexDirection: 'column' } }, ...ch)
     );
-    const EIMAP = { '🖼':'image-line','📊':'bar-chart-square-02-line','📦':'folder-line','📺':'star-01-line','🎬':'eye-line','⭐':'star-01-line','📋':'file-check-line','🎁':'zap-line','❓':'info-circle-line','📝':'edit-01-line','⏱':'clock-line','⏰':'clock-line','⚽':'star-01-solid','✨':'stars-01-line','🎭':'image-line','💰':'bar-chart-square-02-line','🎙':'phone-line','📌':'marker-pin-01-line','🚀':'upload-cloud-line','📷':'image-line','🔍':'search-medium-line','📱':'phone-line','🏆':'star-01-solid','📣':'send-01-line','👣':'arrow-right-line','🎪':'image-line','🎯':'check-circle-line','💻':'edit-01-line','⚡':'zap-line' };
+    const EIMAP = { '🖼':'image-line','📊':'bar-chart-square-02-line','📦':'folder-line','📺':'star-01-line','🎬':'eye-line','⭐':'star-01-line','📋':'file-check-line','🎁':'zap-line','❓':'info-circle-line','📝':'edit-01-line','⏱':'clock-line','⏰':'clock-line','⚽':'star-01-solid','✨':'stars-01-line','🎭':'image-line','💰':'bar-chart-square-02-line','🎙':'phone-line','📌':'marker-pin-01-line','🚀':'upload-cloud-line','📷':'image-line','🔍':'search-medium-line','📱':'phone-line','🏆':'star-01-solid','📣':'send-01-line','👣':'arrow-right-line','🎪':'image-line','🎯':'check-circle-line','💻':'edit-01-line','⚡':'zap-line','📶':'globe-01-line' };
 
     // ── LdpDateTimeTrigger — opens shared renderDatePickerModal() ────────────
     const LdpDateTimeTrigger = () => {
@@ -5474,7 +5475,7 @@ class Component extends DCLogic {
       }
     }
     // ── Section background panel (Camera sections 2,3,4,6) ─────────────────
-    const CAM_BG_IDS = ['lead-top-header','cam-usp','cam-detail','cam-select','cam-awards','camp-countdown','camp-usp','camp-products','camp-compare','camp-targets','camp-videos','inet-countdown','inet-stats','inet-products','inet-playbox','inet-review','inet-steps','inet-promo','sa-countdown','sa-sports','sa-experience','sa-categories','sa-pricing','sa-commentators','lead-countdown','lead-proof','lead-pricing','lead-pkg-compare','lead-steps','lead-reviews','lead-feedback','lead-procedure','inet-faq','sa-faq-support','cam-faq','camp-faq','lead-faq','sa-products'];
+    const CAM_BG_IDS = ['lead-top-header','cam-usp','cam-detail','cam-select','cam-awards','camp-countdown','camp-usp','camp-highlights','camp-products','camp-compare','camp-targets','camp-videos','inet-countdown','inet-stats','inet-products','inet-playbox','inet-review','inet-steps','inet-promo','sa-countdown','sa-sports','sa-experience','sa-categories','sa-pricing','sa-commentators','lead-countdown','lead-proof','lead-pricing','lead-pkg-compare','lead-steps','lead-reviews','lead-feedback','lead-procedure','inet-faq','sa-faq-support','cam-faq','camp-faq','lead-faq','sa-products'];
     const CAM_BG_DEFAULTS = {
       'lead-top-header': { mode:'color', color:'#1e2a5c', image:'' },
       'cam-usp':        { mode:'color', color:'#ffffff', image:'' },
@@ -5483,6 +5484,7 @@ class Component extends DCLogic {
       'cam-awards':     { mode:'color', color:'#1e293b', image:'' },
       'camp-countdown': { mode:'color', color:'#1e293b', image:'' },
       'camp-usp':       { mode:'color', color:'#ffffff', image:'' },
+      'camp-highlights': { mode:'color', color:'#1e293b', image:'' },
       'camp-products':  { mode:'color', color:'#eff6ff', image:'' },
       'camp-compare':   { mode:'color', color:'#0f172a', image:'' },
       'camp-targets':   { mode:'color', color:'#f8fafc', image:'' },
@@ -6840,6 +6842,28 @@ class Component extends DCLogic {
           g2(fld('Tiêu đề ' + f.n, h(DS.Input, { defaultValue: f.t })), fld('Mô tả ngắn', h(DS.Input, { defaultValue: f.d })))
         ))),
       ],
+      // ── CÔNG NGHỆ NỔI BẬT WI-FI 7 (LƯỚI 6 THẺ, ICON CỐ ĐỊNH) ──
+      'camp-highlights': [
+        fld('Tiêu đề section', h(DS.Input, { defaultValue: 'Công nghệ nổi bật của Wi-Fi 7', placeholder: 'VD: Công nghệ nổi bật của Wi-Fi 7' }), true),
+        divr('LƯỚI 6 THẺ CÔNG NGHỆ'),
+        h('div', { key: 'hl-note', style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, padding: '8px 12px', background: 'var(--color-surface-sunken)', borderRadius: 8, fontSize: 12, color: 'var(--color-text-subtle)' } },
+          h(DS.Icon, { name: 'lock-01-line', size: 13, color: 'var(--color-text-subtle)' }),
+          'Icon mỗi thẻ được cố định theo thiết kế — chỉ chỉnh được tiêu đề và mô tả.'
+        ),
+        ...[
+          { n: 1, title: 'Tốc độ đến 10Gbps',        desc: 'Tốc độ đối xứng vượt trội, tải nhanh - upload nhanh' },
+          { n: 2, title: 'Độ trễ cực thấp <10ms',    desc: 'Độ trễ siêu thấp cho game online, streaming và họp trực tuyến' },
+          { n: 3, title: 'Kết nối gần 100 thiết bị', desc: 'Xử lý mượt mà nhiều thiết bị cùng lúc, không giật lag' },
+          { n: 4, title: '3 băng tần mạnh mẽ',       desc: 'Hỗ trợ 2.4GHz, 5GHz và 6GHz giảm nhiễu, tăng hiệu suất' },
+          { n: 5, title: 'Phủ sóng rộng hơn',        desc: 'Công nghệ Beamforming và Multi-Link mang lại vùng phủ sóng mạnh mẽ' },
+          { n: 6, title: 'Bảo mật nâng cao',         desc: 'Chuẩn WPA3 mới nhất, bảo vệ toàn diện cho dữ liệu của bạn' },
+        ].map(f => cb('hl'+f.n, h('div', null,
+          h('div', { style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-text-subtle)', letterSpacing: '0.04em', marginBottom: 10 } }, 'Thẻ ' + f.n),
+          g2(fld('Tiêu đề ' + f.n, h(DS.Input, { defaultValue: f.title })), fld('Mô tả ngắn', h(DS.Input, { defaultValue: f.desc })))
+        ))),
+        divr('NÚT HÀNH ĐỘNG (CTA) DƯỚI LƯỚI'),
+        g2(fld('CTA — Text', h(DS.Input, { defaultValue: 'FPT Wi-Fi 7 Vượt trội như thế nào?' })), fld('CTA — URL', h(DS.Input, { placeholder: '#chi-tiet-cong-nghe' }))),
+      ],
       // ── CATEGORIES (SA) ──
       Categories: [
         g2(fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Giải trí toàn diện' })), fld('Mô tả section', h(DS.Input, { placeholder: 'Mô tả ngắn...' }))),
@@ -7081,7 +7105,7 @@ class Component extends DCLogic {
           }
         }
         return [
-          fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Bảng so sánh thế hệ Wi-Fi' })),
+          g2(fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Bảng so sánh thế hệ Wi-Fi' })), fld('Mô tả section', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả ngắn (tuỳ chọn)...' }))),
           divr('CẤU HÌNH CHI TIẾT BẢNG SO SÁNH'),
           h(ComparisonEd, { key: 'cmp-ed' }),
           h(CTABlock, { key: 'cta-cmp' },
