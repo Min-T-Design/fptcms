@@ -25,6 +25,7 @@
 <body>
 <x-dc>
 <helmet>
+  <link rel="icon" type="image/webp" href="assets/logo-fpt.webp">
   <link rel="stylesheet" href="_ds/fpt-design-system-4069b42b-a7c3-46ff-acb7-dddf8f633b9e/tokens/fonts.css">
   <link rel="stylesheet" href="_ds/fpt-design-system-4069b42b-a7c3-46ff-acb7-dddf8f633b9e/tokens/colors.css">
   <link rel="stylesheet" href="_ds/fpt-design-system-4069b42b-a7c3-46ff-acb7-dddf8f633b9e/tokens/typography.css">
@@ -2101,27 +2102,46 @@ class Component extends DCLogic {
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa quy tắc?', 'Quy tắc "' + r.name + '" sẽ bị xóa khỏi hệ thống.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Quy tắc đã được xóa.'); }, true) },
       ]) },
     ];
-    return this.listCard(
-      this.toolbar(
-        h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'wrap', minWidth: 0 } },
-          this.search('Tìm quy tắc…', 'ruleSearch'),
-          h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: channelOptions, value: channelF, onChange: v => this.setState({ ruleChannelFilter: v, rules_pg: 1 }) }))
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+      h(DS.Alert, { theme: 'info', title: 'Quy tắc ưu tiên' }, 'Quy tắc có độ ưu tiên cao hơn sẽ đè lên quy tắc thấp hơn khi nhiều quy tắc cùng áp dụng cho một gói bán hoặc kênh bán.'),
+      this.listCard(
+        this.toolbar(
+          h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'wrap', minWidth: 0 } },
+            this.search('Tìm quy tắc…', 'ruleSearch'),
+            h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: channelOptions, value: channelF, onChange: v => this.setState({ ruleChannelFilter: v, rules_pg: 1 }) }))
+          ),
+          h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ruleEditor: null }) }, 'Thêm Quy tắc mới')
         ),
-        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ruleEditor: null }) }, 'Thêm Quy tắc mới')
-      ),
-      rules.length ? this.tbl(columns, this.sliceData(rules, 'rules'), 'id', r => this.openRuleDetail(r)) : this.empty('Chưa có quy tắc nào.'),
-      rules.length ? this.renderPagBar(rules.length, 'rules', 'quy tắc') : null
+        rules.length ? this.tbl(columns, this.sliceData(rules, 'rules'), 'id', r => this.openRuleDetail(r)) : this.empty('Chưa có quy tắc nào.'),
+        rules.length ? this.renderPagBar(rules.length, 'rules', 'quy tắc') : null
+      )
     );
   }
   CHECKOUT_RULES() {
     return [
-      { id: 1, name: 'Ưu đãi Combo Thể thao Hè 2026', channel: 'Global', skus: ['INT-SKY', 'SA-SMAX'], period: '01/06 – 31/08', priority: 10, headerBanner: 'Banner Hero Hè 2026', footerBanner: '— Không hiển thị —', popupCheckout: 'Popup Flash Sale', status: 'active' },
-      { id: 2, name: 'Flash Sale Wi-Fi 7', channel: 'Website fpt.vn', skus: ['DEV-WIFI7'], period: '15/06 – 30/06', priority: 5, headerBanner: 'Banner Wi-Fi 7', footerBanner: 'Banner Wi-Fi 7', popupCheckout: '— Không hiển thị —', status: 'active' },
-      { id: 3, name: 'Popup Camera AI', channel: 'App HiFPT', skus: ['CAM-IQ4S'], period: 'Liên tục', priority: 3, headerBanner: '— Không hiển thị —', footerBanner: '— Không hiển thị —', popupCheckout: 'Popup Camera AI', status: 'draft' },
+      { id: 1, name: 'Ưu đãi Combo Thể thao Hè 2026', channel: 'Global', skus: ['INT-SKY', 'SA-SMAX'], period: '01/06 – 31/08', priority: 10, headerBanner: 'Banner Hero Hè 2026', footerBanner: '— Không hiển thị —', popupCheckout: 'Popup Flash Sale', status: 'active',
+        regPopupDelay: 3, regPopupAutoClose: 10,
+        payModalPopup: 'Popup Ưu đãi Thanh toán', payModalFreq: '1 lần/phiên', payModalDelay: 2, payModalAutoClose: 8,
+        payVoucherPopup: 'Popup Nhập mã KM', payVoucherDelay: 0, payVoucherAutoClose: 6,
+        payHeaderBanner: 'Banner Thanh toán An Tâm', payFooterBanner: '— Không hiển thị —',
+        doneHeaderBanner: 'Banner Cảm ơn', doneAppBanner: 'Banner Tải App HiFPT', donePopup: 'Popup Tri ân Khách hàng', doneDelay: 1, doneAutoClose: 8 },
+      { id: 2, name: 'Flash Sale Wi-Fi 7', channel: 'Website fpt.vn', skus: ['DEV-WIFI7'], period: '15/06 – 30/06', priority: 5, headerBanner: 'Banner Wi-Fi 7', footerBanner: 'Banner Wi-Fi 7', popupCheckout: '— Không hiển thị —', status: 'active',
+        regPopupDelay: 0, regPopupAutoClose: 0,
+        payModalPopup: '— Không hiển thị —', payModalFreq: 'Mỗi lần vào', payModalDelay: 0, payModalAutoClose: 0,
+        payVoucherPopup: '— Không hiển thị —', payVoucherDelay: 0, payVoucherAutoClose: 0,
+        payHeaderBanner: 'Banner Wi-Fi 7', payFooterBanner: '— Không hiển thị —',
+        doneHeaderBanner: '— Không hiển thị —', doneAppBanner: 'Banner Tải App HiFPT', donePopup: '— Không hiển thị —', doneDelay: 0, doneAutoClose: 0 },
+      { id: 3, name: 'Popup Camera AI', channel: 'App HiFPT', skus: ['CAM-IQ4S'], period: 'Liên tục', priority: 3, headerBanner: '— Không hiển thị —', footerBanner: '— Không hiển thị —', popupCheckout: 'Popup Camera AI', status: 'draft',
+        regPopupDelay: 5, regPopupAutoClose: 12,
+        payModalPopup: '— Không hiển thị —', payModalFreq: '1 lần/phiên', payModalDelay: 0, payModalAutoClose: 0,
+        payVoucherPopup: '— Không hiển thị —', payVoucherDelay: 0, payVoucherAutoClose: 0,
+        payHeaderBanner: '— Không hiển thị —', payFooterBanner: '— Không hiển thị —',
+        doneHeaderBanner: '— Không hiển thị —', doneAppBanner: '— Không hiển thị —', donePopup: 'Popup Tri ân Khách hàng', doneDelay: 2, doneAutoClose: 8 },
     ];
   }
   openRuleDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const sub = t => h('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--color-accent-text)', margin: '16px 0 2px', paddingTop: 12, borderTop: '1px solid var(--color-border)' } }, t);
     this.openDrawer({ title: r.name, subtitle: 'Chi tiết Quy tắc Banner & Popup', width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên quy tắc', r.name),
@@ -2129,10 +2149,28 @@ class Component extends DCLogic {
         this.detailRow('Gói bán áp dụng', h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } }, r.skus.map(s => h(DS.Badge, { key: s, theme: 'brand' }, s)))),
         this.detailRow('Khoảng thời gian', r.period),
         this.detailRow('Ưu tiên', String(r.priority)),
+        this.detailRow('Trạng thái', this.statusBadge(r.status)),
+
+        sub('Trang thông tin đăng ký'),
         this.detailRow('Header Banner', r.headerBanner),
         this.detailRow('Footer Banner', r.footerBanner),
-        this.detailRow('Popup Checkout', r.popupCheckout),
-        this.detailRow('Trạng thái', this.statusBadge(r.status))
+        this.detailRow('Pop-up', r.popupCheckout),
+        this.detailRow('Delay mở / Tự tắt sau', r.regPopupDelay + 's / ' + r.regPopupAutoClose + 's'),
+
+        sub('Trang thanh toán & nhập mã KM'),
+        this.detailRow('Pop-up đồ họa (Modal)', r.payModalPopup),
+        this.detailRow('Tần suất', r.payModalFreq),
+        this.detailRow('Delay mở / Tự tắt sau (Modal)', r.payModalDelay + 's / ' + r.payModalAutoClose + 's'),
+        this.detailRow('Pop-up khi nhập mã KM', r.payVoucherPopup),
+        this.detailRow('Delay mở / Tự tắt sau (Mã KM)', r.payVoucherDelay + 's / ' + r.payVoucherAutoClose + 's'),
+        this.detailRow('Header Banner (Thanh toán)', r.payHeaderBanner),
+        this.detailRow('Footer Banner (Thanh toán)', r.payFooterBanner),
+
+        sub('Trang hoàn tất đơn hàng'),
+        this.detailRow('Header Banner', r.doneHeaderBanner),
+        this.detailRow('Banner quảng bá App / Sản phẩm', r.doneAppBanner),
+        this.detailRow('Pop-up Tri ân / Hướng dẫn tải App', r.donePopup),
+        this.detailRow('Delay mở / Tự tắt sau', r.doneDelay + 's / ' + r.doneAutoClose + 's')
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -2142,70 +2180,127 @@ class Component extends DCLogic {
   }
   renderRuleEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ ruleEditor: undefined, ruleSkuSelected: undefined, ruleSkuGroup: undefined, ruleSkuQ: undefined });
+    const isNew = !r; const back = () => this.setState({ ruleEditor: undefined, ruleSkuSelected: undefined, ruleSkuGroup: undefined, ruleSkuQ: undefined, ruleSkuCheckAll: undefined, ruleSectionsOpen: undefined, ruleActive: undefined });
+    const ruleActive = this.state.ruleActive !== undefined ? this.state.ruleActive : (r ? r.status === 'active' : true);
+    const openSections = this.state.ruleSectionsOpen || { info: true, reg: false, pay: false, done: false };
+    const toggleSection = k => this.setState({ ruleSectionsOpen: { ...openSections, [k]: !openSections[k] } });
     const skus = this.SKUS().filter(s => this.state.skuActive[s.code] !== false && s.status === 'active');
     const selectedSkus = this.state.ruleSkuSelected !== undefined ? this.state.ruleSkuSelected : (r ? r.skus : []);
-    const groupLabelMap = { Internet: 'Internet', Camera: 'Cam', 'Truyền hình': 'TV', Cloud: 'Cloud' };
+    const groupLabelMap = { Internet: 'Internet', Camera: 'Camera', 'Truyền hình': 'TV', Cloud: 'Thiết bị' };
     const filterBtns = [{ id: 'all', label: 'Tất cả' }, ...Array.from(new Set(skus.map(s => s.group))).map(g => ({ id: g, label: groupLabelMap[g] || g }))];
     const skuGroupF = this.state.ruleSkuGroup || 'all';
     const skuQ = (this.state.ruleSkuQ || '').toLowerCase();
     const filteredSkus = skus.filter(s => (skuGroupF === 'all' || s.group === skuGroupF) && (!skuQ || s.code.toLowerCase().includes(skuQ) || s.name.toLowerCase().includes(skuQ)));
     const toggleSku = code => { const next = selectedSkus.includes(code) ? selectedSkus.filter(c => c !== code) : [...selectedSkus, code]; this.setState({ ruleSkuSelected: next }); };
-    const allChecked = filteredSkus.length > 0 && filteredSkus.every(s => selectedSkus.includes(s.code));
-    const sectionTitle = t => h('div', { style: { fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--color-accent-text)', margin: '4px 0 10px' } }, t);
-    return this.editorShell(
-      isNew ? 'Thêm quy tắc mới' : 'Chỉnh sửa quy tắc: ' + r.name, 'Quy tắc Banner & Popup trang Checkout', back,
-      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-        h('div', null, sectionTitle('1 · Thông tin & điều kiện'),
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-            h(DS.Input, { label: 'Tên quy tắc *', defaultValue: r ? r.name : '', placeholder: 'VD: Ưu đãi Combo Thể thao Hè 2026' }),
-            h('div', { style: { display: 'flex', gap: 12 } },
-              h('div', { style: { flex: 1 } }, h(DS.Select, { label: 'Kênh áp dụng *', options: ['Global', 'tongdaiwifi', 'App HiFPT', 'Website fpt.vn'], defaultValue: r ? r.channel : 'Global' })),
-              h('div', { style: { width: 120 } }, h(DS.Input, { label: 'Ưu tiên *', type: 'number', defaultValue: r ? String(r.priority) : '0' }))
+    const bannerOptions = ['Banner Hero Hè 2026', 'Banner Wi-Fi 7', 'Banner Camera AI', 'Banner Thanh toán An Tâm', 'Banner Cảm ơn', 'Banner Tải App HiFPT'];
+    const popupOptions = ['Popup Flash Sale', 'Popup Camera AI', 'Popup Ưu đãi Thanh toán', 'Popup Nhập mã KM', 'Popup Tri ân Khách hàng'];
+    const fieldHint = t => t && h('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 4 } }, t);
+    const bannerSelect = (label, def, hint) => h('div', null,
+      h(DS.Select, { label, options: ['— Không hiển thị —', ...bannerOptions], defaultValue: def || '— Không hiển thị —' }),
+      fieldHint(hint)
+    );
+    const popupBlock = (label, def, delayDef, autoCloseDef, hint, extra) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+      h('div', { style: { display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12, alignItems: 'start' } },
+        h('div', null,
+          h(DS.Select, { label, options: ['— Không hiển thị —', ...popupOptions], defaultValue: def || '— Không hiển thị —' }),
+          fieldHint(hint)
+        ),
+        h(DS.Input, { label: 'Delay mở (giây)', type: 'number', defaultValue: String(delayDef != null ? delayDef : 0) }),
+        h(DS.Input, { label: 'Tự tắt sau (giây)', type: 'number', defaultValue: String(autoCloseDef != null ? autoCloseDef : 0) })
+      ),
+      extra
+    );
+    const sections = [
+        { key: 'info', title: 'Thông tin chung & điều kiện áp dụng', icon: 'filter-lines-line', content:
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, alignItems: 'start' } },
+            h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px' } },
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } },
+                'Chọn gói bán áp dụng (SKU)', h('span', { style: { color: 'var(--color-danger)' } }, ' *')
+              ),
+              h('div', { style: { marginBottom: 6 } },
+                h(DS.Checkbox, { label: 'Chọn tất cả', checked: !!this.state.ruleSkuCheckAll, onChange: v => this.setState({ ruleSkuCheckAll: v, ruleSkuSelected: v ? filteredSkus.map(s => s.code) : [] }) })
+              ),
+              h('div', { style: { marginBottom: 8 } },
+                h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', size: 'sm', value: this.state.ruleSkuQ || '', onChange: e => this.setState({ ruleSkuQ: e.target ? e.target.value : e }) })
+              ),
+              h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
+                filterBtns.map(f => h(DS.Tag, { key: f.id, selected: skuGroupF === f.id, onClick: () => this.setState({ ruleSkuGroup: f.id }) }, f.label))
+              ),
+              h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 400, overflowY: 'auto', overflowX: 'hidden' } },
+                filteredSkus.length ? filteredSkus.map(s => { const isSel = selectedSkus.includes(s.code); return h('div', { key: s.code, onClick: () => toggleSku(s.code), style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2, background: isSel ? 'var(--color-accent-bg)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent' } },
+                  h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(s.code), label: '' })),
+                  h('span', { style: { fontFamily: 'monospace', fontSize: 11.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', fontWeight: 700 } }, s.code),
+                  h('span', { style: { fontSize: 12.5 } }, s.name),
+                  h('span', { style: { flex: 1 } }),
+                  h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface)', padding: '1px 6px', borderRadius: 4, fontWeight: 500 } }, s.group)
+                ); }) : h('div', { style: { padding: '16px 6px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy SKU phù hợp.')
+              )
             ),
-            h('div', null,
-              h('label', { style: { display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 6 } }, 'Thời gian áp dụng'),
-              h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', showTime: true, containerStyle: { width: '100%' } })
-            ),
-            h('div', null,
-              h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'SKUs áp dụng * (≥ 1)'),
-              h('div', { style: { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px' } },
-                h('div', { style: { marginBottom: 6 } },
-                  h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChecked, onChange: v => { const rest = selectedSkus.filter(c => !filteredSkus.some(s => s.code === c)); this.setState({ ruleSkuSelected: v ? [...rest, ...filteredSkus.map(s => s.code)] : rest }); } })
-                ),
-                h('div', { style: { marginBottom: 8 } },
-                  h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', size: 'sm', value: this.state.ruleSkuQ || '', onChange: e => this.setState({ ruleSkuQ: e.target ? e.target.value : e }) })
-                ),
-                h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
-                  filterBtns.map(f => h(DS.Tag, { key: f.id, selected: skuGroupF === f.id, onClick: () => this.setState({ ruleSkuGroup: f.id }) }, f.label))
-                ),
-                h('div', { className: 'fpt-scroll', style: { maxHeight: 320, overflow: 'auto' } },
-                  filteredSkus.length ? filteredSkus.map(s => h('div', { key: s.code, onClick: () => toggleSku(s.code), style: { display: 'flex', alignItems: 'center', gap: 8, padding: '0 6px', minHeight: 44, borderRadius: 6, cursor: 'pointer', background: selectedSkus.includes(s.code) ? 'var(--color-accent-bg)' : 'transparent' } },
-                    h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: selectedSkus.includes(s.code), onChange: () => toggleSku(s.code), label: '' })),
-                    h('span', { style: { fontFamily: 'monospace', fontSize: 11.5, color: 'var(--color-accent-text)', fontWeight: 600 } }, s.code),
-                    h('span', { style: { fontSize: 12.5 } }, s.name),
-                    h('span', { style: { flex: 1 } }),
-                    h(DS.Badge, { theme: 'neutral' }, s.group)
-                  )) : h('div', { style: { padding: '16px 6px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy SKU phù hợp.')
-                )
+            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+              h(DS.Input, { label: 'Tên quy tắc hiển thị', required: true, defaultValue: r ? r.name : '', placeholder: 'VD: Ưu đãi Combo Thể thao Hè 2026' }),
+              h('div', null,
+                h('label', { style: { display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 6 } }, 'Thời gian bắt đầu — Thời gian kết thúc'),
+                h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', showTime: true, containerStyle: { width: '100%' } })
               )
             )
           )
-        ),
-        h(DS.Divider, null),
-        h('div', null, sectionTitle('2 · Banner đầu trang'), h(DS.Select, { label: '', options: ['— Không hiển thị —', 'Banner Hero Hè 2026', 'Banner Wi-Fi 7', 'Banner Camera AI'], defaultValue: r ? r.headerBanner : '— Không hiển thị —' })),
-        h('div', null, sectionTitle('3 · Banner chân trang'), h(DS.Select, { label: '', options: ['— Không hiển thị —', 'Banner Hero Hè 2026', 'Banner Wi-Fi 7'], defaultValue: r ? r.footerBanner : '— Không hiển thị —' })),
-        h('div', null, sectionTitle('4 · Popup Checkout'),
-          h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { flex: 1 } }, h(DS.Select, { label: 'Popup', options: ['— Không hiển thị —', 'Popup Flash Sale', 'Popup Camera AI'], defaultValue: r ? r.popupCheckout : '— Không hiển thị —' })),
-            h('div', { style: { flex: 1 } }, h(DS.Select, { label: 'Kiểu kích hoạt', options: ['Exit Intent', 'Immediate', 'Trễ 15 giây', 'Trễ 30 giây'], defaultValue: 'Exit Intent' }))
+        },
+        { key: 'reg', title: 'Trang thông tin đăng ký', icon: 'edit-01-line', content:
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+            h('div', { style: { display: 'flex', gap: 12 } },
+              h('div', { style: { flex: 1 } }, bannerSelect('Banner đầu trang (Header)', r ? r.headerBanner : null, 'Ví dụ: Banner ưu đãi nổi bật đầu trang đăng ký')),
+              h('div', { style: { flex: 1 } }, bannerSelect('Banner chân trang (Footer)', r ? r.footerBanner : null, 'Ví dụ: Banner nhắc lại ưu đãi cuối trang đăng ký'))
+            ),
+            popupBlock('Pop-up', r ? r.popupCheckout : null, r ? r.regPopupDelay : 0, r ? r.regPopupAutoClose : 0, 'Ví dụ: Popup giới thiệu ưu đãi khi vào trang đăng ký')
           )
-        ),
-        h(DS.Divider, null),
-        h('div', null, sectionTitle('5 · Trạng thái'), h(DS.Checkbox, { defaultChecked: r ? r.status === 'active' : true, label: 'Kích hoạt quy tắc hoạt động (Active)' }))
+        },
+        { key: 'pay', title: 'Trang thanh toán & nhập mã KM', icon: 'send-01-line', content:
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+            popupBlock('Pop-up đồ họa (Modal Popup)', r ? r.payModalPopup : null, r ? r.payModalDelay : 0, r ? r.payModalAutoClose : 0,
+              'Ví dụ: Popup khuyến mãi hiển thị ngay khi vào trang thanh toán',
+              h('div', { style: { display: 'flex', gap: 16 } },
+                h(DS.Radio, { name: 'payModalFreq', label: '1 lần/phiên', defaultChecked: !r || r.payModalFreq === '1 lần/phiên' }),
+                h(DS.Radio, { name: 'payModalFreq', label: 'Mỗi lần vào', defaultChecked: !!(r && r.payModalFreq === 'Mỗi lần vào') })
+              )
+            ),
+            popupBlock('Pop-up khi áp Voucher (nhập mã KM)', r ? r.payVoucherPopup : null, r ? r.payVoucherDelay : 0, r ? r.payVoucherAutoClose : 0, 'Ví dụ: Popup xác nhận ưu đãi khi áp mã giảm giá'),
+            h('div', { style: { display: 'flex', gap: 12 } },
+              h('div', { style: { flex: 1 } }, bannerSelect('Header Banner (Thanh toán)', r ? r.payHeaderBanner : null, 'Ví dụ: Banner nhắc ưu đãi đang áp dụng ở bước thanh toán')),
+              h('div', { style: { flex: 1 } }, bannerSelect('Footer Banner (Thanh toán)', r ? r.payFooterBanner : null, 'Ví dụ: Banner hỗ trợ / CSKH cuối trang thanh toán'))
+            )
+          )
+        },
+        { key: 'done', title: 'Trang hoàn tất đơn hàng', icon: 'check-circle-line', content:
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+            h('div', { style: { display: 'flex', gap: 12 } },
+              h('div', { style: { flex: 1 } }, bannerSelect('Banner đầu trang (Header)', r ? r.doneHeaderBanner : null, 'Ví dụ: Banner chúc mừng đặt hàng thành công')),
+              h('div', { style: { flex: 1 } }, bannerSelect('Banner quảng bá App / Sản phẩm', r ? r.doneAppBanner : null, 'Ví dụ: Banner giới thiệu App HiFPT góc dưới trang'))
+            ),
+            popupBlock('Pop-up tri ân / hướng dẫn tải App', r ? r.donePopup : null, r ? r.doneDelay : 0, r ? r.doneAutoClose : 0, 'Ví dụ: Popup cảm ơn kèm hướng dẫn tải ứng dụng')
+          )
+        }
+      ];
+    return this.editorShell(
+      isNew ? 'Thêm quy tắc mới' : 'Chỉnh sửa quy tắc: ' + r.name, 'Quy tắc Banner & Popup trang Checkout', back,
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+        sections.map(sec => {
+          const open = !!openSections[sec.key];
+          return h(DS.Card, { key: sec.key, style: { padding: 0, overflow: 'visible' } },
+            h('div', {
+              onClick: () => toggleSection(sec.key),
+              style: { display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', cursor: 'pointer', background: open ? 'var(--color-surface-alt)' : 'transparent', borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)', borderBottomLeftRadius: open ? 0 : 'var(--radius-lg)', borderBottomRightRadius: open ? 0 : 'var(--radius-lg)', transition: 'background .18s cubic-bezier(.2,0,0,1)', height: 56, boxSizing: 'border-box' }
+            },
+              h('span', { className: 'fpt-chevron' + (open ? ' fpt-chevron-open' : '') }, h(DS.Icon, { name: 'chevron-right-01-line', size: 18, color: 'var(--color-text-subtle)' })),
+              h(DS.Icon, { name: sec.icon, size: 18, color: 'var(--color-accent)' }),
+              h('span', { style: { fontWeight: 700, fontSize: 14.5 } }, sec.title)
+            ),
+            open && h('div', { className: 'fpt-accordion-body', style: { padding: '18px 20px', borderTop: '1px solid var(--color-border)' } }, sec.content)
+          );
+        })
       ),
       () => { back(); this.toast('success', 'Đã lưu quy tắc', 'Quy tắc Banner & Popup đã được cập nhật.'); },
-      isNew ? 'Tạo Quy tắc' : 'Lưu Quy tắc'
+      isNew ? 'Tạo Quy tắc' : 'Lưu Quy tắc',
+      h(DS.Switch, { size: 'sm', label: ruleActive ? 'Hoạt động' : 'Tạm tắt', checked: ruleActive, onChange: v => this.setState({ ruleActive: v }), style: { whiteSpace: 'nowrap', flexShrink: 0 } })
     );
   }
 
@@ -2346,7 +2441,7 @@ class Component extends DCLogic {
       h('div', { style: { fontSize: 13.5, color: 'var(--color-text)', marginTop: 3, wordBreak: 'break-word' } }, (value == null || value === '') ? '—' : value)
     );
   }
-  editorShell(title, subtitle, onBack, content, onSave, saveLabel) {
+  editorShell(title, subtitle, onBack, content, onSave, saveLabel, headerExtra) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       h('div', { style: { position: 'sticky', top: -24, zIndex: 40, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
@@ -2357,6 +2452,7 @@ class Component extends DCLogic {
           subtitle && h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', marginLeft: 8 } }, subtitle)
         ),
         h('div', { style: { flex: 1 } }),
+        headerExtra,
         h(DS.Button, { level: 'tertiary', size: 'sm', onClick: onBack }, 'Hủy'),
         onSave && h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', onClick: onSave }, saveLabel || 'Lưu')
       ),
