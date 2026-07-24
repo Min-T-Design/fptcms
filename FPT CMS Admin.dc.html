@@ -172,7 +172,7 @@ class Component extends DCLogic {
     menuView: 'list', menuEditRow: null, menuSearch: '',
     menu_pg: 1, menu_sz: 10,
     // ── Landing Page module ──
-    ldpView: 'list', ldpStep: 1, ldpEditRow: null, ldpTpl: null, ldpSectionTitles: {}, ldpSectionNames: {},
+    ldpView: 'list', ldpStep: 1, ldpEditRow: null, ldpTpl: null, ldpLockTemplate: false, ldpSectionTitles: {}, ldpSectionNames: {},
     ldpTplFilter: 'all', ldpTplSearch: '',
     ldpListSearch: '', ldpListTpl: 'all', ldpListStatus: 'all', ldpListGoal: 'all',
     ldpForm2: {}, ldpLibTab: 'all', ldpLibSearch: '', ldpCustomSecs: [], ldpLibDragId: null, ldpSecDragOverCanvas: false,
@@ -4473,7 +4473,7 @@ class Component extends DCLogic {
           ),
 
         ),
-        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ldpView: 'form', ldpStep: 1, ldpEditRow: null, ldpTpl: null, ldpTplFilter: 'all', ldpTplSearch: '', ldpForm2: {} }) }, 'Tạo LDP mới')
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ldpView: 'form', ldpStep: 1, ldpEditRow: null, ldpTpl: null, ldpLockTemplate: false, ldpTplFilter: 'all', ldpTplSearch: '', ldpForm2: {} }) }, 'Tạo LDP mới')
       ),
       this.filterChipsBar([
         search && this.filterChip('Tìm: ' + search, 'neutral', () => this.setState({ ldpListSearch: '', ldp_pg: 1 })),
@@ -4530,7 +4530,7 @@ class Component extends DCLogic {
                   ),
                   h('td', { style: { padding: '12px 14px', textAlign: 'center' } },
                     h('div', { style: { display: 'flex', gap: 6, justifyContent: 'center', alignItems: 'center' } },
-                      h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: e => { e.stopPropagation(); this.setState({ ldpView: 'form', ldpStep: 2, ldpEditRow: r, ldpTpl: r.tplId, ldpForm2: {} }); } }),
+                      h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: e => { e.stopPropagation(); this.openLdpEditor(r); } }),
                       h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: e => { e.stopPropagation(); this.confirm('Xóa Landing Page?', 'Trang "' + r.name + '" sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa landing page "' + r.name + '".'); }); } })
                     )
                   )
@@ -4541,6 +4541,11 @@ class Component extends DCLogic {
       ),
       this.renderPagBar(data.length, 'ldp', 'landing page')
     );
+  }
+  openLdpEditor(r) {
+    const effStatus = (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
+    const lockTpl = effStatus !== 'draft';
+    this.setState({ ldpView: 'form', ldpStep: lockTpl ? 2 : 1, ldpEditRow: r, ldpTpl: r.tplId, ldpForm2: {}, ldpLockTemplate: lockTpl });
   }
   openLdpDetailDrawer(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -4562,25 +4567,27 @@ class Component extends DCLogic {
         this.detailRow('Trạng thái', stBadge(r.status))
       ),
       footer: () => h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
-        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.setState({ ldpView: 'form', ldpStep: 2, ldpEditRow: r, ldpTpl: r.tplId, ldpForm2: {} }); } }, 'Chỉnh sửa')
+        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openLdpEditor(r); } }, 'Chỉnh sửa')
       )
     });
   }
   renderLdpForm() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const step = this.state.ldpStep || 1;
-    const stepInfo = [{ n: 1, label: 'Chọn Template' }, { n: 2, label: 'Thông tin trang' }, { n: 3, label: 'Nội dung sections' }];
+    const lockTpl = !!this.state.ldpLockTemplate;
+    const minStep = lockTpl ? 2 : 1;
+    const stepInfo = [{ n: 1, label: 'Chọn Template' }, { n: 2, label: 'Thông tin trang' }, { n: 3, label: 'Nội dung sections' }].filter(s => s.n >= minStep);
     const topActions = h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
-      step >= 2 && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'arrow-left-line', onClick: () => this.setState({ ldpStep: step - 1 }) }, step === 2 ? 'Quay lại Template' : 'Quay lại Thông tin'),
-      h(DS.Button, { level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpView: 'list', ldpStep: 1 }) }, 'Hủy'),
+      step > minStep && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'arrow-left-line', onClick: () => this.setState({ ldpStep: step - 1 }) }, step === 2 ? 'Quay lại Template' : 'Quay lại Thông tin'),
+      h(DS.Button, { level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpView: 'list', ldpStep: 1, ldpLockTemplate: false }) }, 'Hủy'),
       step === 2 && h(DS.Button, { level: 'primary', size: 'sm', trailingIcon: 'arrow-right-line',
         onClick: () => { if (!this.state.ldpTpl) { this.toast('warning', 'Chưa chọn template', 'Vui lòng quay lại Bước 1 và chọn template.'); return; } this.setState({ ldpStep: 3 }); }
       }, 'Tiếp theo: Nội dung'),
       step === 3 && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'check-line',
-        onClick: () => { this.setState({ ldpView: 'list', ldpStep: 1 }); this.toast('success', 'Đã lưu nháp', 'Landing Page đã được lưu nháp.'); }
+        onClick: () => { this.setState({ ldpView: 'list', ldpStep: 1, ldpLockTemplate: false }); this.toast('success', 'Đã lưu nháp', 'Landing Page đã được lưu nháp.'); }
       }, 'Lưu nháp'),
       step === 3 && h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line',
-        onClick: () => { this.setState({ ldpView: 'list', ldpStep: 1 }); this.toast('success', 'Đã xuất bản', 'Landing Page đã được xuất bản thành công!'); }
+        onClick: () => { this.setState({ ldpView: 'list', ldpStep: 1, ldpLockTemplate: false }); this.toast('success', 'Đã xuất bản', 'Landing Page đã được xuất bản thành công!'); }
       }, 'Hoàn thành')
     );
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
@@ -4588,7 +4595,7 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', alignItems: 'center', flex: 1 } },
           stepInfo.reduce((acc, s, i) => {
             acc.push(h('div', { key: s.n, style: { display: 'flex', alignItems: 'center', gap: 8, cursor: s.n < step ? 'pointer' : 'default' }, onClick: () => { if (s.n < step) this.setState({ ldpStep: s.n }); } },
-              h('div', { style: { width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: s.n > step ? 'var(--color-text-subtle)' : '#fff', background: s.n === step ? 'var(--color-accent)' : s.n < step ? '#10b981' : 'var(--color-surface-alt)', flexShrink: 0 } }, s.n < step ? '✓' : String(s.n)),
+              h('div', { style: { width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: s.n > step ? 'var(--color-text-subtle)' : '#fff', background: s.n === step ? 'var(--color-accent)' : s.n < step ? '#10b981' : 'var(--color-surface-alt)', flexShrink: 0 } }, s.n < step ? '✓' : String(i + 1)),
               h('span', { style: { fontSize: 13, fontWeight: s.n === step ? 700 : 500, color: s.n <= step ? 'var(--color-text)' : 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, s.label)
             ));
             if (i < stepInfo.length - 1) acc.push(h('div', { key: 'l' + s.n, style: { flex: 1, height: 1, background: step > s.n + 1 ? '#10b981' : 'var(--color-border)', margin: '0 16px' } }));
@@ -4646,7 +4653,7 @@ class Component extends DCLogic {
             }, [])
           )
         ),
-        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', style: { flexShrink: 0, alignSelf: 'center' }, onClick: () => this.setState({ ldpTpl: 'custom', ldpStep: 2, ldpCustomSecs: [], ldpForm2: {} }) }, 'Bắt đầu')
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', style: { flexShrink: 0, alignSelf: 'center' }, onClick: () => this.setState({ ldpTpl: 'custom', ldpStep: 2, ldpLockTemplate: false, ldpCustomSecs: [], ldpForm2: {} }) }, 'Bắt đầu')
       ),
       h('p', { style: { margin: 0, fontSize: 14, color: 'var(--color-text-subtle)' } }, 'Chọn một mẫu template có sẵn bên dưới và tùy chỉnh từng section nội dung ở bước tiếp theo.'),
       h('div', { style: { display: 'flex', gap: 16, alignItems: 'center', padding: '12px 16px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, flexWrap: 'wrap' } },
@@ -4840,7 +4847,7 @@ class Component extends DCLogic {
           h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
             h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Template:'),
             h('span', { style: { fontWeight: 700, color: 'var(--color-accent)', fontSize: 14 } }, tpl.label + (tpl.sections ? ' (' + tpl.sections + ' sections)' : '')),
-            h(DS.Button, { level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpStep: 2 }) }, 'Đổi template')
+            !this.state.ldpLockTemplate && h(DS.Button, { level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpStep: 2 }) }, 'Đổi template')
           ),
           
         ),
