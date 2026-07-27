@@ -4243,7 +4243,7 @@ class Component extends DCLogic {
       { key: 'categories', header: 'Phân loại', width: 240, render: (_, r) => categoryCell(r.categories) },
       { key: 'bgColor', header: 'Màu nền', width: 150, render: (_, r) => colorCell(r.bgColor) },
       { key: 'textColor', header: 'Màu chữ', width: 150, render: (_, r) => colorCell(r.textColor) },
-      { key: 'status', header: 'Trạng thái', width: 150, align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'status', header: 'Trạng thái', width: 150, render: (_, r) => this.statusBadge(r.status) },
       { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openBadgeEditor(r) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Badge/Tag?', 'Badge "' + r.name + '" sẽ bị xóa khỏi thư viện. Nơi đang dùng badge này (Card gói / Trang chi tiết / Check out) sẽ không còn hiển thị tag.', () => {
