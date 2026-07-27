@@ -1804,8 +1804,16 @@ class Component extends DCLogic {
       value: b.name,
       label: h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 5, fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.4px', background: b.bgColor, color: b.textColor } }, b.name)
     }));
-    const defaultCycle = () => ({ id: 'cy' + Date.now() + Math.random().toString(36).slice(2), billingType: '', period: '', tagline: '', offers: [''] });
-    const getProductEntry = code => cyclesMap[code] || { icon: this.PROMO_ICONS()[0], cycles: [defaultCycle()] };
+    // Chu kỳ & Gói tính cước đồng bộ từ QLCS: Trả sau mặc định 1 tháng, Trả trước demo 3/6/12 tháng — không cho thêm/xóa thủ công.
+    const QLCS_CYCLES = [
+      { billingType: 'Trả sau', period: '1 tháng' },
+      { billingType: 'Trả trước', period: '3 tháng' },
+      { billingType: 'Trả trước', period: '6 tháng' },
+      { billingType: 'Trả trước', period: '12 tháng' },
+    ];
+    const defaultCycle = (billingType, period) => ({ id: 'cy' + Date.now() + Math.random().toString(36).slice(2), billingType: billingType || '', period: period || '', tagline: '', offers: [''] });
+    const defaultCyclesFor = () => isInternetMain ? QLCS_CYCLES.map(c => defaultCycle(c.billingType, c.period)) : [defaultCycle('', '1 tháng')];
+    const getProductEntry = code => cyclesMap[code] || { icon: this.PROMO_ICONS()[0], cycles: defaultCyclesFor() };
     const hasContent = code => {
       const entry = cyclesMap[code];
       if (!entry || !Array.isArray(entry.cycles)) return false;
@@ -1822,7 +1830,7 @@ class Component extends DCLogic {
 
     // ── Bộ chỉnh sửa chung: 1 lần chỉnh sẽ áp dụng đồng thời cho mọi gói đang được chọn (selectedSkus) ──
     const sharedDraft = (this.state.checkoutSharedDraft && this.state.checkoutSharedDraft[cid])
-      || (selectedSkus[0] ? getProductEntry(selectedSkus[0].code) : { icon: this.PROMO_ICONS()[0], cycles: [defaultCycle()] });
+      || (selectedSkus[0] ? getProductEntry(selectedSkus[0].code) : { icon: this.PROMO_ICONS()[0], cycles: defaultCyclesFor() });
     // SKU và gói SA không có khái niệm nhiều chu kỳ — chỉ dùng 1 khối nội dung duy nhất, không cho thêm/xóa.
     const visibleCycles = isInternetMain ? sharedDraft.cycles : sharedDraft.cycles.slice(0, 1);
     const applyDraft = draft => this.setState(st => {
@@ -1835,14 +1843,6 @@ class Component extends DCLogic {
       };
     });
     const updateDraftCycle = (cycleId, patch) => applyDraft({ ...sharedDraft, cycles: sharedDraft.cycles.map(c => c.id === cycleId ? { ...c, ...patch } : c) });
-    const addDraftCycle = () => applyDraft({ ...sharedDraft, cycles: [...sharedDraft.cycles, defaultCycle()] });
-    const removeDraftCycle = cycleId => applyDraft({ ...sharedDraft, cycles: sharedDraft.cycles.filter(c => c.id !== cycleId) });
-    const confirmRemoveDraftCycle = cycleId => this.confirm(
-      'Xóa chu kỳ này?',
-      'Chu kỳ và toàn bộ nội dung ưu đãi bên trong sẽ bị xóa, áp dụng cho ' + selectedSkus.length + ' gói đang được chọn.',
-      () => { removeDraftCycle(cycleId); this.closeModal(); this.toast('success', 'Đã xóa', 'Chu kỳ đã được xóa.'); },
-      true
-    );
     const updateDraftOfferLine = (cycleId, idx, val) => updateDraftCycle(cycleId, { offers: sharedDraft.cycles.find(c => c.id === cycleId).offers.map((o, i) => i === idx ? val : o) });
     const addDraftOfferLine = cycleId => updateDraftCycle(cycleId, { offers: [...sharedDraft.cycles.find(c => c.id === cycleId).offers, ''] });
     const removeDraftOfferLine = (cycleId, idx) => updateDraftCycle(cycleId, { offers: sharedDraft.cycles.find(c => c.id === cycleId).offers.filter((_, i) => i !== idx) });
@@ -2016,28 +2016,24 @@ class Component extends DCLogic {
                   ),
                   h('div', { style: { display: 'flex', fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.03em', padding: '10px 14px 6px', gap: 10 } },
                     isInternetMain && h('div', { style: { width: 140, flexShrink: 0 } }, 'Gói tính cước'),
-                    isInternetMain && h('div', { style: { width: 120, flexShrink: 0 } }, 'Chu kỳ'),
-                    isInternetMain && h('div', { style: { width: 160, flexShrink: 0 } }, 'Tag line'),
+                    h('div', { style: { width: 120, flexShrink: 0 } }, 'Chu kỳ'),
+                    h('div', { style: { width: 160, flexShrink: 0 } }, 'Tag line'),
                     h('div', { style: { flex: 1 } }, 'Nội dung ưu đãi')
                   ),
                   visibleCycles.length > 0
                     ? visibleCycles.map((cy, idx) => {
-                        const isPostpaid = cy.billingType === 'Trả sau';
                         return h('div', { key: cy.id, style: { borderBottom: '1px solid var(--color-border)' } },
-                        isInternetMain && h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 14px', background: 'var(--color-surface-alt)' } },
-                          h('span', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.04em' } }, 'Chu kỳ ' + (idx + 1)),
-                          h(DS.IconButton, { icon: 'trash-line', label: 'Xóa chu kỳ', level: 'tertiary', size: 'sm', onClick: () => confirmRemoveDraftCycle(cy.id) })
+                        isInternetMain && h('div', { style: { padding: '6px 14px', background: 'var(--color-surface-alt)' } },
+                          h('span', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.04em' } }, 'Chu kỳ ' + (idx + 1))
                         ),
                         h('div', { style: { display: 'flex', gap: 10, padding: '12px 14px', alignItems: 'flex-start' } },
                           isInternetMain && h('div', { style: { width: 140, flexShrink: 0 } }, h(DS.Select, {
-                            options: billingTypeOptions, value: cy.billingType || '', placeholder: 'Chọn loại',
-                            onChange: val => updateDraftCycle(cy.id, { billingType: val, period: val === 'Trả sau' ? '1 tháng' : cy.period })
+                            options: billingTypeOptions, value: cy.billingType || '', placeholder: 'Chọn loại', disabled: true, title: 'Đồng bộ từ QLCS'
                           })),
-                          isInternetMain && h('div', { style: { width: 120, flexShrink: 0 } }, h(DS.Select, {
-                            options: periodOptions, value: isPostpaid ? '1 tháng' : (cy.period || ''), placeholder: 'Chọn chu kỳ',
-                            disabled: isPostpaid, onChange: val => updateDraftCycle(cy.id, { period: val })
+                          h('div', { style: { width: 120, flexShrink: 0 } }, h(DS.Select, {
+                            options: periodOptions, value: cy.period || '', placeholder: 'Chọn chu kỳ', disabled: true, title: 'Đồng bộ từ QLCS'
                           })),
-                          isInternetMain && h('div', { style: { width: 160, flexShrink: 0 } },
+                          h('div', { style: { width: 160, flexShrink: 0 } },
                             checkoutBadgeOptions.length
                               ? h(DS.Select, {
                                   options: checkoutBadgeOptions, value: cy.tagline || '', placeholder: 'Chọn Tag line…',
@@ -2055,10 +2051,7 @@ class Component extends DCLogic {
                         )
                       );
                       })
-                    : h('div', { style: { padding: '16px 14px', fontSize: 13, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, 'Chưa có chu kỳ nào.'),
-                  isInternetMain && h('div', { style: { padding: '10px 14px', borderTop: sharedDraft.cycles.length > 0 ? '1px solid var(--color-border)' : 'none' } },
-                    h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', onClick: addDraftCycle }, 'Thêm chu kỳ')
-                  )
+                    : h('div', { style: { padding: '16px 14px', fontSize: 13, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, 'Chưa có chu kỳ nào.')
                 )
               )
         )
@@ -2112,7 +2105,6 @@ class Component extends DCLogic {
       { key: 'name', header: 'Tên quy tắc', render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
       { key: 'skus', header: 'Gói bán áp dụng', render: (_, r) => h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } }, r.skus.map(s => h(DS.Badge, { key: s, theme: 'brand' }, s))) },
       { key: 'period', header: 'Khoảng thời gian' },
-      { key: 'priority', header: 'Ưu tiên', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.priority) },
       { key: 'headerBanner', header: 'Header Banner', render: (_, r) => bannerLabel(r.headerBanner) },
       { key: 'footerBanner', header: 'Footer Banner', render: (_, r) => bannerLabel(r.footerBanner) },
       { key: 'popupCheckout', header: 'Popup Checkout', render: (_, r) => bannerLabel(r.popupCheckout) },
@@ -2247,7 +2239,7 @@ class Component extends DCLogic {
               h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
                 filterBtns.map(f => h(DS.Tag, { key: f.id, selected: skuGroupF === f.id, onClick: () => this.setState({ ruleSkuGroup: f.id }) }, f.label))
               ),
-              h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 400, overflowY: 'auto', overflowX: 'hidden' } },
+              h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 200, overflowY: 'auto', overflowX: 'hidden' } },
                 filteredSkus.length ? filteredSkus.map(s => { const isSel = selectedSkus.includes(s.code); return h('div', { key: s.code, onClick: () => toggleSku(s.code), style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2, background: isSel ? 'var(--color-accent-bg)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent' } },
                   h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(s.code), label: '' })),
                   h('span', { style: { fontFamily: 'monospace', fontSize: 11.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', fontWeight: 700 } }, s.code),
@@ -2258,6 +2250,16 @@ class Component extends DCLogic {
               )
             ),
             h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+              h('div', null,
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 6 } },
+                  'Gói bán đã chọn', h(DS.Badge, { theme: 'info' }, selectedSkus.length)
+                ),
+                selectedSkus.length
+                  ? h('div', { className: 'fpt-scroll', style: { display: 'flex', flexWrap: 'wrap', alignContent: 'flex-start', gap: 6, maxHeight: 108, overflowY: 'auto', padding: '8px 10px', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10 } },
+                      selectedSkus.map(code => h(DS.Tag, { key: code, color: 'var(--color-accent)', onClose: () => toggleSku(code) }, code))
+                    )
+                  : h('div', { style: { padding: '10px 12px', fontSize: 12.5, color: 'var(--color-text-subtle)', fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10 } }, 'Chưa chọn gói bán nào.')
+              ),
               h(DS.Input, { label: 'Tên quy tắc hiển thị', required: true, defaultValue: r ? r.name : '', placeholder: 'VD: Ưu đãi Combo Thể thao Hè 2026' }),
               h('div', null,
                 h('label', { style: { display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 6 } }, 'Thời gian bắt đầu — Thời gian kết thúc'),
@@ -8847,6 +8849,10 @@ class Component extends DCLogic {
             h(DS.Switch, { key: 'sw-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => { this.setState(s => ({ newsArtActive: { ...s.newsArtActive, [r.id]: v } })); this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', r.title); } })
           );
         } },
+      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
+        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ newsArticleEdit: r }) },
+        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa bài viết?', '"' + r.title + '" sẽ bị xóa vĩnh viễn.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa bài viết.'); }, true) },
+      ]) },
     ];
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
       statCards,
