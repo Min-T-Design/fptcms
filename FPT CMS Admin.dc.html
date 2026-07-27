@@ -1754,7 +1754,27 @@ class Component extends DCLogic {
     const setMainTab = tab => this.setState(st => ({ checkoutMainTab: { ...st.checkoutMainTab, [cid]: tab } }));
     const isInternetMain = mainTab === 'internet';
     const isInternetSku = s => s.group === 'Internet' && s.kind === 'Dịch vụ';
-    const mainFilteredSkus = allSkus.filter(s => isInternetMain ? isInternetSku(s) : !isInternetSku(s));
+    // ── Tab lọc loại — chỉ áp dụng trong "SKU và gói SA" ──
+    const skuSaCatDefs = [
+      { v: 'all', l: 'Tất cả' },
+      { v: 'camera', l: 'Camera' },
+      { v: 'smarthome', l: 'Smart Home' },
+      { v: 'sa', l: 'Gói SA' },
+      { v: 'ap', l: 'AP' },
+      { v: 'tv', l: 'TV' },
+    ];
+    const skuSaCat = ((this.state.checkoutSkuSaCat || {})[cid]) || 'all';
+    const setSkuSaCat = cat => this.setState(st => ({ checkoutSkuSaCat: { ...st.checkoutSkuSaCat, [cid]: cat } }));
+    const matchSkuSaCat = s => {
+      if (skuSaCat === 'all') return true;
+      if (skuSaCat === 'camera') return s.group === 'Camera';
+      if (skuSaCat === 'smarthome') return s.group === 'Smart Home';
+      if (skuSaCat === 'sa') return s.group === 'Truyền hình' && s.kind === 'Dịch vụ';
+      if (skuSaCat === 'ap') return s.group === 'Internet' && s.kind === 'Thiết bị';
+      if (skuSaCat === 'tv') return s.group === 'Truyền hình' && s.kind === 'Thiết bị';
+      return true;
+    };
+    const mainFilteredSkus = allSkus.filter(s => isInternetMain ? isInternetSku(s) : (!isInternetSku(s) && matchSkuSaCat(s)));
     const filteredSkus = mainFilteredSkus.filter(s => !q || (s.code + s.name).toLowerCase().includes(q));
     const channelSkus = ((this.state.checkoutChannelSkus || {})[cid]) || {};
     const selectedSkus = allSkus.filter(s => !!channelSkus[s.code]);
@@ -1844,15 +1864,14 @@ class Component extends DCLogic {
     const effectiveContentTab = isInternetMain ? contentTab : 'offers';
 
     // ── Item thiết bị đi kèm / dịch vụ bổ sung — đồng bộ từ QLCS, chỉ sửa mô tả & hiển thị Web ──
-    const renderBundledItemRow = (sku, field, item, i, items) => h('div', { key: i, style: { display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface-alt)', marginBottom: i < items.length - 1 ? 8 : 0 } },
-      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 6 } },
-        h(DS.Input, { value: item.name, disabled: true }),
-        h(DS.Input, { value: item.desc, placeholder: 'Mô tả ngắn…', onChange: e => this.updateSkuConfigItem(sku, field, i, 'desc', e && e.target ? e.target.value : e) })
-      ),
-      h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingTop: 2 } },
-        h(DS.Checkbox, { label: 'Web', checked: item.web, onChange: v => this.updateSkuConfigItem(sku, field, i, 'web', v) }),
+    const renderBundledItemRow = (sku, field, item, i, items) => h('div', { key: i, style: { display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface-alt)', marginBottom: i < items.length - 1 ? 8 : 0 } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+        h(DS.Icon, { name: 'lock-01-line', size: 14, color: 'var(--color-text-subtle)', style: { flexShrink: 0 } }),
+        h('span', { style: { flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, item.name),
+        h(DS.Switch, { size: 'sm', label: 'Web', checked: item.web, onChange: v => this.updateSkuConfigItem(sku, field, i, 'web', v), style: { flexShrink: 0 } }),
         h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => this.removeSkuConfigItem(sku, field, i) })
-      )
+      ),
+      h(DS.Input, { value: item.desc, placeholder: 'Mô tả ngắn…', onChange: e => this.updateSkuConfigItem(sku, field, i, 'desc', e && e.target ? e.target.value : e) })
     );
     const renderBundledSection = (label, sku, field) => {
       const items = this.getSkuConfigItems(sku, field);
@@ -1942,7 +1961,10 @@ class Component extends DCLogic {
                 h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChecked, indeterminate: someChecked, onChange: toggleAll })
               ),
               h('div', { style: { marginBottom: 8 } },
-                h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', size: 'sm', value: this.state.checkoutSkuSearch || '', onChange: e => this.setState({ checkoutSkuSearch: e && e.target ? e.target.value : e }) })
+                h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.checkoutSkuSearch || '', onChange: e => this.setState({ checkoutSkuSearch: e && e.target ? e.target.value : e }) })
+              ),
+              !isInternetMain && h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
+                skuSaCatDefs.map(opt => h(DS.Tag, { key: opt.v, selected: skuSaCat === opt.v, onClick: () => setSkuSaCat(opt.v) }, opt.l))
               ),
               h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 512, overflowY: 'auto', overflowX: 'hidden' } },
                 filteredSkus.length ? filteredSkus.map(s => renderSkuItem(s)) : h('div', { style: { padding: '16px 6px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy SKU phù hợp.')
@@ -2170,8 +2192,9 @@ class Component extends DCLogic {
   }
   renderRuleEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ ruleEditor: undefined, ruleSkuSelected: undefined, ruleSkuGroup: undefined, ruleSkuQ: undefined, ruleSkuCheckAll: undefined, ruleSectionsOpen: undefined, ruleActive: undefined });
+    const isNew = !r; const back = () => this.setState({ ruleEditor: undefined, ruleSkuSelected: undefined, ruleSkuGroup: undefined, ruleSkuQ: undefined, ruleSkuCheckAll: undefined, ruleSectionsOpen: undefined, ruleActive: undefined, rulePayModalFreq: undefined });
     const ruleActive = this.state.ruleActive !== undefined ? this.state.ruleActive : (r ? r.status === 'active' : true);
+    const rulePayModalFreq = this.state.rulePayModalFreq !== undefined ? this.state.rulePayModalFreq : (r && r.payModalFreq === 'Mỗi lần vào' ? 'Mỗi lần vào' : '1 lần/phiên');
     const openSections = this.state.ruleSectionsOpen || { info: true, reg: false, pay: false, done: false };
     const toggleSection = k => this.setState({ ruleSectionsOpen: { ...openSections, [k]: !openSections[k] } });
     const skus = this.SKUS().filter(s => this.state.skuActive[s.code] !== false && s.status === 'active');
@@ -2211,7 +2234,7 @@ class Component extends DCLogic {
                 h(DS.Checkbox, { label: 'Chọn tất cả', checked: !!this.state.ruleSkuCheckAll, onChange: v => this.setState({ ruleSkuCheckAll: v, ruleSkuSelected: v ? filteredSkus.map(s => s.code) : [] }) })
               ),
               h('div', { style: { marginBottom: 8 } },
-                h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', size: 'sm', value: this.state.ruleSkuQ || '', onChange: e => this.setState({ ruleSkuQ: e.target ? e.target.value : e }) })
+                h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.ruleSkuQ || '', onChange: e => this.setState({ ruleSkuQ: e.target ? e.target.value : e }) })
               ),
               h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
                 filterBtns.map(f => h(DS.Tag, { key: f.id, selected: skuGroupF === f.id, onClick: () => this.setState({ ruleSkuGroup: f.id }) }, f.label))
@@ -2249,8 +2272,8 @@ class Component extends DCLogic {
             popupBlock('Pop-up đồ họa (Modal Popup)', r ? r.payModalPopup : null, r ? r.payModalDelay : 0, r ? r.payModalAutoClose : 0,
               'Ví dụ: Popup khuyến mãi hiển thị ngay khi vào trang thanh toán',
               h('div', { style: { display: 'flex', gap: 16 } },
-                h(DS.Radio, { name: 'payModalFreq', label: '1 lần/phiên', defaultChecked: !r || r.payModalFreq === '1 lần/phiên' }),
-                h(DS.Radio, { name: 'payModalFreq', label: 'Mỗi lần vào', defaultChecked: !!(r && r.payModalFreq === 'Mỗi lần vào') })
+                h(DS.Radio, { name: 'payModalFreq', label: '1 lần/phiên', checked: rulePayModalFreq === '1 lần/phiên', onChange: () => this.setState({ rulePayModalFreq: '1 lần/phiên' }) }),
+                h(DS.Radio, { name: 'payModalFreq', label: 'Mỗi lần vào', checked: rulePayModalFreq === 'Mỗi lần vào', onChange: () => this.setState({ rulePayModalFreq: 'Mỗi lần vào' }) })
               )
             ),
             popupBlock('Pop-up khi áp Voucher (nhập mã KM)', r ? r.payVoucherPopup : null, r ? r.payVoucherDelay : 0, r ? r.payVoucherAutoClose : 0, 'Ví dụ: Popup xác nhận ưu đãi khi áp mã giảm giá'),
@@ -8176,7 +8199,7 @@ class Component extends DCLogic {
             h(DS.Checkbox, { label: 'Chọn tất cả', checked: !!(this.state.paySkuCheckAll), onChange: v => this.setState({ paySkuCheckAll: v, paySkuSelected: v ? filteredSkus.map(s => s.code) : [] }) })
           ),
           h('div', { style: { marginBottom: 8 } },
-            h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', size: 'sm', value: this.state.paySkuSearch || '', onChange: e => this.setState({ paySkuSearch: e.target.value }) })
+            h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.paySkuSearch || '', onChange: e => this.setState({ paySkuSearch: e.target.value }) })
           ),
           h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
             filterBtns.map(f => h(DS.Tag, { key: f.id, selected: filter === f.id, onClick: () => this.setState({ paySkuFilter: f.id }) }, f.label))
