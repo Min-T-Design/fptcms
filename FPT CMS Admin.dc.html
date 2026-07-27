@@ -276,6 +276,7 @@ class Component extends DCLogic {
       { type: 'item', id: 'pdh-sku', label: 'Nội dung gói bán', icon: 'dots-grid-line' },
       { type: 'item', id: 'cms-display', label: 'Thông tin checkout', icon: 'settings-01-line' },
       { type: 'item', id: 'cms-payment', label: 'Phương thức Thanh toán', icon: 'file-check-line' },
+      { type: 'item', id: 'badge-tag', label: 'Quản lý Badge/Tag', icon: 'stars-01-line' },
       { type: 'cat', label: 'QUẢN LÝ NỘI DUNG (CMS)' },
       { type: 'group', id: 'g-structure', label: 'Cấu trúc Trang', icon: 'file-doc-line', children: [
         { id: 'pages', label: 'Quản lý Trang (Pages)' },
@@ -301,7 +302,7 @@ class Component extends DCLogic {
   }
   TITLES() {
     return {
-      'dashboards': 'Dashboards', 'pdh-sku': 'Nội dung gói bán', 'cms-display': 'Thông tin checkout',
+      'dashboards': 'Dashboards', 'pdh-sku': 'Nội dung gói bán', 'badge-tag': 'Quản lý Badge/Tag', 'cms-display': 'Thông tin checkout',
       'cms-payment': 'Phương thức Thanh toán', 'pages': 'Quản lý Trang (Pages)', 'sections': 'Quản lý Sections',
       'blocks': 'Quản lý Blocks', 'landing': 'Landing Page (LDP)', 'cms-menu': 'Quản lý Menu',
       'banner': 'Quản lý Banner', 'cms-popup': 'Quản lý Popup', 'news': 'Quản lý Tin tức', 'faq': 'Quản lý FAQ',
@@ -530,6 +531,7 @@ class Component extends DCLogic {
     switch (this.state.active) {
       case 'dashboards': return this.renderDashboard();
       case 'pdh-sku': return this.renderSku();
+      case 'badge-tag': return this.renderBadgeTag();
       case 'cms-display': return this.renderCheckout();
       case 'cms-payment': return this.renderPayment();
       case 'pages': return this.renderPages();
@@ -803,7 +805,7 @@ class Component extends DCLogic {
     };
   }
   openSkuEditor(r) {
-    this.setState({ skuEditor: r, skuEditorTab: 'attrs', pkgForm: this.seedPkgForm(r) });
+    this.setState({ skuEditor: r, skuEditorTab: 'attrs', pkgForm: this.seedPkgForm(r), pkgTagEnabled: undefined, pkgTagBadgeId: undefined });
   }
 
   renderSku() {
@@ -1272,12 +1274,20 @@ class Component extends DCLogic {
 
   renderPkgWebSettings(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const presets = ['#ef4444', '#ff6b00', '#10b981', '#3b82f6'];
     const tagEnabled = this.state.pkgTagEnabled !== undefined ? this.state.pkgTagEnabled : !!(r && r.tagEnabled);
-    const tagLabel = this.state.pkgTagText !== undefined ? this.state.pkgTagText : (r ? (r.tagText || '') : '');
-    const tagBg = this.state.pkgTagColor !== undefined ? this.state.pkgTagColor : (r && r.tagColor) || presets[0];
-    const tagTextColor = this.state.pkgTagTextColor !== undefined ? this.state.pkgTagTextColor : (r && r.tagTextColor) || '#ffffff';
-    const isPreset = c => tagBg === c && tagTextColor === '#ffffff';
+    const badges = this.getBadgeTagList().filter(b => b.status === 'active' && (b.categories || []).includes('card'));
+    const legacyMatch = badges.find(b => b.name.trim().toLowerCase() === ((r && r.tagText) || '').trim().toLowerCase());
+    const resolvedDefault = r ? (r.tagBadgeId || (legacyMatch && legacyMatch.id)) : undefined;
+    const tagBadgeId = this.state.pkgTagBadgeId !== undefined ? this.state.pkgTagBadgeId : resolvedDefault;
+    const selectedBadge = badges.find(b => b.id === tagBadgeId);
+    const tagBg = selectedBadge ? selectedBadge.bgColor : 'var(--color-surface-sunken)';
+    const tagTextColor = selectedBadge ? selectedBadge.textColor : 'var(--color-text-subtle)';
+    const tagLabel = selectedBadge ? selectedBadge.name : 'Chưa chọn Badge/Tag';
+    const badgeOptions = badges.map(b => ({
+      value: b.id,
+      label: h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 5, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '.4px', background: b.bgColor, color: b.textColor } }, b.name)
+    }));
+    const goToBadgeModule = () => this.setState({ active: 'badge-tag', badgeTagEditor: null, badgeFormCategories: ['card'] });
     return this.collapsibleSection('pkgSecWebOpen', 'Cài đặt web', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
         h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14 } },
           h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 10 } },
@@ -1288,32 +1298,23 @@ class Component extends DCLogic {
             tagEnabled && h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--color-text-muted)' } },
               'Xem trước:',
               h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '5px 14px', borderRadius: 6, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.5px', background: tagBg, color: tagTextColor } },
-                tagLabel.trim() || 'TAG'
+                tagLabel
               )
             )
           ),
-          tagEnabled && h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-            h(DS.Input, { value: tagLabel, placeholder: 'Nhập tên Tag (VD: HOT, NEW, BÁN CHẠY, SALE…)', onChange: e => this.setState({ pkgTagText: e && e.target ? e.target.value : e }) }),
-            h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' } },
-              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Bộ màu mặc định:'),
-                presets.map(c => h('button', { key: c, type: 'button', title: c, onClick: () => this.setState({ pkgTagColor: c, pkgTagTextColor: '#ffffff' }),
-                  style: { width: 26, height: 26, borderRadius: 7, background: c, border: 'none', cursor: 'pointer', boxShadow: isPreset(c) ? '0 0 0 2px var(--color-surface), 0 0 0 4px ' + c : 'none', flexShrink: 0 } }))
-              ),
-              h('div', { style: { width: 1, height: 20, background: 'var(--color-border)' } }),
-              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Màu chữ:'),
-                h('label', { title: 'Chọn màu chữ tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: tagTextColor } },
-                  h('input', { type: 'color', value: tagTextColor, onChange: e => this.setState({ pkgTagTextColor: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
+          tagEnabled && h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+            badges.length
+              ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
+                  h('div', { style: { width: 280 } }, h(DS.Select, { options: badgeOptions, value: tagBadgeId, placeholder: 'Chọn Badge/Tag…', onChange: v => this.setState({ pkgTagBadgeId: v }) })),
+                  h('button', { type: 'button', onClick: goToBadgeModule, style: { border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--color-accent-text)', textDecoration: 'underline' } }, '+ Tạo Badge/Tag mới')
                 )
-              ),
-              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Màu nền:'),
-                h('label', { title: 'Chọn màu nền tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: tagBg } },
-                  h('input', { type: 'color', value: tagBg, onChange: e => this.setState({ pkgTagColor: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
-                )
-              )
-            )
+              : h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: 10, borderRadius: 8, background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', fontSize: 12.5 } },
+                  h(DS.Icon, { name: 'alert-triangle-line', size: 14, style: { flexShrink: 0 } }),
+                  h('span', null, 'Chưa có Badge/Tag nào thuộc phân loại "Card gói" đang hoạt động. ',
+                    h('button', { type: 'button', onClick: goToBadgeModule, style: { border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontSize: 12.5, fontWeight: 700, color: 'inherit', textDecoration: 'underline' } }, 'Tạo Badge/Tag ngay')
+                  )
+                ),
+            h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'Tên hiển thị và màu sắc của Tag được quản lý tập trung tại module Quản lý Badge/Tag.')
           )
         ),
         this.field('Nội dung Tooltip ghi chú giá', h('div', null,
@@ -1799,6 +1800,11 @@ class Component extends DCLogic {
 
     const billingTypeOptions = ['Trả trước', 'Trả sau'];
     const periodOptions = Array.from({ length: 36 }, (_, i) => (i + 1) + ' tháng');
+    const checkoutBadges = this.getBadgeTagList().filter(b => b.status === 'active' && (b.categories || []).includes('checkout'));
+    const checkoutBadgeOptions = checkoutBadges.map(b => ({
+      value: b.name,
+      label: h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 5, fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.4px', background: b.bgColor, color: b.textColor } }, b.name)
+    }));
     const defaultCycle = () => ({ id: 'cy' + Date.now() + Math.random().toString(36).slice(2), billingType: '', period: '', tagline: '', offers: [''] });
     const getProductEntry = code => cyclesMap[code] || { icon: this.PROMO_ICONS()[0], cycles: [defaultCycle()] };
     const hasContent = code => {
@@ -2033,10 +2039,14 @@ class Component extends DCLogic {
                             options: periodOptions, value: isPostpaid ? '1 tháng' : (cy.period || ''), placeholder: 'Chọn chu kỳ',
                             disabled: isPostpaid, onChange: val => updateDraftCycle(cy.id, { period: val })
                           })),
-                          isInternetMain && h('div', { style: { width: 160, flexShrink: 0 } }, h(DS.Input, {
-                            defaultValue: cy.tagline || '', placeholder: 'Tag line',
-                            onChange: e => updateDraftCycle(cy.id, { tagline: e && e.target ? e.target.value : e })
-                          })),
+                          isInternetMain && h('div', { style: { width: 160, flexShrink: 0 } },
+                            checkoutBadgeOptions.length
+                              ? h(DS.Select, {
+                                  options: checkoutBadgeOptions, value: cy.tagline || '', placeholder: 'Chọn Tag line…',
+                                  onChange: val => updateDraftCycle(cy.id, { tagline: val })
+                                })
+                              : h('div', { title: 'Chưa có Badge/Tag phân loại "Check out" — tạo tại Quản lý Badge/Tag.', style: { fontSize: 11, color: 'var(--color-text-subtle)', padding: '9px 0' } }, 'Chưa có Tag line')
+                          ),
                           h('div', { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 } },
                             cy.offers.map((o, i) => h('div', { key: i, style: { display: 'flex', gap: 6, alignItems: 'center' } },
                               h(DS.Input, { containerStyle: { flex: 1, minWidth: 0 }, defaultValue: o, placeholder: 'Nội dung ưu đãi…', onChange: e => updateDraftOfferLine(cy.id, i, e && e.target ? e.target.value : e) }),
@@ -2562,6 +2572,20 @@ class Component extends DCLogic {
     { id: 2, name: 'Khắc phục sự cố', order: 2, count: 2, lang: 'Tiếng Việt', status: 'active' },
     { id: 3, name: 'Chính sách & Thủ tục', order: 3, count: 1, lang: 'Tiếng Việt', status: 'active' },
     { id: 4, name: 'Dịch vụ GTGT', order: 4, count: 1, lang: 'Tiếng Việt', status: 'active' },
+  ]; }
+  BADGE_TAG_CATEGORIES() {
+    return [
+      { value: 'card', label: 'Card gói' },
+      { value: 'detail', label: 'Trang chi tiết' },
+      { value: 'checkout', label: 'Check out' },
+    ];
+  }
+  BADGE_TAGS() { return [
+    { id: 'bdg-hot', name: 'HOT', bgColor: '#ef4444', textColor: '#ffffff', status: 'active', categories: ['card', 'checkout'], createdAt: '02/05/2026 09:10', createdBy: 'Admin User', updatedAt: '20/05/2026 13:40', updatedBy: '24092 - Nguyễn' },
+    { id: 'bdg-new', name: 'MỚI', bgColor: '#10b981', textColor: '#ffffff', status: 'active', categories: ['card', 'detail'], createdAt: '28/04/2026 08:30', createdBy: 'FI-25128', updatedAt: '28/04/2026 08:30', updatedBy: 'FI-25128' },
+    { id: 'bdg-suggest', name: 'ĐỀ XUẤT', bgColor: '#3b82f6', textColor: '#ffffff', status: 'active', categories: ['card', 'checkout'], createdAt: '18/05/2026 15:30', createdBy: '24092 - Nguyễn', updatedAt: '18/05/2026 15:30', updatedBy: '24092 - Nguyễn' },
+    { id: 'bdg-sale', name: 'SALE', bgColor: '#f97316', textColor: '#ffffff', status: 'active', categories: ['checkout'], createdAt: '10/05/2026 08:30', createdBy: 'Admin User', updatedAt: '10/05/2026 08:30', updatedBy: 'Admin User' },
+    { id: 'bdg-limited', name: 'GIỚI HẠN', bgColor: '#7c3aed', textColor: '#ffffff', status: 'inactive', categories: ['detail'], createdAt: '05/03/2026 10:00', createdBy: 'Admin User', updatedAt: '05/03/2026 10:00', updatedBy: 'Admin User' },
   ]; }
   LDP_TPL_DATA() {
     return [
@@ -4178,6 +4202,195 @@ class Component extends DCLogic {
       ),
       () => { back(); this.toast('success', 'Đã lưu Popup', 'Popup đã được lưu.'); },
       isNew ? 'Tạo Popup' : 'Lưu Popup'
+    );
+  }
+
+  // ===== Badge/Tag =====
+  // Thư viện Badge/Tag dùng chung — định nghĩa tên + màu nền/màu chữ + phân loại nơi sử dụng, được chọn (không phải tự phối màu) tại Card gói / Trang chi tiết / Check out.
+  getBadgeTagList() { return this.state.badgeTagListData || this.BADGE_TAGS(); }
+  badgeTagCategoryLabels(categories) {
+    const defs = this.BADGE_TAG_CATEGORIES();
+    return (categories || []).map(c => (defs.find(d => d.value === c) || {}).label || c);
+  }
+  openBadgeEditor(r) {
+    this.setState({ badgeTagEditor: r, badgeFormName: undefined, badgeFormBg: undefined, badgeFormText: undefined, badgeFormStatus: undefined, badgeFormCategories: undefined });
+  }
+  renderBadgeTag() {
+    if (this.state.badgeTagEditor !== undefined) return this.renderBadgeTagEditor(this.state.badgeTagEditor);
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const catDefs = this.BADGE_TAG_CATEGORIES();
+    const q = (this.state.badgeTagSearch || '').toLowerCase();
+    const catF = this.state.badgeTagCategoryFilter || 'all';
+    const statusF = this.state.badgeTagStatusFilter || 'all';
+    const data = this.getBadgeTagList().filter(b =>
+      (!q || b.name.toLowerCase().includes(q)) &&
+      (catF === 'all' || (b.categories || []).includes(catF)) &&
+      (statusF === 'all' || b.status === statusF)
+    );
+    const chip = (b) => h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 6, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.5px', background: b.bgColor, color: b.textColor, whiteSpace: 'nowrap' } }, b.name || 'TAG');
+    const colorCell = (hex) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+      h('span', { style: { width: 18, height: 18, borderRadius: 5, background: hex, border: '1px solid var(--color-border-strong)', flexShrink: 0 } }),
+      h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)', textTransform: 'uppercase' } }, hex)
+    );
+    const categoryCell = (categories) => {
+      const labels = this.badgeTagCategoryLabels(categories);
+      return labels.length
+        ? h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } }, labels.map(l => h(DS.Badge, { key: l, theme: 'neutral' }, l)))
+        : h('span', { style: { color: 'var(--color-text-subtle)' } }, '—');
+    };
+    const columns = [
+      { key: 'preview', header: 'Xem trước', width: 130, render: (_, r) => chip(r) },
+      { key: 'name', header: 'Tên Badge/Tag', width: 190, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
+      { key: 'categories', header: 'Phân loại', width: 240, render: (_, r) => categoryCell(r.categories) },
+      { key: 'bgColor', header: 'Màu nền', width: 150, render: (_, r) => colorCell(r.bgColor) },
+      { key: 'textColor', header: 'Màu chữ', width: 150, render: (_, r) => colorCell(r.textColor) },
+      { key: 'status', header: 'Trạng thái', width: 150, align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
+        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openBadgeEditor(r) },
+        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Badge/Tag?', 'Badge "' + r.name + '" sẽ bị xóa khỏi thư viện. Nơi đang dùng badge này (Card gói / Trang chi tiết / Check out) sẽ không còn hiển thị tag.', () => {
+          this.setState({ badgeTagListData: this.getBadgeTagList().filter(b => b.id !== r.id) });
+          this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa Badge/Tag "' + r.name + '".');
+        }, true) },
+      ]) },
+    ];
+    const catFilterOptions = [{ value: 'all', label: 'Tất cả phân loại' }, ...catDefs];
+    const statusFilterOptions = [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }];
+    return this.listCard(
+      h('div', { style: { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', padding: 16, borderBottom: '1px solid var(--color-border)' } },
+        h('div', { style: { flex: '2 1 220px', minWidth: 180 } }, h(DS.Input, { placeholder: 'Tìm Badge/Tag…', leadingIcon: 'search-medium-line', value: this.state.badgeTagSearch || '', onChange: e => this.setState({ badgeTagSearch: e && e.target ? e.target.value : e }) })),
+        h('div', { style: { flex: '1 1 160px', minWidth: 160 } }, h(DS.Select, { options: catFilterOptions, value: catF, onChange: v => this.setState({ badgeTagCategoryFilter: v, badgeTag_pg: 1 }) })),
+        h('div', { style: { flex: '1 1 160px', minWidth: 160 } }, h(DS.Select, { options: statusFilterOptions, value: statusF, onChange: v => this.setState({ badgeTagStatusFilter: v, badgeTag_pg: 1 }) })),
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openBadgeEditor(null), style: { flexShrink: 0 } }, 'Thêm Badge/Tag')
+      ),
+      this.filterChipsBar([
+        q && this.filterChip('Tìm: ' + this.state.badgeTagSearch, 'neutral', () => this.setState({ badgeTagSearch: '', badgeTag_pg: 1 })),
+        catF !== 'all' && this.filterChip('Phân loại: ' + (catDefs.find(c => c.value === catF) || {}).label, 'brand', () => this.setState({ badgeTagCategoryFilter: 'all', badgeTag_pg: 1 })),
+        statusF !== 'all' && this.filterChip('Trạng thái: ' + (statusFilterOptions.find(s => s.value === statusF) || {}).label, 'brand', () => this.setState({ badgeTagStatusFilter: 'all', badgeTag_pg: 1 })),
+      ]),
+      data.length ? this.tbl(columns, this.sliceData(data, 'badgeTag'), 'id', r => this.openBadgeTagDetail(r)) : this.empty('Không tìm thấy Badge/Tag phù hợp.'),
+      data.length ? this.renderPagBar(data.length, 'badgeTag', 'badge') : null
+    );
+  }
+  openBadgeTagDetail(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const labels = this.badgeTagCategoryLabels(r.categories);
+    this.openDrawer({
+      title: r.name, subtitle: 'Chi tiết Badge/Tag', width: 420,
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
+        h('div', { style: { display: 'flex', justifyContent: 'center', padding: '18px 0 22px' } },
+          h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '7px 18px', borderRadius: 7, fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '.5px', background: r.bgColor, color: r.textColor } }, r.name)
+        ),
+        this.detailRow('Tên Badge/Tag', r.name),
+        this.detailRow('Phân loại', labels.length ? h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } }, labels.map(l => h(DS.Badge, { key: l, theme: 'neutral' }, l))) : '—'),
+        this.detailRow('Mã màu nền', r.bgColor.toUpperCase()),
+        this.detailRow('Mã màu chữ', r.textColor.toUpperCase()),
+        this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        this.detailRow('Ngày tạo', r.createdAt + ' · ' + r.createdBy),
+        this.detailRow('Cập nhật lần cuối', r.updatedAt + ' · ' + r.updatedBy)
+      ),
+      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
+        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openBadgeEditor(r); } }, 'Chỉnh sửa')
+      )
+    });
+  }
+  renderBadgeTagEditor(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const isNew = !r;
+    const back = () => this.setState({ badgeTagEditor: undefined });
+    const presets = ['#ef4444', '#f97316', '#10b981', '#3b82f6', '#7c3aed', '#0891b2'];
+    const catDefs = this.BADGE_TAG_CATEGORIES();
+    const name = this.state.badgeFormName !== undefined ? this.state.badgeFormName : (r ? r.name : '');
+    const bg = this.state.badgeFormBg !== undefined ? this.state.badgeFormBg : (r ? r.bgColor : presets[0]);
+    const textColor = this.state.badgeFormText !== undefined ? this.state.badgeFormText : (r ? r.textColor : '#ffffff');
+    const status = this.state.badgeFormStatus !== undefined ? this.state.badgeFormStatus : (r ? r.status : 'active');
+    const categories = this.state.badgeFormCategories !== undefined ? this.state.badgeFormCategories : (r ? (r.categories || []) : []);
+    const toggleCategory = c => this.setState({ badgeFormCategories: categories.includes(c) ? categories.filter(x => x !== c) : [...categories, c] });
+    const isPreset = c => bg === c;
+    const sectionLabel = text => h('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--color-text-subtle)', marginBottom: 10 } }, text);
+
+    const onSave = () => {
+      if (!name.trim()) { this.toast('danger', 'Thiếu thông tin', 'Vui lòng nhập tên Badge/Tag.'); return; }
+      if (!categories.length) { this.toast('danger', 'Thiếu thông tin', 'Vui lòng chọn ít nhất 1 Phân loại.'); return; }
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const timeStr = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+      const list = this.getBadgeTagList();
+      if (isNew) {
+        const rec = { id: 'bdg-' + Date.now(), name: name.trim(), bgColor: bg, textColor, status, categories, createdAt: timeStr, createdBy: 'Admin User', updatedAt: timeStr, updatedBy: 'Admin User' };
+        this.setState({ badgeTagListData: [rec, ...list] });
+      } else {
+        this.setState({ badgeTagListData: list.map(b => b.id === r.id ? { ...b, name: name.trim(), bgColor: bg, textColor, status, categories, updatedAt: timeStr, updatedBy: 'Admin User' } : b) });
+      }
+      back();
+      this.toast('success', isNew ? 'Đã tạo Badge/Tag' : 'Đã lưu Badge/Tag', (name.trim() || 'Badge') + ' đã được cập nhật.');
+    };
+
+    return this.editorShell(
+      isNew ? 'Thêm Badge/Tag mới' : 'Chỉnh sửa Badge/Tag: ' + r.name, 'Định nghĩa nhãn hiển thị trên Card gói / Trang chi tiết / Check out', back,
+      h('div', { style: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 28, alignItems: 'start', maxWidth: 880 } },
+        // ── Left column: identity — tên + nơi sử dụng (thông tin quan trọng nhất, đọc trước) ──
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
+          h('div', null,
+            sectionLabel('Thông tin cơ bản'),
+            this.field('Tên Badge/Tag', h(DS.Input, { value: name, placeholder: 'VD: HOT, NEW, BÁN CHẠY, SALE…', onChange: e => this.setState({ badgeFormName: e && e.target ? e.target.value : e }) }), true)
+          ),
+          h('div', null,
+            sectionLabel('Phân loại'),
+            h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: -4, marginBottom: 10 } }, 'Chọn một hoặc nhiều nơi Badge/Tag này được phép sử dụng.'),
+            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, padding: 14, border: '1px solid var(--color-border)', borderRadius: 10 } },
+              catDefs.map(c => h(DS.Checkbox, { key: c.value, label: c.label, checked: categories.includes(c.value), onChange: () => toggleCategory(c.value) }))
+            )
+          )
+        ),
+        // ── Right column: nhận diện màu sắc + trạng thái (phụ trợ, đọc sau) ──
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
+          h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 16px', background: 'var(--color-surface-alt)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 } },
+            h('span', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--color-text-subtle)' } }, 'Xem trước'),
+            h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '7px 18px', borderRadius: 7, fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '.5px', background: bg, color: textColor } }, name.trim() || 'TAG')
+          ),
+          h('div', null,
+            sectionLabel('Màu sắc'),
+            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+              h('div', null,
+                h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 6 } }, 'Bộ màu gợi ý'),
+                h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+                  presets.map(c => h('button', { key: c, type: 'button', title: c, onClick: () => this.setState({ badgeFormBg: c }),
+                    style: { width: 26, height: 26, borderRadius: 7, background: c, border: 'none', cursor: 'pointer', boxShadow: isPreset(c) ? '0 0 0 2px var(--color-surface), 0 0 0 4px ' + c : 'none', flexShrink: 0 } }))
+                )
+              ),
+              h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Màu nền'),
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                  h('label', { title: 'Chọn màu nền tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: bg } },
+                    h('input', { type: 'color', value: bg, onChange: e => this.setState({ badgeFormBg: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
+                  ),
+                  h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)' } }, bg.toUpperCase())
+                )
+              ),
+              h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Màu chữ'),
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                  h('label', { title: 'Chọn màu chữ tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: textColor } },
+                    h('input', { type: 'color', value: textColor, onChange: e => this.setState({ badgeFormText: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
+                  ),
+                  h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)' } }, textColor.toUpperCase())
+                )
+              )
+            )
+          ),
+          h(DS.Divider, null),
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+            h('div', null,
+              h('div', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Kích hoạt'),
+              h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Ngừng hoạt động sẽ ẩn khỏi danh sách chọn ở Card gói / Trang chi tiết / Check out.')
+            ),
+            h(DS.Switch, { checked: status === 'active', onChange: () => this.setState({ badgeFormStatus: status === 'active' ? 'inactive' : 'active' }) })
+          )
+        )
+      ),
+      onSave,
+      isNew ? 'Tạo Badge/Tag' : 'Lưu Badge/Tag'
     );
   }
 
