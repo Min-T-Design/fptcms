@@ -2637,6 +2637,13 @@ class Component extends DCLogic {
       ],
     };
   }
+  // Sections thuộc họ "Danh sách gói Internet": gói Internet, gói Wi-Fi 7, bảng so sánh gói Internet
+  LDP_LOCATION_TOGGLE_IDS() {
+    return new Set(['inet-products', 'lead-pricing', 'camp-products', 'lead-pkg-compare']);
+  }
+  isLdpLocationSection(s) {
+    return !!(s && this.LDP_LOCATION_TOGGLE_IDS().has(s.id));
+  }
   LDP_LIST() {
     return this.state.ldpListData || [
       { id: 1, name: 'Khuyến mãi Internet Tháng 5', tplId: 'internet', tplLabel: 'LDP Internet',         goal: 'Lead Gen',           url: '/km-internet-t5', startDate: '01/05/26', endDate: '31/05/26', lastEdit: '18/05/26', lastEditBy: 'Hà Linh', status: 'publish' },
@@ -4890,6 +4897,9 @@ class Component extends DCLogic {
                   h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 'auto' } },
                     h(DS.Switch, { size: 'sm', checked: this.state['ldpSecVis_' + s.id] !== false, onChange: v => this.setState({ ['ldpSecVis_' + s.id]: v }) }),
                     h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, 'Hiển thị'),
+                    this.isLdpLocationSection(s) && h(DS.Switch, { size: 'sm', checked: this.state['ldpSecLoc_' + s.id] === true, onChange: v => this.setState({ ['ldpSecLoc_' + s.id]: v }) }),
+                    this.isLdpLocationSection(s) && h(DS.Icon, { name: 'marker-pin-01-line', size: 12, color: 'var(--color-text-subtle)' }),
+                    this.isLdpLocationSection(s) && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, 'Vị trí'),
                     h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: () => this.openLdpSectionDrawer(s, tpl) })
                   )
                 )
@@ -4994,6 +5004,11 @@ class Component extends DCLogic {
                           addedCount > 0 && h('span', { style: { fontSize: 10, fontWeight: 700, background: 'var(--color-accent)', color: '#fff', borderRadius: 10, padding: '1px 6px', flexShrink: 0 } }, 'x' + addedCount)
                         ),
                         h('div', { style: { fontSize: 10.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, s.desc),
+                        this.isLdpLocationSection(s) && h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, marginTop: 5 }, onClick: e => e.stopPropagation() },
+                          h(DS.Switch, { size: 'sm', checked: this.state['ldpLibLoc_' + s.id] === true, onChange: v => this.setState({ ['ldpLibLoc_' + s.id]: v }) }),
+                          h(DS.Icon, { name: 'marker-pin-01-line', size: 11, color: 'var(--color-text-subtle)' }),
+                          h('span', { style: { fontSize: 10.5, color: 'var(--color-text-subtle)' } }, 'Vị trí')
+                        ),
                       ),
                       h('button', { onClick: () => addSec(s), title: 'Thêm section', style: { flexShrink: 0, width: 24, height: 24, borderRadius: '50%', border: '1.5px solid var(--color-accent)', background: 'var(--color-accent-bg)', color: 'var(--color-accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, padding: 0, fontFamily: 'inherit', lineHeight: 1 } }, '+')
                     )
@@ -5033,6 +5048,9 @@ class Component extends DCLogic {
                     ),
 
                     h(DS.Switch, { size: 'sm', checked: this.state['ldpSecVis_' + (s.uid || s.id)] !== false, onChange: v => this.setState({ ['ldpSecVis_' + (s.uid || s.id)]: v }) }),
+                    this.isLdpLocationSection(s) && h(DS.Switch, { size: 'sm', checked: this.state['ldpSecLoc_' + (s.uid || s.id)] === true, onChange: v => this.setState({ ['ldpSecLoc_' + (s.uid || s.id)]: v }) }),
+                    this.isLdpLocationSection(s) && h(DS.Icon, { name: 'marker-pin-01-line', size: 12, color: 'var(--color-text-subtle)' }),
+                    this.isLdpLocationSection(s) && h('span', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, 'Vị trí'),
                     h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: () => this.openLdpSectionDrawer(s, { id: 'custom', label: 'Custom LDP' }) }),
                     h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => removeSec(s.uid || s.id) })
                   )
@@ -7676,11 +7694,23 @@ class Component extends DCLogic {
       this.toast('success', 'Đã lưu section', '"' + savedName + '" đã được lưu.');
     };
     const displayName = nameRef.value || this.state.ldpSectionTitles[section.id] || section.name;
+    const locKey = 'ldpSecLoc_' + (section.uid || section.id);
     const formContent = h('div', { style: { display: 'flex', flexDirection: 'column' } },
       // ── Tên section (đặt tên riêng cho section này) ──
       h('div', { style: { marginBottom: 12 } },
         h('label', { style: lbSt }, 'Tên section'),
         h(DS.Input, { defaultValue: nameRef.value, placeholder: section.name, onChange: e => { nameRef.value = e && e.target ? e.target.value : e; } })
+      ),
+      // ── Vị trí (chỉ với section thuộc họ Danh sách gói Internet) ──
+      this.isLdpLocationSection(section) && h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 14px', border: '1px solid var(--color-border)', borderRadius: 8, background: 'var(--color-surface-alt)', marginBottom: 12 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+          h(DS.Icon, { name: 'marker-pin-01-line', size: 16, color: 'var(--color-text-subtle)' }),
+          h('div', null,
+            h('div', { style: { fontWeight: 600, fontSize: 13 } }, 'Vị trí'),
+            h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'Bật để áp dụng hiển thị section này theo vị trí')
+          )
+        ),
+        h(DS.Switch, { size: 'sm', checked: this.state[locKey] === true, onChange: v => this.setState({ [locKey]: v }) })
       ),
       // ── Section header chip ──
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', marginBottom: 16, borderBottom: '1px solid var(--color-border)' } },
