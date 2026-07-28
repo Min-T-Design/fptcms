@@ -1136,7 +1136,7 @@ class Component extends DCLogic {
           this.qlcsField('Loại sản phẩm', meta.loaiGoiBan),
           this.qlcsField('Tên gói bán (tên raw từ QLCS)', meta.tenRaw),
           this.qlcsField('Giá tối thiểu', meta.giaToiThieu),
-          this.qlcsField('Gói tính cước', meta.goiTinhCuoc),
+          this.qlcsField('Hình thức thanh toán', meta.goiTinhCuoc),
           this.qlcsField('Đơn vị tính', meta.donViTinh)
         )
       )
@@ -4322,7 +4322,7 @@ class Component extends DCLogic {
     const categories = this.state.badgeFormCategories !== undefined ? this.state.badgeFormCategories : (r ? (r.categories || []) : []);
     const toggleCategory = c => this.setState({ badgeFormCategories: categories.includes(c) ? categories.filter(x => x !== c) : [...categories, c] });
     const isPreset = c => bg === c;
-    const sectionLabel = text => h('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--color-text-subtle)', marginBottom: 10 } }, text);
+    const secHdr = lbl => h('div', { style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--color-text-subtle)', margin: '20px 0 14px', borderBottom: '1px solid var(--color-border)', paddingBottom: 8 } }, lbl);
 
     const onSave = () => {
       if (!name.trim()) { this.toast('danger', 'Thiếu thông tin', 'Vui lòng nhập tên Badge/Tag.'); return; }
@@ -4343,64 +4343,61 @@ class Component extends DCLogic {
 
     return this.editorShell(
       isNew ? 'Thêm Badge/Tag mới' : 'Chỉnh sửa Badge/Tag: ' + r.name, 'Định nghĩa nhãn hiển thị trên Card gói / Trang chi tiết / Check out', back,
-      h('div', { style: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 28, alignItems: 'start', maxWidth: 880 } },
-        // ── Left column: identity — tên + nơi sử dụng (thông tin quan trọng nhất, đọc trước) ──
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
-          h('div', null,
-            sectionLabel('Thông tin cơ bản'),
-            this.field('Tên Badge/Tag', h(DS.Input, { value: name, placeholder: 'VD: HOT, NEW, BÁN CHẠY, SALE…', onChange: e => this.setState({ badgeFormName: e && e.target ? e.target.value : e }) }), true)
-          ),
-          h('div', null,
-            sectionLabel('Phân loại'),
-            h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: -4, marginBottom: 10 } }, 'Chọn một hoặc nhiều nơi Badge/Tag này được phép sử dụng.'),
-            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, padding: 14, border: '1px solid var(--color-border)', borderRadius: 10 } },
-              catDefs.map(c => h(DS.Checkbox, { key: c.value, label: c.label, checked: categories.includes(c.value), onChange: () => toggleCategory(c.value) }))
-            )
-          )
-        ),
-        // ── Right column: nhận diện màu sắc + trạng thái (phụ trợ, đọc sau) ──
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
-          h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 16px', background: 'var(--color-surface-alt)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 } },
-            h('span', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--color-text-subtle)' } }, 'Xem trước'),
-            h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '7px 18px', borderRadius: 7, fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '.5px', background: bg, color: textColor } }, name.trim() || 'TAG')
-          ),
-          h('div', null,
-            sectionLabel('Màu sắc'),
-            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-              h('div', null,
-                h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 6 } }, 'Bộ màu gợi ý'),
-                h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
-                  presets.map(c => h('button', { key: c, type: 'button', title: c, onClick: () => this.setState({ badgeFormBg: c }),
-                    style: { width: 26, height: 26, borderRadius: 7, background: c, border: 'none', cursor: 'pointer', boxShadow: isPreset(c) ? '0 0 0 2px var(--color-surface), 0 0 0 4px ' + c : 'none', flexShrink: 0 } }))
-                )
-              ),
-              h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Màu nền'),
-                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-                  h('label', { title: 'Chọn màu nền tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: bg } },
-                    h('input', { type: 'color', value: bg, onChange: e => this.setState({ badgeFormBg: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
-                  ),
-                  h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)' } }, bg.toUpperCase())
-                )
-              ),
-              h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Màu chữ'),
-                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-                  h('label', { title: 'Chọn màu chữ tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: textColor } },
-                    h('input', { type: 'color', value: textColor, onChange: e => this.setState({ badgeFormText: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
-                  ),
-                  h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)' } }, textColor.toUpperCase())
-                )
-              )
-            )
-          ),
-          h(DS.Divider, null),
+      h(DS.Card, { style: { padding: 24 } },
+        secHdr('Thông tin cơ bản'),
+        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 4, alignItems: 'start' } },
+          this.field('Tên Badge/Tag', h(DS.Input, { value: name, placeholder: 'VD: HOT, NEW, BÁN CHẠY, SALE…', onChange: e => this.setState({ badgeFormName: e && e.target ? e.target.value : e }) }), true),
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
             h('div', null,
               h('div', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Kích hoạt'),
               h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Ngừng hoạt động sẽ ẩn khỏi danh sách chọn ở Card gói / Trang chi tiết / Check out.')
             ),
             h(DS.Switch, { checked: status === 'active', onChange: () => this.setState({ badgeFormStatus: status === 'active' ? 'inactive' : 'active' }) })
+          )
+        ),
+        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, alignItems: 'start' } },
+          h('div', null,
+            secHdr('Phân loại'),
+            h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Chọn một hoặc nhiều nơi Badge/Tag này được phép sử dụng.'),
+            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, padding: 14, border: '1px solid var(--color-border)', borderRadius: 10 } },
+              catDefs.map(c => h(DS.Checkbox, { key: c.value, label: c.label, checked: categories.includes(c.value), onChange: () => toggleCategory(c.value) }))
+            )
+          ),
+          h('div', null,
+            secHdr('Màu sắc & Xem trước'),
+            h('div', { style: { display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 16 } },
+              h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+                h('div', null,
+                  h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 6 } }, 'Bộ màu gợi ý'),
+                  h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+                    presets.map(c => h('button', { key: c, type: 'button', title: c, onClick: () => this.setState({ badgeFormBg: c }),
+                      style: { width: 26, height: 26, borderRadius: 7, background: c, border: 'none', cursor: 'pointer', boxShadow: isPreset(c) ? '0 0 0 2px var(--color-surface), 0 0 0 4px ' + c : 'none', flexShrink: 0 } }))
+                  )
+                ),
+                h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                  h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Màu nền'),
+                  h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                    h('label', { title: 'Chọn màu nền tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: bg } },
+                      h('input', { type: 'color', value: bg, onChange: e => this.setState({ badgeFormBg: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
+                    ),
+                    h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)' } }, bg.toUpperCase())
+                  )
+                ),
+                h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                  h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Màu chữ'),
+                  h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                    h('label', { title: 'Chọn màu chữ tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: textColor } },
+                      h('input', { type: 'color', value: textColor, onChange: e => this.setState({ badgeFormText: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
+                    ),
+                    h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)' } }, textColor.toUpperCase())
+                  )
+                )
+              ),
+              h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface-sunken)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 20 } },
+                h('span', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--color-text-subtle)' } }, 'Xem trước'),
+                h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '7px 18px', borderRadius: 7, fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '.5px', background: bg, color: textColor } }, name.trim() || 'TAG')
+              )
+            )
           )
         )
       ),
@@ -8252,7 +8249,7 @@ class Component extends DCLogic {
   PAYMENT_LIST_DATA() {
     return [
       { id: 1, time: '01/06/2026 14:15:22', actor: 'huyennk', channel: 'Global', methodId: 'momo', skus: ['INT-GIGA', 'INT-SKY'] },
-      { id: 2, time: '01/06/2026 10:30:05', actor: 'Test003', channel: 'Global', methodId: 'vietqr', skus: ['INT-GIGA', 'INT-SKY', 'INT-META'] },
+      { id: 2, time: '01/06/2026 10:30:05', actor: 'Test003', channel: 'Global', methodId: 'vietqr', skus: ['INT-GIGA', 'INT-SKY', 'INT-META', 'INT-LUX500', 'INT-LUX800', 'CAM-IQ3', 'CAM-IQ4S', 'SA-SMAX', 'DEV-WIFI7'] },
       { id: 3, time: '30/05/2026 15:48:37', actor: 'Trần Minh Khoa', channel: 'Global', methodId: 'zalopay', skus: ['INT-GIGA'] },
       { id: 4, time: '29/05/2026 09:12:04', actor: 'Nguyễn Thị Thùy', channel: 'Global', methodId: 'momo', skus: ['INT-META'] },
       { id: 5, time: '28/05/2026 09:21:40', actor: 'Admin User', channel: 'Global', methodId: 'system', skus: [] },
@@ -8639,9 +8636,9 @@ class Component extends DCLogic {
     };
 
     const columns = [
-      { key: 'stt', header: 'STT', width: 48, align: 'center',
+      { key: 'stt', header: 'STT', width: 60, align: 'center',
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (payPg - 1) * paySz + sliced.indexOf(r) + 1) },
-      { key: 'method', header: 'PTTT tác động', width: 170, render: (_, r) => {
+      { key: 'method', header: 'PTTT tác động', width: 200, render: (_, r) => {
         const idx = sliced.indexOf(r);
         const prev = idx > 0 ? sliced[idx - 1] : null;
         if (prev && prev.methodId === r.methodId) return null; // cùng nhóm với dòng trên → để trống cho hiệu ứng gộp nhóm
@@ -8650,18 +8647,25 @@ class Component extends DCLogic {
           h('span', { style: { fontWeight: 600 } }, this.PAYMENT_METHOD_LABEL(r.methodId))
         );
       } },
-      { key: 'time', header: sh('Thời gian', 'time'), width: 150, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, whiteSpace: 'nowrap' } }, r.time) },
-      { key: 'actor', header: sh('Người thực', 'actor'), width: 150, render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
+      { key: 'time', header: sh('Thời gian', 'time'), width: 180, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, whiteSpace: 'nowrap' } }, r.time) },
+      { key: 'skus', header: 'Gói cước (SKU)', width: 420, render: (_, r) => {
+        if (r.methodId === 'system') return h(DS.Badge, { theme: 'brand' }, 'Tất cả gói');
+        const MAX = 5;
+        const skus = r.skus || [];
+        const visible = skus.slice(0, MAX);
+        const overflow = skus.length - MAX;
+        return h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' } },
+          ...visible.map(code => h(DS.Badge, { key: code, theme: 'neutral' }, code)),
+          overflow > 0 && h(DS.Badge, { key: '__more', theme: 'neutral', title: skus.slice(MAX).join(', ') }, '+' + overflow)
+        );
+      } },
+      { key: 'actor', header: sh('Người thực hiện', 'actor'), width: 200, render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
         h('div', { style: { width: 22, height: 22, borderRadius: '50%', background: 'var(--color-accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } },
           h(DS.Icon, { name: 'user-line', size: 12, color: 'var(--color-accent-text)' })
         ),
         h('span', { style: { fontSize: 12.5, whiteSpace: 'nowrap' } }, r.actor)
       ) },
-      { key: 'skus', header: 'Gói cước (SKU)', render: (_, r) => r.methodId === 'system'
-        ? h(DS.Badge, { theme: 'brand' }, 'Tất cả gói')
-        : h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4 } }, (r.skus || []).map(code => h(DS.Badge, { key: code, theme: 'neutral' }, code)))
-      },
-      { key: 'act', header: 'Hành động', width: 90, align: 'right', render: (_, r) => {
+      { key: 'act', header: 'Hành động', width: 110, align: 'right', render: (_, r) => {
         if (r.methodId === 'system') return h('span', { style: { fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Hệ thống');
         return this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openPayEditor(r) },
