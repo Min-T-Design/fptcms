@@ -2419,6 +2419,7 @@ function Select({
   const isControlled = value !== undefined;
   const current = isControlled ? value : internal;
   const [open, setOpen] = React.useState(false);
+  const [menuPos, setMenuPos] = React.useState(null);
   const ref = React.useRef(null);
   const s = SIZES[size] || SIZES.md;
   const invalid = !!error;
@@ -2430,6 +2431,36 @@ function Select({
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, []);
+  // Menu is measured from the trigger and rendered fixed-to-viewport instead of
+  // being confined to the relatively-positioned wrapper, so an ancestor's
+  // overflow:hidden/auto (e.g. a table card) can never clip it; flips upward
+  // when there isn't enough room below.
+  React.useLayoutEffect(() => {
+    if (!open) return;
+    const MARGIN = 8, MAX_H = 280;
+    const reposition = () => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom - MARGIN;
+      const spaceAbove = rect.top - MARGIN;
+      const dir = spaceBelow < 160 && spaceAbove > spaceBelow ? "up" : "down";
+      setMenuPos({
+        left: rect.left,
+        width: rect.width,
+        top: dir === "down" ? rect.bottom + 6 : undefined,
+        bottom: dir === "up" ? window.innerHeight - rect.top + 6 : undefined,
+        maxHeight: Math.max(120, Math.min(MAX_H, (dir === "down" ? spaceBelow : spaceAbove) - 6)),
+        dir
+      });
+    };
+    reposition();
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open]);
   const pick = v => {
     if (!isControlled) setInternal(v);
     onChange && onChange(v);
@@ -2494,20 +2525,22 @@ function Select({
       transform: open ? "rotate(180deg)" : "none",
       transition: "transform var(--dur-fast)"
     }
-  })), open && /*#__PURE__*/React.createElement("div", {
+  })), open && menuPos && /*#__PURE__*/React.createElement("div", {
     style: {
-      position: "absolute",
-      top: "calc(100% + 6px)",
-      left: 0,
-      right: 0,
-      zIndex: 30,
+      position: "fixed",
+      top: menuPos.top,
+      bottom: menuPos.bottom,
+      left: menuPos.left,
+      width: menuPos.width,
+      zIndex: 1200,
       background: "var(--color-surface)",
       border: "1px solid var(--color-border)",
       borderRadius: "var(--radius-base)",
       boxShadow: "var(--shadow-overlay)",
       padding: 6,
-      maxHeight: 280,
-      overflowY: "auto"
+      maxHeight: menuPos.maxHeight,
+      overflowY: "auto",
+      animation: (menuPos.dir === "up" ? "zen-select-up" : "zen-select-down") + " .16s cubic-bezier(.2,0,0,1)"
     }
   }, norm.map(o => {
     const active = o.value === current;
@@ -2538,7 +2571,7 @@ function Select({
       size: 18,
       color: "var(--color-accent-text)"
     }));
-  }))), (error || hint) && /*#__PURE__*/React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("style", null, "@keyframes zen-select-down{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}@keyframes zen-select-up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}"))), (error || hint) && /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "var(--font-sans)",
       fontSize: 13,
