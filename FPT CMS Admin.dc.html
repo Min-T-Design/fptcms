@@ -102,7 +102,7 @@ class Component extends DCLogic {
     drawer: null,
     modal: null,
     form: {},
-    // Nội dung gói bán module (theo kênh)
+    // Nội dung sản phẩm module (theo kênh)
     skuSearch: '', skuTypeFilter: 'all',
     skuActive: {},
     // Checkout module
@@ -272,8 +272,8 @@ class Component extends DCLogic {
   NAV() {
     return [
       { type: 'item', id: 'dashboards', label: 'Dashboards', icon: 'home-01-line' },
-      { type: 'cat', label: 'QUẢN LÝ SẢN PHẨM' },
-      { type: 'item', id: 'pdh-sku', label: 'Nội dung gói bán', icon: 'dots-grid-line' },
+      { type: 'cat', label: 'NỘI DUNG SẢN PHẨM' },
+      { type: 'item', id: 'pdh-sku', label: 'Nội dung sản phẩm', icon: 'dots-grid-line' },
       { type: 'item', id: 'cms-display', label: 'Thông tin checkout', icon: 'settings-01-line' },
       { type: 'item', id: 'cms-payment', label: 'Phương thức Thanh toán', icon: 'file-check-line' },
       { type: 'item', id: 'badge-tag', label: 'Quản lý Badge/Tag', icon: 'stars-01-line' },
@@ -302,7 +302,7 @@ class Component extends DCLogic {
   }
   TITLES() {
     return {
-      'dashboards': 'Dashboards', 'pdh-sku': 'Nội dung gói bán', 'badge-tag': 'Quản lý Badge/Tag', 'cms-display': 'Thông tin checkout',
+      'dashboards': 'Dashboards', 'pdh-sku': 'Nội dung sản phẩm', 'badge-tag': 'Quản lý Badge/Tag', 'cms-display': 'Thông tin checkout',
       'cms-payment': 'Phương thức Thanh toán', 'pages': 'Quản lý Trang (Pages)', 'sections': 'Quản lý Sections',
       'blocks': 'Quản lý Blocks', 'landing': 'Landing Page (LDP)', 'cms-menu': 'Quản lý Menu',
       'banner': 'Quản lý Banner', 'cms-popup': 'Quản lý Popup', 'news': 'Quản lý Tin tức', 'faq': 'Quản lý FAQ',
@@ -577,7 +577,7 @@ class Component extends DCLogic {
   }
 
   // ---------- SKU module ----------
-  // ---------- Quản lý sản phẩm (Nội dung gói bán theo kênh bán) ----------
+  // ---------- Quản lý sản phẩm (Nội dung sản phẩm theo kênh bán) ----------
   PKG_CHANNELS() {
     return this.CHANNELS().filter(c => c.id !== 'global');
   }
@@ -709,8 +709,8 @@ class Component extends DCLogic {
         bundledProducts: [{ name: 'Camera IQ3 Full HD', tooltip: '', included: true }, { name: 'Cloud 7 ngày miễn phí', tooltip: '', included: true }],
         privTitle: 'Đặc quyền Camera IQ3',
         privileges: [
-          { icon: 'image-line', title: 'Full HD sắc nét', content: 'Độ phân giải Full HD, góc rộng 130 độ.' },
-          { icon: 'bell-01-line', title: 'Cảnh báo tức thời', content: 'Nhận cảnh báo qua App HiFPT khi có chuyển động.' },
+          'Full HD sắc nét, góc rộng 130 độ',
+          'Cảnh báo chuyển động tức thời qua App HiFPT',
         ],
         pkgDesc: 'Full HD, góc rộng 130 độ\nCảnh báo chuyển động tức thời\nTặng thẻ nhớ 32GB',
         shortDesc: 'Camera an ninh Full HD, góc rộng, cảnh báo chuyển động tức thời.', longDesc: '',
@@ -731,8 +731,8 @@ class Component extends DCLogic {
         ],
         bundledProducts: [], privTitle: 'Đặc quyền Camera IQ3',
         privileges: [
-          { icon: 'image-line', title: 'Full HD sắc nét', content: 'Độ phân giải Full HD, góc rộng 110°' },
-          { icon: 'bell-01-line', title: 'Cảnh báo tức thời', content: 'Nhận cảnh báo qua App HiFPT khi có chuyển động' },
+          'Full HD sắc nét, góc rộng 110°',
+          'Cảnh báo chuyển động tức thời qua App HiFPT',
         ],
         pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '20/05/2026 09:31', createdBy: 'FI-25128', updatedAt: '20/05/2026 09:31', updatedBy: 'FI-25128' },
@@ -752,9 +752,9 @@ class Component extends DCLogic {
         bundledProducts: [{ name: 'FPT Play Box (tặng kèm)', tooltip: '', included: true }],
         privTitle: 'Đặc quyền FPT Play SMax',
         privileges: [
-          { icon: 'stars-01-line', title: 'Kho nội dung khổng lồ', content: 'HBO, K+, FPT Play và nhiều kênh khác' },
-          { icon: 'user-circle-line', title: 'Xem đa thiết bị', content: 'Đăng nhập cùng lúc trên TV, điện thoại, máy tính bảng' },
-          { icon: 'check-circle-line', title: 'Không quảng cáo', content: 'Trải nghiệm xem phim liền mạch, không gián đoạn' },
+          'Kho nội dung khổng lồ: HBO, K+, FPT Play và nhiều kênh khác',
+          'Xem đa thiết bị: Đăng nhập cùng lúc trên TV, điện thoại, máy tính bảng',
+          'Không quảng cáo: Trải nghiệm xem phim liền mạch, không gián đoạn',
         ],
         pkgDesc: 'Kho nội dung HBO, K+, FPT Play\nTặng kèm FPT Play Box',
         shortDesc: 'FPT Play SMax - trải nghiệm giải trí đỉnh cao.',
@@ -775,9 +775,9 @@ class Component extends DCLogic {
         ],
         bundledProducts: [], privTitle: 'Đặc quyền Router Wi-Fi 7',
         privileges: [
-          { icon: 'zap-line', title: 'Tốc độ vượt trội', content: 'Chuẩn Wi-Fi 7 mới nhất, băng thông lên đến 5Gbps' },
-          { icon: 'globe-01-line', title: 'Phủ sóng rộng', content: 'Tối ưu cho nhà 2-3 tầng, giảm điểm chết sóng' },
-          { icon: 'check-circle-line', title: 'Bảo hành chính hãng', content: '24 tháng, đổi mới trong 30 ngày đầu nếu lỗi' },
+          'Tốc độ vượt trội: Chuẩn Wi-Fi 7 mới nhất, băng thông lên đến 5Gbps',
+          'Phủ sóng rộng: Tối ưu cho nhà 2-3 tầng, giảm điểm chết sóng',
+          'Bảo hành chính hãng: 24 tháng, đổi mới trong 30 ngày đầu nếu lỗi',
         ],
         pkgDesc: 'Chuẩn Wi-Fi 7 tốc độ vượt trội', shortDesc: 'Router Wi-Fi 7 tốc độ vượt trội, sẵn sàng cho tương lai.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
         createdAt: '16/05/2026 14:22', createdBy: 'FI-25128', updatedAt: '16/05/2026 14:22', updatedBy: 'FI-25128' },
@@ -793,11 +793,13 @@ class Component extends DCLogic {
     return {
       attributes: r && r.attributes ? r.attributes.map(x => ({ ...x })) : [],
       bundledProducts: r && r.bundledProducts ? r.bundledProducts.map(x => ({ ...x })) : [],
-      privileges: (() => {
-        const base = (r && r.privileges ? r.privileges.map(x => ({ ...x })) : []).slice(0, 4);
-        while (base.length < 4) base.push({ icon: '', title: '', content: '' });
-        return base;
-      })(),
+      privileges: this.PKG_CONTENT_DEVICE_LAYOUT(r)
+        ? (r && r.privileges ? [...r.privileges] : [])
+        : (() => {
+            const base = (r && r.privileges ? r.privileges.map(x => ({ ...x })) : []).slice(0, 4);
+            while (base.length < 4) base.push({ icon: '', title: '', content: '' });
+            return base;
+          })(),
       promoList: r && r.promoList ? [...r.promoList] : [],
       gallery: r && r.gallery ? r.gallery.map(x => ({ ...x })) : [],
       videos: r && r.videos ? r.videos.map(x => ({ ...x })) : [],
@@ -851,7 +853,7 @@ class Component extends DCLogic {
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openSkuEditor(r) },
           { icon: 'trash-line', label: 'Xóa', onClick: () => {
             const c = channelMap.get(r.channel);
-            this.confirm('Xóa nội dung gói bán?', '"' + (r.displayName || r.skuCode) + '" trên kênh ' + (c ? c.name : r.channel) + ' sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa nội dung gói bán.'); }, true);
+            this.confirm('Xóa nội dung sản phẩm?', '"' + (r.displayName || r.skuCode) + '" trên kênh ' + (c ? c.name : r.channel) + ' sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa nội dung sản phẩm.'); }, true);
           } },
         ]) },
     ];
@@ -882,7 +884,7 @@ class Component extends DCLogic {
           q && this.filterChip('Tìm: ' + this.state.skuSearch, 'neutral', () => this.setState({ skuSearch: '', pkg_pg: 1 })),
           typeF !== 'all' && this.filterChip('Loại sản phẩm: ' + typeF, 'brand', () => this.setState({ skuTypeFilter: 'all', pkg_pg: 1 })),
         ]),
-        data.length ? this.tbl(columns, sliced, 'id', r => this.openSkuDetail(r)) : this.empty('Không tìm thấy nội dung gói bán phù hợp.'),
+        data.length ? this.tbl(columns, sliced, 'id', r => this.openSkuDetail(r)) : this.empty('Không tìm thấy nội dung sản phẩm phù hợp.'),
         data.length ? this.renderPagBar(data.length, 'pkg', 'nội dung') : null
       )
     );
@@ -894,7 +896,7 @@ class Component extends DCLogic {
     const ch = this.PKG_CHANNELS().find(c => c.id === r.channel);
     const TAG_LABEL = { bestseller: 'Bán chạy', new: 'Mới', recommended: 'Khuyên dùng' };
     this.openDrawer({
-      title: r.displayName || r.skuCode, subtitle: 'Nội dung gói bán · ' + (ch ? ch.name : r.channel), width: 480,
+      title: r.displayName || r.skuCode, subtitle: 'Nội dung sản phẩm · ' + (ch ? ch.name : r.channel), width: 480,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Gói bán từ PDH', sku ? (sku.name + ' (' + sku.code + ')') : r.skuCode),
         this.detailRow('Loại sản phẩm', r.packageType || '—'),
@@ -1068,7 +1070,7 @@ class Component extends DCLogic {
     const onSave = () => {
       const label = isNew ? 'Nội dung mới' : (r.displayName || r.skuCode);
       back();
-      this.toast('success', isNew ? 'Đã tạo nội dung gói bán' : 'Đã lưu nội dung gói bán', label + ' đã được cập nhật.');
+      this.toast('success', isNew ? 'Đã tạo nội dung sản phẩm' : 'Đã lưu nội dung sản phẩm', label + ' đã được cập nhật.');
     };
 
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, animation: 'fptContentIn .22s cubic-bezier(.2,0,0,1)' } },
@@ -1076,7 +1078,7 @@ class Component extends DCLogic {
         h(DS.Button, { level: 'tertiary', leadingIcon: 'arrow-left-line', size: 'sm', onClick: back }, 'Quay lại'),
         h('div', { style: { width: 1, height: 18, background: 'var(--color-border)', margin: '0 2px' } }),
         h('div', { style: { minWidth: 0 } },
-          h('div', { style: { fontWeight: 700, fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, isNew ? 'Tạo nội dung gói bán mới' : (r.displayName || r.skuCode)),
+          h('div', { style: { fontWeight: 700, fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, isNew ? 'Tạo nội dung sản phẩm mới' : (r.displayName || r.skuCode)),
           !isNew && h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, (ch ? ch.name : r.channel) + ' · ' + r.skuCode)
         ),
         h('div', { style: { flex: 1 } }),
@@ -1247,6 +1249,22 @@ class Component extends DCLogic {
   }
   renderPkgPriv(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    // SKU (Thiết bị) và SA không dùng layout card icon+tiêu đề+nội dung của Internet — chỉ nhập text, mỗi dòng là 1 đặc quyền hiển thị trên trang chi tiết.
+    if (this.PKG_CONTENT_DEVICE_LAYOUT(r)) {
+      const lines = this.state.pkgForm.privileges || [];
+      return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginTop: -6 } }, this.pkgSectionBadge('editable', 'Vận hành tự quản lý')),
+        this.field('Tiêu đề chung đặc quyền', h(DS.Input, { defaultValue: r ? r.privTitle : '', placeholder: 'VD: Đặc quyền Camera IQ3' }), true),
+        h('div', null,
+          h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Danh sách đặc quyền'),
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Mỗi dòng hiển thị 1 đặc quyền trên trang chi tiết.'),
+          h(DS.Textarea, {
+            defaultValue: lines.join('\n'), rows: 6, placeholder: 'Mỗi dòng 1 đặc quyền — VD:\nFull HD sắc nét, góc rộng 130 độ\nCảnh báo chuyển động tức thời qua App HiFPT',
+            onBlur: e => this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: (e.target ? e.target.value : e).split('\n').map(x => x.trim()).filter(Boolean) } }))
+          })
+        )
+      );
+    }
     const items = this.state.pkgForm.privileges || [];
     const update = (i, key, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: s.pkgForm.privileges.map((it, j) => j === i ? { ...it, [key]: val } : it) } }));
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
@@ -9484,7 +9502,7 @@ class Component extends DCLogic {
 
   // ===== RBAC matrix =====
   RBAC() { return [
-    { group: 'QUẢN LÝ SẢN PHẨM', modules: ['Nội dung gói bán', 'Thông tin checkout'] },
+    { group: 'NỘI DUNG SẢN PHẨM', modules: ['Nội dung sản phẩm', 'Thông tin checkout'] },
     { group: 'CẤU TRÚC TRANG', modules: ['Quản lý Trang (Pages)', 'Quản lý Sections', 'Quản lý Blocks', 'Landing Page (LDP)', 'Quản lý Menu'] },
     { group: 'MEDIA & QUẢNG BÁ', modules: ['Quản lý Banner', 'Quản lý Popup'] },
     { group: 'BÀI VIẾT & NỘI DUNG', modules: ['Quản lý Tin tức', 'Quản lý FAQ', 'Cấu hình Thông tin hay'] },
