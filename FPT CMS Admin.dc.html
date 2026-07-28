@@ -607,7 +607,7 @@ class Component extends DCLogic {
       tenRaw: (sku.name || '').replace(/[()]/g, '').replace(/\s+/g, ''),
       giaToiThieu: sku.price || '—',
       goiTinhCuoc: isDevice ? 'Trả 1 lần' : 'Trả hàng tháng',
-      donViTinh: isDevice ? 'Cái' : 'Gói cước',
+      phi: 'PLĐ Net',
     };
   }
   PROMO_ICONS() { return ['star-01-line', 'stars-01-line', 'zap-line', 'check-circle-line', 'heart-line']; }
@@ -839,7 +839,7 @@ class Component extends DCLogic {
         } },
       { key: 'type', header: 'Loại sản phẩm', width: 140,
         render: (_, r) => { const sku = skuByCode.get(r.skuCode); return h(DS.Badge, { theme: this.PKG_TYPE_THEME(sku && sku.group) }, sku ? sku.group : '—'); } },
-      { key: 'price', header: 'Giá tối thiểu', width: 130, align: 'right',
+      { key: 'price', header: 'Giá bán', width: 130, align: 'right',
         render: (_, r) => { const sku = skuByCode.get(r.skuCode); return h('span', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, sku ? sku.price : '—'); } },
       { key: 'updatedAt', header: 'Thời gian cập nhật', width: 150,
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
@@ -897,7 +897,7 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Gói bán từ PDH', sku ? (sku.name + ' (' + sku.code + ')') : r.skuCode),
         this.detailRow('Loại sản phẩm', r.packageType || '—'),
-        this.detailRow('Giá tối thiểu', sku ? sku.price : '—'),
+        this.detailRow('Giá bán', sku ? sku.price : '—'),
         this.detailRow('Kênh bán', ch ? ch.name : r.channel),
         this.detailRow('Tên hiển thị trên kênh', r.displayName),
         this.detailRow('URL Slug', 'fpt.vn/' + (r.slug || '—')),
@@ -1135,9 +1135,9 @@ class Component extends DCLogic {
           this.qlcsField('Danh mục', meta.dichVu),
           this.qlcsField('Loại sản phẩm', meta.loaiGoiBan),
           this.qlcsField('Tên gói bán (tên raw từ QLCS)', meta.tenRaw),
-          this.qlcsField('Giá tối thiểu', meta.giaToiThieu),
+          this.qlcsField('Giá bán', meta.giaToiThieu),
           this.qlcsField('Hình thức thanh toán', meta.goiTinhCuoc),
-          this.qlcsField('Đơn vị tính', meta.donViTinh)
+          this.qlcsField('Phí', meta.phi)
         )
       )
     );
@@ -1660,19 +1660,22 @@ class Component extends DCLogic {
   renderCheckoutConfig() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-      h('p', { style: { fontSize: 13, color: 'var(--color-text-subtle)', margin: 0 } },
-        'Cấu hình các ghi chú hiển thị trên trang Checkout. ',
-        h('strong', { style: { color: 'var(--color-text)' } }, 'Mặc định (Global)'),
-        ' áp dụng cho tất cả kênh. Khi kênh để trống → tự kế thừa Global. Khi kênh đã lưu nội dung riêng → hiển thị badge ',
-        h('strong', { style: { color: 'var(--color-accent-text)' } }, 'Tùy chỉnh riêng'), '.'
-      ),
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '10px 14px', fontSize: 11.5 } },
-        h('span', { style: { fontWeight: 600, color: 'var(--color-text-subtle)', marginRight: 2 } }, 'Trạng thái kênh:'),
-        h(DS.Badge, { theme: 'brand' }, 'Tùy chỉnh riêng'),
-        h('span', { style: { color: 'var(--color-text-subtle)' } }, '— Kênh đã lưu nội dung riêng, ghi đè Global'),
-        h('div', { style: { width: 1, height: 14, background: 'var(--color-border)', margin: '0 4px' } }),
-        h(DS.Badge, { theme: 'neutral' }, 'Dùng Global'),
-        h('span', { style: { color: 'var(--color-text-subtle)' } }, '— Kênh để trống, tự kế thừa cấu hình Global')
+      // Giai đoạn hiện tại: tạm ẩn khối ghi chú giải thích Global/kênh riêng (chỉ áp dụng khi có nhiều kênh cùng hiển thị) vì các kênh khác đang tạm ẩn — xem CHECKOUT_HIDDEN_CHANNELS. Sẽ hiện lại khi mở lại các kênh khác ở giai đoạn sau.
+      !this.CHECKOUT_SHOW_CHANNEL_NOTE() ? null : h(React.Fragment, null,
+        h('p', { style: { fontSize: 13, color: 'var(--color-text-subtle)', margin: 0 } },
+          'Cấu hình các ghi chú hiển thị trên trang Checkout. ',
+          h('strong', { style: { color: 'var(--color-text)' } }, 'Mặc định (Global)'),
+          ' áp dụng cho tất cả kênh. Khi kênh để trống → tự kế thừa Global. Khi kênh đã lưu nội dung riêng → hiển thị badge ',
+          h('strong', { style: { color: 'var(--color-accent-text)' } }, 'Tùy chỉnh riêng'), '.'
+        ),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '10px 14px', fontSize: 11.5 } },
+          h('span', { style: { fontWeight: 600, color: 'var(--color-text-subtle)', marginRight: 2 } }, 'Trạng thái kênh:'),
+          h(DS.Badge, { theme: 'brand' }, 'Tùy chỉnh riêng'),
+          h('span', { style: { color: 'var(--color-text-subtle)' } }, '— Kênh đã lưu nội dung riêng, ghi đè Global'),
+          h('div', { style: { width: 1, height: 14, background: 'var(--color-border)', margin: '0 4px' } }),
+          h(DS.Badge, { theme: 'neutral' }, 'Dùng Global'),
+          h('span', { style: { color: 'var(--color-text-subtle)' } }, '— Kênh để trống, tự kế thừa cấu hình Global')
+        )
       ),
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
         // Giai đoạn hiện tại: tạm ẩn 3 kênh tongdaiwifi/App HiFPT/Website fpt.vn khỏi danh sách hiển thị (chỉ ẩn UI, dữ liệu/state theo kênh vẫn giữ nguyên để đồng bộ khi hiện lại ở giai đoạn sau).
@@ -1682,6 +1685,9 @@ class Component extends DCLogic {
   }
   CHECKOUT_HIDDEN_CHANNELS() {
     return ['tdw', 'hifpt', 'fptvn'];
+  }
+  CHECKOUT_SHOW_CHANNEL_NOTE() {
+    return false;
   }
   renderCheckoutChannel(c) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -8316,7 +8322,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const tab = this.state.payTab || 'config';
     const tabDesc = {
-      config: 'Cấu hình ưu đãi và mô tả hiển thị cho từng phương thức thanh toán — áp dụng riêng theo kênh bán hàng hoặc dùng cấu hình Global chung.',
+      config: 'Cấu hình ưu đãi và mô tả hiển thị cho từng phương thức thanh toán.',
       list: 'Nhật ký ghi nhận các thay đổi cấu hình phương thức thanh toán đã áp dụng trong hệ thống, nhóm theo từng phương thức và gói cước liên quan.',
     };
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 0 } },
