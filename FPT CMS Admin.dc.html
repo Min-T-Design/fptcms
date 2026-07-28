@@ -1800,6 +1800,7 @@ class Component extends DCLogic {
     const billingTypeOptions = ['Trả trước', 'Trả sau'];
     const periodOptions = Array.from({ length: 36 }, (_, i) => (i + 1) + ' tháng');
     const checkoutBadges = this.getBadgeTagList().filter(b => b.status === 'active' && (b.categories || []).includes('checkout'));
+    const NO_TAGLINE = '— Không chọn (Không có Tag line) —';
     const checkoutBadgeOptions = checkoutBadges.map(b => ({
       value: b.name,
       label: h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 5, fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.4px', background: b.bgColor, color: b.textColor } }, b.name)
@@ -2036,8 +2037,8 @@ class Component extends DCLogic {
                           h('div', { style: { width: 160, flexShrink: 0 } },
                             checkoutBadgeOptions.length
                               ? h(DS.Select, {
-                                  options: checkoutBadgeOptions, value: cy.tagline || '', placeholder: 'Chọn Tag line…',
-                                  onChange: val => updateDraftCycle(cy.id, { tagline: val })
+                                  options: [NO_TAGLINE, ...checkoutBadgeOptions], value: cy.tagline || NO_TAGLINE,
+                                  onChange: val => updateDraftCycle(cy.id, { tagline: val === NO_TAGLINE ? '' : val })
                                 })
                               : h('div', { title: 'Chưa có Badge/Tag phân loại "Check out" — tạo tại Quản lý Badge/Tag.', style: { fontSize: 11, color: 'var(--color-text-subtle)', padding: '9px 0' } }, 'Chưa có Tag line')
                           ),
