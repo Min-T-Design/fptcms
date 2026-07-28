@@ -600,15 +600,12 @@ class Component extends DCLogic {
   }
   PKG_QLCS_META(sku) {
     if (!sku) return null;
-    const subGroup = { 'Internet': 'Cáp quang gia đình', 'Camera': 'An ninh & giám sát', 'Truyền hình': 'Giải trí trực tuyến', 'Cloud': 'Lưu trữ đám mây' }[sku.group] || '—';
     const isDevice = sku.kind === 'Thiết bị';
     return {
       dichVu: sku.group || '—',
-      nhomDichVu: subGroup,
       loaiGoiBan: sku.kind || '—',
       tenRaw: (sku.name || '').replace(/[()]/g, '').replace(/\s+/g, ''),
       giaToiThieu: sku.price || '—',
-      hinhThucQuanLy: isDevice ? 'Thiết bị lẻ' : 'Thuê bao dịch vụ',
       goiTinhCuoc: isDevice ? 'Trả 1 lần' : 'Trả hàng tháng',
       donViTinh: isDevice ? 'Cái' : 'Gói cước',
     };
@@ -628,9 +625,9 @@ class Component extends DCLogic {
           { icon: 'lock-01-line', name: 'Cam kết SLA', value: '99.5% uptime', featured: false },
         ],
         bundledProducts: [
-          { name: 'Modem Wi-Fi 6', tooltip: 'Modem Wi-Fi 6 tặng kèm, thu hồi khi thanh lý hợp đồng.', included: true },
-          { name: 'Fsafe – Bảo mật', tooltip: 'Miễn phí 3 tháng đầu, tự động gia hạn theo gói cước.', included: true },
-          { name: 'Ultra Fast – Chơi game', tooltip: 'Không áp dụng khi đăng ký gói Giga cơ bản.', included: false },
+          { rawName: 'MODEM_WIFI6_AX1800', name: 'Modem Wi-Fi 6', tooltip: 'Modem Wi-Fi 6 tặng kèm, thu hồi khi thanh lý hợp đồng.', included: true },
+          { rawName: 'FSAFE_SECURITY_ADDON', name: 'Fsafe – Bảo mật', tooltip: 'Miễn phí 3 tháng đầu, tự động gia hạn theo gói cước.', included: true },
+          { rawName: 'ULTRAFAST_GAMING_ADDON', name: 'Ultra Fast – Chơi game', tooltip: 'Không áp dụng khi đăng ký gói Giga cơ bản.', included: false },
         ],
         privTitle: 'Đặc quyền khi đăng ký Internet Giga',
         privileges: [
@@ -651,7 +648,7 @@ class Component extends DCLogic {
         displayName: 'Internet Giga', slug: 'internet-giga',
         tags: ['bestseller'], tagText: 'HOT', tagColor: '#ef4444', tagTextColor: '#ffffff',
         priceTooltip: 'Mức giá bao gồm VAT và có thể được thay đổi theo khu vực và thời điểm. Giá chưa bao gồm phí thuê thiết bị đầu cuối, phí thu tiền tận nhà và các dịch vụ gia tăng khác.',
-        bundledFee: '', attributes: [], bundledProducts: [{ name: 'Modem Wi-Fi 6', tooltip: '', included: true }],
+        bundledFee: '', attributes: [], bundledProducts: [{ rawName: 'MODEM_WIFI6_AX1800', name: 'Modem Wi-Fi 6', tooltip: '', included: true }],
         privTitle: 'Đặc quyền Internet Giga', privileges: [{ icon: 'zap-line', title: 'Tốc độ vượt trội', content: 'Tốc độ 150Mbps ổn định.' }],
         pkgDesc: '150Mbps ổn định\nModem Wi-Fi 6 miễn phí',
         shortDesc: 'Gói Internet Giga tốc độ 150Mbps.',
@@ -665,7 +662,7 @@ class Component extends DCLogic {
         bundledFee: '', attributes: [
           { icon: 'zap-line', name: 'Tốc độ tải xuống', value: '1 Gbps', featured: true },
           { icon: 'star-01-line', name: 'Ưu tiên băng thông', value: 'Có', featured: false },
-        ], bundledProducts: [{ name: 'Modem Wi-Fi 6', tooltip: '', included: true }, { name: 'FPT Play VIP', tooltip: '', included: false }],
+        ], bundledProducts: [{ rawName: 'MODEM_WIFI6_AX1800', name: 'Modem Wi-Fi 6', tooltip: '', included: true }, { rawName: 'FPTPLAY_VIP_ADDON', name: 'FPT Play VIP', tooltip: '', included: false }],
         privTitle: 'Đặc quyền Internet Sky',
         privileges: [
           { icon: 'zap-line', title: 'Tốc độ Gigabit', content: 'Tốc độ tải xuống lên đến 1Gbps.' },
@@ -686,7 +683,7 @@ class Component extends DCLogic {
         displayName: 'Internet Meta - Chuẩn Wi-Fi 6E', slug: 'internet-meta',
         tags: ['new', 'recommended'], tagText: 'MỚI', tagColor: '#10b981', tagTextColor: '#ffffff',
         priceTooltip: 'Mức giá bao gồm VAT và có thể được thay đổi theo khu vực và thời điểm. Giá chưa bao gồm phí thuê thiết bị đầu cuối, phí thu tiền tận nhà và các dịch vụ gia tăng khác.',
-        bundledFee: '', attributes: [{ icon: 'stars-01-line', name: 'Chuẩn Wi-Fi', value: 'Wi-Fi 6E', featured: true }], bundledProducts: [{ name: 'Thiết bị Wi-Fi 6E', tooltip: '', included: true }],
+        bundledFee: '', attributes: [{ icon: 'stars-01-line', name: 'Chuẩn Wi-Fi', value: 'Wi-Fi 6E', featured: true }], bundledProducts: [{ rawName: 'DEVICE_WIFI6E_STD', name: 'Thiết bị Wi-Fi 6E', tooltip: '', included: true }],
         privTitle: 'Đặc quyền Internet Meta', privileges: [{ icon: 'stars-01-line', title: 'Công nghệ mới nhất', content: 'Chuẩn Wi-Fi 6E băng tần 6GHz.' }],
         pkgDesc: 'Chuẩn Wi-Fi 6E băng tần 6GHz\nThiết bị đi kèm miễn phí',
         shortDesc: 'Internet Meta tích hợp thiết bị Wi-Fi 6E thế hệ mới.',
@@ -1135,12 +1132,10 @@ class Component extends DCLogic {
           'Thông tin sản phẩm (QLCS)'
         ),
         open && h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 } },
-          this.qlcsField('Dịch vụ', meta.dichVu),
-          this.qlcsField('Nhóm dịch vụ', meta.nhomDichVu),
+          this.qlcsField('Danh mục', meta.dichVu),
           this.qlcsField('Loại sản phẩm', meta.loaiGoiBan),
           this.qlcsField('Tên gói bán (tên raw từ QLCS)', meta.tenRaw),
           this.qlcsField('Giá tối thiểu', meta.giaToiThieu),
-          this.qlcsField('Hình thức quản lý', meta.hinhThucQuanLy),
           this.qlcsField('Gói tính cước', meta.goiTinhCuoc),
           this.qlcsField('Đơn vị tính', meta.donViTinh)
         )
@@ -1214,18 +1209,18 @@ class Component extends DCLogic {
       const next = bundled.slice(); const [it] = next.splice(from, 1); next.splice(to, 0, it);
       this.setState(s => ({ pkgForm: { ...s.pkgForm, bundledProducts: next } }));
     };
-    const gridCols = '20px 24px 48px 1.3fr 1.3fr 96px';
+    const gridCols = '20px 24px 48px 1.1fr 1.3fr 1.3fr 96px';
     return h('div', null,
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 } },
         h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Sản phẩm đi kèm')
       ),
-      h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Danh sách sản phẩm đồng bộ tự động — chỉ chỉnh sửa: Ảnh, Tên hiển thị web, Tooltip hiển thị web, Hiển thị, Vị trí hiển thị.'),
+      h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Danh sách sản phẩm đồng bộ tự động — Tên mặc định (raw) được đồng bộ từ hệ thống, không thể chỉnh sửa. Chỉ chỉnh sửa: Ảnh, Tên hiển thị web, Tooltip hiển thị web, Hiển thị, Vị trí hiển thị.'),
       h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
         bundled.length === 0
           ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic' } }, 'Chưa có sản phẩm nào trong gói.')
           : h('div', null,
               h('div', { style: { display: 'grid', gridTemplateColumns: gridCols, gap: 10, alignItems: 'center', padding: '7px 14px', borderBottom: '1px solid var(--color-border)', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--color-text-muted)', background: 'var(--color-surface-alt)' } },
-                h('span', null, ''), h('span', null, '#'), h('span', null, 'Ảnh'), h('span', null, 'Tên hiển thị web'), h('span', null, 'Tooltip hiển thị web'), h('span', { style: { textAlign: 'center' } }, 'Hiển thị')
+                h('span', null, ''), h('span', null, '#'), h('span', null, 'Ảnh'), h('span', null, 'Tên mặc định (raw)'), h('span', null, 'Tên hiển thị web'), h('span', null, 'Tooltip hiển thị web'), h('span', { style: { textAlign: 'center' } }, 'Hiển thị')
               ),
               bundled.map((it, i) => h('div', {
                 key: i, draggable: true,
@@ -1239,6 +1234,7 @@ class Component extends DCLogic {
                 h(DS.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 }, title: 'Kéo để sắp xếp vị trí' }),
                 h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', textAlign: 'center' } }, i + 1),
                 h('div', { onClick: () => this.toast('info', 'Chọn ảnh SKU', 'Chọn ảnh minh hoạ cho sản phẩm.'), style: { width: 38, height: 32, background: 'var(--color-surface-alt)', border: '1px dashed var(--color-border)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' } }, h(DS.Icon, { name: 'image-line', size: 14, color: 'var(--color-text-subtle)' })),
+                h(DS.Input, { value: it.rawName || '', disabled: true, title: 'Tên đồng bộ từ hệ thống — không thể chỉnh sửa' }),
                 h(DS.Input, { value: it.name, placeholder: 'Tên hiển thị web…', onChange: e => updBundled(i, 'name', e && e.target ? e.target.value : e) }),
                 h(DS.Input, { value: it.tooltip, placeholder: 'Tooltip hiển thị web…', onChange: e => updBundled(i, 'tooltip', e && e.target ? e.target.value : e) }),
                 h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(DS.Switch, { size: 'sm', checked: it.included, onChange: v => updBundled(i, 'included', v) }))
