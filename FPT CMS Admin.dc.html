@@ -1072,7 +1072,7 @@ class Component extends DCLogic {
     };
 
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, animation: 'fptContentIn .22s cubic-bezier(.2,0,0,1)' } },
-      h('div', { style: { position: 'sticky', top: -24, zIndex: 40, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
+      h('div', { style: { position: 'sticky', top: -24, zIndex: 10, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
         h(DS.Button, { level: 'tertiary', leadingIcon: 'arrow-left-line', size: 'sm', onClick: back }, 'Quay lại'),
         h('div', { style: { width: 1, height: 18, background: 'var(--color-border)', margin: '0 2px' } }),
         h('div', { style: { minWidth: 0 } },
@@ -2468,7 +2468,7 @@ class Component extends DCLogic {
   editorShell(title, subtitle, onBack, content, onSave, saveLabel, headerExtra) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-      h('div', { style: { position: 'sticky', top: -24, zIndex: 40, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
+      h('div', { style: { position: 'sticky', top: -24, zIndex: 10, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
         h(DS.Button, { level: 'tertiary', leadingIcon: 'arrow-left-line', size: 'sm', onClick: onBack }, 'Quay lại'),
         h('div', { style: { width: 1, height: 18, background: 'var(--color-border)', margin: '0 2px' } }),
         h('div', null,
@@ -3279,7 +3279,7 @@ class Component extends DCLogic {
 
     const close = () => this.setState({ blkView: 'list', blkEditRow: null });
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-      h('div', { style: { position: 'sticky', top: -24, zIndex: 40, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
+      h('div', { style: { position: 'sticky', top: -24, zIndex: 10, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
         h(DS.IconButton, { icon: 'arrow-left-line', label: 'Quay lại', level: 'tertiary', size: 'sm', onClick: close }),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 } },
           h('span', { style: { cursor: 'pointer', color: 'var(--color-text-muted)' }, onClick: close }, 'Quản lý Blocks'),
@@ -4825,7 +4825,7 @@ class Component extends DCLogic {
       }, 'Hoàn thành')
     );
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 16, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', position: 'sticky', top: -24, zIndex: 40, margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 16, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', position: 'sticky', top: -24, zIndex: 10, margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
         h('div', { style: { display: 'flex', alignItems: 'center', flex: 1 } },
           stepInfo.reduce((acc, s, i) => {
             acc.push(h('div', { key: s.n, style: { display: 'flex', alignItems: 'center', gap: 8, cursor: s.n < step ? 'pointer' : 'default' }, onClick: () => { if (s.n < step) this.setState({ ldpStep: s.n }); } },
@@ -8887,7 +8887,7 @@ class Component extends DCLogic {
     const isNew = !r || !r.id;
     const closeEditor = () => this.setState({ newsArticleEdit: null });
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-      h('div', { style: { position: 'sticky', top: -24, zIndex: 40, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
+      h('div', { style: { position: 'sticky', top: -24, zIndex: 10, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
         h(DS.IconButton, { icon: 'arrow-left-line', label: 'Quay lại', level: 'tertiary', size: 'sm', onClick: closeEditor }),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 } },
           h('span', { style: { cursor: 'pointer', color: 'var(--color-text-muted)' }, onClick: closeEditor }, 'Quản lý Tin tức'),
