@@ -1153,6 +1153,22 @@ class Component extends DCLogic {
     );
   }
 
+  // ---------- Card-style collapsible row used by "Quản lý Content" (rounded white pill, chevron only, no leading icon) ----------
+  collapsibleCard(stateKey, title, content) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const open = this.state[stateKey] !== false;
+    return h('div', { style: { background: 'var(--color-surface)', border: '1px solid var(--color-border-pale)', borderRadius: 14, boxShadow: '0px 1px 6px rgba(0,0,0,0.03), 0px 2px 12px rgba(16,24,40,0.05)', overflow: 'hidden' } },
+      h('button', {
+        type: 'button', onClick: () => this.setState({ [stateKey]: !open }),
+        style: { display: 'flex', alignItems: 'center', gap: 10, width: '100%', background: 'none', border: 'none', padding: '16px 20px', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: 'var(--color-text)', fontFamily: 'inherit', textAlign: 'left' }
+      },
+        h(DS.Icon, { name: 'chevron-down-line', size: 15, color: 'var(--color-text-subtle)', style: { transform: open ? 'none' : 'rotate(-90deg)', transition: 'transform .15s', flexShrink: 0 } }),
+        title
+      ),
+      open && h('div', { style: { padding: '0 20px 20px' } }, content)
+    );
+  }
+
   // ---------- Tab 1 helper: Thông tin sản phẩm (QLCS) subsection (part of "Đặc tính, Thiết bị") ----------
   qlcsField(label, value) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -1343,7 +1359,7 @@ class Component extends DCLogic {
       label: h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 5, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '.4px', background: b.bgColor, color: b.textColor } }, b.name)
     }));
     const goToBadgeModule = () => this.setState({ active: 'badge-tag', badgeTagEditor: null, badgeFormCategories: ['card'] });
-    return this.collapsibleSection('pkgSecWebOpen', 'Cài đặt web', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+    return this.collapsibleCard('pkgSecWebOpen', 'Cài đặt web', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
         h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14 } },
           h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 10 } },
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
@@ -1548,19 +1564,16 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isDevice = this.PKG_CONTENT_DEVICE_LAYOUT(r);
     const promoList = this.state.pkgForm.promoList || [];
-    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 24 } },
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       this.renderPkgWebSettings(r),
-      h(DS.Divider, null),
       isDevice && this.renderPkgCardImage(r),
       isDevice && h(DS.Divider, null),
-      this.collapsibleSection('pkgSecMediaOpen', 'Hình ảnh sản phẩm & Banner', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
+      this.collapsibleCard('pkgSecMediaOpen', 'Hình ảnh sản phẩm & Banner', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
         this.renderPkgImages(r),
         !isDevice && this.renderPkgMidBanner(r)
       )),
-      isDevice && h(DS.Divider, null),
-      isDevice && this.collapsibleSection('pkgSecVideoOpen', 'Video sản phẩm', this.renderPkgVideo(r)),
-      h(DS.Divider, null),
-      this.collapsibleSection('pkgSecDescOpen', 'Mô tả sản phẩm',
+      isDevice && this.collapsibleCard('pkgSecVideoOpen', 'Video sản phẩm', this.renderPkgVideo(r)),
+      this.collapsibleCard('pkgSecDescOpen', 'Mô tả sản phẩm',
         isDevice
           ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
               h('div', null,
@@ -1590,8 +1603,7 @@ class Component extends DCLogic {
               this.renderPkgPriv(r)
             )
       ),
-      h(DS.Divider, null),
-      this.collapsibleSection('pkgSecPromoOpen', 'Ưu đãi sản phẩm', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+      this.collapsibleCard('pkgSecPromoOpen', 'Ưu đãi sản phẩm', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
         isDevice && this.field('Tiêu đề ưu đãi', h(DS.Input, { defaultValue: r ? r.promoTitle : '', placeholder: 'VD: Ưu đãi khi mua Camera IQ3' })),
         h('div', null,
           h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Danh sách Ưu đãi & Quà tặng'),
