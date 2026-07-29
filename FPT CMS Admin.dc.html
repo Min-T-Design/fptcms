@@ -1841,7 +1841,7 @@ class Component extends DCLogic {
     const billingTypeOptions = ['Trả trước', 'Trả sau'];
     const periodOptions = Array.from({ length: 36 }, (_, i) => (i + 1) + ' tháng');
     const checkoutBadges = this.getBadgeTagList().filter(b => b.status === 'active' && (b.categories || []).includes('checkout'));
-    const NO_TAGLINE = '— Không chọn (Không có Tag line) —';
+    const NO_TAGLINE = 'Không có tag';
     const checkoutBadgeOptions = checkoutBadges.map(b => ({
       value: b.name,
       label: h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 5, fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.4px', background: b.bgColor, color: b.textColor } }, b.name)
