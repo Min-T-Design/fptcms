@@ -378,27 +378,24 @@
     var bs = (open || focus) ? (invalid ? "0 0 0 3px var(--color-danger-bg)" : "var(--shadow-focus)") : "none";
 
     function TimeField(tf) {
-      return h("div", { style: { display: "flex", flexDirection: "column", gap: 6, flex: 1 } },
+      return h("div", { style: { display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 } },
         h("span", { style: { fontSize: 12, fontWeight: 600, color: "var(--color-text-subtle)", fontFamily: "var(--font-sans)" } }, tf.label),
-        h("div", { style: { display: "flex", alignItems: "center", border: "1px solid var(--color-border)", borderRadius: "var(--radius-base)", background: "var(--color-surface)", overflow: "hidden", height: 40 } },
+        h("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
           h("input", {
             type: "text", placeholder: "hh:mm", value: tf.time.value || "",
             onChange: function (e) { if (tf.onTC) tf.onTC(Object.assign({}, tf.time, { value: e.target.value })); },
-            style: { flex: 1, border: "none", outline: "none", padding: "0 10px", fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--color-text)", background: "transparent" }
+            style: { flex: 1, minWidth: 0, height: 40, boxSizing: "border-box", border: "1px solid var(--color-border)", borderRadius: "var(--radius-base)", outline: "none", padding: "0 10px", fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--color-text)", background: "var(--color-surface)" }
           }),
-          h("div", { style: { width: 1, height: "60%", background: "var(--color-border)" } }),
-          h("div", { style: { position: "relative", display: "flex", alignItems: "center", paddingRight: 10 } },
-            h("select", {
-              value: tf.time.period || "AM",
-              onChange: function (e) { if (tf.onTC) tf.onTC(Object.assign({}, tf.time, { period: e.target.value })); },
-              style: { appearance: "none", WebkitAppearance: "none", border: "none", outline: "none", paddingLeft: 10, paddingRight: 20, height: 40, fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--color-text)", background: "transparent", cursor: "pointer" }
-            },
-              h("option", { value: "AM" }, "SA"),
-              h("option", { value: "PM" }, "CH")
-            ),
-            h("span", { style: { position: "absolute", right: 8, pointerEvents: "none", display: "flex", alignItems: "center", color: "var(--color-text-subtle)" } },
-              h(Icon, { name: "chevron-down-line", size: 12 }))
-          )
+          // Reuse the shared DS.Select (viewport-anchored menu) instead of a native <select> —
+          // a raw <select> here rendered wider than its box on some platforms and bled past
+          // the popup's rounded edge; DS.Select can't overflow its trigger.
+          h(DS.Select, {
+            options: [{ value: "AM", label: "SA" }, { value: "PM", label: "CH" }],
+            value: tf.time.period || "AM",
+            onChange: function (v) { if (tf.onTC) tf.onTC(Object.assign({}, tf.time, { period: v })); },
+            size: "sm",
+            containerStyle: { width: 88, flexShrink: 0 }
+          })
         ),
         h("label", { style: { display: "flex", alignItems: "center", gap: 6, cursor: "pointer", userSelect: "none", fontSize: 13, fontFamily: "var(--font-sans)", color: "var(--color-text)" } },
           h("input", { type: "checkbox", checked: tf.allDay || false, onChange: function (e) { if (tf.onAD) tf.onAD(e.target.checked); }, style: { width: 14, height: 14, accentColor: "var(--color-accent)", cursor: "pointer" } }),
