@@ -629,11 +629,13 @@ class Component extends DCLogic {
   PKG_QLCS_META(sku) {
     if (!sku) return null;
     const isDevice = sku.kind === 'Thiết bị';
+    const priceNum = parseInt((sku.price || '').replace(/[^\d]/g, ''), 10) || 0;
     return {
       dichVu: sku.group || '—',
       loaiGoiBan: sku.kind || '—',
       tenRaw: (sku.name || '').replace(/[()]/g, '').replace(/\s+/g, ''),
-      giaToiThieu: sku.price || '—',
+      giaMin: sku.price || '—',
+      giaMax: priceNum ? (priceNum + 100000).toLocaleString('vi-VN') + 'đ' : '—',
       goiTinhCuoc: isDevice ? 'Trả 1 lần' : 'Trả hàng tháng',
       phi: 'PLĐ Net',
     };
@@ -867,8 +869,10 @@ class Component extends DCLogic {
         } },
       { key: 'type', header: 'Loại sản phẩm', width: 140,
         render: (_, r) => { const sku = skuByCode.get(r.skuCode); return h(DS.Badge, { theme: this.PKG_TYPE_THEME(sku && sku.group) }, sku ? sku.group : '—'); } },
-      { key: 'price', header: 'Giá bán', width: 130, align: 'right',
-        render: (_, r) => { const sku = skuByCode.get(r.skuCode); return h('span', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, sku ? sku.price : '—'); } },
+      { key: 'priceMin', header: 'Giá Min', width: 120, align: 'right',
+        render: (_, r) => { const meta = this.PKG_QLCS_META(skuByCode.get(r.skuCode)); return h('span', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, meta ? meta.giaMin : '—'); } },
+      { key: 'priceMax', header: 'Giá Max', width: 120, align: 'right',
+        render: (_, r) => { const meta = this.PKG_QLCS_META(skuByCode.get(r.skuCode)); return h('span', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, meta ? meta.giaMax : '—'); } },
       { key: 'updatedAt', header: 'Thời gian cập nhật', width: 150,
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
       { key: 'updatedBy', header: 'Người cập nhật', width: 150,
@@ -925,7 +929,8 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Gói bán từ PDH', sku ? (sku.name + ' (' + sku.code + ')') : r.skuCode),
         this.detailRow('Loại sản phẩm', r.packageType || '—'),
-        this.detailRow('Giá bán', sku ? sku.price : '—'),
+        this.detailRow('Giá Min', sku ? this.PKG_QLCS_META(sku).giaMin : '—'),
+        this.detailRow('Giá Max', sku ? this.PKG_QLCS_META(sku).giaMax : '—'),
         this.detailRow('Kênh bán', ch ? ch.name : r.channel),
         this.detailRow('Tên hiển thị trên kênh', r.displayName),
         this.detailRow('URL Slug', 'fpt.vn/' + (r.slug || '—')),
@@ -1163,7 +1168,8 @@ class Component extends DCLogic {
           this.qlcsField('Danh mục', meta.dichVu),
           this.qlcsField('Loại sản phẩm', meta.loaiGoiBan),
           this.qlcsField('Tên gói bán (tên raw từ QLCS)', meta.tenRaw),
-          this.qlcsField('Giá bán', meta.giaToiThieu),
+          this.qlcsField('Giá Min', meta.giaMin),
+          this.qlcsField('Giá Max', meta.giaMax),
           this.qlcsField('Hình thức thanh toán', meta.goiTinhCuoc),
           this.qlcsField('Phí', meta.phi)
         )
@@ -1172,13 +1178,6 @@ class Component extends DCLogic {
   }
 
   // ---------- Tab 1 helpers: Đặc tính, Thiết bị & Đặc quyền ----------
-  pkgSectionBadge(kind, text) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const locked = kind === 'locked';
-    return h('span', { style: { display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: locked ? 600 : 700, color: locked ? 'var(--color-text-subtle)' : 'var(--color-warning-text, var(--color-warning))', background: locked ? 'var(--color-surface-sunken)' : 'var(--color-warning-bg, rgba(245,158,11,0.08))', border: '1px solid ' + (locked ? 'var(--color-border)' : 'var(--color-warning)'), borderRadius: 6, padding: '4px 10px' } },
-      text
-    );
-  }
   renderPkgAttributes(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isDevice = this.PKG_IS_DEVICE(r);
@@ -1277,7 +1276,6 @@ class Component extends DCLogic {
     if (this.PKG_CONTENT_DEVICE_LAYOUT(r)) {
       const lines = this.state.pkgForm.privileges || [];
       return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginTop: -6 } }, this.pkgSectionBadge('editable', 'Vận hành tự quản lý')),
         this.field('Tiêu đề chung đặc quyền', h(DS.Input, { defaultValue: r ? r.privTitle : '', placeholder: 'VD: Đặc quyền Camera IQ3' }), true),
         h('div', null,
           h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Danh sách đặc quyền'),
@@ -1292,7 +1290,6 @@ class Component extends DCLogic {
     const items = this.state.pkgForm.privileges || [];
     const update = (i, key, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: s.pkgForm.privileges.map((it, j) => j === i ? { ...it, [key]: val } : it) } }));
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginTop: -6 } }, this.pkgSectionBadge('editable', 'Vận hành tự quản lý')),
       this.field('Tiêu đề chung đặc quyền', h(DS.Input, { defaultValue: r ? r.privTitle : '', placeholder: 'VD: Đặc quyền khi đăng ký Internet Giga' }), true),
       h('div', null,
         h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Danh sách đặc quyền'),
@@ -1680,7 +1677,7 @@ class Component extends DCLogic {
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       h(DS.Tabs, { value: this.state.checkoutTab, onChange: v => this.setState({ checkoutTab: v }), items: [
         { value: 'config', label: 'Cấu hình hiển thị', icon: 'settings-01-line' },
-        { value: 'rules', label: 'Quy tắc Banner & Popup', icon: 'image-line' },
+        { value: 'rules', label: 'Chương trình Banner & Popup', icon: 'image-line' },
       ] }),
       h('div', { key: this.state.checkoutTab, className: 'fpt-tab-content' }, this.state.checkoutTab === 'config' ? this.renderCheckoutConfig() : this.renderCheckoutRules())
     );
@@ -2027,10 +2024,10 @@ class Component extends DCLogic {
       ),
       h('div', { style: { display: 'flex', gap: 10, padding: '12px 14px', alignItems: 'flex-start' } },
         showBilling && h('div', { style: { width: 140, flexShrink: 0 } }, h(DS.Select, {
-          options: billingTypeOptions, value: BILLING_TYPE_FOR_PERIOD(cy.period), disabled: true, title: 'Đồng bộ từ QLCS'
+          options: billingTypeOptions, value: BILLING_TYPE_FOR_PERIOD(cy.period), disabled: true
         })),
         h('div', { style: { width: 120, flexShrink: 0 } }, h(DS.Select, {
-          options: periodOptions, value: cy.period || '', placeholder: 'Chọn chu kỳ', disabled: true, title: 'Đồng bộ từ QLCS'
+          options: periodOptions, value: cy.period || '', placeholder: 'Chọn chu kỳ', disabled: true
         })),
         h('div', { style: { width: 160, flexShrink: 0 } }, renderTaglineSelect(cy.tagline, onTagline)),
         renderOfferLines(cy.offers, { onChange: onOfferChange, onAdd: onOfferAdd, onRemove: onOfferRemove })
@@ -2041,8 +2038,7 @@ class Component extends DCLogic {
       this.collapsibleSection('camCloudOpen_' + cid + '_' + cp.name,
         h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8 } },
           h(DS.Icon, { name: 'upload-cloud-line', size: 15, color: 'var(--color-accent-text)' }),
-          h('span', null, cp.name),
-          h('span', { style: { fontSize: 10.5, fontWeight: 600, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 7px', borderRadius: 4 } }, 'Đồng bộ từ QLCS')
+          h('span', null, cp.name)
         ),
         h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 8, overflow: 'hidden' } },
           renderCycleHeaderRow(false),
@@ -2148,7 +2144,6 @@ class Component extends DCLogic {
                   ),
                   isCameraMain
                     ? h('div', { style: { padding: 14 } },
-                        h('p', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', margin: '0 0 10px' } }, 'Gói Cloud & Chu kỳ được đồng bộ từ hệ thống QLCS — chỉ có thể chỉnh Tag line và Nội dung ưu đãi của từng chu kỳ.'),
                         sharedDraft.cloudPackages.map(cp => renderCloudPackageBlock(cp))
                       )
                     : isOtherMain
@@ -2213,7 +2208,7 @@ class Component extends DCLogic {
     const rules = allRules.filter(r => (channelF === 'all' || r.channel === channelF) && (!q || r.name.toLowerCase().includes(q)));
     const bannerLabel = v => (!v || v === '— Không hiển thị —') ? h('span', { style: { color: 'var(--color-text-subtle)' } }, '—') : v;
     const columns = [
-      { key: 'name', header: 'Tên quy tắc', render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
+      { key: 'name', header: 'Tên chương trình', render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
       { key: 'skus', header: 'Gói bán áp dụng', render: (_, r) => h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } }, r.skus.map(s => h(DS.Badge, { key: s, theme: 'brand' }, s))) },
       { key: 'period', header: 'Khoảng thời gian' },
       { key: 'headerBanner', header: 'Header Banner', render: (_, r) => bannerLabel(r.headerBanner) },
@@ -2222,21 +2217,20 @@ class Component extends DCLogic {
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
       { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ ruleEditor: r }) },
-        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa quy tắc?', 'Quy tắc "' + r.name + '" sẽ bị xóa khỏi hệ thống.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Quy tắc đã được xóa.'); }, true) },
+        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa chương trình?', 'Chương trình "' + r.name + '" sẽ bị xóa khỏi hệ thống.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Chương trình đã được xóa.'); }, true) },
       ]) },
     ];
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-      h(DS.Alert, { theme: 'info', title: 'Quy tắc ưu tiên' }, 'Quy tắc có độ ưu tiên cao hơn sẽ đè lên quy tắc thấp hơn khi nhiều quy tắc cùng áp dụng cho một gói bán hoặc kênh bán.'),
       this.listCard(
         this.toolbar(
           h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'wrap', minWidth: 0 } },
-            this.search('Tìm quy tắc…', 'ruleSearch'),
+            this.search('Tìm chương trình…', 'ruleSearch'),
             h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: channelOptions, value: channelF, onChange: v => this.setState({ ruleChannelFilter: v, rules_pg: 1 }) }))
           ),
-          h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ruleEditor: null }) }, 'Thêm Quy tắc mới')
+          h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ruleEditor: null }) }, 'Thêm Chương trình mới')
         ),
-        rules.length ? this.tbl(columns, this.sliceData(rules, 'rules'), 'id', r => this.openRuleDetail(r)) : this.empty('Chưa có quy tắc nào.'),
-        rules.length ? this.renderPagBar(rules.length, 'rules', 'quy tắc') : null
+        rules.length ? this.tbl(columns, this.sliceData(rules, 'rules'), 'id', r => this.openRuleDetail(r)) : this.empty('Chưa có chương trình nào.'),
+        rules.length ? this.renderPagBar(rules.length, 'rules', 'chương trình') : null
       )
     );
   }
@@ -2265,9 +2259,9 @@ class Component extends DCLogic {
   openRuleDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const sub = t => h('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--color-accent-text)', margin: '16px 0 2px', paddingTop: 12, borderTop: '1px solid var(--color-border)' } }, t);
-    this.openDrawer({ title: r.name, subtitle: 'Chi tiết Quy tắc Banner & Popup', width: 460,
+    this.openDrawer({ title: r.name, subtitle: 'Chi tiết Chương trình Banner & Popup', width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
-        this.detailRow('Tên quy tắc', r.name),
+        this.detailRow('Tên chương trình', r.name),
         this.detailRow('Kênh áp dụng', r.channel),
         this.detailRow('Gói bán áp dụng', h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } }, r.skus.map(s => h(DS.Badge, { key: s, theme: 'brand' }, s)))),
         this.detailRow('Khoảng thời gian', r.period),
@@ -2371,7 +2365,7 @@ class Component extends DCLogic {
                     )
                   : h('div', { style: { padding: '10px 12px', fontSize: 12.5, color: 'var(--color-text-subtle)', fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10 } }, 'Chưa chọn gói bán nào.')
               ),
-              h(DS.Input, { label: 'Tên quy tắc hiển thị', required: true, defaultValue: r ? r.name : '', placeholder: 'VD: Ưu đãi Combo Thể thao Hè 2026' }),
+              h(DS.Input, { label: 'Tên chương trình hiển thị', required: true, defaultValue: r ? r.name : '', placeholder: 'VD: Ưu đãi Combo Thể thao Hè 2026' }),
               h('div', null,
                 h('label', { style: { display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 6 } }, 'Thời gian bắt đầu — Thời gian kết thúc'),
                 h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', showTime: true, containerStyle: { width: '100%' } })
@@ -2415,7 +2409,7 @@ class Component extends DCLogic {
         }
       ];
     return this.editorShell(
-      isNew ? 'Thêm quy tắc mới' : 'Chỉnh sửa quy tắc: ' + r.name, 'Quy tắc Banner & Popup trang Checkout', back,
+      isNew ? 'Thêm chương trình mới' : 'Chỉnh sửa chương trình: ' + r.name, 'Chương trình Banner & Popup trang Checkout', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
         sections.map(sec => {
           const open = !!openSections[sec.key];
@@ -2432,8 +2426,8 @@ class Component extends DCLogic {
           );
         })
       ),
-      () => { back(); this.toast('success', 'Đã lưu quy tắc', 'Quy tắc Banner & Popup đã được cập nhật.'); },
-      isNew ? 'Tạo Quy tắc' : 'Lưu Quy tắc',
+      () => { back(); this.toast('success', 'Đã lưu chương trình', 'Chương trình Banner & Popup đã được cập nhật.'); },
+      isNew ? 'Tạo Chương trình' : 'Lưu Chương trình',
       h(DS.Switch, { size: 'sm', label: ruleActive ? 'Hoạt động' : 'Tạm tắt', checked: ruleActive, onChange: v => this.setState({ ruleActive: v }), style: { whiteSpace: 'nowrap', flexShrink: 0 } })
     );
   }
