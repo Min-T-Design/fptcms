@@ -1102,7 +1102,7 @@ class Component extends DCLogic {
     const ch = r ? this.PKG_CHANNELS().find(c => c.id === r.channel) : null;
     const tab = this.state.skuEditorTab || 'attrs';
     const tabs = [
-      { value: 'attrs', label: 'Đặc tính, Thiết bị & Đặc quyền', icon: 'star-01-line' },
+      { value: 'attrs', label: 'Đặc tính, Thiết bị', icon: 'star-01-line' },
       { value: 'content', label: 'Quản lý Content', icon: 'file-doc-line' },
       { value: 'faq', label: 'FAQ', icon: 'message-chat-circle-line' },
     ];
@@ -1153,7 +1153,7 @@ class Component extends DCLogic {
     );
   }
 
-  // ---------- Tab 1 helper: Thông tin sản phẩm (QLCS) subsection (part of "Đặc tính, Thiết bị & Đặc quyền") ----------
+  // ---------- Tab 1 helper: Thông tin sản phẩm (QLCS) subsection (part of "Đặc tính, Thiết bị") ----------
   qlcsField(label, value) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     return this.field(label, h(DS.Input, { value: value || '—', disabled: true }));
@@ -1191,7 +1191,7 @@ class Component extends DCLogic {
     );
   }
 
-  // ---------- Tab 1 helpers: Đặc tính, Thiết bị & Đặc quyền ----------
+  // ---------- Tab 1 helpers: Đặc tính, Thiết bị ----------
   renderPkgAttributes(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isDevice = this.PKG_IS_DEVICE(r);
@@ -1539,8 +1539,7 @@ class Component extends DCLogic {
       this.renderSkuEditorInfo(r),
       h(DS.Divider, null),
       this.renderPkgAttributes(r),
-      showBundled && h(DS.Divider, null), showBundled && this.renderPkgBundled(r),
-      h(DS.Divider, { label: 'ĐẶC QUYỀN' }), this.renderPkgPriv(r)
+      showBundled && h(DS.Divider, null), showBundled && this.renderPkgBundled(r)
     );
   }
 
@@ -1573,7 +1572,9 @@ class Component extends DCLogic {
                 h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả dài'),
                 h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Rich text — bài viết đánh giá / chi tiết kỹ thuật.'),
                 this.richTextBox(r ? r.longDesc : '', 12, 'Nhập nội dung mô tả chi tiết sản phẩm thiết bị, tính năng công nghệ, hướng dẫn lắp đặt…')
-              )
+              ),
+              h(DS.Divider, { label: 'ĐẶC QUYỀN' }),
+              this.renderPkgPriv(r)
             )
           : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
               this.field('Mô tả card gói', h(DS.Textarea, { defaultValue: r ? r.pkgDesc : '', rows: 4, placeholder: 'Mỗi ý 1 dòng — VD:\n150Mbps ổn định cả giờ cao điểm\nModem Wi-Fi 6 miễn phí' })),
@@ -1584,11 +1585,14 @@ class Component extends DCLogic {
                 ),
                 h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Mỗi dòng hiển thị 1 mục checklist (✓) trên trang chi tiết gói bán.'),
                 h(DS.Textarea, { defaultValue: r ? r.longDesc : '', rows: 8, placeholder: 'Trang bị sẵn Modem Wi-Fi 6 băng tần kép: Trang bị modem Wi-Fi 6 đời mới nhất giúp kết nối ổn định…' })
-              )
+              ),
+              h(DS.Divider, { label: 'ĐẶC QUYỀN' }),
+              this.renderPkgPriv(r)
             )
       ),
       h(DS.Divider, null),
       this.collapsibleSection('pkgSecPromoOpen', 'Ưu đãi sản phẩm', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+        isDevice && this.field('Tiêu đề ưu đãi', h(DS.Input, { defaultValue: r ? r.promoTitle : '', placeholder: 'VD: Ưu đãi khi mua Camera IQ3' })),
         h('div', null,
           h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Danh sách Ưu đãi & Quà tặng'),
           h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Mỗi dòng hiển thị 1 mục checklist (✓) trên trang chi tiết gói bán.'),
