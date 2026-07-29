@@ -1571,6 +1571,7 @@ class Component extends DCLogic {
       this.collapsibleCard('pkgSecDescOpen', 'Mô tả sản phẩm',
         isDevice
           ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
+              this.field('Mô tả card gói', h(DS.Textarea, { defaultValue: r ? r.pkgDesc : '', rows: 4, placeholder: 'Mỗi ý 1 dòng — VD:\nFull HD sắc nét, góc rộng 130 độ\nCảnh báo chuyển động tức thời qua App HiFPT' })),
               h('div', null,
                 h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả ngắn'),
                 h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Hiển thị dưới giá bán thiết bị.'),
