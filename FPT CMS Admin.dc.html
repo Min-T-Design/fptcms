@@ -1389,7 +1389,7 @@ class Component extends DCLogic {
         ),
         this.field('Nội dung Tooltip ghi chú giá', h('div', null,
           h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginBottom: 4 } }, 'Nội dung hiển thị khi khách hàng hover hoặc click vào icon (ⓘ) bên cạnh giá trên Website/App.'),
-          h(DS.Textarea, { defaultValue: r ? (r.priceTooltip || '') : '', rows: 3, placeholder: 'VD: Mức giá bao gồm VAT và có thể được thay đổi theo khu vực và thời điểm…' })
+          h(DS.Input, { defaultValue: r ? (r.priceTooltip || '') : '', placeholder: 'VD: Mức giá bao gồm VAT và có thể được thay đổi theo khu vực và thời điểm…' })
         ))
       )
     );
