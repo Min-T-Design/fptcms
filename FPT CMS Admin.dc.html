@@ -1361,7 +1361,7 @@ class Component extends DCLogic {
     const goToBadgeModule = () => this.setState({ active: 'badge-tag', badgeTagEditor: null, badgeFormCategories: ['card'] });
     return this.collapsibleCard('pkgSecWebOpen', 'Cài đặt web', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
         h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14 } },
-          h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 10 } },
+          h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: tagEnabled ? 10 : 0, flexWrap: 'wrap', gap: 10 } },
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
               h(DS.Switch, { size: 'sm', checked: tagEnabled, onChange: () => this.setState({ pkgTagEnabled: !tagEnabled }) }),
               h('span', { style: { fontWeight: 700, fontSize: 13 } }, 'Tag nổi bật ', h('span', { style: { fontWeight: 400, color: 'var(--color-text-muted)', fontSize: 11.5 } }, '(gắn trên Banner/Card sản phẩm ngoài Web/App)'))
