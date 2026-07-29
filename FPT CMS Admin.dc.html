@@ -1568,11 +1568,6 @@ class Component extends DCLogic {
       this.renderPkgWebSettings(r),
       isDevice && this.renderPkgCardImage(r),
       isDevice && h(DS.Divider, null),
-      this.collapsibleCard('pkgSecMediaOpen', 'Hình ảnh sản phẩm & Banner', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
-        this.renderPkgImages(r),
-        !isDevice && this.renderPkgMidBanner(r)
-      )),
-      isDevice && this.collapsibleCard('pkgSecVideoOpen', 'Video sản phẩm', this.renderPkgVideo(r)),
       this.collapsibleCard('pkgSecDescOpen', 'Mô tả sản phẩm',
         isDevice
           ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
@@ -1603,6 +1598,11 @@ class Component extends DCLogic {
               this.renderPkgPriv(r)
             )
       ),
+      this.collapsibleCard('pkgSecMediaOpen', 'Hình ảnh sản phẩm & Banner', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
+        this.renderPkgImages(r),
+        !isDevice && this.renderPkgMidBanner(r)
+      )),
+      isDevice && this.collapsibleCard('pkgSecVideoOpen', 'Video sản phẩm', this.renderPkgVideo(r)),
       this.collapsibleCard('pkgSecPromoOpen', 'Ưu đãi sản phẩm', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
         isDevice && this.field('Tiêu đề ưu đãi', h(DS.Input, { defaultValue: r ? r.promoTitle : '', placeholder: 'VD: Ưu đãi khi mua Camera IQ3' })),
         h('div', null,
