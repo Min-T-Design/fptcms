@@ -1936,36 +1936,26 @@ class Component extends DCLogic {
       if (!nextPeriod) return;
       applyDraft({ ...sharedDraft, cycles: [...sharedDraft.cycles, makeCycle(nextPeriod)] });
     };
+    // Xóa hẳn 1 khối chu kỳ (chỉ Gói Internet) — luôn giữ lại tối thiểu 1 chu kỳ.
+    const removeDraftCycle = cycleId => applyDraft({ ...sharedDraft, cycles: sharedDraft.cycles.filter(c => c.id !== cycleId) });
+    const confirmRemoveDraftCycle = cycleId => this.confirm(
+      'Xóa chu kỳ này?',
+      'Toàn bộ nội dung ưu đãi của chu kỳ này sẽ bị xóa, áp dụng cho ' + selectedSkus.length + ' gói đang được chọn.',
+      () => { removeDraftCycle(cycleId); this.closeModal(); this.toast('success', 'Đã xóa', 'Chu kỳ đã được xóa.'); },
+      true
+    );
     const updateDraftOfferLine = (cycleId, idx, val) => updateDraftCycle(cycleId, { offers: sharedDraft.cycles.find(c => c.id === cycleId).offers.map((o, i) => i === idx ? val : o) });
     const addDraftOfferLine = cycleId => updateDraftCycle(cycleId, { offers: [...sharedDraft.cycles.find(c => c.id === cycleId).offers, ''] });
     const removeDraftOfferLine = (cycleId, idx) => updateDraftCycle(cycleId, { offers: sharedDraft.cycles.find(c => c.id === cycleId).offers.filter((_, i) => i !== idx) });
-    const confirmRemoveDraftOfferLine = (cycleId, idx) => this.confirm(
-      'Xóa nội dung ưu đãi này?',
-      'Nội dung ưu đãi sẽ bị xóa khỏi chu kỳ này, áp dụng cho ' + selectedSkus.length + ' gói đang được chọn.',
-      () => { removeDraftOfferLine(cycleId, idx); this.closeModal(); this.toast('success', 'Đã xóa', 'Nội dung ưu đãi đã được xóa.'); },
-      true
-    );
     // ── Chu kỳ lồng trong Gói Cloud — dùng cho tab Camera ──
     const updateDraftCloudCycle = (cpId, cycleId, patch) => applyDraft({ ...sharedDraft, cloudPackages: sharedDraft.cloudPackages.map(cp => cp.id !== cpId ? cp : { ...cp, cycles: cp.cycles.map(c => c.id === cycleId ? { ...c, ...patch } : c) }) });
     const updateDraftCloudOfferLine = (cpId, cycleId, idx, val) => updateDraftCloudCycle(cpId, cycleId, { offers: sharedDraft.cloudPackages.find(cp => cp.id === cpId).cycles.find(c => c.id === cycleId).offers.map((o, i) => i === idx ? val : o) });
     const addDraftCloudOfferLine = (cpId, cycleId) => updateDraftCloudCycle(cpId, cycleId, { offers: [...sharedDraft.cloudPackages.find(cp => cp.id === cpId).cycles.find(c => c.id === cycleId).offers, ''] });
     const removeDraftCloudOfferLine = (cpId, cycleId, idx) => updateDraftCloudCycle(cpId, cycleId, { offers: sharedDraft.cloudPackages.find(cp => cp.id === cpId).cycles.find(c => c.id === cycleId).offers.filter((_, i) => i !== idx) });
-    const confirmRemoveDraftCloudOfferLine = (cpId, cycleId, idx) => this.confirm(
-      'Xóa nội dung ưu đãi này?',
-      'Nội dung ưu đãi sẽ bị xóa khỏi chu kỳ này, áp dụng cho ' + selectedSkus.length + ' gói đang được chọn.',
-      () => { removeDraftCloudOfferLine(cpId, cycleId, idx); this.closeModal(); this.toast('success', 'Đã xóa', 'Nội dung ưu đãi đã được xóa.'); },
-      true
-    );
     // ── Nội dung ưu đãi dạng phẳng, không chu kỳ — dùng cho tab Thiết bị khác ──
     const updateDraftFlatOffer = (idx, val) => applyDraft({ ...sharedDraft, offers: sharedDraft.offers.map((o, i) => i === idx ? val : o) });
     const addDraftFlatOffer = () => applyDraft({ ...sharedDraft, offers: [...sharedDraft.offers, ''] });
     const removeDraftFlatOffer = idx => applyDraft({ ...sharedDraft, offers: sharedDraft.offers.filter((_, i) => i !== idx) });
-    const confirmRemoveDraftFlatOffer = idx => this.confirm(
-      'Xóa nội dung ưu đãi này?',
-      'Nội dung ưu đãi sẽ bị xóa, áp dụng cho ' + selectedSkus.length + ' gói đang được chọn.',
-      () => { removeDraftFlatOffer(idx); this.closeModal(); this.toast('success', 'Đã xóa', 'Nội dung ưu đãi đã được xóa.'); },
-      true
-    );
     const saveSharedDraft = () => this.toast('success', 'Đã lưu', 'Đã lưu ưu đãi cho ' + selectedSkus.length + ' gói: ' + selectedSkus.map(s => s.code).join(', ') + '.');
 
     // ── Tab lớn của mục 1 ──
@@ -2084,31 +2074,53 @@ class Component extends DCLogic {
       )),
       h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { alignSelf: 'flex-start' }, onClick: onAdd }, 'Thêm nội dung')
     );
-    const renderCycleHeaderRow = showBilling => h('div', { style: { display: 'flex', fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.03em', padding: '10px 14px 6px', gap: 10 } },
-      showBilling && h('div', { style: { width: 140, flexShrink: 0 } }, 'Gói tính cước'),
-      h('div', { style: { width: 120, flexShrink: 0 } }, 'Chu kỳ'),
-      h('div', { style: { width: 160, flexShrink: 0 } }, 'Tag line'),
-      h('div', { style: { flex: 1 } }, 'Nội dung ưu đãi')
-    );
-    // Header của mỗi khối chu kỳ hiển thị đúng Chu kỳ của khối đó (VD "1 THÁNG") thay vì số thứ tự.
-    // Gói tính cước Trả sau ⇒ Chu kỳ luôn khóa về "1 tháng"; Trả trước ⇒ Chu kỳ chọn tự do 1-36 tháng.
-    const renderCycleRow = (cy, { showBilling, periodChoices, onTagline, onBillingChange, onPeriodChange, onOfferChange, onOfferAdd, onOfferRemove }) => {
+    // Mỗi khối chu kỳ là 1 card độc lập, phân nhóm rõ 2 khu vực: "Cấu hình chu kỳ" (gói tính cước/chu kỳ)
+    // và "Nội dung hiển thị" (tag line/ưu đãi) để dễ quét mắt hơn so với bảng cột phẳng trước đây.
+    // Gói tính cước Trả sau ⇒ Chu kỳ luôn khóa về "1 tháng"; Trả trước ⇒ Chu kỳ nhập tự do (Gói Internet dùng input, còn lại dùng select cố định).
+    const renderCycleRow = (cy, { showBilling, periodInput, onTagline, onBillingChange, onPeriodChange, onOfferChange, onOfferAdd, onOfferRemove, onRemove, removeDisabled }) => {
       const periodLocked = showBilling ? cy.billingType === 'Trả sau' : true;
-      return h('div', { key: cy.id, style: { borderBottom: '1px solid var(--color-border)' } },
-      h('div', { style: { padding: '6px 14px', background: 'var(--color-surface-alt)' } },
-        h('span', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.04em' } }, cy.period)
+      const groupLabelStyle = { fontSize: 10, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 };
+      return h('div', { key: cy.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, marginBottom: 10, overflow: 'hidden', background: 'var(--color-surface)' } },
+      h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 10px 8px 14px', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)' } },
+        h('span', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.04em' } }, 'Chu kỳ: ' + (cy.period || '—')),
+        onRemove && h(DS.IconButton, {
+          icon: 'trash-line', label: 'Xóa chu kỳ', level: 'tertiary', size: 'sm',
+          disabled: removeDisabled, title: removeDisabled ? 'Phải giữ lại tối thiểu 1 chu kỳ' : 'Xóa chu kỳ này',
+          style: { color: removeDisabled ? undefined : 'var(--color-danger-text)' },
+          onClick: onRemove
+        })
       ),
-      h('div', { style: { display: 'flex', gap: 10, padding: '12px 14px', alignItems: 'flex-start' } },
-        showBilling && h('div', { style: { width: 140, flexShrink: 0 } }, h(DS.Select, {
-          options: billingTypeOptions, value: cy.billingType || 'Trả trước', onChange: onBillingChange
-        })),
-        h('div', { style: { width: 120, flexShrink: 0 } }, h(DS.Select, {
-          options: periodChoices || periodOptions, value: cy.period || '', placeholder: 'Chọn chu kỳ', disabled: periodLocked,
-          title: periodLocked && showBilling ? 'Trả sau chỉ có chu kỳ 1 tháng' : undefined,
-          onChange: onPeriodChange
-        })),
-        h('div', { style: { width: 160, flexShrink: 0 } }, renderTaglineSelect(cy.tagline, onTagline)),
-        renderOfferLines(cy.offers, { onChange: onOfferChange, onAdd: onOfferAdd, onRemove: onOfferRemove })
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12, padding: '12px 14px' } },
+        h('div', null,
+          h('div', { style: groupLabelStyle }, 'Cấu hình chu kỳ'),
+          showBilling
+            ? h('div', { style: { display: 'grid', gridTemplateColumns: '160px 1fr', gap: 10 } },
+                h(DS.Select, { options: billingTypeOptions, value: cy.billingType || 'Trả trước', onChange: onBillingChange }),
+                h('div', { style: { minWidth: 0 } },
+                  periodInput
+                    ? h(DS.Input, {
+                        value: cy.period || '', placeholder: 'VD: 6 tháng', disabled: periodLocked,
+                        title: periodLocked ? 'Trả sau chỉ có chu kỳ 1 tháng' : undefined,
+                        onChange: e => onPeriodChange(e && e.target ? e.target.value : e)
+                      })
+                    : h(DS.Select, {
+                        options: periodOptions, value: cy.period || '', placeholder: 'Chọn chu kỳ', disabled: periodLocked,
+                        onChange: onPeriodChange
+                      })
+                )
+              )
+            : h('div', { style: { width: 160 } }, h(DS.Select, {
+                options: periodOptions, value: cy.period || '', placeholder: 'Chọn chu kỳ', disabled: periodLocked,
+                onChange: onPeriodChange
+              }))
+        ),
+        h('div', null,
+          h('div', { style: groupLabelStyle }, 'Nội dung hiển thị'),
+          h('div', { style: { display: 'grid', gridTemplateColumns: '160px 1fr', gap: 10, alignItems: 'flex-start' } },
+            renderTaglineSelect(cy.tagline, onTagline),
+            renderOfferLines(cy.offers, { onChange: onOfferChange, onAdd: onOfferAdd, onRemove: onOfferRemove })
+          )
+        )
       )
     );
     };
@@ -2119,14 +2131,13 @@ class Component extends DCLogic {
           h(DS.Icon, { name: 'upload-cloud-line', size: 15, color: 'var(--color-accent-text)' }),
           h('span', null, cp.name)
         ),
-        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 8, overflow: 'hidden' } },
-          renderCycleHeaderRow(false),
+        h('div', null,
           cp.cycles.map(cy => renderCycleRow(cy, {
             showBilling: false,
             onTagline: val => updateDraftCloudCycle(cp.id, cy.id, { tagline: val }),
             onOfferChange: (i, val) => updateDraftCloudOfferLine(cp.id, cy.id, i, val),
             onOfferAdd: () => addDraftCloudOfferLine(cp.id, cy.id),
-            onOfferRemove: i => confirmRemoveDraftCloudOfferLine(cp.id, cy.id, i)
+            onOfferRemove: i => removeDraftCloudOfferLine(cp.id, cy.id, i)
           }))
         )
       )
@@ -2134,7 +2145,7 @@ class Component extends DCLogic {
     // ── Thiết bị khác: không có khái niệm chu kỳ/tag line, chỉ 1 danh sách Nội dung ưu đãi áp dụng thẳng cho gói ──
     const renderFlatOffersBlock = () => h('div', { style: { padding: '12px 14px' } },
       h('div', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 8 } }, 'Nội dung ưu đãi'),
-      renderOfferLines(sharedDraft.offers, { onChange: updateDraftFlatOffer, onAdd: addDraftFlatOffer, onRemove: confirmRemoveDraftFlatOffer })
+      renderOfferLines(sharedDraft.offers, { onChange: updateDraftFlatOffer, onAdd: addDraftFlatOffer, onRemove: removeDraftFlatOffer })
     );
 
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
@@ -2244,25 +2255,24 @@ class Component extends DCLogic {
                       )
                     : isOtherMain
                     ? renderFlatOffersBlock()
-                    : h(React.Fragment, null,
-                        renderCycleHeaderRow(isInternetMain),
+                    : h('div', { style: { padding: 14 } },
                         sharedDraft.cycles.map(cy => renderCycleRow(cy, {
                           showBilling: isInternetMain,
-                          periodChoices: isInternetMain ? periodOptions.filter(p => p === cy.period || !sharedDraft.cycles.some(c => c.id !== cy.id && c.period === p)) : undefined,
+                          periodInput: isInternetMain,
                           onTagline: val => updateDraftCycle(cy.id, { tagline: val }),
                           onBillingChange: val => updateDraftCycle(cy.id, val === 'Trả sau' ? { billingType: val, period: '1 tháng' } : { billingType: val }),
                           onPeriodChange: val => updateDraftCycle(cy.id, { period: val }),
                           onOfferChange: (i, val) => updateDraftOfferLine(cy.id, i, val),
                           onOfferAdd: () => addDraftOfferLine(cy.id),
-                          onOfferRemove: i => confirmRemoveDraftOfferLine(cy.id, i)
+                          onOfferRemove: i => removeDraftOfferLine(cy.id, i),
+                          onRemove: isInternetMain ? () => confirmRemoveDraftCycle(cy.id) : undefined,
+                          removeDisabled: sharedDraft.cycles.length <= 1
                         })),
-                        isInternetMain && h('div', { style: { padding: '10px 14px' } },
-                          h(DS.Button, {
-                            level: 'secondary', size: 'sm', leadingIcon: 'plus-line',
-                            disabled: sharedDraft.cycles.length >= 36,
-                            onClick: addDraftCycle
-                          }, sharedDraft.cycles.length >= 36 ? 'Đã đủ 36 chu kỳ' : 'Thêm chu kỳ')
-                        )
+                        isInternetMain && h(DS.Button, {
+                          level: 'secondary', size: 'sm', leadingIcon: 'plus-line',
+                          disabled: sharedDraft.cycles.length >= 36,
+                          onClick: addDraftCycle
+                        }, sharedDraft.cycles.length >= 36 ? 'Đã đủ 36 chu kỳ' : 'Thêm chu kỳ')
                       )
                 )
               )
