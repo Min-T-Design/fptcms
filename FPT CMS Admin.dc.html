@@ -5778,7 +5778,7 @@ class Component extends DCLogic {
               criteria.map(function(c) {
                 return h2('div', { key: c.id, style: { display: 'grid', gridTemplateColumns: '16px 1fr 148px 28px', gap: '4px 8px', alignItems: 'center', marginBottom: 6 } },
                   h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', title: 'Kéo để sắp xếp', style: { cursor: 'grab', flexShrink: 0 } }),
-                  h2(DS2.Input, { defaultValue: c.label, placeholder: 'Tên tiêu chí...', size: 'sm', onChange: function(e) { self.updC(c.id, { label: e.target.value }); } }),
+                  h2(DS2.Input, { defaultValue: c.label, placeholder: 'Tên tiêu chí...', onChange: function(e) { self.updC(c.id, { label: e.target.value }); } }),
                   h2(DS2.Select, { value: c.type, options: typeOpts, onChange: function(v) { self.updC(c.id, { type: v }); } }),
                   h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: function() { self.delC(c.id); } })
                 );
@@ -5804,9 +5804,9 @@ class Component extends DCLogic {
         super(p);
         this.state = {
           items: [
-            { id:'p1', name:'FPT Play Basic',   price:'90.000đ', period:'/tháng', origPrice:'',           badge:'',        badgeOn:false, order:1, desc:'Gói cơ bản, phù hợp cá nhân. Áp dụng cho thuê bao mới.', features:'Xem trên 1 thiết bị\nKho phim & series\nNội dung thể thao cơ bản', ctaText:'Đăng ký ngay', ctaUrl:'/dang-ky-basic',   visible:true, expanded:true  },
-            { id:'p2', name:'FPT Play Premium', price:'120.000đ',period:'/tháng', origPrice:'150.000đ',  badge:'Phổ biến', badgeOn:true,  order:2, ngoaiHangAnh:'', nenTang:'', theThao:false, kenh100:'', khoPim:false, chatLuong4K:true,  features:'', ctaText:'Đăng ký ngay', ctaUrl:'/dang-ky-premium', visible:true, expanded:false },
-            { id:'p3', name:'FPT Play VIP',     price:'',         period:'/tháng', origPrice:'',          badge:'',        badgeOn:false, order:3, ngoaiHangAnh:'', nenTang:'', theThao:false, kenh100:'', khoPim:false, chatLuong4K:false, features:'', ctaText:'Đăng ký ngay', ctaUrl:'/dang-ky-vip',     visible:true, expanded:false },
+            { id:'p1', name:'FPT Play Basic',   image:'', price:'90.000đ', period:'/tháng', origPrice:'',           badge:'',        badgeOn:false, order:1, desc:'Gói cơ bản, phù hợp cá nhân. Áp dụng cho thuê bao mới.', features:'Xem trên 1 thiết bị\nKho phim & series\nNội dung thể thao cơ bản', ctaText:'Đăng ký ngay', ctaUrl:'/dang-ky-basic',   visible:true, expanded:true  },
+            { id:'p2', name:'FPT Play Premium', image:'', price:'120.000đ',period:'/tháng', origPrice:'150.000đ',  badge:'Phổ biến', badgeOn:true,  order:2, ngoaiHangAnh:'', nenTang:'', theThao:false, kenh100:'', khoPim:false, chatLuong4K:true,  features:'', ctaText:'Đăng ký ngay', ctaUrl:'/dang-ky-premium', visible:true, expanded:false },
+            { id:'p3', name:'FPT Play VIP',     image:'', price:'',         period:'/tháng', origPrice:'',          badge:'',        badgeOn:false, order:3, ngoaiHangAnh:'', nenTang:'', theThao:false, kenh100:'', khoPim:false, chatLuong4K:false, features:'', ctaText:'Đăng ký ngay', ctaUrl:'/dang-ky-vip',     visible:true, expanded:false },
           ],
           dragIdx: null,
           dragOver: null,
@@ -5818,7 +5818,7 @@ class Component extends DCLogic {
       add()          {
         this.setState(s => {
           const n = s.items.length + 1;
-          return { items: [...s.items, { id: 'p' + Date.now(), name: 'Gói mới ' + n, price: '', period: '/tháng', origPrice: '', badge: '', badgeOn: false, order: n, criteriaValues: {}, features: '', ctaText: 'Đăng ký ngay', ctaUrl: '', visible: true, expanded: true }] };
+          return { items: [...s.items, { id: 'p' + Date.now(), name: 'Gói mới ' + n, image: '', price: '', period: '/tháng', origPrice: '', badge: '', badgeOn: false, order: n, criteriaValues: {}, features: '', ctaText: 'Đăng ký ngay', ctaUrl: '', visible: true, expanded: true }] };
         });
       }
       onDragStart(e, idx) { this.dragSrc = idx; e.dataTransfer.effectAllowed = 'move'; }
@@ -5835,10 +5835,19 @@ class Component extends DCLogic {
         });
       }
       onDragEnd() { this.dragSrc = null; this.setState({ dragOver: null }); }
+      onImageFile(id) {
+        return e => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = ev => this.upd(id, { image: ev.target.result });
+          reader.readAsDataURL(file);
+        };
+      }
       render() {
         const { items, dragOver } = this.state; const self = this;
         const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement;
-        const inp  = (val, ph, onChange, opts) => h2(DS2.Input,  { defaultValue: val, placeholder: ph || '', size: 'sm', onChange: e => onChange(e.target.value), ...(opts||{}) });
+        const inp  = (val, ph, onChange, opts) => h2(DS2.Input,  { defaultValue: val, placeholder: ph || '', onChange: e => onChange(e.target.value), ...(opts||{}) });
         const ta   = (val, ph, onChange, rows) => h2(DS2.Textarea,{ defaultValue: val, placeholder: ph || '', rows: rows || 3, onChange: e => onChange(e.target.value) });
         const lbl  = (text, req) => h2('div', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 } },
           text, req && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 3 } }, '*'));
@@ -5863,6 +5872,7 @@ class Component extends DCLogic {
                 // expand toggle
                 h2('span', { onClick: () => self.upd(item.id, { expanded: !item.expanded }), style: { cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 } },
                   h2(DS2.Icon, { name: item.expanded ? 'chevron-up-line' : 'chevron-down-line', size: 14, color: item.expanded ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
+                  item.image && h2('img', { src: item.image, style: { width: 20, height: 20, borderRadius: 4, objectFit: 'cover', flexShrink: 0 } }),
                   h2('span', { style: { fontWeight: 700, fontSize: 13, color: item.expanded ? 'var(--color-accent)' : 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, item.name || ('Gói ' + (idx + 1))),
                   !item.expanded && item.price && h2('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginLeft: 4 } }, item.price + item.period),
                   !item.expanded && item.badge && h2('span', { style: { fontSize: 10, fontWeight: 700, background: '#fef3c7', color: '#d97706', borderRadius: 4, padding: '1px 6px', marginLeft: 4 } }, item.badge),
@@ -5880,6 +5890,21 @@ class Component extends DCLogic {
               item.expanded && h2('div', { style: { padding: '16px 14px', display: 'flex', flexDirection: 'column', gap: 0 } },
                 h2('div', { style: { marginBottom: 12 } }, lbl('Tên gói', true), inp(item.name, 'VD: FPT Play Basic', v => self.upd(item.id, { name: v }))),
                 h2('div', { style: { marginBottom: 12 } },
+                  lbl('Hình ảnh gói'),
+                  h2('div', { style: { display: 'flex', alignItems: 'center', gap: 12 } },
+                    h2('label', { title: 'Tải hình gói lên', style: { position: 'relative', flexShrink: 0, width: 72, height: 72, borderRadius: 10, overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', border: item.image ? '1px solid var(--color-border)' : '1.5px dashed var(--color-border-strong)', background: item.image ? 'transparent' : 'var(--color-surface-alt)' } },
+                      item.image
+                        ? h2('img', { src: item.image, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } })
+                        : h2(DS2.Icon, { name: 'image-line', size: 20, color: 'var(--color-text-subtle)' }),
+                      h2('input', { type: 'file', accept: 'image/*', style: { display: 'none' }, onChange: self.onImageFile(item.id) })
+                    ),
+                    h2('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+                      h2('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'PNG / JPG / WebP'),
+                      item.image && h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)', alignSelf: 'flex-start' }, onClick: () => self.upd(item.id, { image: '' }) }, 'Xóa hình')
+                    )
+                  )
+                ),
+                h2('div', { style: { marginBottom: 12 } },
                   h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 } },
                     lbl('Badge nhãn (vd: Phổ biến, Đề xuất)'),
                     h2(DS2.Switch, { size: 'sm', checked: item.badgeOn, onChange: v => self.upd(item.id, { badgeOn: v }) })
@@ -5891,7 +5916,7 @@ class Component extends DCLogic {
                 ),
                 row2(
                   field('Text highlight', inp(item.origPrice, 'vd: 120.000đ', v => self.upd(item.id, { origPrice: v }))),
-                  field('Thứ tự vị trí', h2(DS2.Input, { defaultValue: String(item.order), type: 'number', size: 'sm', style: { width: 80 }, onChange: e => self.upd(item.id, { order: parseInt(e.target.value) || idx + 1 }) }))
+                  field('Thứ tự vị trí', h2(DS2.Input, { defaultValue: String(item.order), type: 'number', style: { width: 80 }, onChange: e => self.upd(item.id, { order: parseInt(e.target.value) || idx + 1 }) }))
                 ),
                 h2('div', { style: { marginBottom: 12 } },
                   lbl('Thông tin gói cước'),
@@ -5902,7 +5927,7 @@ class Component extends DCLogic {
                           return h2('div', { key: c.id, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', background: ri % 2 === 0 ? 'var(--color-surface)' : 'var(--color-surface-alt)', borderTop: ri > 0 ? '1px solid var(--color-border)' : 'none', minHeight: 40 } },
                             h2('span', { style: { flex: 1, fontSize: 13, color: 'var(--color-text)' } }, c.label || h2('em', { style: { color: 'var(--color-text-subtle)' } }, '(Chưa đặt tên)')),
                             c.type === 'text'
-                              ? h2(DS2.Input, { defaultValue: val || '', placeholder: '—', size: 'sm', style: { width: 200 }, onChange: function(e) { var cv = Object.assign({}, item.criteriaValues || {}); cv[c.id] = e.target.value; self.upd(item.id, { criteriaValues: cv }); } })
+                              ? h2(DS2.Input, { defaultValue: val || '', placeholder: '—', style: { width: 200 }, onChange: function(e) { var cv = Object.assign({}, item.criteriaValues || {}); cv[c.id] = e.target.value; self.upd(item.id, { criteriaValues: cv }); } })
                               : h2('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
                                   h2('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', minWidth: 32, textAlign: 'right' } }, val ? 'Có' : 'Không'),
                                   h2(DS2.Switch, { size: 'sm', checked: !!val, onChange: function(v) { var cv = Object.assign({}, item.criteriaValues || {}); cv[c.id] = v; self.upd(item.id, { criteriaValues: cv }); } })
