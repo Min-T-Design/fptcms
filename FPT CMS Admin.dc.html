@@ -2481,11 +2481,7 @@ class Component extends DCLogic {
                     )
                   : h('div', { style: { padding: '10px 12px', fontSize: 12.5, color: 'var(--color-text-subtle)', fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10 } }, 'Chưa chọn gói bán nào.')
               ),
-              h(DS.Input, { label: 'Tên chương trình hiển thị', required: true, defaultValue: r ? r.name : '', placeholder: 'VD: Ưu đãi Combo Thể thao Hè 2026' }),
-              h('div', null,
-                h('label', { style: { display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 6 } }, 'Thời gian bắt đầu — Thời gian kết thúc'),
-                h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', showTime: true, containerStyle: { width: '100%' } })
-              )
+              h(DS.Input, { label: 'Tên chương trình hiển thị', required: true, defaultValue: r ? r.name : '', placeholder: 'VD: Ưu đãi Combo Thể thao Hè 2026' })
             )
           )
         },
