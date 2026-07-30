@@ -489,7 +489,7 @@ class Component extends DCLogic {
       );
     }
     return h('div', { style: { position: 'relative', flexShrink: 0 }, onMouseEnter: () => this.setState({ sidebarHovered: true }), onMouseLeave: () => this.setState({ sidebarHovered: false }) },
-      h('div', { className: 'fpt-scroll', style: { width: 256, background: 'var(--color-surface)', borderRight: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', overflow: 'auto', height: '100%', animation: 'fptFade .2s cubic-bezier(.2,0,0,1)' } },
+      h('div', { className: 'fpt-scroll', style: { width: 280, background: 'var(--color-surface)', borderRight: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', overflow: 'auto', height: '100%', animation: 'fptFade .2s cubic-bezier(.2,0,0,1)' } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '18px 22px 14px', position: 'sticky', top: 0, background: 'var(--color-surface)', zIndex: 2 } },
           h('img', { src: 'assets/logo-fpt.webp', alt: 'FPT', style: { width: 52, height: 32, objectFit: 'contain', objectPosition: 'left center', flexShrink: 0 } }),
           h('div', { style: { flex: 1, minWidth: 0, overflow: 'hidden' } },
