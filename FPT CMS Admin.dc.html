@@ -6124,6 +6124,10 @@ class Component extends DCLogic {
           h(DS.Switch, { size: 'sm', defaultChecked: true }),
           h('span', { style: { fontSize: 13 } }, 'Bật dải Countdown dính liền Hero')
         ),
+        g2(
+          mFld('Hình background Desktop (tỉ lệ 360:432, <200KB)', 'URL ảnh background desktop...'),
+          mFld('Hình background Mobile (tỉ lệ 5:7, <150KB)', 'URL ảnh background mobile...')
+        ),
         fld('Tiêu đề countdown', h(DS.Input, { placeholder: 'Nhận ưu đãi...' })),
         fld('Nội dung / Body text', h(DS.Textarea, { rows: 2, placeholder: 'VD: Ưu đãi có hạn — Lắp đặt miễn phí, tặng router Wi-Fi 6...' })),
         g2(
@@ -7917,6 +7921,11 @@ class Component extends DCLogic {
       // ── COUNTDOWN (ĐỒNG HỒ ĐẾM NGƯỢC ĐỘC LẬP CASE 2) ──
       Countdown: [
 
+        divr('BACKGROUND & HÌNH ẢNH'),
+        g2(
+          mFld('Hình background Desktop (tỉ lệ 360:432, <200KB)', 'URL ảnh background desktop...'),
+          mFld('Hình background Mobile (tỉ lệ 5:7, <150KB)', 'URL ảnh background mobile...')
+        ),
         fld('Tiêu đề dải Countdown / Nhãn ưu đãi', h(DS.Input, { placeholder: 'VD: Đăng ký lắp đặt Internet nhận ngay ưu đãi sốc' }), true),
         fld('Nội dung / Body text', h(DS.Textarea, { rows: 2, placeholder: 'VD: Ưu đãi có hạn — Lắp đặt miễn phí, tặng router Wi-Fi 6...' })),
         g2(
@@ -7958,7 +7967,7 @@ class Component extends DCLogic {
           fld('Đường dẫn sau submit (Redirect URL)', h(DS.Input, { placeholder: 'https://fpt.vn/vi/khach-hang-ca-nhan/thank-you' }))
         ),
       ],
-      // ── SA-PRODUCTS (Gói dịch vụ SA — tabs + package editor, no speed/CTA phụ) ──
+      // ── SA-PRODUCTS (Gói dịch vụ SA — tabs + package editor, no speed) ──
       'sa-products': (() => {
         const SA_PKGS = [
           { code:'SA-VVIP1', name:'Gói V.Vip 1', price:'120.000đ/tháng', cat:'co-ban', active:true },
@@ -7979,10 +7988,10 @@ class Component extends DCLogic {
         });
         const DEF_TABS_SA = [
           mkTabSA('t1', 'Cơ bản', [
-            { id:'p1', code:'SA-VVIP1', name:'Gói V.Vip 1', price:'120.000đ/tháng', visible:true, badge:'', ctaText:'Đăng ký ngay', ctaUrl:'#', features:'Xem trực tiếp thể thao\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+            { id:'p1', code:'SA-VVIP1', name:'Gói V.Vip 1', price:'120.000đ/tháng', visible:true, badge:'', ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'', ctaAltUrl:'', features:'Xem trực tiếp thể thao\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
           ]),
           mkTabSA('t2', 'Cao cấp', [
-            { id:'p2', code:'SA-VVIP2', name:'Gói V.Vip 2', price:'150.000đ/tháng', visible:true, badge:'Phổ biến', ctaText:'Đăng ký ngay', ctaUrl:'#', features:'Xem trực tiếp thể thao\nHBO, K+\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+            { id:'p2', code:'SA-VVIP2', name:'Gói V.Vip 2', price:'150.000đ/tháng', visible:true, badge:'Phổ biến', ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'', ctaAltUrl:'', features:'Xem trực tiếp thể thao\nHBO, K+\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
           ]),
         ];
         class SaProductsEd extends React.Component {
@@ -8071,6 +8080,10 @@ class Component extends DCLogic {
                       fld2('CTA chính — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})})),
                       fld2('CTA chính — URL',  h(DS.Input,{key:'cu'+tab.id+selIdx,defaultValue:sel.ctaUrl,placeholder:'/dang-ky?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaUrl:e.target.value})}))
                     ),
+                    g2(
+                      fld2('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt||'',placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
+                      fld2('CTA phụ — URL',  h(DS.Input,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
+                    ),
                     fld2('Tính năng nổi bật (mỗi dòng 1 mục)', h('div',null, h(DS.Textarea,{key:'ft'+tab.id+selIdx,rows:3,defaultValue:sel.features,placeholder:'HBO, K+\nHỗ trợ 24/7\nXem trực tiếp thể thao',onBlur:e=>this.updPkg(tab.id,selIdx,{features:e.target.value})}), h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4,display:'flex',alignItems:'center',gap:4}}, h(DS.Icon,{name:'info-circle-line',size:12,color:'var(--color-text-subtle)'}), 'Mỗi dòng là 1 tính năng — xuống dòng bằng Enter, không phải word-wrap'))),
                     h('div',{style:{marginTop:4,padding:'10px 12px',background:'var(--color-surface-sunken)',borderRadius:10,border:'1px solid var(--color-border)'}},
                       h('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:sel.tooltipOn?10:0}},
@@ -8118,7 +8131,7 @@ class Component extends DCLogic {
                         h(DS.Button,{level:'secondary',onClick:()=>this.updTab(tab.id,{addOpen:false})},'Hủy'),
                         h(DS.Button,{level:'primary',disabled:addSel.size===0,onClick:()=>{
                           const toAdd=SA_PKGS.filter(p=>addSel.has(p.code)&&!existingCodes.has(p.code));
-                          const newPkgs=toAdd.map((p,i)=>({id:'p'+Date.now()+i,code:p.code,name:p.name,price:p.price,visible:true,badge:'',ctaText:'Đăng ký ngay',ctaUrl:'#',features:'',tooltipOn:false,tooltipContent:''}));
+                          const newPkgs=toAdd.map((p,i)=>({id:'p'+Date.now()+i,code:p.code,name:p.name,price:p.price,visible:true,badge:'',ctaText:'Đăng ký ngay',ctaUrl:'#',ctaAlt:'',ctaAltUrl:'',features:'',tooltipOn:false,tooltipContent:''}));
                           this.updTab(tab.id,{pkgs:[...pkgs,...newPkgs],addOpen:false,addSel:new Set()});
                         }},addSel.size?'Thêm ('+addSel.size+' gói)':'Thêm gói')
                       )
