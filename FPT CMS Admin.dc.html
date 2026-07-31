@@ -299,18 +299,18 @@ class Component extends DCLogic {
   }
   SKUS() {
     return [
-      { code: 'INT-GIGA', name: 'Internet Giga (150Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '215.000đ', status: 'active', cms: true, devices: 'ONT 1 port 1G, Thiết bị Wi-Fi 6', addons: 'Fsafe – Bảo mật, Ultra Fast – Chơi game, FPT Play VIP', updatedAt: '20/05/2026 13:40', updatedBy: '24092 - Nguyễn' },
-      { code: 'INT-SKY', name: 'Internet Sky (1Gbps/150Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '290.000đ', status: 'active', cms: true, devices: 'ONT 1 port 1G, Thiết bị Wi-Fi 6', addons: 'FPT Play VIP', updatedAt: '20/05/2026 14:00', updatedBy: '24092 - Nguyễn' },
-      { code: 'INT-META', name: 'Internet Meta (1Gbps)', kind: 'Dịch vụ', group: 'Internet', price: '375.000đ', status: 'active', cms: true, devices: 'ONT 2 port 1G, Thiết bị Wi-Fi 6E', addons: 'Ultra Fast – Chơi game', updatedAt: '19/05/2026 09:15', updatedBy: 'Admin User' },
-      { code: 'INT-LUX500', name: 'Internet LUX 500 (500Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '330.000đ', status: 'active', cms: true, devices: 'ONT 2 port 1G, Thiết bị Wi-Fi 6', addons: 'Fsafe – Bảo mật, FPT Play VIP', updatedAt: '18/05/2026 16:20', updatedBy: 'Admin User' },
-      { code: 'INT-LUX800', name: 'Internet LUX 800 (800Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '430.000đ', status: 'active', cms: false, devices: 'ONT 2 port 1G, Thiết bị Wi-Fi 6', addons: 'Fsafe – Bảo mật, Ultra Fast – Chơi game, FPT Play VIP', updatedAt: '17/05/2026 10:05', updatedBy: 'FI-25128' },
-      { code: 'CAM-IQ3', name: 'FPT Camera IQ3', kind: 'Thiết bị', group: 'Camera', price: '1.490.000đ', status: 'active', cms: true, devices: 'Camera IQ3 Full HD', addons: 'Cloud 7 ngày miễn phí', updatedAt: '20/05/2026 09:30', updatedBy: 'FI-25128' },
-      { code: 'CAM-IQ4S', name: 'FPT Camera IQ4S (AI)', kind: 'Thiết bị', group: 'Camera', price: '1.890.000đ', status: 'active', cms: true, devices: 'Camera IQ4S 4K AI', addons: 'Cloud 7 ngày, Nhận diện khuôn mặt', updatedAt: '20/05/2026 09:40', updatedBy: 'FI-25128' },
-      { code: 'SA-SMAX', name: 'FPT Play SMax', kind: 'Dịch vụ', group: 'Truyền hình', price: '120.000đ', status: 'active', cms: true, devices: 'FPT Play Box (tặng kèm)', addons: 'HBO, K+, FPT Play', updatedAt: '18/05/2026 15:30', updatedBy: '24092 - Nguyễn' },
-      { code: 'SA-SVIP', name: 'FPT Play SVip', kind: 'Dịch vụ', group: 'Truyền hình', price: '199.000đ', status: 'inactive', cms: false, devices: 'FPT Play Box 4K', addons: 'HBO, K+, BritBox, FPT Play', updatedAt: '15/05/2026 11:00', updatedBy: 'Admin User' },
-      { code: 'DEV-WIFI7', name: 'Router Wi-Fi 7', kind: 'Thiết bị', group: 'Internet', price: '2.190.000đ', status: 'active', cms: true, devices: 'Router Wi-Fi 7 BE9300', addons: '—', updatedAt: '16/05/2026 14:22', updatedBy: 'FI-25128' },
-      { code: 'MODEM-AX1800GZ', name: 'Modem Wi-Fi 6 AX1800', kind: 'Thiết bị', group: 'Internet', price: '0đ', status: 'active', cms: true, devices: 'Modem Wi-Fi 6 AX1800', addons: '—', updatedAt: '14/05/2026 13:50', updatedBy: 'Admin User' },
-      { code: 'CLOUD-CAM30', name: 'Cloud Camera 30 ngày', kind: 'Dịch vụ', group: 'Cloud', price: '50.000đ', status: 'inactive', cms: false, devices: '—', addons: 'Cloud lưu 30 ngày', updatedAt: '10/05/2026 08:30', updatedBy: 'Admin User' },
+      { code: 'INT-GIGA', name: 'Internet Giga (150Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '215.000đ', status: 'active', cms: true, source: 'ECP', devices: 'ONT 1 port 1G, Thiết bị Wi-Fi 6', addons: 'Fsafe – Bảo mật, Ultra Fast – Chơi game, FPT Play VIP', updatedAt: '20/05/2026 13:40', updatedBy: '24092 - Nguyễn' },
+      { code: 'INT-SKY', name: 'Internet Sky (1Gbps/150Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '290.000đ', status: 'active', cms: true, source: 'FCP', devices: 'ONT 1 port 1G, Thiết bị Wi-Fi 6', addons: 'FPT Play VIP', updatedAt: '20/05/2026 14:00', updatedBy: '24092 - Nguyễn' },
+      { code: 'INT-META', name: 'Internet Meta (1Gbps)', kind: 'Dịch vụ', group: 'Internet', price: '375.000đ', status: 'active', cms: true, source: 'ECP', devices: 'ONT 2 port 1G, Thiết bị Wi-Fi 6E', addons: 'Ultra Fast – Chơi game', updatedAt: '19/05/2026 09:15', updatedBy: 'Admin User' },
+      { code: 'INT-LUX500', name: 'Internet LUX 500 (500Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '330.000đ', status: 'active', cms: true, source: 'FCP', devices: 'ONT 2 port 1G, Thiết bị Wi-Fi 6', addons: 'Fsafe – Bảo mật, FPT Play VIP', updatedAt: '18/05/2026 16:20', updatedBy: 'Admin User' },
+      { code: 'INT-LUX800', name: 'Internet LUX 800 (800Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '430.000đ', status: 'active', cms: false, source: 'ECP', devices: 'ONT 2 port 1G, Thiết bị Wi-Fi 6', addons: 'Fsafe – Bảo mật, Ultra Fast – Chơi game, FPT Play VIP', updatedAt: '17/05/2026 10:05', updatedBy: 'FI-25128' },
+      { code: 'CAM-IQ3', name: 'FPT Camera IQ3', kind: 'Thiết bị', group: 'Camera', price: '1.490.000đ', status: 'active', cms: true, source: 'FCP', devices: 'Camera IQ3 Full HD', addons: 'Cloud 7 ngày miễn phí', updatedAt: '20/05/2026 09:30', updatedBy: 'FI-25128' },
+      { code: 'CAM-IQ4S', name: 'FPT Camera IQ4S (AI)', kind: 'Thiết bị', group: 'Camera', price: '1.890.000đ', status: 'active', cms: true, source: 'ECP', devices: 'Camera IQ4S 4K AI', addons: 'Cloud 7 ngày, Nhận diện khuôn mặt', updatedAt: '20/05/2026 09:40', updatedBy: 'FI-25128' },
+      { code: 'SA-SMAX', name: 'FPT Play SMax', kind: 'Dịch vụ', group: 'Truyền hình', price: '120.000đ', status: 'active', cms: true, source: 'FCP', devices: 'FPT Play Box (tặng kèm)', addons: 'HBO, K+, FPT Play', updatedAt: '18/05/2026 15:30', updatedBy: '24092 - Nguyễn' },
+      { code: 'SA-SVIP', name: 'FPT Play SVip', kind: 'Dịch vụ', group: 'Truyền hình', price: '199.000đ', status: 'inactive', cms: false, source: 'ECP', devices: 'FPT Play Box 4K', addons: 'HBO, K+, BritBox, FPT Play', updatedAt: '15/05/2026 11:00', updatedBy: 'Admin User' },
+      { code: 'DEV-WIFI7', name: 'Router Wi-Fi 7', kind: 'Thiết bị', group: 'Internet', price: '2.190.000đ', status: 'active', cms: true, source: 'FCP', devices: 'Router Wi-Fi 7 BE9300', addons: '—', updatedAt: '16/05/2026 14:22', updatedBy: 'FI-25128' },
+      { code: 'MODEM-AX1800GZ', name: 'Modem Wi-Fi 6 AX1800', kind: 'Thiết bị', group: 'Internet', price: '0đ', status: 'active', cms: true, source: 'ECP', devices: 'Modem Wi-Fi 6 AX1800', addons: '—', updatedAt: '14/05/2026 13:50', updatedBy: 'Admin User' },
+      { code: 'CLOUD-CAM30', name: 'Cloud Camera 30 ngày', kind: 'Dịch vụ', group: 'Cloud', price: '50.000đ', status: 'inactive', cms: false, source: 'FCP', devices: '—', addons: 'Cloud lưu 30 ngày', updatedAt: '10/05/2026 08:30', updatedBy: 'Admin User' },
     ];
   }
   NAV() {
@@ -1850,7 +1850,16 @@ class Component extends DCLogic {
       if (isSaMain) return isSaSku(s);
       return isOtherDeviceSku(s);
     });
-    const filteredSkus = mainFilteredSkus.filter(s => !q || (s.code + s.name).toLowerCase().includes(q));
+    // ── Tab lọc nguồn hệ thống: ECP / FCP — 2 hệ thống cùng đổ dữ liệu sản phẩm về nên có thể trùng mã,
+    // chỉ cần cấu hình 1 lần ở đúng 1 tab nguồn là đủ cho gói đó. ──
+    const skuSource = ((this.state.checkoutSkuSource || {})[cid]) || 'ecp';
+    const setSkuSource = src => this.setState(st => ({ checkoutSkuSource: { ...st.checkoutSkuSource, [cid]: src }, checkoutSkuSearch: '' }));
+    const sourceFilterBtns = [
+      { id: 'ecp', label: 'ECP' },
+      { id: 'fcp', label: 'FCP' },
+    ];
+    const sourceFilteredSkus = mainFilteredSkus.filter(s => (s.source || 'ECP').toLowerCase() === skuSource);
+    const filteredSkus = sourceFilteredSkus.filter(s => !q || (s.code + s.name).toLowerCase().includes(q));
     const channelSkus = ((this.state.checkoutChannelSkus || {})[cid]) || {};
     // Chỉ tính các gói thuộc đúng tab đang mở, tránh 1 gói được chọn ở tab khác bị cuốn theo khi chỉnh sửa tab này.
     const selectedSkus = mainFilteredSkus.filter(s => !!channelSkus[s.code]);
@@ -2198,7 +2207,31 @@ class Component extends DCLogic {
           // (bọc ngoài không sticky, cao bằng hàng grid → cho phép khối bên trong "sticky" bám lại khi cột phải dài hơn)
           h('div', null,
             h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px', position: 'sticky', top: 8 } },
-              h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } }, 'DANH SÁCH GÓI CƯỚC'),
+              h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } }, 'DANH SÁCH SẢN PHẨM'),
+
+              // ── Tab nguồn hệ thống ECP / FCP — pill-tab, cùng layout với block "DANH SÁCH SẢN PHẨM" của module Phương thức thanh toán ──
+              h('div', {
+                role: 'tablist', title: '2 hệ thống cùng đổ dữ liệu sản phẩm về — nếu 1 sản phẩm trùng ở cả ECP và FCP, chỉ cần cấu hình ở đúng 1 tab nguồn là đủ.',
+                style: { display: 'flex', gap: 3, padding: 3, background: 'var(--color-surface-sunken)', borderRadius: 'var(--radius-full)', marginBottom: 10 }
+              },
+                sourceFilterBtns.map(f => {
+                  const active = f.id === skuSource;
+                  return h('button', {
+                    key: f.id, type: 'button', role: 'tab', 'aria-selected': active,
+                    onClick: () => setSkuSource(f.id),
+                    style: {
+                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '7px 10px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: active ? 700 : 500,
+                      color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
+                      background: active ? 'var(--color-surface)' : 'transparent',
+                      border: 'none', borderRadius: 'var(--radius-full)',
+                      boxShadow: active ? 'var(--shadow-sm)' : 'none',
+                      cursor: 'pointer', transition: 'color var(--dur-fast), background var(--dur-fast)'
+                    }
+                  }, f.label);
+                })
+              ),
+
               h('div', { style: { marginBottom: 6 } },
                 h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChecked, indeterminate: someChecked, onChange: toggleAll })
               ),
@@ -8615,10 +8648,27 @@ class Component extends DCLogic {
     const search = (this.state.paySkuSearch || '').toLowerCase();
     const methods = this.PAYMENT_METHODS_DEF();
     const methodTag = { vietqr: 'QR', momo: 'Momo', zalopay: 'Zalo' };
-    const groupMap = { internet: 'Internet', cam: 'Camera', tv: 'Truyền hình' };
-    const allSkus = this.SKUS().filter(s => s.status === 'active');
+    // ── Tab bậc 1 — nguồn hệ thống: ECP / FCP. 2 hệ thống cùng đổ dữ liệu sản phẩm về nên có thể trùng SKU,
+    // chỉ cần cấu hình PTTT ở đúng 1 tab nguồn là đủ cho gói đó. ──
+    const skuSource = this.state.paySkuSource || 'ecp';
+    const sourceTabDefs = [
+      { id: 'ecp', label: 'ECP' },
+      { id: 'fcp', label: 'FCP' },
+    ];
+    // ── Tab bậc 2 — danh mục sản phẩm, lồng bên trong mỗi tab nguồn ──
+    const catDefs = [
+      { id: 'all', label: 'Tất cả', match: () => true },
+      { id: 'internet', label: 'Internet', match: s => s.group === 'Internet' && s.kind === 'Dịch vụ' },
+      { id: 'camera', label: 'Camera', match: s => s.group === 'Camera' },
+      { id: 'tv', label: 'TV', match: s => s.group === 'Truyền hình' && s.kind === 'Thiết bị' },
+      { id: 'ap', label: 'AP', match: s => s.kind === 'Thiết bị' && s.group !== 'Camera' && s.group !== 'Truyền hình' },
+      { id: 'sa', label: 'Gói SA', match: s => s.group === 'Truyền hình' && s.kind === 'Dịch vụ' },
+    ];
+    const filterBtns = catDefs;
+    const allSkus = this.SKUS().filter(s => s.status === 'active' && (s.source || 'ECP').toLowerCase() === skuSource);
+    const activeCatDef = catDefs.find(c => c.id === filter) || catDefs[0];
     const filteredSkus = allSkus.filter(s => {
-      if (filter !== 'all' && s.group !== groupMap[filter]) return false;
+      if (!activeCatDef.match(s)) return false;
       if (search && !s.code.toLowerCase().includes(search) && !s.name.toLowerCase().includes(search)) return false;
       return true;
     });
@@ -8629,13 +8679,7 @@ class Component extends DCLogic {
     const togglePayChipsExpanded = () => this.setState(st => ({ payChipsExpanded: !st.payChipsExpanded }));
     const visibleSelected = (payChipsExpanded || selected.length <= CHIP_LIMIT) ? selected : selected.slice(0, CHIP_LIMIT);
     const hiddenSelectedCount = selected.length - visibleSelected.length;
-    const filterBtns = [
-      { id: 'all', label: 'Tất cả' },
-      { id: 'internet', label: 'Internet', icon: 'globe-01-line' },
-      { id: 'cam', label: 'Cam', icon: 'camera-01-line' },
-      { id: 'tv', label: 'TV', icon: 'tv-01-line' },
-    ];
-    const inputSt = { width: '100%', padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: 'var(--color-surface)', color: 'var(--color-text)', boxSizing: 'border-box', outline: 'none' };
+    const inputSt ={ width: '100%', padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: 'var(--color-surface)', color: 'var(--color-text)', boxSizing: 'border-box', outline: 'none' };
     const renderSkuItem = (sku) => {
       const cfg = this.getPayConfig()[sku.code] || {};
       const activeMethods = methods.filter(m => cfg[m.id] && cfg[m.id].active);
@@ -8715,15 +8759,42 @@ class Component extends DCLogic {
       // (bọc ngoài không sticky, cao bằng hàng grid → cho phép khối bên trong "sticky" bám lại khi cột phải dài hơn)
       h('div', null,
         h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px', position: 'sticky', top: 8 } },
-          h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } }, 'DANH SÁCH GÓI CƯỚC (SKU)'),
+          h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } }, 'DANH SÁCH SẢN PHẨM'),
+
+          // ── Bậc 1 (chính): nguồn hệ thống ECP / FCP — pill-tab to, nổi bật để phân biệt rõ với bộ lọc danh mục bên dưới ──
+          h('div', {
+            role: 'tablist', title: '2 hệ thống cùng đổ dữ liệu sản phẩm về — nếu 1 sản phẩm trùng ở cả ECP và FCP, chỉ cần cấu hình PTTT ở đúng 1 tab nguồn là đủ.',
+            style: { display: 'flex', gap: 3, padding: 3, background: 'var(--color-surface-sunken)', borderRadius: 'var(--radius-full)', marginBottom: 10 }
+          },
+            sourceTabDefs.map(t => {
+              const active = t.id === skuSource;
+              return h('button', {
+                key: t.id, type: 'button', role: 'tab', 'aria-selected': active,
+                onClick: () => this.setState({ paySkuSource: t.id, paySkuFilter: 'all', paySkuSearch: '' }),
+                style: {
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '7px 10px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: active ? 700 : 500,
+                  color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
+                  background: active ? 'var(--color-surface)' : 'transparent',
+                  border: 'none', borderRadius: 'var(--radius-full)',
+                  boxShadow: active ? 'var(--shadow-sm)' : 'none',
+                  cursor: 'pointer', transition: 'color var(--dur-fast), background var(--dur-fast)'
+                }
+              }, t.label);
+            })
+          ),
+
           h('div', { style: { marginBottom: 6 } },
             h(DS.Checkbox, { label: 'Chọn tất cả', checked: !!(this.state.paySkuCheckAll), onChange: v => this.setState({ paySkuCheckAll: v, paySkuSelected: v ? filteredSkus.map(s => s.code) : [] }) })
           ),
           h('div', { style: { marginBottom: 8 } },
             h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.paySkuSearch || '', onChange: e => this.setState({ paySkuSearch: e.target.value }) })
           ),
+
+          // ── Bậc 2 (phụ): danh mục sản phẩm — chip nhỏ, thuộc phạm vi tab nguồn đang chọn ──
+          h('div', { style: { fontSize: 9.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 } }, 'Danh mục'),
           h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
-            filterBtns.map(f => h(DS.Tag, { key: f.id, selected: filter === f.id, onClick: () => this.setState({ paySkuFilter: f.id }) }, f.label))
+            filterBtns.map(f => h(DS.Tag, { key: f.id, size: 'sm', selected: filter === f.id, onClick: () => this.setState({ paySkuFilter: f.id }) }, f.label))
           ),
           h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 512, overflowY: 'auto', overflowX: 'hidden' } }, filteredSkus.map(sku => renderSkuItem(sku)))
         )
