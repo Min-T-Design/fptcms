@@ -642,6 +642,10 @@ class Component extends DCLogic {
   PKG_CHANNEL_THEME(channelId) {
     return { 'fptvn': 'info', 'hifpt': 'brand', 'tdw': 'warning' }[channelId] || 'neutral';
   }
+  // Hệ thống nguồn lấy thông tin sản phẩm — ECP / FCP có thể cùng khai báo 1 SKU trùng tên.
+  PKG_SOURCE_THEME(source) {
+    return { 'ECP': 'info', 'FCP': 'warning' }[source] || 'neutral';
+  }
   PKG_QLCS_META(sku) {
     if (!sku) return null;
     const isDevice = sku.kind === 'Thiết bị';
@@ -859,6 +863,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.skuSearch || '').toLowerCase();
     const typeF = this.state.skuTypeFilter || 'all';
+    const sourceF = this.state.skuSourceFilter || 'all';
     const skuByCode = new Map(this.SKUS().map(s => [s.code, s]));
     const channelMap = new Map(this.PKG_CHANNELS().map(c => [c.id, c]));
     const all = this.PKG_CONTENTS();
@@ -866,7 +871,8 @@ class Component extends DCLogic {
       const sku = skuByCode.get(r.skuCode);
       const matchQ = !q || (r.displayName + ' ' + r.skuCode + ' ' + (sku ? sku.name : '')).toLowerCase().includes(q);
       const matchType = typeF === 'all' || (sku && sku.group === typeF);
-      return matchQ && matchType;
+      const matchSource = sourceF === 'all' || (sku && (sku.source || 'ECP') === sourceF);
+      return matchQ && matchType && matchSource;
     });
     const sliced = this.sliceData(data, 'pkg');
     const pkgPg = this.state.pkg_pg || 1; const pkgSz = this.state.pkg_sz || 10;
@@ -885,6 +891,8 @@ class Component extends DCLogic {
         } },
       { key: 'type', header: 'Loại sản phẩm', width: 140,
         render: (_, r) => { const sku = skuByCode.get(r.skuCode); return h(DS.Badge, { theme: this.PKG_TYPE_THEME(sku && sku.group) }, sku ? sku.group : '—'); } },
+      { key: 'source', header: 'Hệ thống', width: 100,
+        render: (_, r) => { const sku = skuByCode.get(r.skuCode); const src = sku ? (sku.source || 'ECP') : null; return src ? h(DS.Badge, { theme: this.PKG_SOURCE_THEME(src) }, src) : h('span', null, '—'); } },
       { key: 'priceMin', header: 'Giá Min', width: 120, align: 'right',
         render: (_, r) => { const meta = this.PKG_QLCS_META(skuByCode.get(r.skuCode)); return h('span', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, meta ? meta.giaMin : '—'); } },
       { key: 'priceMax', header: 'Giá Max', width: 120, align: 'right',
@@ -904,13 +912,15 @@ class Component extends DCLogic {
     ];
 
     const typeOptions = [{ value: 'all', label: 'Loại sản phẩm' }, ...Array.from(new Set(this.SKUS().map(s => s.group))).map(g => ({ value: g, label: g }))];
+    const sourceOptions = [{ value: 'all', label: 'Hệ thống' }, { value: 'ECP', label: 'ECP' }, { value: 'FCP', label: 'FCP' }];
 
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
       this.listCard(
         this.toolbar(
           h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
             this.search('Tìm kiếm tên gói bán, tên hiển thị…', 'skuSearch'),
-            h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: typeOptions, value: typeF, onChange: v => this.setState({ skuTypeFilter: v, pkg_pg: 1 }) }))
+            h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: typeOptions, value: typeF, onChange: v => this.setState({ skuTypeFilter: v, pkg_pg: 1 }) })),
+            h('div', { style: { width: 160, flexShrink: 0 } }, h(DS.Select, { options: sourceOptions, value: sourceF, onChange: v => this.setState({ skuSourceFilter: v, pkg_pg: 1 }) }))
           ),
           h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 } },
             h(DS.Button, { level: 'secondary', onClick: () => this.toast('success', 'Đã đồng bộ', 'Dữ liệu gói bán đã được đồng bộ mới nhất từ hệ thống QLCS.') },
@@ -928,6 +938,7 @@ class Component extends DCLogic {
         this.filterChipsBar([
           q && this.filterChip('Tìm: ' + this.state.skuSearch, 'neutral', () => this.setState({ skuSearch: '', pkg_pg: 1 })),
           typeF !== 'all' && this.filterChip('Loại sản phẩm: ' + typeF, 'brand', () => this.setState({ skuTypeFilter: 'all', pkg_pg: 1 })),
+          sourceF !== 'all' && this.filterChip('Hệ thống: ' + sourceF, 'brand', () => this.setState({ skuSourceFilter: 'all', pkg_pg: 1 })),
         ]),
         data.length ? this.tbl(columns, sliced, 'id', r => this.openSkuDetail(r)) : this.empty('Không tìm thấy nội dung sản phẩm phù hợp.'),
         data.length ? this.renderPagBar(data.length, 'pkg', 'nội dung') : null
@@ -944,6 +955,7 @@ class Component extends DCLogic {
       title: r.displayName || r.skuCode, subtitle: 'Nội dung sản phẩm · ' + (ch ? ch.name : r.channel), width: 480,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Gói bán từ PDH', sku ? (sku.name + ' (' + sku.code + ')') : r.skuCode),
+        this.detailRow('Hệ thống', sku ? h(DS.Badge, { theme: this.PKG_SOURCE_THEME(sku.source || 'ECP') }, sku.source || 'ECP') : '—'),
         this.detailRow('Loại sản phẩm', r.packageType || '—'),
         this.detailRow('Giá Min', sku ? this.PKG_QLCS_META(sku).giaMin : '—'),
         this.detailRow('Giá Max', sku ? this.PKG_QLCS_META(sku).giaMax : '—'),
@@ -2000,9 +2012,7 @@ class Component extends DCLogic {
           h('input', { type: 'file', accept: 'image/*', style: { display: 'none' }, onChange: onBundledIconFile(sku, field, i) })
         ),
         h(DS.Icon, { name: 'lock-01-line', size: 14, color: 'var(--color-text-subtle)', style: { flexShrink: 0 } }),
-        h('span', { style: { flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, item.name),
-        h(DS.Switch, { size: 'sm', label: 'Web', checked: item.web, onChange: v => this.updateSkuConfigItem(sku, field, i, 'web', v), style: { flexShrink: 0 } }),
-        h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => this.removeSkuConfigItem(sku, field, i) })
+        h('span', { style: { flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, item.name)
       ),
       h(DS.Input, { value: item.desc, placeholder: 'Mô tả ngắn…', onChange: e => this.updateSkuConfigItem(sku, field, i, 'desc', e && e.target ? e.target.value : e) })
     );
@@ -2199,7 +2209,7 @@ class Component extends DCLogic {
         h('p', { style: { fontSize: 12, color: 'var(--color-text-subtle)', margin: '0 0 10px' } },
           effectiveContentTab === 'offers'
             ? 'Tick chọn một hoặc nhiều gói cước ở danh sách bên trái để áp dụng cho trang Checkout — chỉnh sửa nội dung ưu đãi bên phải sẽ áp dụng đồng thời cho tất cả các gói đang được chọn.'
-            : 'Tick chọn một hoặc nhiều gói cước ở danh sách bên trái — thiết bị đi kèm & dịch vụ bổ sung được đồng bộ tự động từ QLCS theo từng gói, chỉ có thể chỉnh sửa mô tả và trạng thái hiển thị Web.'
+            : 'Tick chọn một hoặc nhiều gói cước ở danh sách bên trái — thiết bị đi kèm & dịch vụ bổ sung được đồng bộ tự động từ QLCS theo từng gói, chỉ có thể chỉnh sửa mô tả.'
         ),
         h('div', { style: { display: 'grid', gridTemplateColumns: '1.36fr 3fr', gap: 16, alignItems: 'stretch' } },
 
@@ -3394,7 +3404,7 @@ class Component extends DCLogic {
     let dynSection = null;
     if (ds === 'goi-cuoc') {
       dynSection = h('div', null,
-        secTitle('🏷️', 'Danh sách các Card Gói Cước trong Block', 'Thêm Card Gói Mới', () => this.setState({ blkPickerModal: 'card-add', blkCardForm: { pdh: '', badge: '', name: '', price: '', download: '', upload: '', gauge: '50', devices: '', note: '', btn1Text: 'Đăng ký ngay', btn1Url: '', btn2Url: '' } })),
+        secTitle('🏷️', 'Danh sách các Card Gói Cước trong Block', 'Thêm Card Gói Mới', () => this.setState({ blkPickerModal: 'card-sku', blkPickerSearch: '', blkPickerCat: '', blkPickerSelected: {}, blkSkuSource: 'ecp' })),
         h('div', { style: { overflowX: 'auto', borderRadius: 8, border: '1px solid var(--color-border)', marginBottom: 20 } },
           h('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: 13 } },
             h('thead', null, h('tr', { style: { background: 'var(--color-surface-alt)' } },
@@ -3546,7 +3556,7 @@ class Component extends DCLogic {
             this.field('Mã Block', h(DS.Input, { defaultValue: r ? r.code : '', placeholder: 'VD: blk-card-internet' }), true),
             this.field('Tên rút gọn', h(DS.Input, { placeholder: 'VD: Card Chuẩn' }), true),
             this.field('Loại Block (Layout)', h(DS.Select, { options: [{ value: 'slider', label: 'Slider' }, { value: 'grid', label: 'Grid' }, { value: 'row', label: 'Row' }, { value: 'accordion', label: 'Accordion' }, { value: 'list', label: 'List' }], value: layout, onChange: v => this.setState({ blkLayout: v }) }), true),
-            this.field('Nguồn dữ liệu', h(DS.Select, { options: [{ value: 'goi-cuoc', label: 'Gói cước' }, { value: 'tin-tuc', label: 'Tin tức / Bài viết' }, { value: 'faq', label: 'Câu hỏi / FAQ' }, { value: 'banner', label: 'Banner' }, { value: 'popup', label: 'Popup' }], value: ds, onChange: v => this.setState({ blkDataSource: v }) }), true),
+            this.field('Loại dữ liệu', h(DS.Select, { options: [{ value: 'goi-cuoc', label: 'Gói cước' }, { value: 'tin-tuc', label: 'Tin tức / Bài viết' }, { value: 'faq', label: 'Câu hỏi / FAQ' }, { value: 'banner', label: 'Banner' }, { value: 'popup', label: 'Popup' }], value: ds, onChange: v => this.setState({ blkDataSource: v }) }), true),
             this.field('Thứ tự hiển thị', h(DS.Input, { type: 'number', defaultValue: r && r.order != null ? String(r.order) : '1' }))
           ),
           dynSection,
@@ -3569,14 +3579,14 @@ class Component extends DCLogic {
     const s = this.state;
     const close = () => this.setState({ blkPickerModal: null, blkPickerSearch: '', blkPickerCat: '', blkPickerSelected: {} });
 
-    const mkOverlay = (title, width, body, footer) => h('div', { style: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' } },
-      h('div', { style: { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, width, maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0,0,0,.4)' } },
-        h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', padding: '16px 24px', flexShrink: 0 } },
-          h('h3', { style: { margin: 0, fontSize: 16, fontWeight: 700 } }, title),
-          h(DS.IconButton, { icon: 'x-circle-line', level: 'tertiary', size: 'sm', onClick: close })
-        ),
-        h('div', { style: { flex: 1, overflowY: 'auto', padding: '16px 24px' } }, body),
-        h('div', { style: { borderTop: '1px solid var(--color-border)', padding: '12px 24px', display: 'flex', justifyContent: 'flex-end', gap: 10, flexShrink: 0 } }, ...footer)
+    // ── DS.Modal — chuẩn modal dùng chung toàn hệ thống (giống modal "Thêm gói vào tab" của SA Products, modal "Chọn câu hỏi từ kho FAQ"...), thay cho overlay tự dựng riêng của module Blocks trước đây ──
+    const mkOverlay = (title, width, body, footer, description) => h(DS.Modal, {
+      open: true, onClose: close, title, description, size: 'lg',
+      style: width && width !== 680 ? { maxWidth: width } : undefined,
+    },
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+        body,
+        h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 4 } }, ...footer)
       )
     );
 
@@ -3602,16 +3612,16 @@ class Component extends DCLogic {
       const flt = all.filter(a => { const q = (s.blkPickerSearch || '').toLowerCase(); return (!q || a.title.toLowerCase().includes(q)) && (!s.blkPickerCat || a.cat === s.blkPickerCat); });
       const sel = s.blkPickerSelected;
       const allChk = flt.length > 0 && flt.every(a => sel[a.id]);
-      return mkOverlay(h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8 } }, h(DS.Icon, { name: 'file-text-line', size: 18, color: 'var(--color-accent)' }), 'Chọn Bài viết để thêm vào Block'), 660,
+      return mkOverlay('Chọn Bài viết để thêm vào Block', 660,
         h('div', null,
           h('div', { style: { display: 'flex', gap: 10, marginBottom: 12 } },
             h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Tìm kiếm bài viết...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch, onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) })),
             h('div', { style: { width: 190 } }, h(DS.Select, { options: [{ value: '', label: '-- Tất cả danh mục --' }, 'Tin công nghệ', 'Hướng dẫn', 'Tin thể thao', 'Khuyến mãi', 'Sản phẩm'], value: s.blkPickerCat || '', onChange: v => this.setState({ blkPickerCat: v }) }))
           ),
           pickerTable(
-            [h('th', { style: { width: 40, textAlign: 'center', padding: '8px 10px' } }, h('input', { type: 'checkbox', checked: allChk, onChange: () => this.setState({ blkPickerSelected: allChk ? {} : Object.fromEntries(flt.map(a => [a.id, true])) }) })), th('Tiêu đề bài viết'), th('Danh mục'), th('Ngày xuất bản', 100)],
+            [h('th', { style: { width: 40, textAlign: 'center', padding: '8px 10px' } }, h(DS.Checkbox, { checked: allChk, onChange: () => this.setState({ blkPickerSelected: allChk ? {} : Object.fromEntries(flt.map(a => [a.id, true])) }) })), th('Tiêu đề bài viết'), th('Danh mục'), th('Ngày xuất bản', 100)],
             flt.map(a => h('tr', { key: a.id, style: { borderTop: '1px solid var(--color-border)' } },
-              h('td', { style: { textAlign: 'center', padding: '8px 10px' } }, h('input', { type: 'checkbox', checked: !!sel[a.id], onChange: () => this.setState(sv => { const ns = Object.assign({}, sv.blkPickerSelected); ns[a.id] ? delete ns[a.id] : (ns[a.id] = true); return { blkPickerSelected: ns }; }) })),
+              h('td', { style: { textAlign: 'center', padding: '8px 10px' } }, h(DS.Checkbox, { checked: !!sel[a.id], onChange: () => this.setState(sv => { const ns = Object.assign({}, sv.blkPickerSelected); ns[a.id] ? delete ns[a.id] : (ns[a.id] = true); return { blkPickerSelected: ns }; }) })),
               td(h('strong', null, a.title)),
               td(h(DS.Badge, { theme: 'info' }, a.cat)),
               td(a.date, { color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' })
@@ -3638,16 +3648,16 @@ class Component extends DCLogic {
       const flt = all.filter(f => { const q = (s.blkPickerSearch || '').toLowerCase(); return (!q || f.q.toLowerCase().includes(q)) && (!s.blkPickerCat || f.cat === s.blkPickerCat); });
       const sel = s.blkPickerSelected;
       const allChk = flt.length > 0 && flt.every(f => sel[f.id]);
-      return mkOverlay(h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8 } }, h(DS.Icon, { name: 'help-circle-line', size: 18, color: 'var(--color-accent)' }), 'Chọn Câu hỏi FAQ để thêm vào Block'), 660,
+      return mkOverlay('Chọn Câu hỏi FAQ để thêm vào Block', 660,
         h('div', null,
           h('div', { style: { display: 'flex', gap: 10, marginBottom: 12 } },
             h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Tìm kiếm câu hỏi...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch, onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) })),
             h('div', { style: { width: 190 } }, h(DS.Select, { options: [{ value: '', label: '-- Tất cả danh mục --' }, 'Hỗ trợ kỹ thuật', 'Thanh toán cước', 'Chính sách', 'Thủ tục', 'Hướng dẫn'], value: s.blkPickerCat || '', onChange: v => this.setState({ blkPickerCat: v }) }))
           ),
           pickerTable(
-            [h('th', { style: { width: 40, textAlign: 'center', padding: '8px 10px' } }, h('input', { type: 'checkbox', checked: allChk, onChange: () => this.setState({ blkPickerSelected: allChk ? {} : Object.fromEntries(flt.map(f => [f.id, true])) }) })), th('Câu hỏi FAQ'), th('Danh mục', 160)],
+            [h('th', { style: { width: 40, textAlign: 'center', padding: '8px 10px' } }, h(DS.Checkbox, { checked: allChk, onChange: () => this.setState({ blkPickerSelected: allChk ? {} : Object.fromEntries(flt.map(f => [f.id, true])) }) })), th('Câu hỏi FAQ'), th('Danh mục', 160)],
             flt.map(f => h('tr', { key: f.id, style: { borderTop: '1px solid var(--color-border)' } },
-              h('td', { style: { textAlign: 'center', padding: '8px 10px' } }, h('input', { type: 'checkbox', checked: !!sel[f.id], onChange: () => this.setState(sv => { const ns = Object.assign({}, sv.blkPickerSelected); ns[f.id] ? delete ns[f.id] : (ns[f.id] = true); return { blkPickerSelected: ns }; }) })),
+              h('td', { style: { textAlign: 'center', padding: '8px 10px' } }, h(DS.Checkbox, { checked: !!sel[f.id], onChange: () => this.setState(sv => { const ns = Object.assign({}, sv.blkPickerSelected); ns[f.id] ? delete ns[f.id] : (ns[f.id] = true); return { blkPickerSelected: ns }; }) })),
               td(h('strong', null, f.q)),
               td(h(DS.Badge, { theme: 'warning' }, f.cat))
             ))
@@ -3672,13 +3682,13 @@ class Component extends DCLogic {
       ];
       const flt = all.filter(b => { const q = (s.blkPickerSearch || '').toLowerCase(); return !q || b.name.toLowerCase().includes(q); });
       const sel = s.blkPickerSelected;
-      return mkOverlay(h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8 } }, h(DS.Icon, { name: 'image-01-line', size: 18, color: 'var(--color-accent)' }), 'Chọn Banner để thêm vào Block'), 600,
+      return mkOverlay('Chọn Banner để thêm vào Block', 600,
         h('div', null,
           h('div', { style: { marginBottom: 12 } }, h(DS.Input, { placeholder: 'Tìm kiếm banner theo tên...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch, onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) })),
           pickerTable(
             [h('th', { style: { width: 40, textAlign: 'center', padding: '8px 10px' } }, 'Chọn'), th('Tên Banner'), th('Ảnh Desktop')],
             flt.map(b => h('tr', { key: b.id, style: { borderTop: '1px solid var(--color-border)' } },
-              h('td', { style: { textAlign: 'center', padding: '8px 10px' } }, h('input', { type: 'checkbox', checked: !!sel[b.id], onChange: () => this.setState(sv => { const ns = Object.assign({}, sv.blkPickerSelected); ns[b.id] ? delete ns[b.id] : (ns[b.id] = true); return { blkPickerSelected: ns }; }) })),
+              h('td', { style: { textAlign: 'center', padding: '8px 10px' } }, h(DS.Checkbox, { checked: !!sel[b.id], onChange: () => this.setState(sv => { const ns = Object.assign({}, sv.blkPickerSelected); ns[b.id] ? delete ns[b.id] : (ns[b.id] = true); return { blkPickerSelected: ns }; }) })),
               td(h('strong', null, b.name)),
               td(b.img, { fontSize: 12, color: 'var(--color-text-subtle)' })
             ))
@@ -3703,13 +3713,13 @@ class Component extends DCLogic {
       ];
       const flt = all.filter(p => { const q = (s.blkPickerSearch || '').toLowerCase(); return !q || p.name.toLowerCase().includes(q); });
       const sel = s.blkPickerSelected;
-      return mkOverlay(h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8 } }, h(DS.Icon, { name: 'message-chat-circle-line', size: 18, color: 'var(--color-accent)' }), 'Chọn Popup để thêm vào Block'), 600,
+      return mkOverlay('Chọn Popup để thêm vào Block', 600,
         h('div', null,
           h('div', { style: { marginBottom: 12 } }, h(DS.Input, { placeholder: 'Tìm kiếm popup theo tên...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch, onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) })),
           pickerTable(
             [h('th', { style: { width: 40, textAlign: 'center', padding: '8px 10px' } }, 'Chọn'), th('Tên Popup'), th('Ảnh Desktop')],
             flt.map(p => h('tr', { key: p.id, style: { borderTop: '1px solid var(--color-border)' } },
-              h('td', { style: { textAlign: 'center', padding: '8px 10px' } }, h('input', { type: 'checkbox', checked: !!sel[p.id], onChange: () => this.setState(sv => { const ns = Object.assign({}, sv.blkPickerSelected); ns[p.id] ? delete ns[p.id] : (ns[p.id] = true); return { blkPickerSelected: ns }; }) })),
+              h('td', { style: { textAlign: 'center', padding: '8px 10px' } }, h(DS.Checkbox, { checked: !!sel[p.id], onChange: () => this.setState(sv => { const ns = Object.assign({}, sv.blkPickerSelected); ns[p.id] ? delete ns[p.id] : (ns[p.id] = true); return { blkPickerSelected: ns }; }) })),
               td(h('strong', null, p.name)),
               td(p.img, { fontSize: 12, color: 'var(--color-text-subtle)' })
             ))
@@ -3723,15 +3733,103 @@ class Component extends DCLogic {
       );
     }
 
+    // ── Chọn gói cước (SKU) để thêm Card — cùng bố cục "DANH SÁCH SẢN PHẨM" (tab nguồn ECP/FCP + danh mục + tìm kiếm) đang dùng ở module Phương thức Thanh toán / Thông tin checkout, đóng gói trong DS.Modal ──
+    if (pm === 'card-sku') {
+      const skuSource = s.blkSkuSource || 'ecp';
+      const catDefs = [
+        { id: '', label: 'Tất cả', match: () => true },
+        { id: 'internet', label: 'Internet', match: x => x.group === 'Internet' && x.kind === 'Dịch vụ' },
+        { id: 'camera', label: 'Camera', match: x => x.group === 'Camera' },
+        { id: 'tv', label: 'TV', match: x => x.group === 'Truyền hình' && x.kind === 'Thiết bị' },
+        { id: 'ap', label: 'AP', match: x => x.kind === 'Thiết bị' && x.group !== 'Camera' && x.group !== 'Truyền hình' },
+        { id: 'sa', label: 'Gói SA', match: x => x.group === 'Truyền hình' && x.kind === 'Dịch vụ' },
+      ];
+      const activeCatDef = catDefs.find(c => c.id === (s.blkPickerCat || '')) || catDefs[0];
+      const q = (s.blkPickerSearch || '').toLowerCase();
+      const flt = this.SKUS().filter(x => x.status === 'active' && (x.source || 'ECP').toLowerCase() === skuSource)
+        .filter(x => activeCatDef.match(x) && (!q || x.code.toLowerCase().includes(q) || x.name.toLowerCase().includes(q)));
+      const existingCodes = new Set(s.blkCards.map(c => c.pdh).filter(Boolean));
+      const sel = s.blkPickerSelected;
+      const selectable = flt.filter(x => !existingCodes.has(x.code));
+      const allChk = selectable.length > 0 && selectable.every(x => sel[x.code]);
+      const selCount = Object.keys(sel).length;
+      return mkOverlay('Chọn gói cước để thêm vào Block', 660,
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+          h('div', {
+            role: 'tablist', title: '2 hệ thống cùng đổ dữ liệu sản phẩm về — nếu 1 sản phẩm trùng ở cả ECP và FCP, chỉ cần chọn ở đúng 1 tab nguồn là đủ.',
+            style: { display: 'flex', gap: 3, padding: 3, background: 'var(--color-surface-sunken)', borderRadius: 'var(--radius-full)' }
+          },
+            [{ id: 'ecp', label: 'ECP' }, { id: 'fcp', label: 'FCP' }].map(t => {
+              const active = t.id === skuSource;
+              return h('button', {
+                key: t.id, type: 'button', role: 'tab', 'aria-selected': active,
+                onClick: () => this.setState({ blkSkuSource: t.id, blkPickerCat: '', blkPickerSearch: '' }),
+                style: {
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '7px 10px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: active ? 700 : 500,
+                  color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
+                  background: active ? 'var(--color-surface)' : 'transparent',
+                  border: 'none', borderRadius: 'var(--radius-full)',
+                  boxShadow: active ? 'var(--shadow-sm)' : 'none',
+                  cursor: 'pointer', transition: 'color var(--dur-fast), background var(--dur-fast)'
+                }
+              }, t.label);
+            })
+          ),
+          h(DS.Input, { placeholder: 'Tìm kiếm theo mã/tên gói...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch || '', onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) }),
+          h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } },
+            catDefs.map(c => h(DS.Tag, { key: c.id, size: 'sm', selected: (s.blkPickerCat || '') === c.id, onClick: () => this.setState({ blkPickerCat: c.id }) }, c.label))
+          ),
+          h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChk, onChange: v => this.setState({ blkPickerSelected: v ? Object.fromEntries(selectable.map(x => [x.code, true])) : {} }) }),
+          h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 320, overflowY: 'auto', overflowX: 'hidden', border: '1px solid var(--color-border)', borderRadius: 8, padding: 6 } },
+            flt.length ? flt.map(sku => {
+              const already = existingCodes.has(sku.code);
+              const isSel = !!sel[sku.code];
+              const toggle = () => { if (already) return; this.setState(sv => { const ns = Object.assign({}, sv.blkPickerSelected); ns[sku.code] ? delete ns[sku.code] : (ns[sku.code] = true); return { blkPickerSelected: ns }; }); };
+              return h('div', { key: sku.code, onClick: toggle, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, cursor: already ? 'not-allowed' : 'pointer', marginBottom: 2, background: isSel ? 'var(--color-accent-bg)' : already ? 'var(--color-surface-sunken)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent', opacity: already ? 0.55 : 1 } },
+                h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, disabled: already, onChange: toggle })),
+                h('div', { style: { flex: 1, minWidth: 0 } },
+                  h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 1 } },
+                    h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+                    h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group),
+                    already && h('span', { style: { fontSize: 10, fontWeight: 600, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 6px', borderRadius: 4, marginLeft: 'auto' } }, 'Đã thêm')
+                  ),
+                  h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name),
+                  h('div', { style: { fontSize: 11.5, fontWeight: 600, color: 'var(--color-success-text, #10b981)' } }, sku.price)
+                )
+              );
+            }) : h('div', { style: { padding: '24px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy gói phù hợp.')
+          ),
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, selCount + ' gói đã chọn')
+        ),
+        [h(DS.Button, { key: 'c', level: 'tertiary', onClick: close }, 'Hủy'),
+         h(DS.Button, { key: 'ok', level: 'primary', leadingIcon: 'check-line', disabled: selCount === 0, onClick: () => {
+           const allSkus = this.SKUS();
+           const chosen = Object.keys(sel).filter(code => !existingCodes.has(code)).map(code => allSkus.find(x => x.code === code)).filter(Boolean);
+           if (!chosen.length) return;
+           const mk = (sku, i) => {
+             const speedMatch = sku.name.match(/\(([^)]+)\)/);
+             const cleanName = sku.name.replace(/\s*\([^)]*\)\s*$/, '');
+             return { id: Date.now() + i, pdh: sku.code, badge: '', name: cleanName, price: sku.price, download: speedMatch ? speedMatch[1] : '', upload: '', speed: speedMatch ? speedMatch[1] : '', gauge: '50', devices: sku.devices || '', device: sku.devices || '', note: '', btn1Text: 'Đăng ký ngay', btn1Url: '', btn2Url: '' };
+           };
+           if (chosen.length === 1) {
+             this.setState({ blkPickerModal: 'card-add', blkPickerSelected: {}, blkPickerSearch: '', blkPickerCat: '', blkCardForm: mk(chosen[0], 0) });
+           } else {
+             const newCards = chosen.map(mk);
+             this.setState(sv => ({ blkCards: sv.blkCards.concat(newCards), blkPickerModal: null, blkPickerSearch: '', blkPickerCat: '', blkPickerSelected: {} }));
+             this.toast('success', 'Đã thêm', newCards.length + ' gói cước đã được thêm vào Block.');
+           }
+         } }, selCount > 1 ? 'Thêm (' + selCount + ' gói)' : 'Tiếp tục')],
+        'Chọn một hoặc nhiều gói cước từ danh mục sản phẩm — chọn 1 gói sẽ mở màn tuỳ chỉnh hiển thị Card, chọn nhiều gói sẽ thêm nhanh vào danh sách.'
+      );
+    }
+
     // ── Card add / edit ──
     if (pm === 'card-add' || pm === 'card-edit') {
       const isEdit = pm === 'card-edit';
       const cf = s.blkCardForm;
       const setF = (k, v) => this.setState(sv => ({ blkCardForm: Object.assign({}, sv.blkCardForm, { [k]: v }) }));
-      const cardTitle = h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8 } },
-        h(DS.Icon, { name: isEdit ? 'edit-01-line' : 'plus-line', size: 18, color: 'var(--color-accent)' }),
-        isEdit ? 'Chỉnh sửa Card Gói Cước' : 'Thêm Card Gói Mới'
-      );
+      const cardTitle = isEdit ? 'Chỉnh sửa Card Gói Cước' : 'Thêm Card Gói Mới';
       // ── Live preview card ──
       const gaugePct = parseInt(cf.gauge || '50', 10);
       const gaugeRot = -90 + gaugePct * 1.8;
@@ -3903,7 +4001,7 @@ class Component extends DCLogic {
           h('div', { style: { flex: 1, minWidth: 0, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 } },
             h('div', { style: { gridColumn: 'span 3' } },
               this.field('Liên kết Package gốc (từ Product Hub - PDH)',
-                h(DS.Select, { options: [{ value: '', label: '-- Không liên kết (Nhập tay thủ công) --' }, 'PKG-GIGA-01 - Gói Internet Giga 300Mbps', 'PKG-SKY-01 - Gói Internet Sky 1Gbps', 'PKG-GIGA-F1 - Gói Internet Giga F1 300Mbps', 'PKG-SKY-F1 - Gói Internet Sky F1 1Gbps'], value: cf.pdh || '', onChange: v => setF('pdh', v) })
+                h(DS.Select, { options: [{ value: '', label: '-- Không liên kết (Nhập tay thủ công) --' }, ...this.SKUS().map(sku => ({ value: sku.code, label: sku.code + ' - ' + sku.name }))], value: cf.pdh || '', onChange: v => setF('pdh', v) })
               )
             ),
             this.field('Nhãn nổi bật (Badge)', h(DS.Input, { value: cf.badge || '', onChange: e => setF('badge', e.target ? e.target.value : e), placeholder: 'VD: Phù hợp cá nhân, gia đình nhỏ' })),
