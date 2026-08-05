@@ -2362,9 +2362,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.ruleSearch || '').toLowerCase();
     const allRules = this.CHECKOUT_RULES();
-    const channelOptions = [{ value: 'all', label: 'Tất cả kênh' }, ...Array.from(new Set(allRules.map(r => r.channel))).map(c => ({ value: c, label: c }))];
-    const channelF = this.state.ruleChannelFilter || 'all';
-    const rules = allRules.filter(r => (channelF === 'all' || r.channel === channelF) && (!q || r.name.toLowerCase().includes(q)));
+    const rules = allRules.filter(r => !q || r.name.toLowerCase().includes(q));
     const bannerLabel = v => (!v || v === '— Không hiển thị —') ? h('span', { style: { color: 'var(--color-text-subtle)' } }, '—') : v;
     const columns = [
       { key: 'name', header: 'Tên chương trình', render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
@@ -2383,8 +2381,7 @@ class Component extends DCLogic {
       this.listCard(
         this.toolbar(
           h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'wrap', minWidth: 0 } },
-            this.search('Tìm chương trình…', 'ruleSearch'),
-            h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: channelOptions, value: channelF, onChange: v => this.setState({ ruleChannelFilter: v, rules_pg: 1 }) }))
+            this.search('Tìm chương trình…', 'ruleSearch')
           ),
           h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ruleEditor: null }) }, 'Thêm Chương trình mới')
         ),
