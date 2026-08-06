@@ -848,6 +848,7 @@ class Component extends DCLogic {
             return base;
           })(),
       promoList: r && r.promoList ? [...r.promoList] : [],
+      promoListTitle: r && r.promoListTitle ? r.promoListTitle : '',
       gallery: r && r.gallery ? r.gallery.map(x => ({ ...x })) : [],
       videos: r && r.videos ? r.videos.map(x => ({ ...x })) : [],
       faqCat: r && r.faqCat ? r.faqCat : '',
@@ -1630,11 +1631,15 @@ class Component extends DCLogic {
         isDevice && this.field('Tiêu đề ưu đãi', h(DS.Input, { defaultValue: r ? r.promoTitle : '', placeholder: 'VD: Ưu đãi khi mua Camera IQ3' })),
         h('div', null,
           h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Danh sách Ưu đãi & Quà tặng'),
-          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Mỗi dòng hiển thị 1 mục checklist (✓) trên trang chi tiết gói bán.'),
-          h(DS.Textarea, {
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Mỗi dòng hiển thị 1 mục checklist (✓) trên trang chi tiết gói bán.'),
+          this.field('Tiêu đề danh sách', h(DS.Input, {
+            defaultValue: this.state.pkgForm.promoListTitle || '', placeholder: 'VD: Ưu đãi & Quà tặng khi đăng ký',
+            onBlur: e => this.setState(s => ({ pkgForm: { ...s.pkgForm, promoListTitle: e.target ? e.target.value : e } }))
+          })),
+          h('div', { style: { marginTop: 10 } }, h(DS.Textarea, {
             defaultValue: promoList.join('\n'), rows: 5, placeholder: 'Mỗi dòng 1 ưu đãi — VD:\nTặng modem Wi-Fi 6 trị giá 1.200.000đ\nMiễn phí lắp đặt toàn quốc',
             onBlur: e => this.setState(s => ({ pkgForm: { ...s.pkgForm, promoList: (e.target ? e.target.value : e).split('\n').map(x => x.trim()).filter(Boolean) } }))
-          })
+          }))
         )
       ))
     );
