@@ -2336,8 +2336,8 @@ class Component extends DCLogic {
         })
       ),
 
-      // ── Footer actions ──
-      h('div', { style: { display: 'flex', justifyContent: isCustomChild ? 'space-between' : 'flex-end', alignItems: 'center', gap: 10, borderTop: '1px solid var(--color-border)', paddingTop: 16 } },
+      // ── Footer actions (chỉ áp dụng cho form của từng kênh con) ──
+      isChild && h('div', { style: { display: 'flex', justifyContent: isCustomChild ? 'space-between' : 'flex-end', alignItems: 'center', gap: 10, borderTop: '1px solid var(--color-border)', paddingTop: 16 } },
         isCustomChild && h(DS.Button, {
           level: 'tertiary', leadingIcon: 'trash-line',
           onClick: () => this.confirm(
@@ -2349,10 +2349,10 @@ class Component extends DCLogic {
         h(DS.Button, {
           level: 'primary', leadingIcon: 'check-line',
           onClick: () => {
-            if (isChild && isInherit) { this.setState(s => ({ inherit: { ...s.inherit, [cid]: false } })); }
-            this.toast('success', 'Đã lưu', isChild ? 'Cấu hình kênh đã được lưu.' : 'Cấu hình Global đã được cập nhật.');
+            if (isInherit) { this.setState(s => ({ inherit: { ...s.inherit, [cid]: false } })); }
+            this.toast('success', 'Đã lưu', 'Cấu hình kênh đã được lưu.');
           }
-        }, isChild ? 'Lưu cấu hình kênh' : 'Lưu cấu hình Global')
+        }, 'Lưu cấu hình kênh')
       )
     );
   }
