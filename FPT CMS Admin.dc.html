@@ -1562,7 +1562,6 @@ class Component extends DCLogic {
             h('div', { style: { flex: 1 } }, h(DS.Input, { value: it.url, placeholder: 'URL video (YouTube/Vimeo) hoặc tải .mp4…', onChange: e => update(i, 'url', e && e.target ? e.target.value : e) })),
             h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => remove(i) })
           ),
-          h(DS.Input, { value: it.title, placeholder: 'Tiêu đề hiển thị của video…', onChange: e => update(i, 'title', e && e.target ? e.target.value : e) }),
           this.uploadBox('Thumbnail video (tuỳ chọn)', 'JPG / PNG')
         ))
       ),
