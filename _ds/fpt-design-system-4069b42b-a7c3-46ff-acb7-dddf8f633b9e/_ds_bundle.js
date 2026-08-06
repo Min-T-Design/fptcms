@@ -2407,6 +2407,8 @@ function Select({
   error,
   size = "md",
   disabled = false,
+  searchable = false,
+  searchPlaceholder = "Tìm kiếm…",
   style,
   containerStyle,
   ...rest
@@ -2420,10 +2422,13 @@ function Select({
   const current = isControlled ? value : internal;
   const [open, setOpen] = React.useState(false);
   const [menuPos, setMenuPos] = React.useState(null);
+  const [query, setQuery] = React.useState("");
   const ref = React.useRef(null);
+  const searchRef = React.useRef(null);
   const s = SIZES[size] || SIZES.md;
   const invalid = !!error;
   const selected = norm.find(o => o.value === current);
+  const visible = searchable && query ? norm.filter(o => o.label.toLowerCase().includes(query.toLowerCase())) : norm;
   React.useEffect(() => {
     const close = e => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
@@ -2431,6 +2436,12 @@ function Select({
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, []);
+  React.useEffect(() => {
+    if (open) {
+      setQuery("");
+      if (searchable) setTimeout(() => searchRef.current && searchRef.current.focus(), 0);
+    }
+  }, [open]);
   // Menu is measured from the trigger and rendered fixed-to-viewport instead of
   // being confined to the relatively-positioned wrapper, so an ancestor's
   // overflow:hidden/auto (e.g. a table card) can never clip it; flips upward
@@ -2542,7 +2553,35 @@ function Select({
       overflowY: "auto",
       animation: (menuPos.dir === "up" ? "zen-select-up" : "zen-select-down") + " .16s cubic-bezier(.2,0,0,1)"
     }
-  }, norm.map(o => {
+  }, searchable && /*#__PURE__*/React.createElement("input", {
+    ref: searchRef,
+    type: "text",
+    value: query,
+    onChange: e => setQuery(e.target.value),
+    onClick: e => e.stopPropagation(),
+    placeholder: searchPlaceholder,
+    style: {
+      width: "100%",
+      boxSizing: "border-box",
+      marginBottom: 6,
+      padding: "7px 9px",
+      fontFamily: "var(--font-sans)",
+      fontSize: s.fs,
+      color: "var(--color-text)",
+      background: "var(--color-surface)",
+      border: "1px solid var(--color-border)",
+      borderRadius: "var(--radius-sm)",
+      outline: "none"
+    }
+  }), searchable && visible.length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "10px 8px",
+      textAlign: "center",
+      fontFamily: "var(--font-sans)",
+      fontSize: 13,
+      color: "var(--color-text-subtle)"
+    }
+  }, "Không tìm thấy kết quả"), visible.map(o => {
     const active = o.value === current;
     return /*#__PURE__*/React.createElement("div", {
       key: o.value,

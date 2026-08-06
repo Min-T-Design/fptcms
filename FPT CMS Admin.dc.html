@@ -692,7 +692,7 @@ class Component extends DCLogic {
         promoList: ['Tặng modem Wi-Fi 6 trị giá 1.200.000đ', 'Miễn phí lắp đặt toàn quốc', 'Giảm 5% khi thanh toán online qua Visa/Mastercard/MoMo'],
         gallery: [{ id: 1, alt: 'Modem Wi-Fi 6 đi kèm gói Internet Giga' }, { id: 2, alt: 'Gia đình sử dụng Internet Giga' }, { id: 3, alt: 'Kỹ thuật viên lắp đặt Internet Giga' }],
         videos: [{ id: 1, title: 'Giới thiệu Internet Giga', url: 'https://youtu.be/demo-giga' }],
-        faqIds: [1, 2], midBanners: [{ id: 1, active: true }],
+        faqCat: 'Thanh toán cước', faqList: [{ id: 1, hidden: false }, { id: 4, hidden: true }, { id: 7, hidden: false }, { id: 8, hidden: false }], midBanners: [{ id: 1, active: true }],
         createdAt: '02/05/2026 09:10', createdBy: 'Admin User', updatedAt: '20/05/2026 13:40', updatedBy: '24092 - Nguyễn' },
       { id: 'INT-GIGA__hifpt', skuCode: 'INT-GIGA', channel: 'hifpt', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet Giga', slug: 'internet-giga',
@@ -703,7 +703,7 @@ class Component extends DCLogic {
         pkgDesc: '150Mbps ổn định\nModem Wi-Fi 6 miễn phí',
         shortDesc: 'Gói Internet Giga tốc độ 150Mbps.',
         longDesc: 'Tốc độ 150Mbps ổn định: Duy trì tốc độ 150Mbps ổn định, phù hợp nhu cầu gia đình sử dụng hàng ngày.\nModem Wi-Fi 6 miễn phí: Trang bị modem Wi-Fi 6 đi kèm, không phát sinh phí thuê thiết bị.',
-        promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [1], midBanners: [],
+        promoIcon: 'star-01-line', promoList: [], videos: [], faqCat: 'Thanh toán cước', faqList: [{ id: 1, hidden: false }, { id: 4, hidden: false }, { id: 7, hidden: false }, { id: 8, hidden: false }], midBanners: [],
         createdAt: '02/05/2026 09:10', createdBy: 'Admin User', updatedAt: '18/05/2026 10:05', updatedBy: 'Admin User' },
       { id: 'INT-SKY__fptvn', skuCode: 'INT-SKY', channel: 'fptvn', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet Sky - Tốc độ Gigabit', slug: 'internet-sky',
@@ -721,13 +721,13 @@ class Component extends DCLogic {
         pkgDesc: 'Tốc độ Gigabit 1Gbps\nƯu tiên băng thông giờ cao điểm',
         shortDesc: 'Internet Sky mang tốc độ Gigabit cho trải nghiệm mượt mà.',
         longDesc: 'Tốc độ Gigabit 1Gbps: Tốc độ tải xuống lên đến 1Gbps, đáp ứng nhu cầu streaming 4K, chơi game và làm việc trực tuyến không giật lag.\nƯu tiên băng thông giờ cao điểm: Luôn duy trì tốc độ ổn định ngay cả vào khung giờ sử dụng cao điểm trong ngày.',
-        promoIcon: 'zap-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        promoIcon: 'zap-line', promoList: [], videos: [], faqCat: '', faqList: [], midBanners: [],
         createdAt: '28/04/2026 08:30', createdBy: 'FI-25128', updatedAt: '20/05/2026 14:00', updatedBy: '24092 - Nguyễn' },
       { id: 'INT-SKY__tdw', skuCode: 'INT-SKY', channel: 'tdw', status: 'inactive', packageType: 'Dịch vụ',
         displayName: 'Internet Sky', slug: 'internet-sky',
         tags: [], tagText: '', tagColor: '#ef4444', tagTextColor: '#ffffff', priceTooltip: '',
         bundledFee: '', attributes: [], bundledProducts: [], privTitle: '', privileges: [],
-        pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqCat: '', faqList: [], midBanners: [],
         createdAt: '28/04/2026 08:31', createdBy: 'FI-25128', updatedAt: '28/04/2026 08:31', updatedBy: 'FI-25128' },
       { id: 'INT-META__fptvn', skuCode: 'INT-META', channel: 'fptvn', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet Meta - Chuẩn Wi-Fi 6E', slug: 'internet-meta',
@@ -738,7 +738,7 @@ class Component extends DCLogic {
         pkgDesc: 'Chuẩn Wi-Fi 6E băng tần 6GHz\nThiết bị đi kèm miễn phí',
         shortDesc: 'Internet Meta tích hợp thiết bị Wi-Fi 6E thế hệ mới.',
         longDesc: 'Chuẩn Wi-Fi 6E băng tần 6GHz: Công nghệ Wi-Fi 6E mới nhất với băng tần 6GHz, giảm nhiễu sóng và tăng tốc độ kết nối vượt trội.\nThiết bị đi kèm miễn phí: Trang bị thiết bị Wi-Fi 6E chính hãng miễn phí, không phát sinh chi phí thuê thiết bị hàng tháng.',
-        promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        promoIcon: 'star-01-line', promoList: [], videos: [], faqCat: '', faqList: [], midBanners: [],
         createdAt: '19/05/2026 09:00', createdBy: 'Admin User', updatedAt: '19/05/2026 09:15', updatedBy: 'Admin User' },
       { id: 'CAM-IQ3__fptvn', skuCode: 'CAM-IQ3', channel: 'fptvn', status: 'active', packageType: 'Thiết bị',
         displayName: 'FPT Camera IQ3 - An ninh thông minh', slug: 'fpt-camera-iq3',
@@ -762,7 +762,7 @@ class Component extends DCLogic {
         pkgDesc: 'Full HD, góc rộng 130 độ\nCảnh báo chuyển động tức thời\nTặng thẻ nhớ 32GB',
         shortDesc: 'Camera an ninh Full HD, góc rộng, cảnh báo chuyển động tức thời.', longDesc: '',
         promoIcon: 'star-01-line', promoList: ['Tặng thẻ nhớ 32GB', 'Giảm 10% cho đơn hàng đầu tiên qua ZaloPay'],
-        videos: [], faqIds: [], midBanners: [{ id: 1, active: true }],
+        videos: [], faqCat: '', faqList: [], midBanners: [{ id: 1, active: true }],
         createdAt: '20/05/2026 09:30', createdBy: 'FI-25128', updatedAt: '20/05/2026 09:30', updatedBy: 'FI-25128' },
       { id: 'CAM-IQ3__hifpt', skuCode: 'CAM-IQ3', channel: 'hifpt', status: 'active', packageType: 'Thiết bị',
         displayName: 'FPT Camera IQ3', slug: 'fpt-camera-iq3',
@@ -781,7 +781,7 @@ class Component extends DCLogic {
           'Full HD sắc nét, góc rộng 110°',
           'Cảnh báo chuyển động tức thời qua App HiFPT',
         ],
-        pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqCat: '', faqList: [], midBanners: [],
         createdAt: '20/05/2026 09:31', createdBy: 'FI-25128', updatedAt: '20/05/2026 09:31', updatedBy: 'FI-25128' },
       { id: 'SA-SMAX__fptvn', skuCode: 'SA-SMAX', channel: 'fptvn', status: 'active', packageType: 'SA',
         displayName: 'FPT Play SMax - Giải trí không giới hạn', slug: 'fpt-play-smax',
@@ -806,7 +806,7 @@ class Component extends DCLogic {
         pkgDesc: 'Kho nội dung HBO, K+, FPT Play\nTặng kèm FPT Play Box',
         shortDesc: 'FPT Play SMax - trải nghiệm giải trí đỉnh cao.',
         longDesc: 'Kho nội dung khổng lồ: Trọn bộ kênh HBO, K+, FPT Play và VTV Cab cùng hàng ngàn phim, show giải trí bản quyền.\nXem đa thiết bị: Đăng nhập cùng lúc trên tối đa 2 thiết bị — Smart TV, điện thoại, máy tính bảng.\nChất lượng Full HD/4K: Trải nghiệm hình ảnh sắc nét Full HD hoặc 4K tùy nội dung, không quảng cáo gián đoạn.',
-        promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        promoIcon: 'star-01-line', promoList: [], videos: [], faqCat: '', faqList: [], midBanners: [],
         createdAt: '18/05/2026 15:30', createdBy: '24092 - Nguyễn', updatedAt: '18/05/2026 15:30', updatedBy: '24092 - Nguyễn' },
       { id: 'DEV-WIFI7__fptvn', skuCode: 'DEV-WIFI7', channel: 'fptvn', status: 'draft', packageType: 'Thiết bị',
         displayName: 'Router Wi-Fi 7 - Chuẩn kết nối tương lai', slug: 'router-wifi-7',
@@ -826,13 +826,13 @@ class Component extends DCLogic {
           'Phủ sóng rộng: Tối ưu cho nhà 2-3 tầng, giảm điểm chết sóng',
           'Bảo hành chính hãng: 24 tháng, đổi mới trong 30 ngày đầu nếu lỗi',
         ],
-        pkgDesc: 'Chuẩn Wi-Fi 7 tốc độ vượt trội', shortDesc: 'Router Wi-Fi 7 tốc độ vượt trội, sẵn sàng cho tương lai.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        pkgDesc: 'Chuẩn Wi-Fi 7 tốc độ vượt trội', shortDesc: 'Router Wi-Fi 7 tốc độ vượt trội, sẵn sàng cho tương lai.', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqCat: '', faqList: [], midBanners: [],
         createdAt: '16/05/2026 14:22', createdBy: 'FI-25128', updatedAt: '16/05/2026 14:22', updatedBy: 'FI-25128' },
       { id: 'INT-LUX500__tdw', skuCode: 'INT-LUX500', channel: 'tdw', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet LUX 500', slug: 'internet-lux-500',
         tags: [], tagText: '', tagColor: '#ef4444', tagTextColor: '#ffffff', priceTooltip: '',
         bundledFee: '', attributes: [], bundledProducts: [], privTitle: '', privileges: [],
-        pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqIds: [], midBanners: [],
+        pkgDesc: '', shortDesc: '', longDesc: '', promoIcon: 'star-01-line', promoList: [], videos: [], faqCat: '', faqList: [], midBanners: [],
         createdAt: '18/05/2026 16:20', createdBy: 'Admin User', updatedAt: '18/05/2026 16:20', updatedBy: 'Admin User' },
     ];
   }
@@ -850,7 +850,8 @@ class Component extends DCLogic {
       promoList: r && r.promoList ? [...r.promoList] : [],
       gallery: r && r.gallery ? r.gallery.map(x => ({ ...x })) : [],
       videos: r && r.videos ? r.videos.map(x => ({ ...x })) : [],
-      faqIds: r && r.faqIds ? [...r.faqIds] : [],
+      faqCat: r && r.faqCat ? r.faqCat : '',
+      faqList: r && r.faqList ? r.faqList.map(x => ({ ...x })) : [],
       midBanners: r && r.midBanners ? r.midBanners.map(x => ({ ...x })) : [],
     };
   }
@@ -967,7 +968,8 @@ class Component extends DCLogic {
         this.detailRow('Đặc tính nổi bật', (r.attributes || []).length ? r.attributes.length + ' đặc tính' : '—'),
         this.detailRow('Mô tả ngắn', r.shortDesc),
         this.detailRow('Đặc quyền', (r.privileges || []).length ? r.privileges.length + ' đặc quyền' : '—'),
-        this.detailRow('FAQ đính kèm', (r.faqIds || []).length ? r.faqIds.length + ' câu hỏi' : '—'),
+        this.detailRow('Danh mục FAQ', r.faqCat || '—'),
+        this.detailRow('FAQ đính kèm', (r.faqList || []).length ? r.faqList.length + ' câu hỏi (' + (r.faqList || []).filter(x => !x.hidden).length + ' đang hiển thị)' : '—'),
         this.detailRow('Ngày tạo', r.createdAt + ' · ' + r.createdBy),
         this.detailRow('Cập nhật lần cuối', r.updatedAt + ' · ' + r.updatedBy)
       ),
@@ -1641,31 +1643,60 @@ class Component extends DCLogic {
   // ---------- Tab 3: FAQ ----------
   renderSkuEditorFaq(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const faqIds = this.state.pkgForm.faqIds || [];
-    const allFaqs = this.FAQS();
-    const selected = faqIds.map(id => allFaqs.find(f => f.id === id)).filter(Boolean);
-    const remove = (id) => this.setState(s => ({ pkgForm: { ...s.pkgForm, faqIds: s.pkgForm.faqIds.filter(x => x !== id) } }));
+    const faqCat = this.state.pkgForm.faqCat || '';
+    const faqCats = this.FAQ_CATS();
+    const allFaqs = this.state.faqItems || this.FAQS();
+    const savedList = this.state.pkgForm.faqList || [];
+    // Danh sách hiển thị luôn đồng bộ với toàn bộ câu hỏi đang có trong danh mục đã chọn,
+    // giữ lại thứ tự / trạng thái ẩn-hiện mà admin đã tuỳ chỉnh (nếu có).
+    const catFaqs = faqCat ? allFaqs.filter(f => f.cat === faqCat) : [];
+    const list = catFaqs.slice()
+      .sort((a, b) => {
+        const ia = savedList.findIndex(x => x.id === a.id);
+        const ib = savedList.findIndex(x => x.id === b.id);
+        if (ia === -1 && ib === -1) return (a.order || 0) - (b.order || 0);
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      })
+      .map(f => ({ ...f, hidden: (savedList.find(x => x.id === f.id) || {}).hidden || false }));
+
+    const writeList = (next) => this.setState(s => ({ pkgForm: { ...s.pkgForm, faqList: next.map(f => ({ id: f.id, hidden: !!f.hidden })) } }));
+    const selectCat = (val) => {
+      const apply = () => {
+        const qs = allFaqs.filter(f => f.cat === val);
+        this.setState(s => ({ pkgForm: { ...s.pkgForm, faqCat: val, faqList: qs.map(f => ({ id: f.id, hidden: false })) } }));
+      };
+      if (faqCat && faqCat !== val && list.length > 0) {
+        this.confirm('Đổi danh mục FAQ?', 'Danh sách câu hỏi, thứ tự và trạng thái ẩn/hiện hiện tại sẽ được thay bằng toàn bộ câu hỏi của danh mục "' + val + '".', () => { apply(); this.closeModal(); }, true);
+      } else apply();
+    };
+    const toggleHidden = (id) => writeList(list.map(f => f.id === id ? { ...f, hidden: !f.hidden } : f));
     const move = (from, to) => {
-      if (to < 0 || to >= faqIds.length) return;
-      const next = faqIds.slice(); const [id] = next.splice(from, 1); next.splice(to, 0, id);
-      this.setState(s => ({ pkgForm: { ...s.pkgForm, faqIds: next } }));
+      if (to < 0 || to >= list.length) return;
+      const next = list.slice(); const [f] = next.splice(from, 1); next.splice(to, 0, f);
+      writeList(next);
     };
-    const openPicker = () => {
-      this.setState({ pkgFaqPickerSel: [...faqIds], pkgFaqPickerQ: '' });
-      this.openModal({ kind: 'form', title: 'Đính kèm FAQ từ thư viện', description: 'Chọn câu hỏi để hiển thị trên trang gói bán', render: () => this.pkgFaqPickerModal() });
-    };
+
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-      h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 } },
-        h('div', null,
-          h('div', { style: { fontSize: 13, fontWeight: 700 } }, 'FAQ đính kèm'),
-          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Câu hỏi thường gặp hiển thị trên trang gói bán · kéo thả để sắp xếp')
-        ),
-        h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: openPicker }, 'Thêm câu hỏi hiển thị')
+      h('div', null,
+        h('div', { style: { fontSize: 13, fontWeight: 700 } }, 'FAQ đính kèm'),
+        h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Chọn danh mục từ module Quản lý FAQ để tải toàn bộ câu hỏi thuộc danh mục đó · kéo thả để sắp xếp thứ tự · bật/tắt để ẩn hiện từng câu hỏi')
       ),
-      selected.length === 0
-        ? h('div', { style: { padding: 24, textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10 } }, 'Chưa có câu hỏi nào được đính kèm.')
+      h('div', { style: { maxWidth: 360 } }, this.field('Danh mục FAQ', h(DS.Select, {
+        placeholder: 'Chọn danh mục…',
+        searchable: true,
+        searchPlaceholder: 'Tìm danh mục FAQ…',
+        value: faqCat,
+        options: faqCats.map(c => ({ value: c.name, label: c.name })),
+        onChange: v => selectCat(v)
+      }), true)),
+      !faqCat
+        ? h('div', { style: { padding: 24, textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10 } }, 'Vui lòng chọn danh mục FAQ để tải danh sách câu hỏi.')
+        : list.length === 0
+        ? h('div', { style: { padding: 24, textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10 } }, 'Danh mục này chưa có câu hỏi nào trong Quản lý FAQ.')
         : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-            selected.map((f, i) => h('div', {
+            list.map((f, i) => h('div', {
                 key: f.id, draggable: true,
                 onDragStart: e => { e.dataTransfer.effectAllowed = 'move'; this.setState({ pkgFaqDragIdx: i }); },
                 onDragOver: e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.setState({ pkgFaqDragOverIdx: i }); },
@@ -1675,46 +1706,16 @@ class Component extends DCLogic {
                 style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1px solid ' + (this.state.pkgFaqDragOverIdx === i ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 10, background: this.state.pkgFaqDragOverIdx === i ? 'var(--color-accent-bg)' : 'transparent', opacity: this.state.pkgFaqDragIdx === i ? 0.4 : 1, transition: 'all .12s' }
               },
               h(DS.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
-              h('div', { style: { flex: 1 } },
+              h('div', { style: { flex: 1, opacity: f.hidden ? 0.5 : 1 } },
                 h('div', { style: { fontSize: 13, fontWeight: 600 } }, f.q),
                 h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 } }, f.a)
               ),
-              h(DS.IconButton, { icon: 'x-circle-line', label: 'Gỡ', level: 'tertiary', size: 'sm', onClick: () => remove(f.id) })
-            ))
-          )
-    );
-  }
-  pkgFaqPickerModal() {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const q = (this.state.pkgFaqPickerQ || '').toLowerCase();
-    const sel = this.state.pkgFaqPickerSel || [];
-    const all = this.FAQS().filter(f => !q || (f.q + ' ' + f.cat).toLowerCase().includes(q));
-    const cats = Array.from(new Set(all.map(f => f.cat)));
-    const toggle = (id) => this.setState(s => ({ pkgFaqPickerSel: (s.pkgFaqPickerSel || []).includes(id) ? s.pkgFaqPickerSel.filter(x => x !== id) : [...(s.pkgFaqPickerSel || []), id] }));
-    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4, width: 520, maxWidth: '100%' } },
-      h(DS.Input, { placeholder: 'Tìm câu hỏi theo từ khoá…', leadingIcon: 'search-medium-line', value: this.state.pkgFaqPickerQ || '', onChange: e => this.setState({ pkgFaqPickerQ: e && e.target ? e.target.value : e }) }),
-      h('div', { className: 'fpt-scroll', style: { maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 } },
-        cats.length === 0 ? h('div', { style: { textAlign: 'center', padding: 32, color: 'var(--color-text-muted)', fontSize: 13 } }, 'Không tìm thấy câu hỏi') :
-        cats.map(cat => h('div', { key: cat },
-          h('div', { style: { fontSize: 11, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--color-text-muted)', fontWeight: 700, marginBottom: 8 } }, cat),
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-            all.filter(f => f.cat === cat).map(f => h('label', { key: f.id, onClick: () => toggle(f.id), style: { display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderRadius: 8, border: sel.includes(f.id) ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)', background: sel.includes(f.id) ? 'var(--color-accent-bg)' : 'var(--color-surface)', cursor: 'pointer' } },
-              h(DS.Checkbox, { checked: sel.includes(f.id), onChange: () => toggle(f.id), label: '' }),
-              h('div', { style: { flex: 1 } },
-                h('div', { style: { fontSize: 13, fontWeight: 500 } }, f.q),
-                h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 } }, f.a)
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
+                h('span', { style: { width: 92, textAlign: 'right', fontSize: 13, fontWeight: 500, color: f.hidden ? 'var(--color-text-subtle)' : 'var(--color-text)' } }, f.hidden ? 'Đang ẩn' : 'Đang hiển thị'),
+                h(DS.Switch, { checked: !f.hidden, onChange: () => toggleHidden(f.id) })
               )
             ))
           )
-        ))
-      ),
-      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTop: '1px solid var(--color-border)' } },
-        h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, sel.length + ' câu hỏi được chọn'),
-        h('div', { style: { display: 'flex', gap: 10 } },
-          h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy'),
-          h(DS.Button, { level: 'primary', onClick: () => { this.setState(s => ({ pkgForm: { ...s.pkgForm, faqIds: [...sel] } })); this.closeModal(); this.toast('success', 'Đã đính kèm FAQ', sel.length + ' câu hỏi đã được gắn vào gói bán.'); } }, 'Xác nhận (' + sel.length + ')')
-        )
-      )
     );
   }
 
@@ -2822,12 +2823,20 @@ class Component extends DCLogic {
     { id: 4, cat: 'Thanh toán cước', q: 'Có thể thanh toán qua Momo không?', a: 'Có, FPT Telecom hỗ trợ thanh toán qua ví MoMo. Mở ứng dụng MoMo, chọn Thanh toán hóa đơn, tìm FPT Telecom và nhập mã khách hàng.', lang: 'Tiếng Việt', order: 2, status: 'draft' },
     { id: 5, cat: 'Dịch vụ GTGT', q: 'Fsafe bảo mật là gì và có tính phí riêng không?', a: 'Fsafe là dịch vụ bảo mật mạng do FPT Telecom cung cấp, bảo vệ thiết bị khỏi virus, phần mềm độc hại. Một số gói Internet đã bao gồm Fsafe miễn phí trong thời gian đầu.', lang: 'Tiếng Việt', order: 1, status: 'active' },
     { id: 6, cat: 'Khắc phục sự cố', q: 'How to change the Wi-Fi password of FPT?', a: 'You can change the Wi-Fi password via the Hi FPT app (download the app, log in, go to Modem Management to change the name/password), or access 192.168.1.1 in your browser.', lang: 'English', order: 2, status: 'active' },
+    { id: 7, cat: 'Thanh toán cước', q: 'Thanh toán trễ hạn có bị cắt dịch vụ không?', a: 'Nếu quá 5 ngày kể từ ngày đến hạn thanh toán mà chưa thanh toán, dịch vụ có thể bị tạm ngưng. FPT Telecom sẽ gửi thông báo nhắc nhở qua SMS/App Hi FPT trước khi cắt dịch vụ.', lang: 'Tiếng Việt', order: 3, status: 'active' },
+    { id: 8, cat: 'Thanh toán cước', q: 'Làm sao để nhận hóa đơn điện tử hàng tháng?', a: 'Khách hàng có thể đăng ký nhận hóa đơn điện tử qua email trong mục Quản lý tài khoản trên ứng dụng Hi FPT, hoặc liên hệ tổng đài 1900 6600 để được hỗ trợ đăng ký.', lang: 'Tiếng Việt', order: 4, status: 'active' },
+    { id: 9, cat: 'Khắc phục sự cố', q: 'Đèn tín hiệu trên modem báo đỏ nghĩa là gì?', a: 'Đèn đỏ thường báo hiệu mất kết nối đường truyền. Vui lòng kiểm tra dây cáp quang, khởi động lại modem; nếu đèn vẫn đỏ, liên hệ hotline 1900 6600 để kỹ thuật viên hỗ trợ.', lang: 'Tiếng Việt', order: 3, status: 'active' },
+    { id: 10, cat: 'Khắc phục sự cố', q: 'Tốc độ mạng chậm hơn so với gói đã đăng ký phải làm sao?', a: 'Kiểm tra số lượng thiết bị đang kết nối cùng lúc, khởi động lại modem, hoặc đo tốc độ tại speedtest.fpt.vn. Nếu tốc độ vẫn thấp hơn cam kết, liên hệ tổng đài để được kiểm tra đường truyền.', lang: 'Tiếng Việt', order: 4, status: 'active' },
+    { id: 11, cat: 'Chính sách & Thủ tục', q: 'Có thể chuyển đổi gói cước giữa chừng hợp đồng không?', a: 'Có, khách hàng có thể nâng/hạ gói cước bất kỳ lúc nào qua ứng dụng Hi FPT hoặc tổng đài 1900 6600. Gói mới sẽ áp dụng từ kỳ cước tiếp theo.', lang: 'Tiếng Việt', order: 3, status: 'active' },
+    { id: 12, cat: 'Chính sách & Thủ tục', q: 'Thủ tục hủy dịch vụ cần những gì?', a: 'Khách hàng liên hệ tổng đài 1900 6600 hoặc ra điểm giao dịch FPT gần nhất, cung cấp thông tin hợp đồng và lý do hủy để được xử lý theo chính sách hiện hành.', lang: 'Tiếng Việt', order: 4, status: 'active' },
+    { id: 13, cat: 'Dịch vụ GTGT', q: 'FPT Play có tính phí thêm khi đăng ký kèm gói Internet không?', a: 'Một số gói Internet đã bao gồm FPT Play VIP miễn phí trong thời gian ưu đãi; sau thời gian này khách hàng có thể tiếp tục sử dụng với mức phí ưu đãi dành cho khách hàng FPT Telecom.', lang: 'Tiếng Việt', order: 2, status: 'active' },
+    { id: 14, cat: 'Dịch vụ GTGT', q: 'Camera AI có cần đăng ký thêm gói Cloud không?', a: 'Camera hoạt động độc lập với bộ nhớ trong, tuy nhiên để lưu trữ trực tuyến và xem lại từ xa, khách hàng nên đăng ký thêm gói Cloud Camera theo nhu cầu lưu trữ.', lang: 'Tiếng Việt', order: 3, status: 'active' },
   ]; }
   FAQ_CATS() { return [
-    { id: 1, name: 'Thanh toán cước', order: 1, count: 2, lang: 'Tiếng Việt', status: 'active' },
-    { id: 2, name: 'Khắc phục sự cố', order: 2, count: 2, lang: 'Tiếng Việt', status: 'active' },
-    { id: 3, name: 'Chính sách & Thủ tục', order: 3, count: 1, lang: 'Tiếng Việt', status: 'active' },
-    { id: 4, name: 'Dịch vụ GTGT', order: 4, count: 1, lang: 'Tiếng Việt', status: 'active' },
+    { id: 1, name: 'Thanh toán cước', order: 1, count: 4, lang: 'Tiếng Việt', status: 'active' },
+    { id: 2, name: 'Khắc phục sự cố', order: 2, count: 4, lang: 'Tiếng Việt', status: 'active' },
+    { id: 3, name: 'Chính sách & Thủ tục', order: 3, count: 3, lang: 'Tiếng Việt', status: 'active' },
+    { id: 4, name: 'Dịch vụ GTGT', order: 4, count: 3, lang: 'Tiếng Việt', status: 'active' },
   ]; }
   BADGE_TAG_CATEGORIES() {
     return [
