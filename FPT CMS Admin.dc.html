@@ -961,7 +961,6 @@ class Component extends DCLogic {
         this.detailRow('Loại sản phẩm', r.packageType || '—'),
         this.detailRow('Giá Min', sku ? this.PKG_QLCS_META(sku).giaMin : '—'),
         this.detailRow('Giá Max', sku ? this.PKG_QLCS_META(sku).giaMax : '—'),
-        this.detailRow('Kênh bán', ch ? ch.name : r.channel),
         this.detailRow('Tên hiển thị trên kênh', r.displayName),
         this.detailRow('URL Slug', 'fpt.vn/' + (r.slug || '—')),
         this.detailRow('Trạng thái hiển thị', this.statusBadge(r.status)),
