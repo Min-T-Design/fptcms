@@ -867,7 +867,6 @@ class Component extends DCLogic {
     const typeF = this.state.skuTypeFilter || 'all';
     const sourceF = this.state.skuSourceFilter || 'all';
     const skuByCode = new Map(this.SKUS().map(s => [s.code, s]));
-    const channelMap = new Map(this.PKG_CHANNELS().map(c => [c.id, c]));
     const all = this.PKG_CONTENTS();
     const data = all.filter(r => {
       const sku = skuByCode.get(r.skuCode);
@@ -906,10 +905,6 @@ class Component extends DCLogic {
       { key: 'act', header: 'Thao tác nhanh', width: 110, align: 'right',
         render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openSkuEditor(r) },
-          { icon: 'trash-line', label: 'Xóa', onClick: () => {
-            const c = channelMap.get(r.channel);
-            this.confirm('Xóa nội dung sản phẩm?', '"' + (r.displayName || r.skuCode) + '" trên kênh ' + (c ? c.name : r.channel) + ' sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa nội dung sản phẩm.'); }, true);
-          } },
         ]) },
     ];
 
@@ -2456,7 +2451,7 @@ class Component extends DCLogic {
   }
   renderRuleEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ ruleEditor: undefined, ruleSkuSelected: undefined, ruleSkuGroup: undefined, ruleSkuQ: undefined, ruleSkuCheckAll: undefined, ruleSectionsOpen: undefined, ruleActive: undefined, rulePayModalFreq: undefined });
+    const isNew = !r; const back = () => this.setState({ ruleEditor: undefined, ruleSkuSelected: undefined, ruleSkuGroup: undefined, ruleSkuSource: undefined, ruleSkuQ: undefined, ruleSkuCheckAll: undefined, ruleSectionsOpen: undefined, ruleActive: undefined, rulePayModalFreq: undefined });
     const ruleActive = this.state.ruleActive !== undefined ? this.state.ruleActive : (r ? r.status === 'active' : true);
     const rulePayModalFreq = this.state.rulePayModalFreq !== undefined ? this.state.rulePayModalFreq : (r && r.payModalFreq === 'Mỗi lần vào' ? 'Mỗi lần vào' : '1 lần/phiên');
     const openSections = this.state.ruleSectionsOpen || { info: true, reg: false, pay: false, done: false };
@@ -2465,9 +2460,12 @@ class Component extends DCLogic {
     const selectedSkus = this.state.ruleSkuSelected !== undefined ? this.state.ruleSkuSelected : (r ? r.skus : []);
     const groupLabelMap = { Internet: 'Internet', Camera: 'Camera', 'Truyền hình': 'TV', Cloud: 'Thiết bị' };
     const filterBtns = [{ id: 'all', label: 'Tất cả' }, ...Array.from(new Set(skus.map(s => s.group))).map(g => ({ id: g, label: groupLabelMap[g] || g }))];
+    // ── Tab bậc 1 — nguồn hệ thống: ECP / FCP (đồng bộ với "Danh sách sản phẩm" ở module Phương thức thanh toán) ──
+    const sourceTabDefs = [{ id: 'ecp', label: 'ECP' }, { id: 'fcp', label: 'FCP' }];
+    const skuSourceF = this.state.ruleSkuSource || 'ecp';
     const skuGroupF = this.state.ruleSkuGroup || 'all';
     const skuQ = (this.state.ruleSkuQ || '').toLowerCase();
-    const filteredSkus = skus.filter(s => (skuGroupF === 'all' || s.group === skuGroupF) && (!skuQ || s.code.toLowerCase().includes(skuQ) || s.name.toLowerCase().includes(skuQ)));
+    const filteredSkus = skus.filter(s => (s.source || 'ECP').toLowerCase() === skuSourceF && (skuGroupF === 'all' || s.group === skuGroupF) && (!skuQ || s.code.toLowerCase().includes(skuQ) || s.name.toLowerCase().includes(skuQ)));
     const toggleSku = code => { const next = selectedSkus.includes(code) ? selectedSkus.filter(c => c !== code) : [...selectedSkus, code]; this.setState({ ruleSkuSelected: next }); };
     const bannerOptions = ['Banner Hero Hè 2026', 'Banner Wi-Fi 7', 'Banner Camera AI', 'Banner Thanh toán An Tâm', 'Banner Cảm ơn', 'Banner Tải App HiFPT'];
     const popupOptions = ['Popup Flash Sale', 'Popup Camera AI', 'Popup Ưu đãi Thanh toán', 'Popup Nhập mã KM', 'Popup Tri ân Khách hàng'];
@@ -2492,16 +2490,43 @@ class Component extends DCLogic {
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, alignItems: 'start' } },
             h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px' } },
               h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } },
-                'Chọn gói bán áp dụng (SKU)', h('span', { style: { color: 'var(--color-danger)' } }, ' *')
+                'Danh sách sản phẩm', h('span', { style: { color: 'var(--color-danger)' } }, ' *')
               ),
+
+              // ── Bậc 1 (chính): nguồn hệ thống ECP / FCP — pill-tab to, nổi bật để phân biệt rõ với bộ lọc danh mục bên dưới ──
+              h('div', {
+                role: 'tablist', title: '2 hệ thống cùng đổ dữ liệu sản phẩm về — nếu 1 sản phẩm trùng ở cả ECP và FCP, chỉ cần chọn ở đúng 1 tab nguồn là đủ.',
+                style: { display: 'flex', gap: 3, padding: 3, background: 'var(--color-surface-sunken)', borderRadius: 'var(--radius-full)', marginBottom: 10 }
+              },
+                sourceTabDefs.map(t => {
+                  const active = t.id === skuSourceF;
+                  return h('button', {
+                    key: t.id, type: 'button', role: 'tab', 'aria-selected': active,
+                    onClick: () => this.setState({ ruleSkuSource: t.id, ruleSkuGroup: 'all', ruleSkuQ: '' }),
+                    style: {
+                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '7px 10px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: active ? 700 : 500,
+                      color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
+                      background: active ? 'var(--color-surface)' : 'transparent',
+                      border: 'none', borderRadius: 'var(--radius-full)',
+                      boxShadow: active ? 'var(--shadow-sm)' : 'none',
+                      cursor: 'pointer', transition: 'color var(--dur-fast), background var(--dur-fast)'
+                    }
+                  }, t.label);
+                })
+              ),
+
               h('div', { style: { marginBottom: 6 } },
                 h(DS.Checkbox, { label: 'Chọn tất cả', checked: !!this.state.ruleSkuCheckAll, onChange: v => this.setState({ ruleSkuCheckAll: v, ruleSkuSelected: v ? filteredSkus.map(s => s.code) : [] }) })
               ),
               h('div', { style: { marginBottom: 8 } },
                 h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.ruleSkuQ || '', onChange: e => this.setState({ ruleSkuQ: e.target ? e.target.value : e }) })
               ),
+
+              // ── Bậc 2 (phụ): danh mục sản phẩm — chip nhỏ, thuộc phạm vi tab nguồn đang chọn ──
+              h('div', { style: { fontSize: 9.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 } }, 'Danh mục'),
               h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
-                filterBtns.map(f => h(DS.Tag, { key: f.id, selected: skuGroupF === f.id, onClick: () => this.setState({ ruleSkuGroup: f.id }) }, f.label))
+                filterBtns.map(f => h(DS.Tag, { key: f.id, size: 'sm', selected: skuGroupF === f.id, onClick: () => this.setState({ ruleSkuGroup: f.id }) }, f.label))
               ),
               h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 200, overflowY: 'auto', overflowX: 'hidden' } },
                 filteredSkus.length ? filteredSkus.map(s => { const isSel = selectedSkus.includes(s.code); return h('div', { key: s.code, onClick: () => toggleSku(s.code), style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2, background: isSel ? 'var(--color-accent-bg)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent' } },
