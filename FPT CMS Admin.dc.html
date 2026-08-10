@@ -1139,11 +1139,9 @@ class Component extends DCLogic {
         h(DS.Button, { level: 'tertiary', leadingIcon: 'arrow-left-line', size: 'sm', onClick: back }, 'Quay lại'),
         h('div', { style: { width: 1, height: 18, background: 'var(--color-border)', margin: '0 2px' } }),
         h('div', { style: { minWidth: 0 } },
-          h('div', { style: { fontWeight: 700, fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, isNew ? 'Tạo nội dung sản phẩm mới' : (r.displayName || r.skuCode)),
-          !isNew && h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, (ch ? ch.name : r.channel) + ' · ' + r.skuCode)
+          h('div', { style: { fontWeight: 700, fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, isNew ? 'Tạo nội dung sản phẩm mới' : (r.displayName || r.skuCode))
         ),
         h('div', { style: { flex: 1 } }),
-        !isNew && this.statusBadge(r.status),
         h(DS.Button, { level: 'tertiary', size: 'sm', onClick: back }, 'Hủy'),
         h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', onClick: onSave }, isNew ? 'Tạo nội dung' : 'Lưu nội dung')
       ),
@@ -1802,7 +1800,19 @@ class Component extends DCLogic {
             });
           }
         }, '\u0110\u1ed3ng b\u1ed9 theo Global'),
-        isGlobal ? h(DS.Badge, { theme: 'brand' }, 'C\u1ea5u h\u00ecnh g\u1ed1c') : this.statusBadge(inherit ? 'global' : 'custom')
+        isGlobal ? h(DS.Button, {
+          level: 'secondary', size: 'sm',
+          onClick: (e) => { e.stopPropagation(); this.toast('success', '\u0110\u00e3 \u0111\u1ed3ng b\u1ed9', 'C\u1ea5u h\u00ecnh Global \u0111\u00e3 \u0111\u01b0\u1ee3c \u0111\u1ed3ng b\u1ed9 m\u1edbi nh\u1ea5t t\u1eeb h\u1ec7 th\u1ed1ng.'); }
+        },
+          h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 7 } },
+            h('svg', { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flexShrink: 0 } },
+              h('polyline', { points: '23 4 23 10 17 10' }),
+              h('polyline', { points: '1 20 1 14 7 14' }),
+              h('path', { d: 'M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15' })
+            ),
+            'Sync'
+          )
+        ) : this.statusBadge(inherit ? 'global' : 'custom')
       ),
       open && h('div', { className: 'fpt-accordion-body', style: { padding: '18px 20px', borderTop: '1px solid var(--color-border)' } },
         isGlobal ? this.renderCheckoutGlobalForm(false, 'global', false) : this.renderCheckoutChildForm(c, inherit)
@@ -8773,7 +8783,19 @@ class Component extends DCLogic {
               style: { marginRight: 8, visibility: inherit ? 'hidden' : 'visible', pointerEvents: inherit ? 'none' : 'auto' },
               onClick: e => { e.stopPropagation(); this.openModal({ kind: 'confirm', title: 'Đồng bộ ' + c.full + ' theo Global?', message: 'Các tùy chỉnh riêng của kênh này sẽ bị xóa. Kênh sẽ chuyển về dùng cấu hình Global.', onYes: () => { this.setState(s => ({ payInherit: { ...(s.payInherit || {}), [c.id]: true }, payChannelOpen: s.payChannelOpen === c.id ? null : s.payChannelOpen })); this.closeModal(); this.toast('info', 'Đã đồng bộ', c.full + ' đã chuyển về dùng cấu hình Global.'); }, danger: true }); }
             }, 'Đồng bộ theo Global'),
-            isGlobal ? h(DS.Badge, { theme: 'brand' }, 'Cấu hình gốc') : this.statusBadge(inherit ? 'global' : 'custom')
+            isGlobal ? h(DS.Button, {
+              level: 'secondary', size: 'sm',
+              onClick: (e) => { e.stopPropagation(); this.toast('success', 'Đã đồng bộ', 'Cấu hình Global đã được đồng bộ mới nhất từ hệ thống.'); }
+            },
+              h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 7 } },
+                h('svg', { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flexShrink: 0 } },
+                  h('polyline', { points: '23 4 23 10 17 10' }),
+                  h('polyline', { points: '1 20 1 14 7 14' }),
+                  h('path', { d: 'M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15' })
+                ),
+                'Sync'
+              )
+            ) : this.statusBadge(inherit ? 'global' : 'custom')
           ),
           isOpen && h('div', { className: 'fpt-accordion-body', style: { padding: '18px 20px', borderTop: '1px solid var(--color-border)' } },
             !isGlobal ? h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, background: 'var(--color-accent-bg)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 7, padding: '9px 13px', marginBottom: 14, fontSize: 12, color: 'var(--color-text-subtle)' } },
@@ -9092,7 +9114,7 @@ class Component extends DCLogic {
           h('span', { style: { fontWeight: 600 } }, this.PAYMENT_METHOD_LABEL(r.methodId))
         );
       } },
-      { key: 'time', header: sh('Thời gian', 'time'), width: 180, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, whiteSpace: 'nowrap' } }, r.time) },
+      { key: 'time', header: sh('Thời gian cập nhật', 'time'), width: 180, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, whiteSpace: 'nowrap' } }, r.time) },
       { key: 'skus', header: 'Gói cước (SKU)', width: 420, render: (_, r) => {
         if (r.methodId === 'system') return h(DS.Badge, { theme: 'brand' }, 'Tất cả gói');
         const MAX = 5;

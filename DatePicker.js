@@ -404,6 +404,22 @@
       );
     }
 
+    function dtLabel(d, placeholder, time, allDay) {
+      if (!d) return h("span", { style: { fontFamily: "var(--font-sans)", fontSize: s.fs, color: "var(--color-text-subtle)", whiteSpace: "nowrap" } }, placeholder);
+      return h("span", { style: { display: "inline-flex", alignItems: "center", gap: 6, minWidth: 0 } },
+        h("span", { style: { fontFamily: "var(--font-sans)", fontSize: s.fs, fontWeight: 600, color: "var(--color-text)", whiteSpace: "nowrap" } }, fmtD(d, format)),
+        allDay && h("span", {
+          style: { fontFamily: "var(--font-sans)", fontSize: 11, fontWeight: 600, color: "var(--color-accent-text)", background: "var(--color-accent-bg)", borderRadius: "var(--radius-full)", padding: "1px 8px", whiteSpace: "nowrap", flexShrink: 0 }
+        }, "Cả ngày"),
+        (!allDay && time && time.value) && h("span", {
+          style: { display: "inline-flex", alignItems: "center", gap: 3, fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 500, color: "var(--color-text-subtle)", background: "var(--color-surface-alt)", borderRadius: "var(--radius-full)", padding: "1px 8px 1px 6px", whiteSpace: "nowrap", flexShrink: 0 }
+        },
+          h(Icon, { name: "clock-line", size: 12, color: "var(--color-text-subtle)" }),
+          time.value + " " + (time.period === "PM" ? "CH" : "SA")
+        )
+      );
+    }
+
     var panel = open && h("div", {
       style: {
         position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 9999,
@@ -462,7 +478,7 @@
           style: { display: "flex", alignItems: "center", gap: 6, flex: 1, padding: "0 " + s.px + "px", border: "none", outline: "none", cursor: "pointer", background: picking === "start" ? "var(--color-accent-bg)" : "transparent", transition: "background var(--dur-fast)" }
         },
           h(Icon, { name: "calendar-line", size: s.ic, color: rs ? "var(--color-accent)" : "var(--color-text-subtle)" }),
-          h("span", { style: { fontFamily: "var(--font-sans)", fontSize: s.fs, color: rs ? "var(--color-text)" : "var(--color-text-subtle)", whiteSpace: "nowrap" } }, rs ? fmtD(rs, format) : placeholderStart)
+          dtLabel(rs, placeholderStart, fromTime, fromAllDay)
         ),
         h("div", { style: { width: 1, alignSelf: "stretch", background: "var(--color-border)", margin: "8px 0" } }),
         h("button", {
@@ -472,7 +488,7 @@
           style: { display: "flex", alignItems: "center", gap: 6, flex: 1, padding: "0 " + s.px + "px", border: "none", outline: "none", cursor: "pointer", background: picking === "end" ? "var(--color-accent-bg)" : "transparent", transition: "background var(--dur-fast)" }
         },
           h(Icon, { name: "calendar-line", size: s.ic, color: re ? "var(--color-accent)" : "var(--color-text-subtle)" }),
-          h("span", { style: { fontFamily: "var(--font-sans)", fontSize: s.fs, color: re ? "var(--color-text)" : "var(--color-text-subtle)", whiteSpace: "nowrap" } }, re ? fmtD(re, format) : placeholderEnd)
+          dtLabel(re, placeholderEnd, toTime, toAllDay)
         ),
         h("div", { style: { display: "flex", alignItems: "center", paddingRight: 10, gap: 2 } },
           hasValue && !disabled && h("button", {
