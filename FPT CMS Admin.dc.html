@@ -958,7 +958,6 @@ class Component extends DCLogic {
         this.detailRow('Giá Max', sku ? this.PKG_QLCS_META(sku).giaMax : '—'),
         this.detailRow('Tên hiển thị trên kênh', r.displayName),
         this.detailRow('URL Slug', 'fpt.vn/' + (r.slug || '—')),
-        this.detailRow('Trạng thái hiển thị', this.statusBadge(r.status)),
         this.detailRow('Tag nổi bật', (r.tags || []).length ? r.tags.map(t => TAG_LABEL[t] || t).join(', ') : '—'),
         this.detailRow('Đặc tính nổi bật', (r.attributes || []).length ? r.attributes.length + ' đặc tính' : '—'),
         this.detailRow('Mô tả ngắn', r.shortDesc),
