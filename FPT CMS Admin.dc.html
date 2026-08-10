@@ -1914,6 +1914,8 @@ class Component extends DCLogic {
     // (Trả sau chỉ có chu kỳ hàng tháng); chọn Trả trước ⇒ Chu kỳ mở khóa, chọn tự do 1-36 tháng.
     const CYCLE_PERIODS = ['1 tháng', '3 tháng', '6 tháng', '12 tháng'];
     const BILLING_TYPE_FOR_PERIOD = period => period === '1 tháng' ? 'Trả sau' : 'Trả trước';
+    // Chỉ lấy phần số của chuỗi "N tháng" — dùng để hiển thị trong ô nhập (hậu tố "Tháng" cố định riêng) và so trùng.
+    const periodDigits = period => { const m = /\d+/.exec(period || ''); return m ? m[0] : ''; };
     const makeCycle = period => ({ id: 'cy' + Date.now() + Math.random().toString(36).slice(2), billingType: BILLING_TYPE_FOR_PERIOD(period), period: period || '', tagline: '', offers: [''] });
     // Gói Cloud (tab Camera) cũng đồng bộ từ QLCS — demo 2 gói, mỗi gói mang đủ bộ Chu kỳ chuẩn ở trên.
     const CLOUD_PACKAGES = ['Cloud 3 ngày', 'Cloud 7 ngày'];
@@ -2103,7 +2105,7 @@ class Component extends DCLogic {
     // Mỗi khối chu kỳ là 1 card độc lập, phân nhóm rõ 2 khu vực: "Cấu hình chu kỳ" (gói tính cước/chu kỳ)
     // và "Nội dung hiển thị" (tag line/ưu đãi) để dễ quét mắt hơn so với bảng cột phẳng trước đây.
     // Gói tính cước Trả sau ⇒ Chu kỳ luôn khóa về "1 tháng"; Trả trước ⇒ Chu kỳ nhập tự do (Gói Internet dùng input, còn lại dùng select cố định).
-    const renderCycleRow = (cy, { showBilling, periodInput, onTagline, onBillingChange, onPeriodChange, onOfferChange, onOfferAdd, onOfferRemove, onRemove, removeDisabled }) => {
+    const renderCycleRow = (cy, { showBilling, periodInput, periodError, onTagline, onBillingChange, onPeriodChange, onOfferChange, onOfferAdd, onOfferRemove, onRemove, removeDisabled }) => {
       const periodLocked = showBilling ? cy.billingType === 'Trả sau' : true;
       const groupLabelStyle = { fontSize: 10, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 };
       return h('div', { key: cy.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, marginBottom: 10, overflow: 'hidden', background: 'var(--color-surface)' } },
@@ -2124,11 +2126,26 @@ class Component extends DCLogic {
                 h(DS.Select, { options: billingTypeOptions, value: cy.billingType || 'Trả trước', onChange: onBillingChange }),
                 h('div', { style: { minWidth: 0 } },
                   periodInput
-                    ? h(DS.Input, {
-                        value: cy.period || '', placeholder: 'VD: 6 tháng', disabled: periodLocked,
-                        title: periodLocked ? 'Trả sau chỉ có chu kỳ 1 tháng' : undefined,
-                        onChange: e => onPeriodChange(e && e.target ? e.target.value : e)
-                      })
+                    ? h('div', { style: { position: 'relative', minWidth: 0 } },
+                        h(DS.Input, {
+                          value: periodDigits(cy.period), placeholder: '6', disabled: periodLocked,
+                          title: periodLocked ? 'Trả sau chỉ có chu kỳ 1 tháng' : undefined,
+                          error: periodError || undefined,
+                          inputMode: 'numeric', pattern: '[0-9]*',
+                          style: { paddingRight: 56 },
+                          onChange: e => {
+                            const raw = e && e.target ? e.target.value : e;
+                            onPeriodChange((raw || '').replace(/\D/g, ''));
+                          },
+                          onBlur: () => { if (periodError) this.toast('danger', 'Trùng chu kỳ', periodError); }
+                        }),
+                        h('span', {
+                          style: {
+                            position: 'absolute', top: 24, right: 14, transform: 'translateY(-50%)',
+                            fontSize: 13.5, fontWeight: 600, color: 'var(--color-text-subtle)', pointerEvents: 'none'
+                          }
+                        }, 'Tháng')
+                      )
                     : h(DS.Select, {
                         options: periodOptions, value: cy.period || '', placeholder: 'Chọn chu kỳ', disabled: periodLocked,
                         onChange: onPeriodChange
@@ -2306,18 +2323,26 @@ class Component extends DCLogic {
                     : isOtherMain
                     ? renderFlatOffersBlock()
                     : h('div', { style: { padding: 14 } },
-                        sharedDraft.cycles.map(cy => renderCycleRow(cy, {
-                          showBilling: isInternetMain,
-                          periodInput: isInternetMain,
-                          onTagline: val => updateDraftCycle(cy.id, { tagline: val }),
-                          onBillingChange: val => updateDraftCycle(cy.id, val === 'Trả sau' ? { billingType: val, period: '1 tháng' } : { billingType: val }),
-                          onPeriodChange: val => updateDraftCycle(cy.id, { period: val }),
-                          onOfferChange: (i, val) => updateDraftOfferLine(cy.id, i, val),
-                          onOfferAdd: () => addDraftOfferLine(cy.id),
-                          onOfferRemove: i => removeDraftOfferLine(cy.id, i),
-                          onRemove: isInternetMain ? () => confirmRemoveDraftCycle(cy.id) : undefined,
-                          removeDisabled: sharedDraft.cycles.length <= 1
-                        })),
+                        // Trùng chu kỳ chỉ tính giữa các khối đang mở khóa (Trả trước, nhập tay) — khối khóa "1 tháng" (Trả sau) không tính.
+                        sharedDraft.cycles.map(cy => {
+                          const periodLockedFor = c => isInternetMain ? c.billingType === 'Trả sau' : true;
+                          const digits = periodDigits(cy.period);
+                          const isDupPeriod = isInternetMain && !periodLockedFor(cy) && digits &&
+                            sharedDraft.cycles.some(o => o.id !== cy.id && !periodLockedFor(o) && periodDigits(o.period) === digits);
+                          return renderCycleRow(cy, {
+                            showBilling: isInternetMain,
+                            periodInput: isInternetMain,
+                            periodError: isDupPeriod ? ('Chu kỳ ' + digits + ' tháng đã được sử dụng, vui lòng nhập số khác.') : '',
+                            onTagline: val => updateDraftCycle(cy.id, { tagline: val }),
+                            onBillingChange: val => updateDraftCycle(cy.id, val === 'Trả sau' ? { billingType: val, period: '1 tháng' } : { billingType: val }),
+                            onPeriodChange: digitsVal => updateDraftCycle(cy.id, { period: digitsVal ? digitsVal + ' tháng' : '' }),
+                            onOfferChange: (i, val) => updateDraftOfferLine(cy.id, i, val),
+                            onOfferAdd: () => addDraftOfferLine(cy.id),
+                            onOfferRemove: i => removeDraftOfferLine(cy.id, i),
+                            onRemove: isInternetMain ? () => confirmRemoveDraftCycle(cy.id) : undefined,
+                            removeDisabled: sharedDraft.cycles.length <= 1
+                          });
+                        }),
                         isInternetMain && h(DS.Button, {
                           level: 'secondary', size: 'sm', leadingIcon: 'plus-line',
                           disabled: sharedDraft.cycles.length >= 36,
