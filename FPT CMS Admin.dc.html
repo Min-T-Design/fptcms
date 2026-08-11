@@ -81,6 +81,8 @@
     .fpt-expand-btn{transition:transform .15s cubic-bezier(.2,0,0,1)}
     .fpt-expand-btn:hover{transform:scale(1.12)!important}
     .fpt-gallery-tile:hover .fpt-gallery-overlay{opacity:1!important}
+    .fpt-table-sticky-col{transition:box-shadow .15s cubic-bezier(.2,0,0,1)}
+    .fpt-table-scrolled .fpt-table-sticky-col{box-shadow:-8px 0 12px -6px rgba(16,24,40,.18)}
   </style>
 </helmet>
 <div id="fpt-cms">{{ app }}</div>
@@ -2743,8 +2745,14 @@ class Component extends DCLogic {
   tbl(columns, data, rowKey, onRowClick) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const minW = columns.reduce((s, c) => s + (c.width || 150), 0);
-    return h('div', { className: 'fpt-scroll fpt-drag-scroll', style: { overflowX: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' } },
-      h(DS.Table, { dense: true, style: { border: 'none', borderRadius: 0, minWidth: minW }, columns, data, rowKey, onRowClick })
+    // Cột "act" (Thao tác) luôn fix bên phải khi bảng phải cuộn ngang — quy ước dùng chung mọi module, xem CLAUDE.md §9.
+    const cols = columns.map(c => c.key === 'act' ? { ...c, sticky: true } : c);
+    return h('div', {
+      className: 'fpt-scroll fpt-drag-scroll',
+      style: { overflowX: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' },
+      onScroll: e => { e.currentTarget.classList.toggle('fpt-table-scrolled', e.currentTarget.scrollLeft > 2); }
+    },
+      h(DS.Table, { dense: true, style: { border: 'none', borderRadius: 0, overflow: 'visible', minWidth: minW }, columns: cols, data, rowKey, onRowClick })
     );
   }
   renderPagBar(total, key, label) {
@@ -9198,7 +9206,7 @@ class Component extends DCLogic {
         ),
         h('span', { style: { fontSize: 12.5, whiteSpace: 'nowrap' } }, r.actor)
       ) },
-      { key: 'act', header: 'Hành động', width: 110, align: 'right', render: (_, r) => {
+      { key: 'act', header: 'Hành động', width: 110, align: 'right', sticky: true, render: (_, r) => {
         if (r.methodId === 'system') return h('span', { style: { fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Hệ thống');
         return this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openPayEditor(r) },
@@ -9232,8 +9240,12 @@ class Component extends DCLogic {
         filterMethod !== 'all' && this.filterChip('PTTT: ' + this.PAYMENT_METHOD_LABEL(filterMethod), 'info', () => this.setState({ payListFilterMethod: 'all' })),
       ]),
       // ── Table with horizontal scroll ──
-      h('div', { className: 'fpt-scroll fpt-drag-scroll', style: { overflowX: 'auto' } },
-        h(DS.Table, { dense: true, style: { border: 'none', borderRadius: 0, minWidth: 760 }, rowKey: 'id', columns, data: sliced })
+      h('div', {
+        className: 'fpt-scroll fpt-drag-scroll',
+        style: { overflowX: 'auto' },
+        onScroll: e => { e.currentTarget.classList.toggle('fpt-table-scrolled', e.currentTarget.scrollLeft > 2); }
+      },
+        h(DS.Table, { dense: true, style: { border: 'none', borderRadius: 0, overflow: 'visible', minWidth: 760 }, rowKey: 'id', columns, data: sliced })
       ),
       this.renderPagBar(data.length, 'payList', 'cấu hình')
     );

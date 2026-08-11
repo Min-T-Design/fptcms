@@ -284,7 +284,7 @@ Object.assign(__ds_scope, { Divider });
 // components/data/Table.jsx
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/** Table — lightweight data table. columns: [{key,header,align?,width?,render?}]. */
+/** Table — lightweight data table. columns: [{key,header,align?,width?,render?,sticky?}]. `sticky: true|'right'` pins that column to the right edge (e.g. an actions column) so it stays reachable while other columns scroll underneath — pair with a horizontally scrolling ancestor whose overflow isn't clipped by this component's own wrapper (pass `overflow: 'visible'` via `style`). */
 function Table({
   columns = [],
   data = [],
@@ -296,6 +296,12 @@ function Table({
 }) {
   const [hover, setHover] = React.useState(-1);
   const pad = dense ? "8px 12px" : "13px 16px";
+  const stickyRightStyle = bg => ({
+    position: "sticky",
+    right: 0,
+    zIndex: 1,
+    background: bg
+  });
   return /*#__PURE__*/React.createElement("div", _extends({
     style: {
       border: "1px solid var(--color-border)",
@@ -316,6 +322,7 @@ function Table({
     }
   }, columns.map(c => /*#__PURE__*/React.createElement("th", {
     key: c.key,
+    className: c.sticky ? "fpt-table-sticky-col" : undefined,
     style: {
       textAlign: c.align || "left",
       padding: pad,
@@ -326,7 +333,8 @@ function Table({
       textTransform: "uppercase",
       color: "var(--color-text-subtle)",
       borderBottom: "1px solid var(--color-border)",
-      whiteSpace: "nowrap"
+      whiteSpace: "nowrap",
+      ...(c.sticky ? stickyRightStyle("var(--color-surface-alt)") : null)
     }
   }, c.header)))), /*#__PURE__*/React.createElement("tbody", null, data.map((row, i) => /*#__PURE__*/React.createElement("tr", {
     key: rowKey ? row[rowKey] : i,
@@ -339,13 +347,15 @@ function Table({
     }
   }, columns.map(c => /*#__PURE__*/React.createElement("td", {
     key: c.key,
+    className: c.sticky ? "fpt-table-sticky-col" : undefined,
     style: {
       textAlign: c.align || "left",
       padding: pad,
       fontSize: 14,
       color: "var(--color-text)",
       borderBottom: i === data.length - 1 ? "none" : "1px solid var(--color-border-pale)",
-      verticalAlign: "middle"
+      verticalAlign: "middle",
+      ...(c.sticky ? stickyRightStyle(hover === i && onRowClick ? "var(--color-surface-alt)" : "var(--color-surface)") : null)
     }
   }, c.render ? c.render(row[c.key], row, i) : row[c.key])))))));
 }

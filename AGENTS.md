@@ -138,3 +138,29 @@ Whenever generating:
 * management screens
 
 always follow these rules by default unless the user explicitly overrides them.
+
+---
+
+## 8. Dropdown / Select Menu Overflow
+
+Any floating option menu (Select, combobox, autocomplete, tag picker, filter dropdown) **must never be visually clipped** by an ancestor's `overflow: hidden` / `overflow: auto` — this is a recurring bug in tables, grouped-row editors and cards (e.g. the "Tag line" column of the shared cycles table in Thông tin checkout, where the menu got sliced off by the table Card's rounded-corner `overflow: hidden`).
+
+Mandatory behavior for every dropdown/popover menu:
+
+* Render the open menu positioned relative to the **viewport** (`position: fixed`, coordinates measured live from the trigger's `getBoundingClientRect()`) — never `position: absolute` confined to a parent that might clip it.
+* Recompute the menu's position when it opens, and keep it anchored on `scroll`/`resize` while open (a nested scroll container's `scroll` event doesn't bubble — listen on `window` with `capture: true`).
+* Flip the menu **upward** when there isn't enough room below the trigger; clamp `maxHeight` to whatever space is actually available in that direction.
+* Don't reinvent this per-module: `DS.Select` (`_ds/fpt-design-system-4069b42b-a7c3-46ff-acb7-dddf8f633b9e/_ds_bundle.js`) already implements this centrally — reuse `DS.Select` for every new dropdown instead of hand-rolling a new absolute-positioned menu that will inherit the same clipping bug.
+
+---
+
+## 9. Sticky "Thao tác" (Action) Column
+
+Every table's action column ("Thao tác" / "Thao tác nhanh" — the column holding row-level icon buttons like Sửa/Xóa/Kích hoạt) **must stay pinned to the right edge** while the table scrolls horizontally, so it stays reachable even when other columns' content is long enough to force a horizontal scroll. Pin with a light drop shadow on its left edge (only while actually scrolled) so it visually floats above the scrolled content, matching the reference screenshot the user provided (Danh sách mã SKU → "Thao tác nhanh" column).
+
+This is implemented centrally, not per-module:
+
+* `DS.Table` (`_ds/fpt-design-system-4069b42b-a7c3-46ff-acb7-dddf8f633b9e/_ds_bundle.js`) supports a `sticky: true` flag on a column definition (`columns: [{ key, header, ..., sticky: true }]`), which pins that `<th>`/`<td>` with `position: sticky; right: 0` and an opaque background matching the row's hover state.
+* The shared `tbl(columns, data, rowKey, onRowClick)` helper (defined once on the app's root component) auto-marks any column with `key === 'act'` as `sticky` — so any module using `this.tbl(...)` gets this for free, no per-call-site change needed. This is why the action column convention (`key: 'act'`, last in the array, `align: 'right'`) must be kept consistent across every module.
+* The shadow is applied via the `fpt-table-sticky-col` class combined with an ancestor `fpt-table-scrolled` class, toggled by an `onScroll` listener on the table's horizontal-scroll wrapper (`scrollLeft > 2`) — cheap `classList.toggle`, no re-render. Any hand-rolled table that bypasses `tbl()` (e.g. a custom `DS.Table` usage) must wire up the same `onScroll` handler and pass `sticky: true` on its action column, and must pass `overflow: 'visible'` in `DS.Table`'s `style` prop — the wrapper's default `overflow: 'hidden'` (used for rounded-corner clipping) would otherwise become the sticky positioning's containing block instead of the real scroll container, breaking the pin.
+* Don't hand-roll a separate "frozen column" implementation per module — reuse this `sticky` column flag the same way `DS.Select` is reused for dropdowns (see §8).
