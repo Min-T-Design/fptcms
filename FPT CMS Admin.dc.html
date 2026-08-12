@@ -81,8 +81,8 @@
     .fpt-expand-btn{transition:transform .15s cubic-bezier(.2,0,0,1)}
     .fpt-expand-btn:hover{transform:scale(1.12)!important}
     .fpt-gallery-tile:hover .fpt-gallery-overlay{opacity:1!important}
-    .fpt-table-sticky-col{transition:box-shadow .15s cubic-bezier(.2,0,0,1)}
-    .fpt-table-scrolled .fpt-table-sticky-col{box-shadow:-8px 0 12px -6px rgba(16,24,40,.18)}
+    .fpt-table-sticky-col::before{content:'';position:absolute;top:0;bottom:0;left:-10px;width:10px;pointer-events:none;opacity:0;transition:opacity .15s cubic-bezier(.2,0,0,1);background:linear-gradient(to right, rgba(16,24,40,0), rgba(16,24,40,.22))}
+    .fpt-table-scrolled .fpt-table-sticky-col::before{opacity:1}
   </style>
 </helmet>
 <div id="fpt-cms">{{ app }}</div>
