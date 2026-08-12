@@ -5137,9 +5137,42 @@ class Component extends DCLogic {
       const [lbl, theme] = map[s] || ['—', 'neutral'];
       return h(DS.Badge, { theme, dot: true }, lbl);
     };
-    const thSt  = { padding: '10px 14px', fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--color-text-subtle)', borderBottom: '1px solid var(--color-border)', whiteSpace: 'nowrap', background: 'var(--color-surface)', textAlign: 'left' };
     const pageData = this.sliceData(data, 'ldp');
     const statLabel = { publish: 'Đang chạy', expired: 'Hết hạn', draft: 'Nháp', hidden: 'Tạm ẩn' };
+    const columns = [
+      { key: 'name', header: 'Tên Trang (Campaign)', width: 220, render: (_, r) => h('div', null,
+          h('div', { style: { fontWeight: 700, fontSize: 14 } }, r.name),
+          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, r.goal)
+        ) },
+      { key: 'tpl', header: 'Template', width: 150, render: (_, r) =>
+          h('span', { style: { background: tplBg[r.tplId] || 'var(--color-surface-alt)', color: tplColors[r.tplId] || 'var(--color-text-muted)', padding: '2px 10px', borderRadius: 10, fontSize: 12, whiteSpace: 'nowrap', fontWeight: 600 } }, r.tplLabel) },
+      { key: 'url', header: 'URL', width: 160, render: (_, r) =>
+          h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url) },
+      { key: 'period', header: 'Thời gian hiệu lực', width: 150, render: (_, r) =>
+          h('span', { style: { whiteSpace: 'nowrap', color: 'var(--color-text-muted)' } }, r.startDate + ' – ' + r.endDate) },
+      { key: 'lastEdit', header: 'Lần sửa cuối', width: 130, render: (_, r) =>
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } },
+            h('div', null, r.lastEdit),
+            h('div', null, '— ' + r.lastEditBy)
+          ) },
+      { key: 'status', header: 'Trạng thái', width: 110, render: (_, r) => { const curSt = ldpSt(r.id) || r.status; return stBadge(curSt); } },
+      { key: 'visible', header: 'Hiển thị', width: 80, align: 'center', render: (_, r) => {
+          const curSt = ldpSt(r.id) || r.status;
+          const isOn = curSt === 'publish';
+          const isDraft = curSt === 'draft' || curSt === 'expired';
+          if (isDraft) return h('span', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, '—');
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { checked: isOn, size: 'sm', onChange: v => {
+              if (v) { this.confirm('Bật Landing Page?', 'Trang "' + r.name + '" sẽ được hiển thị trở lại cho người dùng.', () => { this.setState({ ldpStatuses: { ...(this.state.ldpStatuses||{}), [r.id]: 'publish' } }); this.closeModal(); this.toast('success', 'Đã bật', 'Landing Page "' + r.name + '" đang chạy.'); }); }
+              else { this.confirm('Tắt Landing Page?', 'Trang "' + r.name + '" sẽ bị tạm ẩn. Bạn có thể bật lại bất kỳ lúc nào.', () => { this.setState({ ldpStatuses: { ...(this.state.ldpStatuses||{}), [r.id]: 'hidden' } }); this.closeModal(); this.toast('success', 'Đã tắt', 'Landing Page "' + r.name + '" đã tạm ẩn.'); }); }
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+          { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openLdpEditor(r) },
+          { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Landing Page?', 'Trang "' + r.name + '" sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa landing page "' + r.name + '".'); }) },
+        ]) },
+    ];
     return this.listCard(
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', minWidth: 0 } },
@@ -5176,65 +5209,8 @@ class Component extends DCLogic {
         statF !== 'all' && this.filterChip('Trạng thái: ' + (statLabel[statF] || statF), 'info', () => this.setState({ ldpListStatus: 'all', ldp_pg: 1 })),
 
       ]),
-      h('div', { style: { overflowX: 'auto' } },
-        h('table', { style: { width: '100%', borderCollapse: 'collapse', minWidth: 900 } },
-          h('thead', null,
-            h('tr', null,
-              h('th', { style: thSt }, 'Tên Trang (Campaign)'),
-              h('th', { style: thSt }, 'Template'),
-              h('th', { style: thSt }, 'URL'),
-              h('th', { style: thSt }, 'Thời gian hiệu lực'),
-              h('th', { style: thSt }, 'Lần sửa cuối'),
-              h('th', { style: thSt }, 'Trạng thái'),
-              h('th', { style: { ...thSt, textAlign: 'center' } }, 'Hiển thị'),
-              h('th', { style: { ...thSt, textAlign: 'center' } }, 'Thao tác')
-            )
-          ),
-          h('tbody', null,
-            data.length === 0
-              ? h('tr', null, h('td', { colSpan: 8, style: { padding: 32, textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13 } }, 'Không tìm thấy landing page nào.'))
-              : pageData.map(r =>
-                h('tr', { key: r.id, className: 'fpt-row-hover', style: { borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }, onClick: () => this.openLdpDetailDrawer(r) },
-                  h('td', { style: { padding: '12px 14px' } },
-                    h('div', { style: { fontWeight: 700, fontSize: 14 } }, r.name),
-                    h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, r.goal)
-                  ),
-                  h('td', { style: { padding: '12px 14px' } },
-                    h('span', { style: { background: tplBg[r.tplId] || 'var(--color-surface-alt)', color: tplColors[r.tplId] || 'var(--color-text-muted)', padding: '2px 10px', borderRadius: 10, fontSize: 12, whiteSpace: 'nowrap', fontWeight: 600 } }, r.tplLabel)
-                  ),
-                  h('td', { style: { padding: '12px 14px' } },
-                    h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url)
-                  ),
-                  h('td', { style: { padding: '12px 14px', fontSize: 13, whiteSpace: 'nowrap', color: 'var(--color-text-muted)' } }, r.startDate + ' – ' + r.endDate),
-                  h('td', { style: { padding: '12px 14px', fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } },
-                    h('div', null, r.lastEdit),
-                    h('div', null, '— ' + r.lastEditBy)
-                  ),
-                  h('td', { style: { padding: '12px 14px' } }, (() => { const curSt = ldpSt(r.id) || r.status; return stBadge(curSt); })()),
-                  h('td', { style: { padding: '12px 14px', textAlign: 'center' }, onClick: e => e.stopPropagation() },
-                    (() => {
-                      const curSt = ldpSt(r.id) || r.status;
-                      const isOn = curSt === 'publish';
-                      const isDraft = curSt === 'draft' || curSt === 'expired';
-                      if (isDraft) return h('span', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, '—');
-                      return h(DS.Switch, { checked: isOn, size: 'sm', onChange: v => {
-                        if (v) { this.confirm('Bật Landing Page?', 'Trang "' + r.name + '" sẽ được hiển thị trở lại cho người dùng.', () => { this.setState({ ldpStatuses: { ...(this.state.ldpStatuses||{}), [r.id]: 'publish' } }); this.closeModal(); this.toast('success', 'Đã bật', 'Landing Page "' + r.name + '" đang chạy.'); }); }
-                        else { this.confirm('Tắt Landing Page?', 'Trang "' + r.name + '" sẽ bị tạm ẩn. Bạn có thể bật lại bất kỳ lúc nào.', () => { this.setState({ ldpStatuses: { ...(this.state.ldpStatuses||{}), [r.id]: 'hidden' } }); this.closeModal(); this.toast('success', 'Đã tắt', 'Landing Page "' + r.name + '" đã tạm ẩn.'); }); }
-                      } });
-                    })()
-                  ),
-                  h('td', { style: { padding: '12px 14px', textAlign: 'center' } },
-                    h('div', { style: { display: 'flex', gap: 6, justifyContent: 'center', alignItems: 'center' } },
-                      h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: e => { e.stopPropagation(); this.openLdpEditor(r); } }),
-                      h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: e => { e.stopPropagation(); this.confirm('Xóa Landing Page?', 'Trang "' + r.name + '" sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa landing page "' + r.name + '".'); }); } })
-                    )
-                  )
-                )
-              )
-          )
-        )
-      ),
-      this.renderPagBar(data.length, 'ldp', 'landing page')
+      data.length ? this.tbl(columns, pageData, 'id', r => this.openLdpDetailDrawer(r)) : this.empty('Không tìm thấy landing page nào.'),
+      data.length ? this.renderPagBar(data.length, 'ldp', 'landing page') : null
     );
   }
   openLdpEditor(r) {
