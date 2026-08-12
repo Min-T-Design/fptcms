@@ -517,8 +517,8 @@ class Component extends DCLogic {
     return h('div', { style: { height: 60, flexShrink: 0, background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', position: 'relative', zIndex: 20 } },
       h('h1', { style: { fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-.01em' } }, this.TITLES()[this.state.active] || ''),
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 14 } },
-        // channel selector
-        h('div', { style: { position: 'relative' } },
+        // channel selector (tạm ẩn)
+        false && h('div', { style: { position: 'relative' } },
           h('div', { onClick: (e) => { const r = e.currentTarget.getBoundingClientRect(); const dir = (window.innerHeight - r.bottom) < 240 ? 'up' : 'down'; this.setState(s => ({ channelMenu: !s.channelMenu, channelMenuDir: dir, userMenu: false })); }, style: { display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: 'var(--color-accent-bg)', border: '1px solid var(--color-accent)', borderRadius: 20, padding: '6px 14px', userSelect: 'none' } },
             h('span', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-accent-text)', textTransform: 'uppercase', letterSpacing: '.04em', lineHeight: '18px' } }, 'Kênh:'),
             cur.icon && h(DS.Icon, { name: cur.icon, size: 15, color: 'var(--color-accent-text)' }),
