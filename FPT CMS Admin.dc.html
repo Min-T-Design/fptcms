@@ -1458,14 +1458,9 @@ class Component extends DCLogic {
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 24 } },
       isDevice
         ? h('div', null,
-            h('div', { style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10, flexWrap: 'wrap' } },
-              h('div', null,
-                h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Gallery ảnh sản phẩm '),
-                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 400 } }, '(Tối đa 15 ảnh — kéo thả để sắp xếp thứ tự hiển thị)')
-              ),
-              h('button', { type: 'button', onClick: () => this.toast('info', 'Upload hàng loạt', 'Chọn nhiều ảnh để tải lên cùng lúc (demo).'), style: { display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--color-accent)', fontSize: 12.5, fontWeight: 700 } },
-                h(DS.Icon, { name: 'zap-line', size: 14, color: 'var(--color-accent)' }), 'Upload hàng loạt'
-              )
+            h('div', { style: { marginBottom: 10 } },
+              h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Gallery ảnh sản phẩm '),
+              h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 400 } }, '(Tối đa 15 ảnh — kéo thả để sắp xếp thứ tự hiển thị)')
             ),
             h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 14 } },
               gallery.map((g, i) => h('div', {
@@ -9035,10 +9030,10 @@ class Component extends DCLogic {
                 this.openModal({ kind: 'confirm',
                   title: 'Tạo cấu hình riêng cho ' + c.full + '?',
                   message: 'Kênh này đang dùng cấu hình Global. Sau khi xác nhận, cấu hình riêng sẽ được tạo và ghi đè Global cho kênh này.',
-                  onYes: () => { this.setState(s => ({ payInherit: { ...(s.payInherit || {}), [c.id]: false }, payChannelOpen: c.id, paySkuSelected: [], paySkuSearch: '', paySkuFilter: 'all', paySkuCheckAll: false })); this.closeModal(); this.toast('brand', 'Bật tùy chỉnh riêng', c.full + ' đang được cấu hình độc lập.'); }
+                  onYes: () => { this.setState(s => ({ payInherit: { ...(s.payInherit || {}), [c.id]: false }, payChannelOpen: c.id, paySkuSelected: [], paySkuSearch: '', paySkuFilter: 'internet', paySkuCheckAll: false })); this.closeModal(); this.toast('brand', 'Bật tùy chỉnh riêng', c.full + ' đang được cấu hình độc lập.'); }
                 });
               } else {
-                this.setState(s => { const opening = s.payChannelOpen !== c.id; return { payChannelOpen: opening ? c.id : null, ...(opening ? { paySkuSelected: [], paySkuSearch: '', paySkuFilter: 'all', paySkuCheckAll: false } : {}) }; });
+                this.setState(s => { const opening = s.payChannelOpen !== c.id; return { payChannelOpen: opening ? c.id : null, ...(opening ? { paySkuSelected: [], paySkuSearch: '', paySkuFilter: 'internet', paySkuCheckAll: false } : {}) }; });
               }
             },
             style: { display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', cursor: 'pointer', background: isOpen ? 'var(--color-surface-alt)' : 'transparent', borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)', transition: 'background .18s cubic-bezier(.2,0,0,1)', height: 56, boxSizing: 'border-box' }
@@ -9082,7 +9077,7 @@ class Component extends DCLogic {
   renderPaymentChannelBody(channel) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const selected = this.state.paySkuSelected || [];
-    const filter = this.state.paySkuFilter || 'all';
+    const filter = this.state.paySkuFilter || 'internet';
     const search = (this.state.paySkuSearch || '').toLowerCase();
     const methods = this.PAYMENT_METHODS_DEF();
     const methodTag = { vietqr: 'QR', momo: 'Momo', zalopay: 'Zalo' };
@@ -9094,13 +9089,14 @@ class Component extends DCLogic {
       { id: 'fcp', label: 'FCP' },
     ];
     // ── Tab bậc 2 — danh mục sản phẩm, lồng bên trong mỗi tab nguồn ──
+    const isInternetSku = s => s.group === 'Internet' && s.kind === 'Dịch vụ';
+    const isCameraSku = s => s.group === 'Camera';
+    const isSaSku = s => s.group === 'Truyền hình' && s.kind === 'Dịch vụ';
     const catDefs = [
-      { id: 'all', label: 'Tất cả', match: () => true },
-      { id: 'internet', label: 'Internet', match: s => s.group === 'Internet' && s.kind === 'Dịch vụ' },
-      { id: 'camera', label: 'Camera', match: s => s.group === 'Camera' },
-      { id: 'tv', label: 'TV', match: s => s.group === 'Truyền hình' && s.kind === 'Thiết bị' },
-      { id: 'ap', label: 'AP', match: s => s.kind === 'Thiết bị' && s.group !== 'Camera' && s.group !== 'Truyền hình' },
-      { id: 'sa', label: 'Gói SA', match: s => s.group === 'Truyền hình' && s.kind === 'Dịch vụ' },
+      { id: 'internet', label: 'Gói internet', match: isInternetSku },
+      { id: 'camera', label: 'Camera', match: isCameraSku },
+      { id: 'sa', label: 'Gói SA', match: isSaSku },
+      { id: 'other', label: 'Thiết bị khác', match: s => !isInternetSku(s) && !isCameraSku(s) && !isSaSku(s) },
     ];
     const filterBtns = catDefs;
     const allSkus = this.SKUS().filter(s => s.status === 'active' && (s.source || 'ECP').toLowerCase() === skuSource);
@@ -9216,7 +9212,7 @@ class Component extends DCLogic {
               const active = t.id === skuSource;
               return h('button', {
                 key: t.id, type: 'button', role: 'tab', 'aria-selected': active,
-                onClick: () => this.setState({ paySkuSource: t.id, paySkuFilter: 'all', paySkuSearch: '' }),
+                onClick: () => this.setState({ paySkuSource: t.id, paySkuFilter: 'internet', paySkuSearch: '' }),
                 style: {
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   padding: '7px 10px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: active ? 700 : 500,
