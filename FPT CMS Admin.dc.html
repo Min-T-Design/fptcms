@@ -1796,19 +1796,7 @@ class Component extends DCLogic {
             });
           }
         }, '\u0110\u1ed3ng b\u1ed9 theo Global'),
-        isGlobal ? h(DS.Button, {
-          level: 'secondary', size: 'sm',
-          onClick: (e) => { e.stopPropagation(); this.toast('success', '\u0110\u00e3 \u0111\u1ed3ng b\u1ed9', 'C\u1ea5u h\u00ecnh Global \u0111\u00e3 \u0111\u01b0\u1ee3c \u0111\u1ed3ng b\u1ed9 m\u1edbi nh\u1ea5t t\u1eeb h\u1ec7 th\u1ed1ng.'); }
-        },
-          h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 7 } },
-            h('svg', { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flexShrink: 0 } },
-              h('polyline', { points: '23 4 23 10 17 10' }),
-              h('polyline', { points: '1 20 1 14 7 14' }),
-              h('path', { d: 'M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15' })
-            ),
-            'Sync'
-          )
-        ) : this.statusBadge(inherit ? 'global' : 'custom')
+        !isGlobal ? this.statusBadge(inherit ? 'global' : 'custom') : null
       ),
       open && h('div', { className: 'fpt-accordion-body', style: { padding: '18px 20px', borderTop: '1px solid var(--color-border)' } },
         isGlobal ? this.renderCheckoutGlobalForm(false, 'global', false) : this.renderCheckoutChildForm(c, inherit)
@@ -2488,14 +2476,24 @@ class Component extends DCLogic {
     const toggleSection = k => this.setState({ ruleSectionsOpen: { ...openSections, [k]: !openSections[k] } });
     const skus = this.SKUS().filter(s => this.state.skuActive[s.code] !== false && s.status === 'active');
     const selectedSkus = this.state.ruleSkuSelected !== undefined ? this.state.ruleSkuSelected : (r ? r.skus : []);
-    const groupLabelMap = { Internet: 'Internet', Camera: 'Camera', 'Truyền hình': 'TV', Cloud: 'Thiết bị' };
-    const filterBtns = [{ id: 'all', label: 'Tất cả' }, ...Array.from(new Set(skus.map(s => s.group))).map(g => ({ id: g, label: groupLabelMap[g] || g }))];
+    // ── Danh mục cố định 4 loại, đồng bộ với 4 tab lớn của mục "Cấu hình nội dung" (Gói Internet / Camera / Gói SA / Thiết bị khác) ──
+    const isInternetRuleSku = s => s.group === 'Internet' && s.kind === 'Dịch vụ';
+    const isCameraRuleSku = s => s.group === 'Camera';
+    const isSaRuleSku = s => s.group === 'Truyền hình' && s.kind === 'Dịch vụ';
+    const isOtherRuleSku = s => !isInternetRuleSku(s) && !isCameraRuleSku(s) && !isSaRuleSku(s);
+    const filterBtns = [
+      { id: 'internet', label: 'Gói Internet', test: isInternetRuleSku },
+      { id: 'camera', label: 'Camera', test: isCameraRuleSku },
+      { id: 'sa', label: 'Gói SA', test: isSaRuleSku },
+      { id: 'other', label: 'Thiết bị khác', test: isOtherRuleSku },
+    ];
     // ── Tab bậc 1 — nguồn hệ thống: ECP / FCP (đồng bộ với "Danh sách sản phẩm" ở module Phương thức thanh toán) ──
     const sourceTabDefs = [{ id: 'ecp', label: 'ECP' }, { id: 'fcp', label: 'FCP' }];
     const skuSourceF = this.state.ruleSkuSource || 'ecp';
-    const skuGroupF = this.state.ruleSkuGroup || 'all';
+    const skuGroupF = this.state.ruleSkuGroup || 'internet';
+    const activeFilterBtn = filterBtns.find(f => f.id === skuGroupF) || filterBtns[0];
     const skuQ = (this.state.ruleSkuQ || '').toLowerCase();
-    const filteredSkus = skus.filter(s => (s.source || 'ECP').toLowerCase() === skuSourceF && (skuGroupF === 'all' || s.group === skuGroupF) && (!skuQ || s.code.toLowerCase().includes(skuQ) || s.name.toLowerCase().includes(skuQ)));
+    const filteredSkus = skus.filter(s => (s.source || 'ECP').toLowerCase() === skuSourceF && activeFilterBtn.test(s) && (!skuQ || s.code.toLowerCase().includes(skuQ) || s.name.toLowerCase().includes(skuQ)));
     const toggleSku = code => { const next = selectedSkus.includes(code) ? selectedSkus.filter(c => c !== code) : [...selectedSkus, code]; this.setState({ ruleSkuSelected: next }); };
     const bannerOptions = ['Banner Hero Hè 2026', 'Banner Wi-Fi 7', 'Banner Camera AI', 'Banner Thanh toán An Tâm', 'Banner Cảm ơn', 'Banner Tải App HiFPT'];
     const popupOptions = ['Popup Flash Sale', 'Popup Camera AI', 'Popup Ưu đãi Thanh toán', 'Popup Nhập mã KM', 'Popup Tri ân Khách hàng'];
@@ -2532,7 +2530,7 @@ class Component extends DCLogic {
                   const active = t.id === skuSourceF;
                   return h('button', {
                     key: t.id, type: 'button', role: 'tab', 'aria-selected': active,
-                    onClick: () => this.setState({ ruleSkuSource: t.id, ruleSkuGroup: 'all', ruleSkuQ: '' }),
+                    onClick: () => this.setState({ ruleSkuSource: t.id, ruleSkuGroup: 'internet', ruleSkuQ: '' }),
                     style: {
                       flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       padding: '7px 10px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: active ? 700 : 500,
@@ -9201,19 +9199,7 @@ class Component extends DCLogic {
               style: { marginRight: 8, visibility: inherit ? 'hidden' : 'visible', pointerEvents: inherit ? 'none' : 'auto' },
               onClick: e => { e.stopPropagation(); this.openModal({ kind: 'confirm', title: 'Đồng bộ ' + c.full + ' theo Global?', message: 'Các tùy chỉnh riêng của kênh này sẽ bị xóa. Kênh sẽ chuyển về dùng cấu hình Global.', onYes: () => { this.setState(s => ({ payInherit: { ...(s.payInherit || {}), [c.id]: true }, payChannelOpen: s.payChannelOpen === c.id ? null : s.payChannelOpen })); this.closeModal(); this.toast('info', 'Đã đồng bộ', c.full + ' đã chuyển về dùng cấu hình Global.'); }, danger: true }); }
             }, 'Đồng bộ theo Global'),
-            isGlobal ? h(DS.Button, {
-              level: 'secondary', size: 'sm',
-              onClick: (e) => { e.stopPropagation(); this.toast('success', 'Đã đồng bộ', 'Cấu hình Global đã được đồng bộ mới nhất từ hệ thống.'); }
-            },
-              h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 7 } },
-                h('svg', { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flexShrink: 0 } },
-                  h('polyline', { points: '23 4 23 10 17 10' }),
-                  h('polyline', { points: '1 20 1 14 7 14' }),
-                  h('path', { d: 'M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15' })
-                ),
-                'Sync'
-              )
-            ) : this.statusBadge(inherit ? 'global' : 'custom')
+            !isGlobal ? this.statusBadge(inherit ? 'global' : 'custom') : null
           ),
           isOpen && h('div', { className: 'fpt-accordion-body', style: { padding: '18px 20px', borderTop: '1px solid var(--color-border)' } },
             !isGlobal ? h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, background: 'var(--color-accent-bg)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 7, padding: '9px 13px', marginBottom: 14, fontSize: 12, color: 'var(--color-text-subtle)' } },
