@@ -8719,14 +8719,25 @@ class Component extends DCLogic {
     );
   }
   // Mở Inline Full-Page Editor cho 1 dòng cấu hình PTTT (r = dòng đang sửa, null/'new' = tạo mới) — theo CLAUDE.md, Create/Edit luôn dùng full-page editor, không dùng Drawer.
+  // Khi sửa (r truyền vào): không cho thêm gói mới — chỉ sửa/xóa các gói đã có sẵn từ bước tạo trước đó — nên mỗi gói giữ mô tả riêng thay vì 1 mô tả dùng chung.
   openPayEditor(r) {
     const cfg = r ? this.getSkuMethodCfg(r.skus[0], r.methodId) : { active: true, startDate: '', endDate: '', descriptions: [] };
+    let payEditDescriptions;
+    if (r) {
+      payEditDescriptions = {};
+      r.skus.forEach(code => {
+        const skuCfg = this.getSkuMethodCfg(code, r.methodId);
+        payEditDescriptions[code] = (skuCfg.descriptions && skuCfg.descriptions.length) ? [...skuCfg.descriptions] : [''];
+      });
+    } else {
+      payEditDescriptions = [''];
+    }
     this.setState({
       payEditor: r || 'new',
       payEditMethodId: r ? r.methodId : this.PAYMENT_METHODS_DEF()[0].id,
       payEditStart: cfg.startDate ? new Date(cfg.startDate + 'T00:00:00') : null,
       payEditEnd: cfg.endDate ? new Date(cfg.endDate + 'T00:00:00') : null,
-      payEditDescriptions: (cfg.descriptions && cfg.descriptions.length) ? [...cfg.descriptions] : [''],
+      payEditDescriptions,
       payEditSkuSelected: r ? [...r.skus] : [],
       payEditSkuFilter: 'all',
       payEditSkuSearch: '',
@@ -8736,17 +8747,56 @@ class Component extends DCLogic {
   closePayEditor() {
     this.setState({ payEditor: undefined, payEditMethodId: undefined, payEditStart: undefined, payEditEnd: undefined, payEditDescriptions: undefined, payEditSkuSelected: undefined, payEditSkuFilter: undefined, payEditSkuSearch: undefined, payEditSkuCheckAll: undefined });
   }
+  // Xóa 1 gói khỏi cấu hình đang sửa (chỉ dùng ở chế độ sửa) — gói bị xóa sẽ được tắt (active:false) cho PTTT này khi lưu.
+  removePayEditSku(code) {
+    const map = { ...(this.state.payEditDescriptions || {}) };
+    delete map[code];
+    this.setState({
+      payEditSkuSelected: (this.state.payEditSkuSelected || []).filter(c => c !== code),
+      payEditDescriptions: map,
+    });
+  }
+  addPayEditDescLine(code) {
+    const map = { ...(this.state.payEditDescriptions || {}) };
+    map[code] = [...(map[code] || ['']), ''];
+    this.setState({ payEditDescriptions: map });
+  }
+  updatePayEditDescLine(code, idx, val) {
+    const map = { ...(this.state.payEditDescriptions || {}) };
+    const arr = [...(map[code] || [''])];
+    arr[idx] = val;
+    map[code] = arr;
+    this.setState({ payEditDescriptions: map });
+  }
+  removePayEditDescLine(code, idx) {
+    const map = { ...(this.state.payEditDescriptions || {}) };
+    map[code] = (map[code] || ['']).filter((_, i) => i !== idx);
+    this.setState({ payEditDescriptions: map });
+  }
   savePayEditor() {
-    const skus = this.state.payEditSkuSelected || [];
-    if (!skus.length) { this.toast('warning', 'Chưa chọn gói', 'Hãy chọn ít nhất 1 gói cước'); return; }
     const isEdit = this.state.payEditor && this.state.payEditor !== 'new';
     const methodId = isEdit ? this.state.payEditor.methodId : this.state.payEditMethodId;
     const fmt = d => d ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') : '';
-    const descriptions = (this.state.payEditDescriptions || []).filter(d => d.trim());
-    const cfgUpdate = { active: true, startDate: fmt(this.state.payEditStart), endDate: fmt(this.state.payEditEnd), descriptions };
+    const startDate = fmt(this.state.payEditStart), endDate = fmt(this.state.payEditEnd);
     const cfg = this.getPayConfig();
     const newCfg = { ...cfg };
-    skus.forEach(code => { newCfg[code] = { ...(newCfg[code] || {}), [methodId]: cfgUpdate }; });
+    const skus = this.state.payEditSkuSelected || [];
+    if (!skus.length) { this.toast('warning', 'Chưa chọn gói', 'Hãy chọn ít nhất 1 gói cước'); return; }
+    if (isEdit) {
+      const descMap = this.state.payEditDescriptions || {};
+      skus.forEach(code => {
+        const descriptions = (descMap[code] || []).filter(d => d.trim());
+        newCfg[code] = { ...(newCfg[code] || {}), [methodId]: { active: true, startDate, endDate, descriptions } };
+      });
+      // Gói bị xóa khỏi cấu hình trong lúc sửa (có trong bản gốc nhưng không còn trong danh sách hiện tại) — tắt PTTT này cho gói đó.
+      const removed = (this.state.payEditor.skus || []).filter(code => !skus.includes(code));
+      removed.forEach(code => {
+        newCfg[code] = { ...(newCfg[code] || {}), [methodId]: { active: false, startDate: '', endDate: '', descriptions: [] } };
+      });
+    } else {
+      const descriptions = (this.state.payEditDescriptions || []).filter(d => d.trim());
+      skus.forEach(code => { newCfg[code] = { ...(newCfg[code] || {}), [methodId]: { active: true, startDate, endDate, descriptions } }; });
+    }
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
     const timeStr = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
@@ -8764,10 +8814,119 @@ class Component extends DCLogic {
     const methodId = isEdit ? r.methodId : (this.state.payEditMethodId || this.PAYMENT_METHODS_DEF()[0].id);
     const methodDef = this.PAYMENT_METHODS_DEF().find(m => m.id === methodId);
     const back = () => this.closePayEditor();
-    const descriptions = this.state.payEditDescriptions && this.state.payEditDescriptions.length ? this.state.payEditDescriptions : [''];
-
-    // ── Danh sách gói cước (SKU) — đồng bộ với component "DANH SÁCH GÓI CƯỚC (SKU)" của tab Cấu hình ──
     const selected = this.state.payEditSkuSelected || [];
+    const allSkusMap = {}; this.SKUS().forEach(s => { allSkusMap[s.code] = s; });
+
+    // ── Chế độ sửa: không cho thêm gói mới, chỉ sửa/xóa các gói đã có sẵn từ bước tạo trước — mỗi gói có mô tả riêng ──
+    if (isEdit) {
+      const descMap = this.state.payEditDescriptions || {};
+      return this.editorShell(
+        'Chỉnh sửa cấu hình nhanh PTTT',
+        r.skus.join(', '),
+        back,
+        h('div', { style: { display: 'grid', gridTemplateColumns: '1.36fr 3fr', gap: 16, alignItems: 'start' } },
+          // ── Block trái: các gói cước đã áp dụng — chỉ xem/xóa, không thêm mới ──
+          h('div', { style: { position: 'sticky', top: 8 } },
+            this.listCard(
+              this.toolbar(
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                  h(DS.Icon, { name: 'file-doc-line', size: 16, color: 'var(--color-text-subtle)' }),
+                  h('span', { style: { fontWeight: 700, fontSize: 13.5 } }, 'Gói cước áp dụng')
+                ),
+                h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, selected.length + ' gói')
+              ),
+              h('div', { style: { padding: 16 } },
+                selected.length === 0
+                  ? h('div', { style: { textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, padding: '24px 0' } }, 'Không còn gói nào trong cấu hình này')
+                  : h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 440, overflowY: 'auto', overflowX: 'hidden' } },
+                      selected.map(code => {
+                        const sku = allSkusMap[code];
+                        return h('div', { key: code, style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--color-border)' } },
+                          h('div', { style: { flex: 1, minWidth: 0 } },
+                            h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                              h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace' } }, code),
+                              sku && h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
+                            ),
+                            sku && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
+                          ),
+                          h(DS.IconButton, { icon: 'trash-line', label: 'Xóa gói', level: 'tertiary', size: 'sm', onClick: () => this.removePayEditSku(code) })
+                        );
+                      })
+                    )
+              )
+            )
+          ),
+
+          // ── Block phải: thông tin cấu hình + mô tả ưu đãi riêng cho từng gói ──
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 } },
+            this.listCard(
+              this.toolbar(
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                  h(DS.Icon, { name: 'settings-01-line', size: 16, color: 'var(--color-text-subtle)' }),
+                  h('span', { style: { fontWeight: 700, fontSize: 13.5 } }, 'Thông tin cấu hình')
+                ),
+                h(DS.Badge, { theme: 'brand' }, methodDef.name)
+              ),
+              h('div', { style: { padding: 16, display: 'flex', flexDirection: 'column', gap: 18 } },
+                h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+                  this.field('Phương thức thanh toán', h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, height: 48, padding: '0 14px', boxSizing: 'border-box', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)' } },
+                    h(DS.Icon, { name: 'lock-01-line', size: 14, color: 'var(--color-text-subtle)' }),
+                    this.payLogo(methodDef.shortName, 20),
+                    h('span', { style: { fontSize: 13 } }, methodDef.name)
+                  )),
+                  this.field('Thời gian áp dụng', h(DS.DateRangePicker, {
+                    startDate: this.state.payEditStart || null,
+                    endDate: this.state.payEditEnd || null,
+                    placeholderStart: 'Ngày bắt đầu',
+                    placeholderEnd: 'Ngày hết hạn',
+                    showTime: true,
+                    containerStyle: { width: '100%' },
+                    onChange: range => this.setState({ payEditStart: range.start, payEditEnd: range.end }),
+                  }), true)
+                )
+              )
+            ),
+
+            h(DS.Divider, null),
+
+            // ── Mô tả ưu đãi kèm theo — tách riêng theo từng gói đã thêm từ bước trước ──
+            selected.length === 0
+              ? null
+              : selected.map(code => {
+                  const sku = allSkusMap[code];
+                  const descArr = descMap[code] && descMap[code].length ? descMap[code] : [''];
+                  return h('div', { key: code },
+                    this.listCard(
+                      this.toolbar(
+                        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                          h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace' } }, code),
+                          sku && h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, sku.name)
+                        ),
+                        h(DS.Button, { level: 'secondary', size: 'xs', leadingIcon: 'plus-line', onClick: () => this.addPayEditDescLine(code) }, 'Thêm dòng')
+                      ),
+                      h('div', { style: { padding: 16 } },
+                        h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } }, 'MÔ TẢ ƯU ĐÃI KÈM THEO'),
+                        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+                          descArr.map((desc, idx) =>
+                            h('div', { key: idx, style: { display: 'flex', alignItems: 'center', gap: 6 } },
+                              h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'VD: Giảm 50k khi thanh toán Online', value: desc, onChange: e => this.updatePayEditDescLine(code, idx, e.target ? e.target.value : e) })),
+                              h(DS.IconButton, { icon: 'trash-line', label: 'Xóa dòng', level: 'tertiary', size: 'sm', onClick: () => this.removePayEditDescLine(code, idx) })
+                            )
+                          )
+                        )
+                      )
+                    )
+                  );
+                })
+          )
+        ),
+        () => this.savePayEditor(),
+        'Lưu thay đổi'
+      );
+    }
+
+    // ── Chế độ tạo mới: chọn gói từ toàn bộ danh sách + 1 mô tả dùng chung cho tất cả gói vừa chọn ──
+    const descriptions = this.state.payEditDescriptions && this.state.payEditDescriptions.length ? this.state.payEditDescriptions : [''];
     const filter = this.state.payEditSkuFilter || 'all';
     const search = (this.state.payEditSkuSearch || '').toLowerCase();
     const groupMap = { internet: 'Internet', cam: 'Camera', tv: 'Truyền hình' };
@@ -8808,8 +8967,8 @@ class Component extends DCLogic {
     };
 
     return this.editorShell(
-      isEdit ? 'Chỉnh sửa cấu hình nhanh PTTT' : 'Thêm cấu hình PTTT',
-      isEdit ? r.skus.join(', ') : 'Tạo cấu hình mới',
+      'Thêm cấu hình PTTT',
+      'Tạo cấu hình mới',
       back,
       h('div', { style: { display: 'grid', gridTemplateColumns: '1.36fr 3fr', gap: 16, alignItems: 'start' } },
         // ── Block trái: Gán gói cước (SKU) áp dụng — khung trắng + header, cùng tỉ lệ với "DANH SÁCH GÓI CƯỚC (SKU)" ──
@@ -8838,7 +8997,7 @@ class Component extends DCLogic {
           )
         ),
 
-        // ── Block phải: cảnh báo ghi đè (nếu có) + thông tin còn lại + mô tả — khung trắng + header ──
+        // ── Block phải: cảnh báo ghi đè (nếu có) + thông tin còn lại + mô tả ──
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 } },
         showOverwriteWarning && h(DS.Alert, { theme: 'warning', title: 'Chỉnh sửa sẽ ghi đè nội dung hiện có', style: { borderRadius: 10 } },
           'Đang chọn ' + selected.length + ' gói, trong đó ' + selectedWithContent.length + ' gói (' + selectedWithContent.join(', ') + ') đã có nội dung ưu đãi. Mọi thay đổi bên dưới sẽ áp dụng đồng loạt và ghi đè — nội dung cũ của các gói này sẽ bị xóa.'
@@ -8848,30 +9007,23 @@ class Component extends DCLogic {
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
               h(DS.Icon, { name: 'settings-01-line', size: 16, color: 'var(--color-text-subtle)' }),
               h('span', { style: { fontWeight: 700, fontSize: 13.5 } }, 'Thông tin cấu hình')
-            ),
-            isEdit && h(DS.Badge, { theme: 'brand' }, methodDef.name)
+            )
           ),
           h('div', { style: { padding: 16, display: 'flex', flexDirection: 'column', gap: 18 } },
             h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-              isEdit
-                ? this.field('Phương thức thanh toán', h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, height: 48, padding: '0 14px', boxSizing: 'border-box', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)' } },
-                    h(DS.Icon, { name: 'lock-01-line', size: 14, color: 'var(--color-text-subtle)' }),
-                    this.payLogo(methodDef.shortName, 20),
-                    h('span', { style: { fontSize: 13 } }, methodDef.name)
-                  ))
-                : this.field('Phương thức thanh toán', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                    this.PAYMENT_METHODS_DEF().map(m => {
-                      const isSelM = methodId === m.id;
-                      return h('div', {
-                        key: m.id, onClick: () => this.setState({ payEditMethodId: m.id }),
-                        style: { display: 'flex', alignItems: 'center', gap: 10, height: 48, padding: '0 14px', boxSizing: 'border-box', borderRadius: 'var(--radius-base)', cursor: 'pointer', border: '1.5px solid ' + (isSelM ? 'var(--color-accent)' : 'var(--color-border)'), background: isSelM ? 'var(--color-accent-bg)' : 'var(--color-surface)', transition: 'all .15s' }
-                      },
-                        this.payLogo(m.shortName, 24),
-                        h('span', { style: { flex: 1, fontSize: 13.5, fontWeight: isSelM ? 600 : 400, color: isSelM ? 'var(--color-accent-text)' : 'var(--color-text)' } }, m.name),
-                        isSelM && h(DS.Icon, { name: 'check-circle-solid', size: 16, color: 'var(--color-accent)' })
-                      );
-                    })
-                  ), true),
+              this.field('Phương thức thanh toán', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+                  this.PAYMENT_METHODS_DEF().map(m => {
+                    const isSelM = methodId === m.id;
+                    return h('div', {
+                      key: m.id, onClick: () => this.setState({ payEditMethodId: m.id }),
+                      style: { display: 'flex', alignItems: 'center', gap: 10, height: 48, padding: '0 14px', boxSizing: 'border-box', borderRadius: 'var(--radius-base)', cursor: 'pointer', border: '1.5px solid ' + (isSelM ? 'var(--color-accent)' : 'var(--color-border)'), background: isSelM ? 'var(--color-accent-bg)' : 'var(--color-surface)', transition: 'all .15s' }
+                    },
+                      this.payLogo(m.shortName, 24),
+                      h('span', { style: { flex: 1, fontSize: 13.5, fontWeight: isSelM ? 600 : 400, color: isSelM ? 'var(--color-accent-text)' : 'var(--color-text)' } }, m.name),
+                      isSelM && h(DS.Icon, { name: 'check-circle-solid', size: 16, color: 'var(--color-accent)' })
+                    );
+                  })
+                ), true),
               this.field('Thời gian áp dụng', h(DS.DateRangePicker, {
                 startDate: this.state.payEditStart || null,
                 endDate: this.state.payEditEnd || null,
@@ -8905,7 +9057,7 @@ class Component extends DCLogic {
         )
       ),
       () => this.savePayEditor(),
-      isEdit ? 'Lưu thay đổi' : 'Tạo cấu hình'
+      'Tạo cấu hình'
     );
   }
   getPayListData() { return this.state.payListData || this.PAYMENT_LIST_DATA(); }
@@ -9294,9 +9446,7 @@ class Component extends DCLogic {
     const groupOrder = [...this.PAYMENT_METHODS_DEF().map(m => m.id), 'system'];
     const groupIndex = id => { const i = groupOrder.indexOf(id); return i === -1 ? groupOrder.length : i; };
 
-    // Filter/sort state
-    const search = (this.state.payListSearch || '').toLowerCase();
-    const filterMethod = this.state.payListFilterMethod || 'all';
+    // Sort state
     const sort = this.state.payListSort || { key: null, dir: 'asc' };
 
     // Parse "DD/MM/YYYY HH:mm:ss" → timestamp cho sắp xếp theo thời gian
@@ -9308,17 +9458,8 @@ class Component extends DCLogic {
       return new Date(+yyyy, +mm - 1, +dd, +hh, +mi, +(ss || 0)).getTime();
     };
 
-    // Áp dụng lọc
-    let data = this.getPayListData().filter(r => {
-      const skuText = (r.skus || []).join(' ').toLowerCase();
-      const methodText = this.PAYMENT_METHOD_LABEL(r.methodId).toLowerCase();
-      if (search && !skuText.includes(search) && !methodText.includes(search) && !(r.actor || '').toLowerCase().includes(search)) return false;
-      if (filterMethod !== 'all' && r.methodId !== filterMethod) return false;
-      return true;
-    });
-
     // Sắp xếp: nhóm theo PTTT là ưu tiên hàng đầu; trong mỗi nhóm sắp theo Thời gian (mới nhất trước) hoặc theo lựa chọn của người dùng
-    data = [...data].sort((a, b) => {
+    const data = [...this.getPayListData()].sort((a, b) => {
       const gi = groupIndex(a.methodId) - groupIndex(b.methodId);
       if (gi !== 0) return gi;
       if (!sort.key) return parseTime(b.time) - parseTime(a.time);
@@ -9364,7 +9505,6 @@ class Component extends DCLogic {
       sortIcon(key)
     );
 
-    const hasFilters = !!(search || filterMethod !== 'all');
     const payPg = this.state.payList_pg || 1;
     const paySz = this.state.payList_sz || 10;
     const sliced = this.sliceData(data, 'payList');
@@ -9414,7 +9554,6 @@ class Component extends DCLogic {
         if (r.methodId === 'system') return h('span', { style: { fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Hệ thống');
         return this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openPayEditor(r) },
-          { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa cấu hình?', 'Phương thức ' + this.PAYMENT_METHOD_LABEL(r.methodId) + ' trên gói ' + (r.skus || []).join(', ') + ' sẽ bị gỡ.', () => { this.setState(s => ({ payListData: this.getPayListData().filter(x => x.id !== r.id) })); this.closeModal(); this.toast('success', 'Đã xóa', 'Đã gỡ cấu hình.'); }, true) },
         ]);
       } },
     ];
@@ -9427,22 +9566,6 @@ class Component extends DCLogic {
           h('span', { style: { fontWeight: 700, fontSize: 14 } }, 'Danh sách cấu hình Phương thức Thanh toán')
         )
       ),
-      // ── Filter row: search + dropdown PTTT ──
-      h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid var(--color-border)', flexWrap: 'wrap', background: 'var(--color-surface-alt)' } },
-        h('div', { style: { flex: '1 1 220px', minWidth: 180 } },
-          h(DS.Input, {
-            placeholder: 'Tìm gói cước, phương thức, người thực hiện…',
-            leadingIcon: 'search-medium-line',
-            value: this.state.payListSearch || '',
-            onChange: e => this.setState({ payListSearch: e.target ? e.target.value : e })
-          })
-        ),
-        h(DS.Select, { value: filterMethod, options: [{ value: 'all', label: 'Tất cả PTTT' }, ...this.PAYMENT_METHODS_DEF().map(m => ({ value: m.id, label: m.shortName })), { value: 'system', label: 'Hệ thống' }], onChange: v => this.setState({ payListFilterMethod: v }), style: { minWidth: 160 } }),
-      ),
-      this.filterChipsBar([
-        (this.state.payListSearch || '') && this.filterChip('Tìm: ' + this.state.payListSearch, 'neutral', () => this.setState({ payListSearch: '' })),
-        filterMethod !== 'all' && this.filterChip('PTTT: ' + this.PAYMENT_METHOD_LABEL(filterMethod), 'info', () => this.setState({ payListFilterMethod: 'all' })),
-      ]),
       // ── Table with horizontal scroll ──
       h('div', {
         className: 'fpt-scroll fpt-drag-scroll',
