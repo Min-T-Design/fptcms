@@ -379,7 +379,7 @@ class Component extends DCLogic {
     const map = {
       active: ['success', 'Hoạt động'], inactive: ['neutral', 'Ngừng hoạt động'],
       draft: ['warning', 'Nháp'], locked: ['danger', 'Tạm khóa'],
-      running: ['success', 'Đang chạy'], expired: ['neutral', 'Hết hạn'],
+      running: ['success', 'Đang chạy'], expired: ['neutral', 'Hết hạn'], disabled: ['neutral', 'Đã tắt'],
       global: ['info', 'Dùng Global'], custom: ['brand', 'Tùy chỉnh riêng'],
       publish: ['success', 'Đã xuất bản'], hidden: ['warning', 'Tạm ẩn'],
     };
@@ -904,7 +904,7 @@ class Component extends DCLogic {
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
       { key: 'updatedBy', header: 'Người cập nhật', width: 150,
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedBy || '—') },
-      { key: 'act', header: 'Thao tác nhanh', width: 110, align: 'right',
+      { key: 'act', header: 'Thao tác', width: 110, align: 'right',
         render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openSkuEditor(r) },
         ]) },
@@ -2790,6 +2790,54 @@ class Component extends DCLogic {
       h('div', { style: { fontSize: 13.5, color: 'var(--color-text)', marginTop: 3, wordBreak: 'break-word' } }, (value == null || value === '') ? '—' : value)
     );
   }
+  // Multi-select combobox: chip box + search + checkbox list + chọn/bỏ chọn tất cả.
+  // Expands inline (no floating overlay) so it never needs the DS.Select viewport-clip fix.
+  tagPicker(options, selected, onChange, opts) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    opts = opts || {};
+    const openKey = opts.stateKey + 'Open';
+    const queryKey = opts.stateKey + 'Q';
+    const open = !!this.state[openKey];
+    const query = this.state[queryKey] || '';
+    const visible = query ? options.filter(o => o.toLowerCase().includes(query.toLowerCase())) : options;
+    const toggle = o => onChange(selected.includes(o) ? selected.filter(x => x !== o) : [...selected, o]);
+    return h('div', null,
+      h('div', {
+        onClick: () => this.setState({ [openKey]: !open }),
+        style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minHeight: 44, padding: '7px 10px', border: '1px solid ' + (open ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 10, cursor: 'pointer', background: 'var(--color-surface)', boxShadow: open ? 'var(--shadow-focus)' : 'none' }
+      },
+        selected.length === 0 && h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 13.5, padding: '2px 4px' } }, opts.placeholder || 'Chọn...'),
+        selected.map(o => h(DS.Tag, {
+          key: o, size: 'sm',
+          style: { background: 'var(--color-accent-bg)', border: '1px solid var(--color-accent)', color: 'var(--color-accent-text)', fontWeight: 600 },
+          onClose: () => toggle(o)
+        }, o)),
+        h('div', { style: { flex: 1 } }),
+        selected.length > 0 && h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex' } },
+          h(DS.IconButton, { icon: 'x-circle-line', level: 'tertiary', size: 'sm', label: 'Bỏ chọn tất cả', onClick: () => onChange([]) })
+        ),
+        h(DS.Icon, { name: open ? 'chevron-up-line' : 'chevron-down-line', size: 18, color: 'var(--color-text-subtle)' })
+      ),
+      open && h('div', { style: { marginTop: 8, border: '1px solid var(--color-border)', borderRadius: 10, padding: 10, background: 'var(--color-surface)' } },
+        h(DS.Input, { leadingIcon: 'search-medium-line', placeholder: opts.searchPlaceholder || 'Tìm kiếm...', value: query, onChange: e => this.setState({ [queryKey]: e.target ? e.target.value : e }) }),
+        h('div', { className: 'fpt-scroll', style: { maxHeight: 220, overflowY: 'auto', marginTop: 8, display: 'flex', flexDirection: 'column' } },
+          visible.length === 0
+            ? h('div', { style: { padding: '14px 4px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy kết quả')
+            : visible.map(o => {
+                const isSel = selected.includes(o);
+                return h('div', { key: o, onClick: () => toggle(o), style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 8px', borderRadius: 8, cursor: 'pointer', background: isSel ? 'var(--color-accent-bg)' : 'transparent' } },
+                  h('span', { style: { fontSize: 13.5 } }, o),
+                  h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggle(o) }))
+                );
+              })
+        ),
+        h('div', { style: { display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border-pale)' } },
+          h('button', { type: 'button', onClick: () => onChange(options.slice()), style: { background: 'none', border: 'none', padding: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--color-accent-text)', cursor: 'pointer' } }, 'Chọn tất cả'),
+          h('button', { type: 'button', onClick: () => onChange([]), style: { background: 'none', border: 'none', padding: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--color-danger-text)', cursor: 'pointer' } }, 'Bỏ chọn tất cả')
+        )
+      )
+    );
+  }
   editorShell(title, subtitle, onBack, content, onSave, saveLabel, headerExtra, shellKey) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     return h('div', { key: shellKey, style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -2875,10 +2923,14 @@ class Component extends DCLogic {
     { id: 25, pid: 0,  level: 0, name: 'Điều khoản sử dụng',                  type: 'page',     pos: 'Footer', url: '/dieu-khoan-su-dung',                     target: '_self',  order: 1, date: '15/01/2026 10:01' },
     { id: 26, pid: 0,  level: 0, name: 'Liên hệ',                             type: 'page',     pos: 'Footer', url: '/lien-he',                                target: '_self',  order: 2, date: '15/01/2026 10:02' },
   ]; }
+  BANNER_PAGES() { return ['Trang chủ', 'Danh mục Camera', 'Smart Tivi', 'FPT Smart Home', 'Internet - Wifi']; }
   BANNERS() { return [
-    { id: 1, name: 'Banner Hero Trang Chủ T6', order: 1, pages: 'Trang chủ', period: '01/06 – 30/06', status: 'running' },
-    { id: 2, name: 'Banner Wi-Fi 7', order: 2, pages: 'Trang chủ, Khuyến mãi', period: '15/06 – 30/06', status: 'running' },
-    { id: 3, name: 'Banner Camera AI', order: 3, pages: 'Khuyến mãi Tháng 6', period: '01/05 – 31/05', status: 'expired' },
+    { id: 1, name: 'Banner Hero Trang Chủ Q3', order: 1, pages: ['Trang chủ'], link: '/khuyen-mai-quy-3', bannerType: 'normal', target: '_self', period: '01/08/2026 – 31/08/2026', createdAt: '20/07/2026', status: 'active' },
+    { id: 2, name: 'Banner Wi-Fi 7 Ưu đãi', order: 2, pages: ['Trang chủ', 'Internet - Wifi'], link: '/internet/wifi-7', bannerType: 'normal', target: '_self', period: '15/07/2026 – 15/09/2026', createdAt: '10/07/2026', status: 'active' },
+    { id: 3, name: 'Banner Camera AI Khuyến mãi Hè', order: 3, pages: ['Danh mục Camera'], link: '/camera-an-ninh/khuyen-mai', bannerType: 'normal', target: '_blank', period: '01/05/2026 – 31/05/2026', createdAt: '20/04/2026', status: 'expired' },
+    { id: 4, name: 'Banner Smart Home Sale', order: 4, pages: ['FPT Smart Home', 'Smart Tivi'], link: '/fpt-smart-home/sale', bannerType: 'normal', target: '_top', period: '01/07/2026 – 15/07/2026', createdAt: '25/06/2026', status: 'disabled' },
+    { id: 5, name: 'Banner Ưu đãi Thanh toán Online', order: 5, pages: ['Trang chủ'], link: '/checkout/uu-dai-online', bannerType: 'checkout', target: '_self', period: 'Liên tục', createdAt: '10/03/2026', status: 'active' },
+    { id: 6, name: 'Banner Giới thiệu Access Point', order: 6, pages: ['Danh mục Camera', 'Smart Tivi', 'FPT Smart Home'], link: '/access-point', bannerType: 'normal', target: '_parent', period: '01/06/2026 – 30/06/2026', createdAt: '15/05/2026', status: 'expired' },
   ]; }
   POPUPS() { return [
     { id: 1, name: 'Flash Sale T6', position: 'Trang chủ', channels: 'fpt.vn, hifpt', period: '01/06 – 30/06', status: 'running' },
@@ -3045,7 +3097,7 @@ class Component extends DCLogic {
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
       { key: 'updatedAt', header: 'Ngày chỉnh sửa', width: 148,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
-      { key: 'act', header: '', width: 80, align: 'right',
+      { key: 'act', header: 'Thao tác', width: 80, align: 'right',
         render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ pageEditor: r }) },
           { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa trang?', 'Trang "' + r.name + '" sẽ bị xóa vĩnh viễn.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa trang "' + r.name + '".'); }, true) },
@@ -3392,7 +3444,7 @@ class Component extends DCLogic {
       { key: 'loai', header: 'Loại', render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, r.layout + ' · ' + r.datasource) },
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)', textAlign: 'center', display: 'block' } }, r.order != null ? r.order : '—') },
       { key: 'createdAt', header: 'Ngày tạo', width: 145, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
-      { key: 'act', header: '', width: 80, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 80, align: 'right', render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openBlockEdit(r) },
           { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Block?', 'Block "' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa block.'); }, true) },
         ]) },
@@ -4178,7 +4230,7 @@ class Component extends DCLogic {
       { key: 'target', header: 'Target',   width: 90,  align: 'center', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: r.target === '_blank' ? 'var(--color-warning-text)' : 'var(--color-text-muted)' } }, r.target) },
       { key: 'order',  header: 'Thứ tự',   width: 80,  align: 'center', render: (_, r) => h('span', { style: { color: 'var(--color-text-muted)' } }, r.order) },
       { key: 'date',   header: 'Ngày tạo', width: 160, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.date || '—') },
-      { key: 'act',    header: '',          width: 80,  align: 'right',  render: (_, r) => this.rowActions([
+      { key: 'act',    header: 'Thao tác',  width: 80,  align: 'right',  render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ menuView: 'form', menuEditRow: r }) },
         { icon: 'trash-line',   label: 'Xóa', onClick: () => this.confirm('Xóa menu?', 'Menu "' + r.name + '" và các menu con sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa menu "' + r.name + '".'); }, true) },
       ]) },
@@ -4448,46 +4500,76 @@ class Component extends DCLogic {
     if (this.state.bannerEditor !== undefined) return this.renderBannerEditor(this.state.bannerEditor);
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.bannerSearch || '').toLowerCase();
-    const data = this.BANNERS().filter(b => !q || b.name.toLowerCase().includes(q));
+    const pageF = this.state.bannerPageFilter || 'all';
+    const statusF = this.state.bannerStatusFilter || 'all';
+    const statusLabel = { active: 'Hoạt động', expired: 'Hết hạn', disabled: 'Đã tắt' };
+    const data = this.BANNERS().filter(b => {
+      if (q && !b.name.toLowerCase().includes(q)) return false;
+      if (pageF !== 'all' && !b.pages.includes(pageF)) return false;
+      if (statusF !== 'all' && b.status !== statusF) return false;
+      return true;
+    });
+    const sliced = this.sliceData(data, 'banners');
+    const bannersPg = this.state.banners_pg || 1;
+    const bannersSz = this.state.banners_sz || 10;
     const columns = [
-      { key: 'order', header: '#', width: 44, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
-      { key: 'name', header: 'Tên Banner', render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } }, h('div', { style: { width: 56, height: 32, borderRadius: 6, background: 'linear-gradient(135deg,var(--fpt-7),var(--fpt-9))', flexShrink: 0 } }), h('span', { style: { fontWeight: 600 } }, r.name)) },
-      { key: 'pages', header: 'Trang áp dụng' },
-      { key: 'period', header: 'Thời gian' },
-      { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
-        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ bannerEditor: r }) },
+      { key: 'stt', header: 'STT', width: 56, align: 'center',
+        render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (bannersPg - 1) * bannersSz + sliced.indexOf(r) + 1) },
+      { key: 'name', header: 'Tên Banner', width: 240, render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+          h('div', { style: { width: 56, height: 32, borderRadius: 6, background: 'linear-gradient(135deg,var(--fpt-7),var(--fpt-9))', flexShrink: 0 } }),
+          h('div', null,
+            h('div', { style: { fontWeight: 600 } }, r.name),
+            h('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 1 } }, r.bannerType === 'checkout' ? 'Trang Checkout' : 'Trang thường')
+          )
+        ) },
+      { key: 'pages', header: 'Trang áp dụng', width: 170, render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' } },
+          h('span', { style: { fontSize: 13 } }, r.pages[0]),
+          r.pages.length > 1 && h(DS.Badge, { theme: 'neutral' }, '+' + (r.pages.length - 1) + ' khác')
+        ) },
+      { key: 'link', header: 'Link URL', width: 190, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 11.5, color: 'var(--color-text-subtle)' } }, r.link) },
+      { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, whiteSpace: 'nowrap' } }, r.period) },
+      { key: 'order', header: 'Thứ tự', width: 72, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
+      { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
+      { key: 'status', header: 'Trạng thái', width: 110, align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+          const isOn = (this.state.bannerActiveMap || {})[r.id] !== undefined ? !!(this.state.bannerActiveMap || {})[r.id] : r.status === 'active';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-banner-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              this.setState(s => ({ bannerActiveMap: { ...s.bannerActiveMap, [r.id]: v } }));
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Banner "' + r.name + '".');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openBannerEditor(r) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Banner?', 'Banner "' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa banner.'); }, true) },
       ]) },
     ];
     return this.listCard(
-      this.toolbar(this.search('Tìm banner…', 'bannerSearch'), h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ bannerEditor: null }) }, 'Tạo Banner mới')),
-      data.length ? this.tbl(columns, this.sliceData(data, 'banners'), 'id', r => this.openBannerDetail(r)) : this.empty('Chưa có banner.'),
+      this.toolbar(
+        h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+          this.search('Tìm banner…', 'bannerSearch'),
+          h('div', { style: { width: 190, flexShrink: 0 } }, h(DS.Select, {
+            options: [{ value: 'all', label: 'Tất cả trang' }, ...this.BANNER_PAGES().map(p => ({ value: p, label: p }))],
+            value: pageF,
+            onChange: v => this.setState({ bannerPageFilter: v, banners_pg: 1 })
+          })),
+          h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
+            options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'expired', label: 'Hết hạn' }, { value: 'disabled', label: 'Đã tắt' }],
+            value: statusF,
+            onChange: v => this.setState({ bannerStatusFilter: v, banners_pg: 1 })
+          }))
+        ),
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openBannerEditor(null) }, 'Tạo Banner mới')
+      ),
+      this.filterChipsBar([
+        q && this.filterChip('Tìm: ' + q, 'neutral', () => this.setState({ bannerSearch: '', banners_pg: 1 })),
+        pageF !== 'all' && this.filterChip('Trang: ' + pageF, 'brand', () => this.setState({ bannerPageFilter: 'all', banners_pg: 1 })),
+        statusF !== 'all' && this.filterChip('Trạng thái: ' + statusLabel[statusF], 'info', () => this.setState({ bannerStatusFilter: 'all', banners_pg: 1 })),
+      ]),
+      data.length ? this.tbl(columns, sliced, 'id', r => this.openBannerDetail(r)) : this.empty('Chưa có banner.'),
       data.length ? this.renderPagBar(data.length, 'banners', 'banner') : null
     );
-  }
-  openBannerDrawer(r) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    this.openDrawer({
-      title: r ? 'Sửa Banner' : 'Tạo Banner mới', subtitle: 'Banner slider đa thiết bị', width: 620,
-      render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        h('div', { style: { display: 'flex', gap: 12 } },
-          h('div', { style: { flex: 1 } }, this.field('Tên Banner', h(DS.Input, { defaultValue: r ? r.name : '' }), true)),
-          h('div', { style: { width: 110 } }, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order) : '1' }), true))
-        ),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } }, this.uploadBox('Ảnh Desktop (1920px)', 'Bắt buộc'), this.uploadBox('Ảnh Mobile (768px)', 'Bắt buộc')),
-        this.field('Link URL đích', h(DS.Input, { placeholder: '/khuyen-mai-thang-6' })),
-        h('div', { style: { display: 'flex', gap: 12 } },
-          h('div', { style: { flex: 1 } }, this.field('Target', h(DS.Select, { options: ['_self', '_blank'], defaultValue: '_self' }))),
-          h('div', { style: { flex: 1 } }, this.field('Trang áp dụng', h(DS.Select, { options: ['Trang chủ', 'Khuyến mãi Tháng 6', 'Tin tức'], defaultValue: 'Trang chủ' }), true))
-        ),
-        this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))
-      ),
-      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Hủy'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'check-line', onClick: () => { this.closeDrawer(); this.toast('success', 'Đã lưu Banner', 'Banner đã được lưu vào slider.'); } }, 'Lưu Banner')
-      )
-    });
   }
 
   // ===== Popup =====
@@ -4502,7 +4584,7 @@ class Component extends DCLogic {
       { key: 'channels', header: 'Kênh áp dụng' },
       { key: 'period', header: 'Thời gian chạy' },
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ popupEditor: r }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Popup?', 'Popup "' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa popup.'); }, true) },
       ]) },
@@ -4546,40 +4628,81 @@ class Component extends DCLogic {
     });
   }
 
+  openBannerEditor(r) {
+    this.setState({ bannerEditor: r, bannerEditorPages: r ? [...r.pages] : ['Trang chủ'], bannerPagesDDOpen: false, bannerPagesDDQ: '' });
+  }
+  closeBannerEditor() {
+    this.setState({ bannerEditor: undefined, bannerEditorPages: undefined, bannerPagesDDOpen: undefined, bannerPagesDDQ: undefined });
+  }
   openBannerDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     this.openDrawer({ title: r.name, subtitle: 'Chi tiết Banner', width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         h('div', { style: { width: '100%', height: 80, background: 'linear-gradient(135deg,var(--fpt-7),var(--fpt-9))', borderRadius: 8, marginBottom: 12 } }),
-        this.detailRow('Tên Banner', r.name), this.detailRow('Thứ tự', String(r.order)),
-        this.detailRow('Trang áp dụng', r.pages), this.detailRow('Thời gian', r.period),
+        this.detailRow('Tên Banner', r.name),
+        this.detailRow('Loại banner', r.bannerType === 'checkout' ? 'Trang Checkout' : 'Trang thường (Menu Trang)'),
+        this.detailRow('Link URL đích', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5 } }, r.link)),
+        this.detailRow('Target', r.target),
+        this.detailRow('Danh sách trang áp dụng (' + r.pages.length + ')', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 } }, r.pages.map(p => h(DS.Tag, { key: p, size: 'sm' }, p)))),
+        this.detailRow('Thời gian hiển thị', r.period),
+        this.detailRow('Thứ tự ưu tiên', String(r.order)),
+        this.detailRow('Ngày tạo', r.createdAt),
         this.detailRow('Trạng thái', this.statusBadge(r.status))
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.setState({ bannerEditor: r }); } }, 'Chỉnh sửa')
+        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openBannerEditor(r); } }, 'Chỉnh sửa')
       )
     });
   }
   renderBannerEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ bannerEditor: undefined });
-    return this.editorShell(
-      isNew ? 'Tạo Banner mới' : 'Chỉnh sửa Banner: ' + r.name, 'Banner slider đa thiết bị', back,
-      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        h('div', { style: { display: 'flex', gap: 12 } },
-          h('div', { style: { flex: 1 } }, this.field('Tên Banner', h(DS.Input, { defaultValue: r ? r.name : '' }), true)),
-          h('div', { style: { width: 110 } }, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order) : '1' }), true))
-        ),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } }, this.uploadBox('Ảnh Desktop (1920px)', 'Bắt buộc'), this.uploadBox('Ảnh Mobile (768px)', 'Bắt buộc')),
-        this.field('Link URL đích', h(DS.Input, { placeholder: '/khuyen-mai-thang-6' })),
-        h('div', { style: { display: 'flex', gap: 12 } },
-          h('div', { style: { flex: 1 } }, this.field('Target', h(DS.Select, { options: ['_self', '_blank'], defaultValue: '_self' }))),
-          h('div', { style: { flex: 1 } }, this.field('Trang áp dụng', h(DS.Select, { options: ['Trang chủ', 'Khuyến mãi Tháng 6', 'Tin tức'], defaultValue: 'Trang chủ' }), true))
-        ),
-        this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))
+    const isNew = !r; const back = () => this.closeBannerEditor();
+    const pages = r ? r.pages : ['Trang chủ'];
+    const selectedPages = this.state.bannerEditorPages || pages;
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+        h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
       ),
-      () => { back(); this.toast('success', 'Đã lưu Banner', 'Banner đã được lưu vào slider.'); },
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
+    );
+    return this.editorShell(
+      isNew ? 'Tạo Banner mới' : 'Chỉnh sửa Banner: ' + r.name, 'Banner hiển thị đa thiết bị', back,
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
+          h(DS.Switch, { defaultChecked: !r || r.status !== 'disabled' })
+        ),
+        section(1, 'file-doc-line', 'Thông tin chung Banner',
+          h('div', { style: { display: 'flex', gap: 12 } },
+            h('div', { style: { flex: 1 } }, this.field('Tên Banner', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Banner Hero Trang Chủ T6' }), true)),
+            h('div', { style: { width: 150 } }, this.field('Thứ tự ưu tiên', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order) : '1' }), true))
+          )
+        ),
+        section(2, 'image-line', 'Tài ảnh Banner (Drag & Drop)',
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+            this.uploadBox('Banner Desktop', 'JPG, PNG, WEBP · ≤200KB'),
+            this.uploadBox('Banner Mobile', 'JPG, PNG, WEBP · ≤150KB')
+          )
+        ),
+        section(3, 'share-01-line', 'Cấu hình Liên kết & Áp dụng',
+          h('div', { style: { display: 'flex', gap: 12 } },
+            h('div', { style: { flex: 1 } }, this.field('Loại banner', h(DS.Select, { options: [{ value: 'normal', label: 'Trang thường (Menu Trang)' }, { value: 'checkout', label: 'Trang Checkout' }], defaultValue: r ? r.bannerType : 'normal' }))),
+            h('div', { style: { width: 140 } }, this.field('Target', h(DS.Select, { options: ['_self', '_blank', '_parent', '_top'], defaultValue: r ? r.target : '_self' })))
+          ),
+          this.field('Link URL đích', h(DS.Input, { defaultValue: r ? r.link : '', placeholder: '/khuyen-mai-thang-6' }), true),
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+            h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+              h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Trang áp dụng hiển thị', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+              selectedPages.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '(Đã chọn: ' + selectedPages.length + ' trang)')
+            ),
+            this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ bannerEditorPages: v }), { stateKey: 'bannerPagesDD', placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
+          ),
+          this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))
+        )
+      ),
+      () => { back(); this.toast('success', 'Đã lưu Banner', isNew ? 'Banner mới đã được tạo.' : 'Banner "' + r.name + '" đã được cập nhật.'); },
       isNew ? 'Tạo Banner' : 'Lưu Banner'
     );
   }
@@ -4676,7 +4799,7 @@ class Component extends DCLogic {
       { key: 'bgColor', header: 'Màu nền', width: 150, render: (_, r) => colorCell(r.bgColor) },
       { key: 'textColor', header: 'Màu chữ', width: 150, render: (_, r) => colorCell(r.textColor) },
       { key: 'status', header: 'Trạng thái', width: 150, render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openBadgeEditor(r) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Badge/Tag?', 'Badge "' + r.name + '" sẽ bị xóa khỏi thư viện. Nơi đang dùng badge này (Card gói / Trang chi tiết / Check out) sẽ không còn hiển thị tag.', () => {
           this.setState({ badgeTagListData: this.getBadgeTagList().filter(b => b.id !== r.id) });
@@ -4890,7 +5013,7 @@ class Component extends DCLogic {
       { key: 'cat', header: 'Danh mục', render: (_, r) => { const c = catColors[r.cat] || {}; return h('span', { style: { background: c.bg || 'var(--color-surface-alt)', color: c.color || 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, r.cat); } },
       { key: 'lang', header: 'Ngôn ngữ', render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.lang || 'Tiếng Việt') },
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' } }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa FAQ?', 'Câu hỏi sẽ bị xóa.', () => { const base = this.state.faqItems || this.FAQS(); this.setState({ faqItems: base.filter(f => f.id !== r.id) }); this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa câu hỏi.'); }, true) },
       ]) },
@@ -4992,7 +5115,7 @@ class Component extends DCLogic {
       { key: 'lang', header: 'Ngôn ngữ', render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.lang || 'Tiếng Việt') },
       { key: 'count', header: 'Số câu hỏi', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqCatEditor: r }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa danh mục?', 'Danh mục "' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa danh mục.'); }, true) },
       ]) },
@@ -9207,7 +9330,7 @@ class Component extends DCLogic {
         ),
         h('span', { style: { fontSize: 12.5, whiteSpace: 'nowrap' } }, r.actor)
       ) },
-      { key: 'act', header: 'Hành động', width: 110, align: 'right', sticky: true, render: (_, r) => {
+      { key: 'act', header: 'Thao tác', width: 110, align: 'right', sticky: true, render: (_, r) => {
         if (r.methodId === 'system') return h('span', { style: { fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Hệ thống');
         return this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openPayEditor(r) },
@@ -9411,7 +9534,7 @@ class Component extends DCLogic {
             h(DS.Switch, { key: 'sw-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => { this.setState(s => ({ newsArtActive: { ...s.newsArtActive, [r.id]: v } })); this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', r.title); } })
           );
         } },
-      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ newsArticleEdit: r }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa bài viết?', '"' + r.title + '" sẽ bị xóa vĩnh viễn.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa bài viết.'); }, true) },
       ]) },
@@ -9561,7 +9684,7 @@ class Component extends DCLogic {
       { key: 'layout', header: 'Kiểu giao diện', render: (_, r) => h(DS.Badge, { theme: 'neutral' }, r.layout || 'default') },
       { key: 'count',  header: 'Số bài', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa',  onClick: () => this.setState({ newsCatEditor: r }) },
         { icon: 'trash-line',  label: 'Xóa',  onClick: () => this.confirm('Xóa chuyên mục?', '"' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa chuyên mục.'); }, true) },
       ]) },
@@ -9630,7 +9753,7 @@ class Component extends DCLogic {
       { key: 'phone', header: 'Số điện thoại', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5 } }, r.phone) },
       { key: 'articles', header: 'Số bài viết', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.articles) },
       { key: 'status',   header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ authorEditor: r }) },
         { icon: 'trash-line',  label: 'Xóa', onClick: () => this.confirm('Xóa tác giả?', '"' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa tác giả.'); }, true) },
       ]) },
@@ -9686,7 +9809,7 @@ class Component extends DCLogic {
       { key: 'slug', header: 'Slug', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
       { key: 'count', header: 'Số bài dùng', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ tagEditor: r }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Tag?', 'Tag #' + r.name + ' sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa tag.'); }, true) },
       ]) },
@@ -9980,7 +10103,7 @@ class Component extends DCLogic {
       { key: 'accounts', header: 'Tài khoản', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.accounts) },
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
       { key: 'date', header: 'Ngày tạo' },
-      { key: 'act', header: '', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ roleEditor: r }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => r.system ? this.toast('danger', 'Không thể xóa', 'Vai trò hệ thống mặc định không được xóa.') : r.accounts > 0 ? this.toast('warning', 'Không thể xóa', 'Vai trò đang có tài khoản sử dụng. Hãy chuyển tài khoản sang vai trò khác trước.') : this.confirm('Xóa vai trò?', 'Vai trò "' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa vai trò.'); }, true) },
       ]) },
@@ -10021,7 +10144,7 @@ class Component extends DCLogic {
       { key: 'role', header: 'Vai trò', render: (_, r) => h(DS.Badge, { theme: 'brand' }, r.role) },
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
       { key: 'last', header: 'Đăng nhập gần nhất' },
-      { key: 'act', header: '', width: 120, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 120, align: 'right', render: (_, r) => this.rowActions([
         { icon: r.status === 'locked' ? 'lock-unlocked-01-line' : 'lock-01-line', label: r.status === 'locked' ? 'Mở khóa' : 'Khóa', onClick: () => this.toast(r.status === 'locked' ? 'success' : 'warning', r.status === 'locked' ? 'Đã mở khóa' : 'Đã khóa', r.name + (r.status === 'locked' ? ' có thể đăng nhập lại.' : ' bị thu hồi phiên đăng nhập.')) },
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ userEditor: r }) },
       ]) },
