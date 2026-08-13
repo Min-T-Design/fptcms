@@ -313,6 +313,16 @@ class Component extends DCLogic {
       { code: 'DEV-WIFI7', name: 'Router Wi-Fi 7', kind: 'Thiết bị', group: 'Internet', price: '2.190.000đ', status: 'active', cms: true, source: 'FCP', devices: 'Router Wi-Fi 7 BE9300', addons: '—', updatedAt: '16/05/2026 14:22', updatedBy: 'FI-25128' },
       { code: 'MODEM-AX1800GZ', name: 'Modem Wi-Fi 6 AX1800', kind: 'Thiết bị', group: 'Internet', price: '0đ', status: 'active', cms: true, source: 'ECP', devices: 'Modem Wi-Fi 6 AX1800', addons: '—', updatedAt: '14/05/2026 13:50', updatedBy: 'Admin User' },
       { code: 'CLOUD-CAM30', name: 'Cloud Camera 30 ngày', kind: 'Dịch vụ', group: 'Cloud', price: '50.000đ', status: 'inactive', cms: false, source: 'FCP', devices: '—', addons: 'Cloud lưu 30 ngày', updatedAt: '10/05/2026 08:30', updatedBy: 'Admin User' },
+      { code: 'INT-LUX1000', name: 'Internet LUX 1000 (1Gbps/300Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '480.000đ', status: 'active', cms: true, source: 'ECP', devices: 'ONT 2 port 10G, Thiết bị Wi-Fi 6E', addons: 'Fsafe – Bảo mật, Ultra Fast – Chơi game, FPT Play VIP', updatedAt: '22/05/2026 09:10', updatedBy: '24092 - Nguyễn' },
+      { code: 'INT-COMBO200', name: 'Internet Combo Gia Đình (200Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '250.000đ', status: 'active', cms: true, source: 'FCP', devices: 'ONT 1 port 1G, Thiết bị Wi-Fi 6', addons: 'FPT Play VIP', updatedAt: '22/05/2026 09:20', updatedBy: 'Admin User' },
+      { code: 'INT-BIZ500', name: 'Internet Doanh Nghiệp (500Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '890.000đ', status: 'active', cms: true, source: 'ECP', devices: 'ONT 2 port 1G, Thiết bị Wi-Fi 6', addons: 'IP tĩnh, SLA cam kết', updatedAt: '22/05/2026 09:30', updatedBy: 'FI-25128' },
+      { code: 'CAM-IQ5', name: 'FPT Camera IQ5 (AI 4K)', kind: 'Thiết bị', group: 'Camera', price: '2.190.000đ', status: 'active', cms: true, source: 'FCP', devices: 'Camera IQ5 4K AI', addons: 'Cloud 7 ngày, Nhận diện khuôn mặt', updatedAt: '22/05/2026 10:00', updatedBy: 'FI-25128' },
+      { code: 'CAM-OUTDOOR', name: 'FPT Camera Outdoor IP66', kind: 'Thiết bị', group: 'Camera', price: '1.690.000đ', status: 'active', cms: true, source: 'ECP', devices: 'Camera ngoài trời chống nước IP66', addons: 'Cloud 7 ngày miễn phí', updatedAt: '22/05/2026 10:10', updatedBy: 'FI-25128' },
+      { code: 'SA-KPLUS', name: 'FPT Play K+', kind: 'Dịch vụ', group: 'Truyền hình', price: '150.000đ', status: 'active', cms: true, source: 'FCP', devices: 'FPT Play Box (tặng kèm)', addons: 'K+, FPT Play', updatedAt: '22/05/2026 10:20', updatedBy: '24092 - Nguyễn' },
+      { code: 'SA-HBOMAX', name: 'FPT Play HBO Max', kind: 'Dịch vụ', group: 'Truyền hình', price: '179.000đ', status: 'active', cms: true, source: 'ECP', devices: 'FPT Play Box 4K', addons: 'HBO, FPT Play', updatedAt: '22/05/2026 10:30', updatedBy: 'Admin User' },
+      { code: 'DEV-MESH', name: 'Router Mesh Wi-Fi 6E (2 Pack)', kind: 'Thiết bị', group: 'Internet', price: '2.890.000đ', status: 'active', cms: true, source: 'FCP', devices: 'Mesh Wi-Fi 6E 2 Pack', addons: '—', updatedAt: '22/05/2026 10:40', updatedBy: 'FI-25128' },
+      { code: 'DEV-ONT10G', name: 'ONT 10G Fiber', kind: 'Thiết bị', group: 'Internet', price: '990.000đ', status: 'active', cms: true, source: 'ECP', devices: 'ONT 10G Fiber', addons: '—', updatedAt: '22/05/2026 10:50', updatedBy: 'Admin User' },
+      { code: 'CLOUD-CAM7', name: 'Cloud Camera 7 ngày', kind: 'Dịch vụ', group: 'Cloud', price: '0đ', status: 'active', cms: true, source: 'FCP', devices: '—', addons: 'Cloud lưu 7 ngày', updatedAt: '22/05/2026 11:00', updatedBy: 'Admin User' },
     ];
   }
   NAV() {
@@ -8743,7 +8753,7 @@ class Component extends DCLogic {
     });
   }
   closePayEditor() {
-    this.setState({ payEditor: undefined, payEditMethodId: undefined, payEditStart: undefined, payEditEnd: undefined, payEditDescriptions: undefined, payEditSkuSelected: undefined, payEditSkuFilter: undefined, payEditSkuSearch: undefined, payEditSkuCheckAll: undefined });
+    this.setState({ payEditor: undefined, payEditMethodId: undefined, payEditStart: undefined, payEditEnd: undefined, payEditDescriptions: undefined, payEditSkuSelected: undefined, payEditSkuFilter: undefined, payEditSkuSearch: undefined, payEditSkuCheckAll: undefined, payEditFocusSku: undefined });
   }
   // Xóa 1 gói khỏi cấu hình đang sửa (chỉ dùng ở chế độ sửa) — gói bị xóa sẽ được tắt (active:false) cho PTTT này khi lưu.
   removePayEditSku(code) {
@@ -8752,7 +8762,14 @@ class Component extends DCLogic {
     this.setState({
       payEditSkuSelected: (this.state.payEditSkuSelected || []).filter(c => c !== code),
       payEditDescriptions: map,
+      payEditFocusSku: this.state.payEditFocusSku === code ? undefined : this.state.payEditFocusSku,
     });
+  }
+  // Bấm 1 gói ở danh sách bên trái (chế độ sửa) → cuộn/focus tới card mô tả tương ứng bên phải.
+  focusPayEditSku(code) {
+    this.setState({ payEditFocusSku: code });
+    const el = document.getElementById('pay-desc-' + code);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   addPayEditDescLine(code) {
     const map = { ...(this.state.payEditDescriptions || {}) };
@@ -8818,6 +8835,13 @@ class Component extends DCLogic {
     // ── Chế độ sửa: không cho thêm gói mới, chỉ sửa/xóa các gói đã có sẵn từ bước tạo trước — mỗi gói có mô tả riêng ──
     if (isEdit) {
       const descMap = this.state.payEditDescriptions || {};
+      const editSkuSearch = (this.state.payEditSkuSearch || '').toLowerCase();
+      const filteredSelected = editSkuSearch
+        ? selected.filter(code => {
+            const sku = allSkusMap[code];
+            return code.toLowerCase().includes(editSkuSearch) || (sku && sku.name.toLowerCase().includes(editSkuSearch));
+          })
+        : selected;
       return this.editorShell(
         'Chỉnh sửa cấu hình nhanh PTTT',
         r.skus.join(', '),
@@ -8836,20 +8860,31 @@ class Component extends DCLogic {
               h('div', { style: { padding: 16 } },
                 selected.length === 0
                   ? h('div', { style: { textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, padding: '24px 0' } }, 'Không còn gói nào trong cấu hình này')
-                  : h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 440, overflowY: 'auto', overflowX: 'hidden' } },
-                      selected.map(code => {
-                        const sku = allSkusMap[code];
-                        return h('div', { key: code, style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--color-border)' } },
-                          h('div', { style: { flex: 1, minWidth: 0 } },
-                            h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-                              h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace' } }, code),
-                              sku && h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
-                            ),
-                            sku && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
-                          ),
-                          h(DS.IconButton, { icon: 'trash-line', label: 'Xóa gói', level: 'tertiary', size: 'sm', onClick: () => this.removePayEditSku(code) })
-                        );
-                      })
+                  : h('div', null,
+                      h('div', { style: { marginBottom: 8 } },
+                        h(DS.Input, { placeholder: 'Tìm theo mã hoặc tên gói...', leadingIcon: 'search-medium-line', value: this.state.payEditSkuSearch || '', onChange: e => this.setState({ payEditSkuSearch: e.target ? e.target.value : e }) })
+                      ),
+                      filteredSelected.length === 0
+                        ? h('div', { style: { textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, padding: '20px 0' } }, 'Không tìm thấy gói phù hợp')
+                        : h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 440, overflowY: 'auto', overflowX: 'hidden' } },
+                            filteredSelected.map(code => {
+                              const sku = allSkusMap[code];
+                              const isFocused = this.state.payEditFocusSku === code;
+                              return h('div', {
+                                key: code, onClick: () => this.focusPayEditSku(code),
+                                style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', border: '1.5px solid ' + (isFocused ? 'var(--color-accent)' : 'var(--color-border)'), background: isFocused ? 'var(--color-accent-bg)' : 'transparent', transition: 'all .15s' }
+                              },
+                                h('div', { style: { flex: 1, minWidth: 0 } },
+                                  h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                                    h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isFocused ? 'var(--color-accent-text)' : 'var(--color-text)' } }, code),
+                                    sku && h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
+                                  ),
+                                  sku && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
+                                ),
+                                h(DS.IconButton, { icon: 'trash-line', label: 'Xóa gói', level: 'tertiary', size: 'sm', onClick: e => { e.stopPropagation(); this.removePayEditSku(code); } })
+                              );
+                            })
+                          )
                     )
               )
             )
@@ -8893,7 +8928,8 @@ class Component extends DCLogic {
               : selected.map(code => {
                   const sku = allSkusMap[code];
                   const descArr = descMap[code] && descMap[code].length ? descMap[code] : [''];
-                  return h('div', { key: code },
+                  const isFocused = this.state.payEditFocusSku === code;
+                  return h('div', { key: code, id: 'pay-desc-' + code, style: { borderRadius: 'var(--radius-lg)', outline: '2px solid ' + (isFocused ? 'var(--color-accent)' : 'transparent'), outlineOffset: 3, transition: 'outline-color .3s ease' } },
                     this.listCard(
                       this.toolbar(
                         h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
@@ -9081,10 +9117,9 @@ class Component extends DCLogic {
   PAYMENT_LIST_DATA() {
     return [
       { id: 1, time: '01/06/2026 14:15:22', actor: 'huyennk', channel: 'Global', methodId: 'momo', skus: ['INT-GIGA', 'INT-SKY'] },
-      { id: 2, time: '01/06/2026 10:30:05', actor: 'Test003', channel: 'Global', methodId: 'vietqr', skus: ['INT-GIGA', 'INT-SKY', 'INT-META', 'INT-LUX500', 'INT-LUX800', 'CAM-IQ3', 'CAM-IQ4S', 'SA-SMAX', 'DEV-WIFI7'] },
+      { id: 2, time: '01/06/2026 10:30:05', actor: 'Test003', channel: 'Global', methodId: 'vietqr', skus: ['INT-GIGA', 'INT-SKY', 'INT-META', 'INT-LUX500', 'INT-LUX800', 'CAM-IQ3', 'CAM-IQ4S', 'SA-SMAX', 'DEV-WIFI7', 'MODEM-AX1800GZ', 'INT-LUX1000', 'INT-COMBO200', 'INT-BIZ500', 'CAM-IQ5', 'CAM-OUTDOOR', 'SA-KPLUS', 'SA-HBOMAX', 'DEV-MESH', 'DEV-ONT10G', 'CLOUD-CAM7'] },
       { id: 3, time: '30/05/2026 15:48:37', actor: 'Trần Minh Khoa', channel: 'Global', methodId: 'zalopay', skus: ['INT-GIGA'] },
       { id: 4, time: '29/05/2026 09:12:04', actor: 'Nguyễn Thị Thùy', channel: 'Global', methodId: 'momo', skus: ['INT-META'] },
-      { id: 5, time: '28/05/2026 09:21:40', actor: 'Admin User', channel: 'Global', methodId: 'system', skus: [] },
     ];
   }
   defaultPayConfig() {
@@ -9530,12 +9565,6 @@ class Component extends DCLogic {
           overflow > 0 && h(DS.Badge, { key: '__more', theme: 'neutral', title: skus.slice(MAX).join(', ') }, '+' + overflow)
         );
       } },
-      { key: 'actor', header: sh('Người thực hiện', 'actor'), width: 200, render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
-        h('div', { style: { width: 22, height: 22, borderRadius: '50%', background: 'var(--color-accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } },
-          h(DS.Icon, { name: 'user-line', size: 12, color: 'var(--color-accent-text)' })
-        ),
-        h('span', { style: { fontSize: 12.5, whiteSpace: 'nowrap' } }, r.actor)
-      ) },
       { key: 'act', header: 'Thao tác', width: 110, align: 'right', sticky: true, render: (_, r) => {
         if (r.methodId === 'system') return h('span', { style: { fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Hệ thống');
         return this.rowActions([
