@@ -2933,9 +2933,10 @@ class Component extends DCLogic {
     { id: 6, name: 'Banner Giới thiệu Access Point', order: 6, pages: ['Danh mục Camera', 'Smart Tivi', 'FPT Smart Home'], link: '/access-point', bannerType: 'normal', target: '_parent', period: '01/06/2026 – 30/06/2026', createdAt: '15/05/2026', status: 'expired' },
   ]; }
   POPUPS() { return [
-    { id: 1, name: 'Flash Sale T6', position: 'Trang chủ', channels: 'fpt.vn, hifpt', period: '01/06 – 30/06', status: 'running' },
-    { id: 2, name: 'Popup Camera AI', position: 'Theo Gói (Checkout)', channels: 'hifpt', period: 'Liên tục', status: 'running' },
-    { id: 3, name: 'Popup Tư vấn', position: 'Theo URL', channels: 'fpt.vn', period: '01/05 – 31/05', status: 'expired' },
+    { id: 1, name: 'Flash Sale T5', type: 'menu-page', pages: ['Trang chủ'], period: '15/05/2026 – 20/05/2026', trigger: 'exit-intent', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'running' },
+    { id: 2, name: 'Khuyến mãi Camera', type: 'checkout', checkoutScope: 'Gói Camera AI', period: '01/05/2026 – 31/05/2026', trigger: 'immediate', delaySec: 0, autoCloseSec: 8, frequency: 'once', status: 'running' },
+    { id: 3, name: 'Ưu đãi lắp mới Internet', type: 'global', period: '10/04/2026 – 10/05/2026', trigger: 'delay', delaySec: 3, autoCloseSec: 0, frequency: 'always', status: 'expired' },
+    { id: 4, name: 'Popup Tết 2026', type: 'menu-page', pages: ['Trang chủ', 'Danh mục Camera'], period: '20/01/2026 – 05/02/2026', trigger: 'scroll', delaySec: 0, autoCloseSec: 0, frequency: '24h', status: 'disabled' },
   ]; }
   FAQS() { return [
     { id: 1, cat: 'Thanh toán cước', q: 'Làm thế nào để thanh toán cước trực tuyến?', a: 'FPT Telecom hỗ trợ đa dạng hình thức thanh toán: ứng dụng Hi FPT, ví điện tử MoMo, VNPay, ZaloPay, chuyển khoản ngân hàng hoặc tại quầy giao dịch FPT.', lang: 'Tiếng Việt', order: 1, status: 'active' },
@@ -4573,59 +4574,103 @@ class Component extends DCLogic {
   }
 
   // ===== Popup =====
+  POPUP_TYPES() { return [
+    { value: 'menu-page', label: 'Trang thường (Menu Trang)' },
+    { value: 'checkout', label: 'Trang Checkout' },
+    { value: 'global', label: 'Toàn trang (Global)' },
+  ]; }
+  POPUP_TRIGGERS() { return [
+    { value: 'immediate', label: 'Tức thì khi vào trang (Immediate)' },
+    { value: 'delay', label: 'Thời gian trễ (Delay)' },
+    { value: 'scroll', label: 'Cuộn trang (Scroll)' },
+    { value: 'exit-intent', label: 'Ý định rời trang (Exit Intent)' },
+  ]; }
+  POPUP_FREQUENCIES() { return [
+    { value: 'every-session', label: 'Mỗi phiên truy cập (Session)' },
+    { value: 'once', label: 'Một lần duy nhất' },
+    { value: 'always', label: 'Mọi lần tải trang' },
+    { value: '24h', label: 'Sau 24 giờ' },
+  ]; }
+  popupTypeCell(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    if (r.type === 'checkout') return h('span', { style: { fontSize: 13 } }, 'Checkout' + (r.checkoutScope ? ' (' + r.checkoutScope + ')' : ''));
+    if (r.type === 'global') return h('span', { style: { fontSize: 13 } }, 'Toàn trang (Global)');
+    const pages = r.pages || [];
+    return h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' } },
+      h('span', { style: { fontSize: 13 } }, pages[0] || '—'),
+      pages.length > 1 && h(DS.Badge, { theme: 'neutral' }, '+' + (pages.length - 1) + ' khác')
+    );
+  }
+  openPopupEditor(r) {
+    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : 'menu-page', popupEditorTrigger: r ? r.trigger : 'exit-intent', popupPagesDDOpen: false, popupPagesDDQ: '' });
+  }
+  closePopupEditor() {
+    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupPagesDDOpen: undefined, popupPagesDDQ: undefined });
+  }
   renderPopup() {
     if (this.state.popupEditor !== undefined) return this.renderPopupEditor(this.state.popupEditor);
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.popupSearch || '').toLowerCase();
-    const data = this.POPUPS().filter(p => !q || p.name.toLowerCase().includes(q));
+    const typeF = this.state.popupTypeFilter || 'all';
+    const statusF = this.state.popupStatusFilter || 'all';
+    const typeLabels = this.POPUP_TYPES();
+    const typeLabel = Object.fromEntries(typeLabels.map(t => [t.value, t.label]));
+    const statusLabel = { running: 'Đang chạy', expired: 'Hết hạn', disabled: 'Đã tắt' };
+    const data = this.POPUPS().filter(p => {
+      if (q && !p.name.toLowerCase().includes(q)) return false;
+      if (typeF !== 'all' && p.type !== typeF) return false;
+      if (statusF !== 'all' && p.status !== statusF) return false;
+      return true;
+    });
+    const sliced = this.sliceData(data, 'popups');
+    const popupsPg = this.state.popups_pg || 1;
+    const popupsSz = this.state.popups_sz || 10;
     const columns = [
-      { key: 'name', header: 'Tên Popup', render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
-      { key: 'position', header: 'Vị trí hiển thị' },
-      { key: 'channels', header: 'Kênh áp dụng' },
-      { key: 'period', header: 'Thời gian chạy' },
-      { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'stt', header: '#', width: 44, align: 'center',
+        render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (popupsPg - 1) * popupsSz + sliced.indexOf(r) + 1) },
+      { key: 'name', header: 'Tên Popup', width: 200, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
+      { key: 'type', header: 'Loại popup', width: 190, render: (_, r) => this.popupTypeCell(r) },
+      { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.period) },
+      { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+          const isOn = (this.state.popupActiveMap || {})[r.id] !== undefined ? !!(this.state.popupActiveMap || {})[r.id] : r.status === 'running';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-popup-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', title: 'Bật/Tắt Popup', onChange: v => {
+              this.setState(s => ({ popupActiveMap: { ...s.popupActiveMap, [r.id]: v } }));
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Popup "' + r.name + '".');
+            } })
+          );
+        } },
       { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
-        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ popupEditor: r }) },
+        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openPopupEditor(r) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Popup?', 'Popup "' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa popup.'); }, true) },
       ]) },
     ];
     return this.listCard(
-      this.toolbar(this.search('Tìm popup…', 'popupSearch'), h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ popupEditor: null }) }, 'Tạo Popup mới')),
-      data.length ? this.tbl(columns, this.sliceData(data, 'popups'), 'id', r => this.openPopupDetail(r)) : this.empty('Chưa có popup.'),
+      this.toolbar(
+        h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+          this.search('Tìm kiếm…', 'popupSearch'),
+          h('div', { style: { width: 210, flexShrink: 0 } }, h(DS.Select, {
+            options: [{ value: 'all', label: 'Tất cả loại popup' }, ...typeLabels],
+            value: typeF,
+            onChange: v => this.setState({ popupTypeFilter: v, popups_pg: 1 })
+          })),
+          h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
+            options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'running', label: 'Đang chạy' }, { value: 'expired', label: 'Hết hạn' }, { value: 'disabled', label: 'Đã tắt' }],
+            value: statusF,
+            onChange: v => this.setState({ popupStatusFilter: v, popups_pg: 1 })
+          }))
+        ),
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openPopupEditor(null) }, 'Tạo Popup mới')
+      ),
+      this.filterChipsBar([
+        q && this.filterChip('Tìm: ' + q, 'neutral', () => this.setState({ popupSearch: '', popups_pg: 1 })),
+        typeF !== 'all' && this.filterChip('Loại: ' + typeLabel[typeF], 'brand', () => this.setState({ popupTypeFilter: 'all', popups_pg: 1 })),
+        statusF !== 'all' && this.filterChip('Trạng thái: ' + statusLabel[statusF], 'info', () => this.setState({ popupStatusFilter: 'all', popups_pg: 1 })),
+      ]),
+      data.length ? this.tbl(columns, sliced, 'id', r => this.openPopupDetail(r)) : this.empty('Chưa có popup.'),
       data.length ? this.renderPagBar(data.length, 'popups', 'popup') : null
     );
-  }
-  openPopupDrawer(r) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const src = this.state.form.utmS !== undefined ? this.state.form.utmS : 'popup_banner';
-    const med = this.state.form.utmM !== undefined ? this.state.form.utmM : 'homepage';
-    const camp = this.state.form.utmC !== undefined ? this.state.form.utmC : 'flashsale_t6';
-    const url = this.state.form.purl !== undefined ? this.state.form.purl : '/khuyen-mai';
-    this.openDrawer({
-      title: r ? 'Sửa Popup' : 'Tạo Popup mới', subtitle: 'Popup quảng cáo + UTM Tracking', width: 620,
-      render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } }, h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'), h(DS.Switch, { defaultChecked: r ? r.status === 'running' : true })),
-        this.field('Tên Popup', h(DS.Input, { defaultValue: r ? r.name : '' }), true),
-        this.field('Vị trí hiển thị', h(DS.Select, { options: ['Trang chủ', 'Theo URL chỉ định', 'Theo Gói bán (Checkout)', 'Global'], defaultValue: r ? r.position : 'Trang chủ' }), true),
-        h('div', null,
-          h('label', { style: { display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 6 } }, 'Thời gian chạy *'),
-          h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } })
-        ),
-        this.field('Kênh áp dụng', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 14 } }, ['tongdaiwifi', 'hifpt', 'fpt.vn', 'fptshop'].map(c => h(DS.Checkbox, { key: c, label: c, defaultChecked: c === 'fpt.vn' })))),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } }, this.uploadBox('Ảnh Desktop (16:9)', '≤ 1MB'), this.uploadBox('Ảnh Mobile (1:1)', '≤ 1MB')),
-        this.field('URL đích', h(DS.Input, { value: url, onChange: e => this.setField('purl', e.target ? e.target.value : e) }), true),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 } },
-          h('div', null, this.field('UTM Source', h(DS.Input, { value: src, onChange: e => this.setField('utmS', e.target ? e.target.value : e) }))),
-          h('div', null, this.field('UTM Medium', h(DS.Input, { value: med, onChange: e => this.setField('utmM', e.target ? e.target.value : e) }))),
-          h('div', { style: { gridColumn: '1 / -1' } }, this.field('UTM Campaign', h(DS.Input, { value: camp, onChange: e => this.setField('utmC', e.target ? e.target.value : e) })))
-        ),
-        h('div', { style: { padding: 12, background: 'var(--color-info-bg)', borderRadius: 10, fontSize: 12, color: 'var(--color-info-text)', wordBreak: 'break-all', fontFamily: 'monospace' } }, 'URL tracking: ' + url + '?utm_source=' + src + '&utm_medium=' + med + '&utm_campaign=' + camp)
-      ),
-      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Hủy'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'check-line', onClick: () => { this.closeDrawer(); this.toast('success', 'Đã lưu Popup', 'Popup đã được lưu.'); } }, 'Lưu Popup')
-      )
-    });
   }
 
   openBannerEditor(r) {
@@ -4708,45 +4753,84 @@ class Component extends DCLogic {
   }
   openPopupDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const typeLabel = Object.fromEntries(this.POPUP_TYPES().map(t => [t.value, t.label]));
+    const triggerLabel = Object.fromEntries(this.POPUP_TRIGGERS().map(t => [t.value, t.label]));
+    const freqLabel = Object.fromEntries(this.POPUP_FREQUENCIES().map(t => [t.value, t.label]));
     this.openDrawer({ title: r.name, subtitle: 'Chi tiết Popup', width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
-        this.detailRow('Tên Popup', r.name), this.detailRow('Vị trí', r.position),
-        this.detailRow('Kênh áp dụng', r.channels), this.detailRow('Thời gian', r.period),
+        this.detailRow('Tên Popup', r.name),
+        this.detailRow('Loại popup', typeLabel[r.type]),
+        r.type === 'menu-page' && this.detailRow('Trang áp dụng hiển thị (' + (r.pages || []).length + ')', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 } }, (r.pages || []).map(p => h(DS.Tag, { key: p, size: 'sm' }, p)))),
+        r.type === 'checkout' && this.detailRow('Phạm vi Checkout', r.checkoutScope || '—'),
+        this.detailRow('Thời gian hiển thị', r.period),
+        this.detailRow('Kiểu kích hoạt', triggerLabel[r.trigger]),
+        r.trigger === 'delay' && this.detailRow('Thời gian trễ', (r.delaySec || 0) + ' giây'),
+        this.detailRow('Thời gian tự đóng', r.autoCloseSec ? r.autoCloseSec + ' giây' : 'Không tự đóng'),
+        this.detailRow('Tần suất hiển thị', freqLabel[r.frequency]),
         this.detailRow('Trạng thái', this.statusBadge(r.status))
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.setState({ popupEditor: r }); } }, 'Chỉnh sửa')
+        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openPopupEditor(r); } }, 'Chỉnh sửa')
       )
     });
   }
   renderPopupEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ popupEditor: undefined });
-    const src = (this.state.form || {}).utmS !== undefined ? this.state.form.utmS : 'popup_banner';
-    const med = (this.state.form || {}).utmM !== undefined ? this.state.form.utmM : 'homepage';
-    const camp = (this.state.form || {}).utmC !== undefined ? this.state.form.utmC : 'flashsale_t6';
-    const url  = (this.state.form || {}).purl !== undefined ? this.state.form.purl : '/khuyen-mai';
-    return this.editorShell(
-      isNew ? 'Tạo Popup mới' : 'Chỉnh sửa Popup: ' + r.name, 'Popup quảng cáo + UTM Tracking', back,
-      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
-          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'), h(DS.Switch, { defaultChecked: r ? r.status === 'running' : true })),
-        this.field('Tên Popup', h(DS.Input, { defaultValue: r ? r.name : '' }), true),
-        this.field('Vị trí hiển thị', h(DS.Select, { options: ['Trang chủ', 'Theo URL chỉ định', 'Theo Gói bán (Checkout)', 'Global'], defaultValue: r ? r.position : 'Trang chủ' }), true),
-        h('div', null, h('label', { style: { display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 6 } }, 'Thời gian chạy *'), h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } })),
-        this.field('Kênh áp dụng', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 14 } }, ['tongdaiwifi', 'hifpt', 'fpt.vn', 'fptshop'].map(c => h(DS.Checkbox, { key: c, label: c, defaultChecked: c === 'fpt.vn' })))),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } }, this.uploadBox('Ảnh Desktop (16:9)', '≤ 1MB'), this.uploadBox('Ảnh Mobile (1:1)', '≤ 1MB')),
-        this.field('URL đích', h(DS.Input, { value: url, onChange: e => this.setField('purl', e.target ? e.target.value : e) }), true),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 } },
-          h('div', null, this.field('UTM Source', h(DS.Input, { value: src, onChange: e => this.setField('utmS', e.target ? e.target.value : e) }))),
-          h('div', null, this.field('UTM Medium', h(DS.Input, { value: med, onChange: e => this.setField('utmM', e.target ? e.target.value : e) }))),
-          h('div', { style: { gridColumn: '1 / -1' } }, this.field('UTM Campaign', h(DS.Input, { value: camp, onChange: e => this.setField('utmC', e.target ? e.target.value : e) })))
-        ),
-        h('div', { style: { padding: 12, background: 'var(--color-info-bg)', borderRadius: 10, fontSize: 12, color: 'var(--color-info-text)', wordBreak: 'break-all', fontFamily: 'monospace' } },
-          'URL tracking: ' + url + '?utm_source=' + src + '&utm_medium=' + med + '&utm_campaign=' + camp)
+    const isNew = !r; const back = () => this.closePopupEditor();
+    const type = this.state.popupEditorType || (r ? r.type : 'menu-page');
+    const trigger = this.state.popupEditorTrigger || (r ? r.trigger : 'exit-intent');
+    const selectedPages = this.state.popupEditorPages || (r && r.pages) || [];
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+        h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
       ),
-      () => { back(); this.toast('success', 'Đã lưu Popup', 'Popup đã được lưu.'); },
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
+    );
+    return this.editorShell(
+      isNew ? 'Tạo Popup mới' : 'Chỉnh sửa Popup: ' + r.name, 'Popup hiển thị đa thiết bị', back,
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
+          h(DS.Switch, { defaultChecked: !r || r.status === 'running' })
+        ),
+        section(1, 'file-doc-line', 'Thông tin cơ bản',
+          h('div', { style: { display: 'flex', gap: 12 } },
+            h('div', { style: { flex: 1 } }, this.field('Tên Popup', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Flash Sale T6' }), true)),
+            h('div', { style: { width: 230 } }, this.field('Loại popup', h(DS.Select, {
+              options: this.POPUP_TYPES(), value: type, onChange: v => this.setState({ popupEditorType: v })
+            }), true))
+          ),
+          this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }), true),
+          type !== 'checkout'
+            ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+                h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                  h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Trang áp dụng hiển thị'),
+                  selectedPages.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '(Đã chọn: ' + selectedPages.length + ' trang)')
+                ),
+                this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ popupEditorPages: v }), { stateKey: 'popupPagesDD', placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
+              )
+            : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Popup Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.')
+        ),
+        section(2, 'image-line', 'Hình ảnh',
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+            this.uploadBox('Desktop (16:9)', 'JPG, PNG · tối đa 1MB'),
+            this.uploadBox('Mobile / Bottom Sheet (1:1)', 'JPG, PNG · tối đa 1MB')
+          )
+        ),
+        section(3, 'zap-line', 'Hành vi hiển thị',
+          h('div', { style: { display: 'flex', gap: 12 } },
+            h('div', { style: { flex: 1 } }, this.field('Kiểu kích hoạt', h(DS.Select, {
+              options: this.POPUP_TRIGGERS(), value: trigger, onChange: v => this.setState({ popupEditorTrigger: v })
+            }), true)),
+            trigger === 'delay' && h('div', { style: { width: 170 } }, this.field('Thời gian trễ (giây)', h(DS.Input, { type: 'number', defaultValue: r ? String(r.delaySec || 5) : '5' }), true)),
+            h('div', { style: { width: 200 } }, this.field('Thời gian tự đóng (giây)', h(DS.Input, { type: 'number', defaultValue: r && r.autoCloseSec ? String(r.autoCloseSec) : '', placeholder: 'Để trống nếu không tự đóng' })))
+          ),
+          this.field('Tần suất hiển thị', h(DS.Select, { options: this.POPUP_FREQUENCIES(), defaultValue: r ? r.frequency : 'every-session' }), true)
+        )
+      ),
+      () => { back(); this.toast('success', 'Đã lưu Popup', isNew ? 'Popup mới đã được tạo.' : 'Popup "' + r.name + '" đã được cập nhật.'); },
       isNew ? 'Tạo Popup' : 'Lưu Popup'
     );
   }
