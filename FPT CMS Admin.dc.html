@@ -389,7 +389,7 @@ class Component extends DCLogic {
     const map = {
       active: ['success', 'Hoạt động'], inactive: ['neutral', 'Ngừng hoạt động'],
       draft: ['warning', 'Nháp'], locked: ['danger', 'Tạm khóa'],
-      running: ['success', 'Đang chạy'], expired: ['neutral', 'Hết hạn'], disabled: ['neutral', 'Đã tắt'],
+      running: ['success', 'Đang chạy'], expired: ['danger', 'Hết hạn'], disabled: ['neutral', 'Đã tắt'],
       global: ['info', 'Dùng Global'], custom: ['brand', 'Tùy chỉnh riêng'],
       publish: ['success', 'Đã xuất bản'], hidden: ['warning', 'Tạm ẩn'],
     };
@@ -4536,6 +4536,7 @@ class Component extends DCLogic {
       { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
       { key: 'status', header: 'Trạng thái', width: 110, align: 'center', render: (_, r) => this.statusBadge(r.status) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+          if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
           const isOn = (this.state.bannerActiveMap || {})[r.id] !== undefined ? !!(this.state.bannerActiveMap || {})[r.id] : r.status === 'active';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-banner-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
@@ -4636,6 +4637,7 @@ class Component extends DCLogic {
       { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.period) },
       { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => this.statusBadge(r.status) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+          if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
           const isOn = (this.state.popupActiveMap || {})[r.id] !== undefined ? !!(this.state.popupActiveMap || {})[r.id] : r.status === 'running';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-popup-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', title: 'Bật/Tắt Popup', onChange: v => {
