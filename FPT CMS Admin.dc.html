@@ -3249,7 +3249,7 @@ class Component extends DCLogic {
       { key: 'act', header: 'Thao tác', width: 80, align: 'right',
         render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ secEditor: r, secEditorBlocks: r ? (r.blocks || []) : [] }) },
-          { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Section?', 'Các trang đang dùng Section này sẽ bị ảnh hưởng.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa Section.'); }, true) },
+          { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Section?', 'Section "' + r.name + '" sẽ bị xóa khỏi trang "' + r.page + '".', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa Section.'); }, true) },
         ]) },
     ];
     const pageOptions = [{ value: 'all', label: '— Chọn trang —' }, ...pages.map(p => ({ value: p, label: p }))];
@@ -3384,9 +3384,8 @@ class Component extends DCLogic {
     const toggleBlock = (b) => { const cur = this.state.secEditorBlocks || []; this.setState({ secEditorBlocks: cur.includes(b) ? cur.filter(x => x !== b) : [...cur, b] }); };
     return this.editorShell(
       isNew ? 'Tạo Section mới' : 'Chỉnh sửa: ' + r.name,
-      isNew ? 'Section là component dùng chung' : 'Trang: ' + r.page, back,
+      isNew ? 'Thông tin Section' : 'Trang: ' + r.page, back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-        h(DS.Alert, { theme: 'info', title: 'Lưu ý dùng chung' }, 'Khi cập nhật Section, tất cả trang đang gán sẽ thay đổi đồng thời.'),
         h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
           h('div', null, this.field('Thuộc trang', h(DS.Select, { options: PAGES, defaultValue: r ? r.page : PAGES[0] }), true)),
           h('div', null, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order != null ? r.order : '') : '' })))
@@ -3414,7 +3413,7 @@ class Component extends DCLogic {
             ); })
         )
       ),
-      () => { back(); this.toast('success', 'Đã lưu', 'Section đã được cập nhật trên các trang liên quan.'); },
+      () => { back(); this.toast('success', 'Đã lưu', isNew ? 'Section mới đã được tạo.' : 'Đã cập nhật Section "' + r.name + '".'); },
       isNew ? 'Tạo Section' : 'Cập nhật Section'
     );
   }
