@@ -2190,8 +2190,7 @@ class Component extends DCLogic {
       // ── 1. Cấu hình nội dung ──
       h('div', null,
         h('div', { style: { fontSize: 13.5, fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 } },
-          '1. Cấu hình nội dung',
-          !isChild && h('span', { style: { color: 'var(--color-danger-text)', marginLeft: 4 } }, '*')
+          '1. Cấu hình nội dung'
         ),
         h('div', { role: 'tablist', style: { display: 'inline-flex', gap: 4, alignItems: 'stretch', padding: 4, background: 'var(--color-surface-sunken)', borderRadius: 'var(--radius-full)', marginBottom: 14 } },
           mainTabDefs.map(t => {
@@ -2512,14 +2511,10 @@ class Component extends DCLogic {
       h(DS.Select, { label, options: ['— Không hiển thị —', ...bannerOptions], defaultValue: def || '— Không hiển thị —' }),
       fieldHint(hint)
     );
-    const popupBlock = (label, def, delayDef, autoCloseDef, hint, extra) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-      h('div', { style: { display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12, alignItems: 'start' } },
-        h('div', null,
-          h(DS.Select, { label, options: ['— Không hiển thị —', ...popupOptions], defaultValue: def || '— Không hiển thị —' }),
-          fieldHint(hint)
-        ),
-        h(DS.Input, { label: 'Delay mở (giây)', type: 'number', defaultValue: String(delayDef != null ? delayDef : 0) }),
-        h(DS.Input, { label: 'Tự tắt sau (giây)', type: 'number', defaultValue: String(autoCloseDef != null ? autoCloseDef : 0) })
+    const popupBlock = (label, def, hint, extra) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+      h('div', null,
+        h(DS.Select, { label, options: ['— Không hiển thị —', ...popupOptions], defaultValue: def || '— Không hiển thị —' }),
+        fieldHint(hint)
       ),
       extra
     );
@@ -2597,19 +2592,19 @@ class Component extends DCLogic {
               h('div', { style: { flex: 1 } }, bannerSelect('Banner đầu trang (Header)', r ? r.headerBanner : null, 'Ví dụ: Banner ưu đãi nổi bật đầu trang đăng ký')),
               h('div', { style: { flex: 1 } }, bannerSelect('Banner chân trang (Footer)', r ? r.footerBanner : null, 'Ví dụ: Banner nhắc lại ưu đãi cuối trang đăng ký'))
             ),
-            popupBlock('Pop-up', r ? r.popupCheckout : null, r ? r.regPopupDelay : 0, r ? r.regPopupAutoClose : 0, 'Ví dụ: Popup giới thiệu ưu đãi khi vào trang đăng ký')
+            popupBlock('Pop-up', r ? r.popupCheckout : null, 'Ví dụ: Popup giới thiệu ưu đãi khi vào trang đăng ký')
           )
         },
         { key: 'pay', title: 'Trang thanh toán & nhập mã KM', icon: 'send-01-line', content:
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-            popupBlock('Pop-up đồ họa (Modal Popup)', r ? r.payModalPopup : null, r ? r.payModalDelay : 0, r ? r.payModalAutoClose : 0,
+            popupBlock('Pop-up đồ họa (Modal Popup)', r ? r.payModalPopup : null,
               'Ví dụ: Popup khuyến mãi hiển thị ngay khi vào trang thanh toán',
               h('div', { style: { display: 'flex', gap: 16 } },
                 h(DS.Radio, { name: 'payModalFreq', label: '1 lần/phiên', checked: rulePayModalFreq === '1 lần/phiên', onChange: () => this.setState({ rulePayModalFreq: '1 lần/phiên' }) }),
                 h(DS.Radio, { name: 'payModalFreq', label: 'Mỗi lần vào', checked: rulePayModalFreq === 'Mỗi lần vào', onChange: () => this.setState({ rulePayModalFreq: 'Mỗi lần vào' }) })
               )
             ),
-            popupBlock('Pop-up khi áp Voucher (nhập mã KM)', r ? r.payVoucherPopup : null, r ? r.payVoucherDelay : 0, r ? r.payVoucherAutoClose : 0, 'Ví dụ: Popup xác nhận ưu đãi khi áp mã giảm giá'),
+            popupBlock('Pop-up khi áp Voucher (nhập mã KM)', r ? r.payVoucherPopup : null, 'Ví dụ: Popup xác nhận ưu đãi khi áp mã giảm giá'),
             h('div', { style: { display: 'flex', gap: 12 } },
               h('div', { style: { flex: 1 } }, bannerSelect('Header Banner (Thanh toán)', r ? r.payHeaderBanner : null, 'Ví dụ: Banner nhắc ưu đãi đang áp dụng ở bước thanh toán')),
               h('div', { style: { flex: 1 } }, bannerSelect('Footer Banner (Thanh toán)', r ? r.payFooterBanner : null, 'Ví dụ: Banner hỗ trợ / CSKH cuối trang thanh toán'))
@@ -2622,7 +2617,7 @@ class Component extends DCLogic {
               h('div', { style: { flex: 1 } }, bannerSelect('Banner đầu trang (Header)', r ? r.doneHeaderBanner : null, 'Ví dụ: Banner chúc mừng đặt hàng thành công')),
               h('div', { style: { flex: 1 } }, bannerSelect('Banner quảng bá App / Sản phẩm', r ? r.doneAppBanner : null, 'Ví dụ: Banner giới thiệu App HiFPT góc dưới trang'))
             ),
-            popupBlock('Pop-up tri ân / hướng dẫn tải App', r ? r.donePopup : null, r ? r.doneDelay : 0, r ? r.doneAutoClose : 0, 'Ví dụ: Popup cảm ơn kèm hướng dẫn tải ứng dụng')
+            popupBlock('Pop-up tri ân / hướng dẫn tải App', r ? r.donePopup : null, 'Ví dụ: Popup cảm ơn kèm hướng dẫn tải ứng dụng')
           )
         }
       ];
@@ -2936,10 +2931,10 @@ class Component extends DCLogic {
     { id: 6, name: 'Banner Giới thiệu Access Point', order: 6, pages: ['Danh mục Camera', 'Smart Tivi', 'FPT Smart Home'], link: '/access-point', bannerType: 'normal', target: '_parent', period: '01/06/2026 – 30/06/2026', createdAt: '15/05/2026', status: 'expired' },
   ]; }
   POPUPS() { return [
-    { id: 1, name: 'Flash Sale T5', type: 'menu-page', pages: ['Trang chủ'], period: '15/05/2026 – 20/05/2026', trigger: 'exit-intent', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'running' },
-    { id: 2, name: 'Khuyến mãi Camera', type: 'checkout', checkoutScope: 'Gói Camera AI', period: '01/05/2026 – 31/05/2026', trigger: 'immediate', delaySec: 0, autoCloseSec: 8, frequency: 'once', status: 'running' },
-    { id: 3, name: 'Ưu đãi lắp mới Internet', type: 'global', period: '10/04/2026 – 10/05/2026', trigger: 'delay', delaySec: 3, autoCloseSec: 0, frequency: 'always', status: 'expired' },
-    { id: 4, name: 'Popup Tết 2026', type: 'menu-page', pages: ['Trang chủ', 'Danh mục Camera'], period: '20/01/2026 – 05/02/2026', trigger: 'scroll', delaySec: 0, autoCloseSec: 0, frequency: '24h', status: 'disabled' },
+    { id: 1, name: 'Flash Sale T5', type: 'menu-page', pages: ['Trang chủ'], period: '15/05/2026 – 20/05/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'running' },
+    { id: 2, name: 'Khuyến mãi Camera', type: 'checkout', checkoutScope: 'Gói Camera AI', period: '01/05/2026 – 31/05/2026', trigger: 'immediate', delaySec: 0, autoCloseSec: 8, frequency: 'every-session', status: 'running' },
+    { id: 3, name: 'Ưu đãi lắp mới Internet', type: 'menu-page', pages: ['Trang chủ', 'Internet - Wifi'], period: '10/04/2026 – 10/05/2026', trigger: 'delay', delaySec: 3, autoCloseSec: 0, frequency: 'always', status: 'expired' },
+    { id: 4, name: 'Popup Tết 2026', type: 'menu-page', pages: ['Trang chủ', 'Danh mục Camera'], period: '20/01/2026 – 05/02/2026', trigger: 'scroll', delaySec: 0, autoCloseSec: 0, frequency: 'always', status: 'disabled' },
   ]; }
   FAQS() { return [
     { id: 1, cat: 'Thanh toán cước', q: 'Làm thế nào để thanh toán cước trực tuyến?', a: 'FPT Telecom hỗ trợ đa dạng hình thức thanh toán: ứng dụng Hi FPT, ví điện tử MoMo, VNPay, ZaloPay, chuyển khoản ngân hàng hoặc tại quầy giao dịch FPT.', lang: 'Tiếng Việt', order: 1, status: 'active' },
@@ -4581,24 +4576,19 @@ class Component extends DCLogic {
   POPUP_TYPES() { return [
     { value: 'menu-page', label: 'Trang thường (Menu Trang)' },
     { value: 'checkout', label: 'Trang Checkout' },
-    { value: 'global', label: 'Toàn trang (Global)' },
   ]; }
   POPUP_TRIGGERS() { return [
     { value: 'immediate', label: 'Tức thì khi vào trang (Immediate)' },
     { value: 'delay', label: 'Thời gian trễ (Delay)' },
     { value: 'scroll', label: 'Cuộn trang (Scroll)' },
-    { value: 'exit-intent', label: 'Ý định rời trang (Exit Intent)' },
   ]; }
   POPUP_FREQUENCIES() { return [
     { value: 'every-session', label: 'Mỗi phiên truy cập (Session)' },
-    { value: 'once', label: 'Một lần duy nhất' },
     { value: 'always', label: 'Mọi lần tải trang' },
-    { value: '24h', label: 'Sau 24 giờ' },
   ]; }
   popupTypeCell(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     if (r.type === 'checkout') return h('span', { style: { fontSize: 13 } }, 'Checkout' + (r.checkoutScope ? ' (' + r.checkoutScope + ')' : ''));
-    if (r.type === 'global') return h('span', { style: { fontSize: 13 } }, 'Toàn trang (Global)');
     const pages = r.pages || [];
     return h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' } },
       h('span', { style: { fontSize: 13 } }, pages[0] || '—'),
@@ -4606,7 +4596,7 @@ class Component extends DCLogic {
     );
   }
   openPopupEditor(r) {
-    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : 'menu-page', popupEditorTrigger: r ? r.trigger : 'exit-intent', popupPagesDDOpen: false, popupPagesDDQ: '' });
+    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : 'menu-page', popupEditorTrigger: r ? r.trigger : 'immediate', popupPagesDDOpen: false, popupPagesDDQ: '' });
   }
   closePopupEditor() {
     this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupPagesDDOpen: undefined, popupPagesDDQ: undefined });
@@ -4615,14 +4605,12 @@ class Component extends DCLogic {
     if (this.state.popupEditor !== undefined) return this.renderPopupEditor(this.state.popupEditor);
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.popupSearch || '').toLowerCase();
-    const typeF = this.state.popupTypeFilter || 'all';
+    const pageF = this.state.popupPageFilter || 'all';
     const statusF = this.state.popupStatusFilter || 'all';
-    const typeLabels = this.POPUP_TYPES();
-    const typeLabel = Object.fromEntries(typeLabels.map(t => [t.value, t.label]));
     const statusLabel = { running: 'Đang chạy', expired: 'Hết hạn', disabled: 'Đã tắt' };
     const data = this.POPUPS().filter(p => {
       if (q && !p.name.toLowerCase().includes(q)) return false;
-      if (typeF !== 'all' && p.type !== typeF) return false;
+      if (pageF !== 'all' && !(p.pages || []).includes(pageF)) return false;
       if (statusF !== 'all' && p.status !== statusF) return false;
       return true;
     });
@@ -4633,7 +4621,7 @@ class Component extends DCLogic {
       { key: 'stt', header: '#', width: 44, align: 'center',
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (popupsPg - 1) * popupsSz + sliced.indexOf(r) + 1) },
       { key: 'name', header: 'Tên Popup', width: 200, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
-      { key: 'type', header: 'Loại popup', width: 190, render: (_, r) => this.popupTypeCell(r) },
+      { key: 'type', header: 'Trang áp dụng', width: 190, render: (_, r) => this.popupTypeCell(r) },
       { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.period) },
       { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => this.statusBadge(r.status) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
@@ -4656,9 +4644,9 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
           this.search('Tìm kiếm…', 'popupSearch'),
           h('div', { style: { width: 210, flexShrink: 0 } }, h(DS.Select, {
-            options: [{ value: 'all', label: 'Tất cả loại popup' }, ...typeLabels],
-            value: typeF,
-            onChange: v => this.setState({ popupTypeFilter: v, popups_pg: 1 })
+            options: [{ value: 'all', label: 'Tất cả trang áp dụng' }, ...this.BANNER_PAGES().map(p => ({ value: p, label: p }))],
+            value: pageF,
+            onChange: v => this.setState({ popupPageFilter: v, popups_pg: 1 })
           })),
           h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
             options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'running', label: 'Đang chạy' }, { value: 'expired', label: 'Hết hạn' }, { value: 'disabled', label: 'Đã tắt' }],
@@ -4670,7 +4658,7 @@ class Component extends DCLogic {
       ),
       this.filterChipsBar([
         q && this.filterChip('Tìm: ' + q, 'neutral', () => this.setState({ popupSearch: '', popups_pg: 1 })),
-        typeF !== 'all' && this.filterChip('Loại: ' + typeLabel[typeF], 'brand', () => this.setState({ popupTypeFilter: 'all', popups_pg: 1 })),
+        pageF !== 'all' && this.filterChip('Trang: ' + pageF, 'brand', () => this.setState({ popupPageFilter: 'all', popups_pg: 1 })),
         statusF !== 'all' && this.filterChip('Trạng thái: ' + statusLabel[statusF], 'info', () => this.setState({ popupStatusFilter: 'all', popups_pg: 1 })),
       ]),
       data.length ? this.tbl(columns, sliced, 'id', r => this.openPopupDetail(r)) : this.empty('Chưa có popup.'),
@@ -4679,10 +4667,10 @@ class Component extends DCLogic {
   }
 
   openBannerEditor(r) {
-    this.setState({ bannerEditor: r, bannerEditorPages: r ? [...r.pages] : ['Trang chủ'], bannerPagesDDOpen: false, bannerPagesDDQ: '' });
+    this.setState({ bannerEditor: r, bannerEditorPages: r ? [...r.pages] : ['Trang chủ'], bannerEditorType: r ? r.bannerType : 'normal', bannerPagesDDOpen: false, bannerPagesDDQ: '' });
   }
   closeBannerEditor() {
-    this.setState({ bannerEditor: undefined, bannerEditorPages: undefined, bannerPagesDDOpen: undefined, bannerPagesDDQ: undefined });
+    this.setState({ bannerEditor: undefined, bannerEditorPages: undefined, bannerEditorType: undefined, bannerPagesDDOpen: undefined, bannerPagesDDQ: undefined });
   }
   openBannerDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -4710,6 +4698,7 @@ class Component extends DCLogic {
     const isNew = !r; const back = () => this.closeBannerEditor();
     const pages = r ? r.pages : ['Trang chủ'];
     const selectedPages = this.state.bannerEditorPages || pages;
+    const bannerType = this.state.bannerEditorType || (r ? r.bannerType : 'normal');
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -4738,17 +4727,19 @@ class Component extends DCLogic {
         ),
         section(3, 'share-01-line', 'Cấu hình Liên kết & Áp dụng',
           h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { flex: 1 } }, this.field('Loại banner', h(DS.Select, { options: [{ value: 'normal', label: 'Trang thường (Menu Trang)' }, { value: 'checkout', label: 'Trang Checkout' }], defaultValue: r ? r.bannerType : 'normal' }))),
+            h('div', { style: { flex: 1 } }, this.field('Loại banner', h(DS.Select, { options: [{ value: 'normal', label: 'Trang thường (Menu Trang)' }, { value: 'checkout', label: 'Trang Checkout' }], value: bannerType, onChange: v => this.setState({ bannerEditorType: v }) }))),
             h('div', { style: { width: 140 } }, this.field('Target', h(DS.Select, { options: ['_self', '_blank', '_parent', '_top'], defaultValue: r ? r.target : '_self' })))
           ),
           this.field('Link URL đích', h(DS.Input, { defaultValue: r ? r.link : '', placeholder: '/khuyen-mai-thang-6' }), true),
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-            h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-              h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Trang áp dụng hiển thị', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
-              selectedPages.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '(Đã chọn: ' + selectedPages.length + ' trang)')
-            ),
-            this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ bannerEditorPages: v }), { stateKey: 'bannerPagesDD', placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
-          ),
+          bannerType !== 'checkout'
+            ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+                h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                  h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Trang áp dụng hiển thị', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+                  selectedPages.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '(Đã chọn: ' + selectedPages.length + ' trang)')
+                ),
+                this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ bannerEditorPages: v }), { stateKey: 'bannerPagesDD', placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
+              )
+            : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Banner Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.'),
           this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))
         )
       ),
@@ -4784,7 +4775,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.closePopupEditor();
     const type = this.state.popupEditorType || (r ? r.type : 'menu-page');
-    const trigger = this.state.popupEditorTrigger || (r ? r.trigger : 'exit-intent');
+    const trigger = this.state.popupEditorTrigger || (r ? r.trigger : 'immediate');
     const selectedPages = this.state.popupEditorPages || (r && r.pages) || [];
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
