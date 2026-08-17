@@ -2769,11 +2769,11 @@ class Component extends DCLogic {
       )
     );
   }
-  uploadBox(label, hint) {
+  uploadBox(label, hint, required) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     return h('div', { onClick: () => this.toast('info', 'Chọn tệp', 'Mở hộp thoại tải ảnh (demo).'), style: { border: '1.5px dashed var(--color-border-strong)', borderRadius: 10, padding: '20px 14px', textAlign: 'center', cursor: 'pointer', background: 'var(--color-surface-alt)' } },
       h(DS.Icon, { name: 'upload-cloud-line', size: 22, color: 'var(--color-text-subtle)' }),
-      h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 6 } }, label),
+      h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 6 } }, label, required && h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
       hint && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, hint)
     );
   }
@@ -3182,16 +3182,16 @@ class Component extends DCLogic {
         ),
         h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
           h('div', null, this.field('Tiêu đề (H1)', h(DS.Input, { defaultValue: r ? r.h1 : '', placeholder: 'Nhập tiêu đề chính hiển thị' }), true)),
-          h('div', null, this.field('Tag tin tức', h(DS.Input, { defaultValue: r ? (r.newsTag || '') : '', placeholder: 'Nhập tag để phân loại…' })))
+          h('div', null, this.field('Tag tin tức', h(DS.Input, { defaultValue: r ? (r.newsTag || '') : '', placeholder: 'Nhập tag để phân loại…' }), true))
         ),
         h(DS.Divider, { label: 'CẤU HÌNH SEO' }),
         h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-          h('div', null, this.field('Meta tiêu đề', h(DS.Input, { defaultValue: r ? (r.metaTitle || '') : '', placeholder: 'Tiêu đề hiển thị trên Google' }))),
-          h('div', null, this.field('Meta từ khóa', h(DS.Input, { defaultValue: r ? (r.metaKeywords || '') : '', placeholder: 'internet fpt, wifi 6, …' })))
+          h('div', null, this.field('Meta tiêu đề', h(DS.Input, { defaultValue: r ? (r.metaTitle || '') : '', placeholder: 'Tiêu đề hiển thị trên Google' }), true)),
+          h('div', null, this.field('Meta từ khóa', h(DS.Input, { defaultValue: r ? (r.metaKeywords || '') : '', placeholder: 'internet fpt, wifi 6, …' }), true))
         ),
-        this.field('Meta mô tả', h(DS.Textarea, { defaultValue: r ? (r.metaDesc || '') : '', placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 })),
+        this.field('Meta mô tả', h(DS.Textarea, { defaultValue: r ? (r.metaDesc || '') : '', placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 }), true),
         h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'start' } },
-          h('div', null, this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤1MB')),
+          h('div', null, this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤1MB', true)),
           h('div', { style: { paddingTop: 24 } }, h(DS.Switch, { label: 'Trạng thái hoạt động', defaultChecked: !r || r.status === 'active' }))
         )
       ),
