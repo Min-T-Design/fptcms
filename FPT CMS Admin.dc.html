@@ -3272,7 +3272,7 @@ class Component extends DCLogic {
   openSectionDrawer(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const PAGES = this.PAGES().map(p => p.name);
-    const TYPES = ['Hero Banner', 'Product List', 'Features / Lợi ích', 'Accordion', 'HTML Article', 'Question', 'Row VAT'];
+    const TYPES = ['HTML - Layout category', 'HTML - Layout experience', 'HTML - Layout banner', 'HTML - Layout article', 'HTML - Video', 'HTML - Layout gaming', 'Tabs', 'Row', 'Row VAT', 'Question', 'Form liên hệ'];
     const allBlocks = this.BLOCKS().map(b => b.name);
     this.openDrawer({
       title: r ? 'Sửa Section' : 'Tạo Section mới',
@@ -3378,42 +3378,73 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.setState({ secEditor: undefined, secEditorBlocks: undefined });
     const PAGES = this.PAGES().map(p => p.name);
-    const TYPES = ['Hero Banner', 'Product List', 'Features / Lợi ích', 'Accordion', 'HTML Article', 'Question', 'Row VAT'];
+    const TYPES = ['HTML - Layout category', 'HTML - Layout experience', 'HTML - Layout banner', 'HTML - Layout article', 'HTML - Video', 'HTML - Layout gaming', 'Tabs', 'Row', 'Row VAT', 'Question', 'Form liên hệ'];
     const allBlocks = this.BLOCKS().map(b => b.name);
     const selBlocks = this.state.secEditorBlocks || [];
     const toggleBlock = (b) => { const cur = this.state.secEditorBlocks || []; this.setState({ secEditorBlocks: cur.includes(b) ? cur.filter(x => x !== b) : [...cur, b] }); };
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+        h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
+      ),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
+    );
     return this.editorShell(
       isNew ? 'Tạo Section mới' : 'Chỉnh sửa: ' + r.name,
       isNew ? 'Thông tin Section' : 'Trang: ' + r.page, back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
-          h('div', null, this.field('Thuộc trang', h(DS.Select, { options: PAGES, defaultValue: r ? r.page : PAGES[0] }), true)),
-          h('div', null, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order != null ? r.order : '') : '' })))
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
+          h(DS.Switch, { defaultChecked: r ? r.status === 'active' : true })
         ),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-          h('div', null, this.field('Tên quản trị', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Hero Banner Trang chủ' }), true)),
-          h('div', null, this.field('Tiêu đề hiển thị', h(DS.Input, { defaultValue: r ? (r.title || '') : '', placeholder: 'VD: Khuyến mãi nổi bật' }), true))
+        section(1, 'file-doc-line', 'Thông tin cơ bản',
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
+            h('div', null, this.field('Thuộc trang', h(DS.Select, { options: PAGES, defaultValue: r ? r.page : PAGES[0] }), true)),
+            h('div', null, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order != null ? r.order : '') : '' })))
+          ),
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+            h('div', null, this.field('Tên quản trị', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Hero Banner Trang chủ' }), true)),
+            h('div', null, this.field('Tiêu đề hiển thị', h(DS.Input, { defaultValue: r ? (r.title || '') : '', placeholder: 'VD: Khuyến mãi nổi bật' }), true))
+          ),
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+            h('div', null, this.field('Mã Section', h(DS.Input, { defaultValue: r ? r.code : '', placeholder: 'VD: sec-hero-home' }), true)),
+            h('div', null, this.field('Loại Section', h(DS.Select, { options: TYPES, defaultValue: r ? r.type : TYPES[0] }), true))
+          ),
+          this.field('Mô tả ngắn', h(DS.Textarea, { rows: 2, placeholder: 'Nhập mô tả cho Section này...' }))
         ),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-          h('div', null, this.field('Mã Section', h(DS.Input, { defaultValue: r ? r.code : '', placeholder: 'VD: sec-hero-home' }), true)),
-          h('div', null, this.field('Loại Section', h(DS.Select, { options: TYPES, defaultValue: r ? r.type : TYPES[0] }), true))
+        section(2, 'share-01-line', 'Nút xem thêm (Call-to-action)',
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+            h('div', null, this.field('Text hiển thị', h(DS.Input, { defaultValue: r ? (r.ctaText || '') : '', placeholder: 'VD: Xem thêm' }))),
+            h('div', null, this.field('Link URL đích', h(DS.Input, { defaultValue: r ? (r.ctaUrl || '') : '', placeholder: 'VD: /internet' })))
+          )
         ),
-        this.field('Mô tả ngắn', h(DS.Textarea, { rows: 2, placeholder: 'Nhập mô tả cho Section này...' })),
-        h(DS.Divider, { label: 'CẤU HÌNH HIỂN THỊ' }),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
-          h('div', null, h(DS.Switch, { label: 'Trạng thái hoạt động', defaultChecked: r ? r.status === 'active' : true })),
-          h('div', null, h(DS.Switch, { label: 'Đánh dấu Nổi bật' }))
+        section(3, 'image-line', 'Hình ảnh & Icon',
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+            this.uploadBox('URL Hình ảnh (Desktop)', 'JPG, PNG, WebP, SVG · ≤150KB'),
+            this.uploadBox('URL Hình ảnh (Mobile)', 'JPG, PNG, WebP, SVG · ≤150KB'),
+            this.uploadBox('Hình nền (Background)', 'JPG, PNG, WebP, SVG · ≤150KB'),
+            this.uploadBox('Icon', 'PNG, SVG · ≤150KB'),
+            this.uploadBox('Icon Active', 'PNG, SVG · ≤150KB')
+          )
         ),
-        h(DS.Divider, { label: 'GẮN BLOCKS' }),
-        h('div', { className: 'fpt-scroll', style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', maxHeight: 220, overflowY: 'auto' } },
-          allBlocks.length === 0 ? h('div', { style: { padding: 14, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, 'Chưa có block nào.')
-            : allBlocks.map(b => { const ck = selBlocks.includes(b); return h('div', { key: b, onClick: () => toggleBlock(b), style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--color-border-pale)', background: ck ? 'var(--color-accent-bg)' : 'transparent', transition: 'background .15s' } },
-              h('div', { style: { width: 16, height: 16, borderRadius: 4, flexShrink: 0, border: '1.5px solid', borderColor: ck ? 'var(--color-accent)' : 'var(--color-border-strong)', background: ck ? 'var(--color-accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, ck && h(DS.Icon, { name: 'check-line', size: 11, color: '#fff' })),
-              h('span', { style: { fontSize: 13, fontWeight: ck ? 600 : 400, userSelect: 'none' } }, b)
-            ); })
+        section(4, 'zap-line', 'Cấu hình hiển thị',
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
+            h('div', null, h(DS.Switch, { label: 'Đánh dấu Nổi bật' })),
+            h('div', null, h(DS.Switch, { label: 'Hiển thị Bộ lọc (Filter)' })),
+            h('div', null, h(DS.Switch, { label: 'Hiển thị Breadcrumb' }))
+          )
+        ),
+        section(5, 'dots-grid-line', 'Gắn Blocks',
+          h('div', { className: 'fpt-scroll', style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', maxHeight: 220, overflowY: 'auto' } },
+            allBlocks.length === 0 ? h('div', { style: { padding: 14, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, 'Chưa có block nào.')
+              : allBlocks.map(b => { const ck = selBlocks.includes(b); return h('div', { key: b, onClick: () => toggleBlock(b), style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--color-border-pale)', background: ck ? 'var(--color-accent-bg)' : 'transparent', transition: 'background .15s' } },
+                h('div', { style: { width: 16, height: 16, borderRadius: 4, flexShrink: 0, border: '1.5px solid', borderColor: ck ? 'var(--color-accent)' : 'var(--color-border-strong)', background: ck ? 'var(--color-accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, ck && h(DS.Icon, { name: 'check-line', size: 11, color: '#fff' })),
+                h('span', { style: { fontSize: 13, fontWeight: ck ? 600 : 400, userSelect: 'none' } }, b)
+              ); })
+          )
         )
       ),
-      () => { back(); this.toast('success', 'Đã lưu', isNew ? 'Section mới đã được tạo.' : 'Đã cập nhật Section "' + r.name + '".'); },
+      () => { back(); this.toast('success', 'Đã lưu Section', isNew ? 'Section mới đã được tạo.' : 'Đã cập nhật Section "' + r.name + '".'); },
       isNew ? 'Tạo Section' : 'Cập nhật Section'
     );
   }

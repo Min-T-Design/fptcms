@@ -165,3 +165,57 @@ This is implemented centrally, not per-module:
 * The shadow is a `linear-gradient` overlay on a `.fpt-table-sticky-col::before` pseudo-element (purely horizontal fade, `top:0;bottom:0`, no vertical falloff), toggled to `opacity:1` by an ancestor `fpt-table-scrolled` class — itself toggled by an `onScroll` listener on the table's horizontal-scroll wrapper (`scrollLeft > 2`) via cheap `classList.toggle`, no re-render. Any hand-rolled table that bypasses `tbl()` (e.g. a custom `DS.Table` usage) must wire up the same `onScroll` handler and pass `sticky: true` on its action column, and must pass `overflow: 'visible'` in `DS.Table`'s `style` prop — the wrapper's default `overflow: 'hidden'` (used for rounded-corner clipping) would otherwise become the sticky positioning's containing block instead of the real scroll container, breaking the pin.
 * **Gotcha — do NOT implement this shadow with `box-shadow`, it was tried twice and failed both times:** (1) `box-shadow` on a `<td>`/`<th>` is silently **not painted at all** when the parent `<table>` has `border-collapse: collapse` — `getComputedStyle` still reports the shadow correctly, so this is invisible without pixel-sampling a real screenshot. (2) Even after forcing `border-collapse: separate`, `box-shadow`'s blur radius fades out vertically at *each cell's own* top/bottom edge (every `<td>` is a separate box), so instead of one continuous shadow down the column you get a visibly seamed "shadow per row" — exactly the artifact this row exists to warn about. The `linear-gradient` pseudo-element sidesteps both problems: it isn't `box-shadow` (unaffected by border-collapse) and has zero vertical variation (no vertical component in the gradient), so adjacent cells' overlays are pixel-identical at the seam.
 * Don't hand-roll a separate "frozen column" implementation per module — reuse this `sticky` column flag the same way `DS.Select` is reused for dropdowns (see §8).
+
+---
+
+## 10. Full-Page Editor: Field Hierarchy & Visual Grouping
+
+Every Inline Full-Page Editor (§1) must organize its fields into clearly separated, logically ordered groups — never one long unbroken column of inputs. This is a standard already established by the more mature editors in the codebase (`renderBannerEditor`, `renderPopupEditor`); apply it to every editor going forward, not just the ones it happened to be built into first.
+
+### Preferred structure: numbered `DS.Card` sections
+
+For any editor with 3+ logical field groups, wrap each group in its own `DS.Card` with a numbered, icon-labeled header, using the local `section()` helper pattern already used by Banner/Popup/Section editors:
+
+```js
+const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
+  h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+    h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+    h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
+  ),
+  h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
+);
+```
+
+Re-declare this helper locally in each `renderXEditor` (it's cheap and keeps each editor self-contained) rather than trying to share one instance across modules. For a small editor (1-2 field groups, e.g. simple name+slug forms), plain `DS.Divider({label:'…'})` group separators inside a single flowing column (no cards) is still acceptable — don't force the card treatment where it adds no clarity.
+
+### Standing toggle placement
+
+If the record has one primary on/off state (`Trạng thái hoạt động` / active-inactive), pull it out of any card and render it as a standalone highlighted bar at the very top of the form, above section 1 — not buried inside a "Cấu hình hiển thị" card with the other secondary toggles:
+
+```js
+h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+  h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
+  h(DS.Switch, { defaultChecked: /* … */ })
+)
+```
+
+Secondary/less-critical switches (nổi bật, filter, breadcrumb, v.v.) stay grouped together inside their own later card — never scattered across other groups.
+
+### Group ordering (top → bottom)
+
+Order groups by how central and how often-touched the field is, not alphabetically or by data-model order:
+
+1. **Standing status toggle** (if any) — see above, outside any card.
+2. **Thông tin cơ bản** — identity/classification fields: name (admin-facing), display title (public-facing), code/slug, type/category select, parent/page relation, order. These are what the list table and filters key off of, so they come first. Pair tightly related fields in a 2-column grid row (e.g. admin name + display title; code + type); give a short field its own narrow column (e.g. `gridTemplateColumns: '1fr 100px'` for an order number next to a page select) instead of stretching it full width.
+3. **Content-adjacent groups** — CTA text/link, SEO meta, or similar "what does this say / where does it point" fields. Own card/divider if the group is thematically distinct from group 1.
+4. **Hình ảnh & tài nguyên** — always its own card. Image/icon/file fields always use `this.uploadBox(label, hint, required)` — never a raw `DS.Input` for an asset URL (keeps the drag-drop upload UX consistent app-wide; `uploadBox` now supports a `required` 3rd arg for the red-asterisk marker).
+5. **Cấu hình hiển thị** — remaining behavior toggles, grouped together in one card.
+6. **Quan hệ / liên kết** — relations to other entities (e.g. gắn Blocks, tag pickers, multi-select pickers). Optional/advanced, so it goes last.
+
+Not every editor needs all six groups — skip what doesn't apply, but keep the relative order when multiple groups are present.
+
+### Required-field marking
+
+Use the existing `this.field(label, control, required)` red-asterisk convention for every required text/select/textarea field, and the mirrored `required` arg on `this.uploadBox(label, hint, required)` for required media fields. Never invent a different required-marker style. `DS.Switch` toggles are never marked required — a boolean always has a value, so "required" doesn't apply to them.
+
+Never wrap an editor's fields in an explanatory `DS.Alert` implying the record is shared/global (e.g. "cập nhật sẽ ảnh hưởng mọi trang đang gán…") unless the underlying data model actually supports that many-to-many relationship — check the field itself (a single-select "thuộc trang" means the record belongs to exactly one parent, not many) before writing copy that claims otherwise.
