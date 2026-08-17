@@ -2926,9 +2926,9 @@ class Component extends DCLogic {
     { id: 1, name: 'Banner Hero Trang Chủ Q3', order: 1, pages: ['Trang chủ'], link: '/khuyen-mai-quy-3', bannerType: 'normal', target: '_self', period: '01/08/2026 – 31/08/2026', createdAt: '20/07/2026', status: 'active' },
     { id: 2, name: 'Banner Wi-Fi 7 Ưu đãi', order: 2, pages: ['Trang chủ', 'Internet - Wifi'], link: '/internet/wifi-7', bannerType: 'normal', target: '_self', period: '15/07/2026 – 15/09/2026', createdAt: '10/07/2026', status: 'active' },
     { id: 3, name: 'Banner Camera AI Khuyến mãi Hè', order: 3, pages: ['Danh mục Camera'], link: '/camera-an-ninh/khuyen-mai', bannerType: 'normal', target: '_blank', period: '01/05/2026 – 31/05/2026', createdAt: '20/04/2026', status: 'expired' },
-    { id: 4, name: 'Banner Smart Home Sale', order: 4, pages: ['FPT Smart Home', 'Smart Tivi'], link: '/fpt-smart-home/sale', bannerType: 'normal', target: '_top', period: '01/07/2026 – 15/07/2026', createdAt: '25/06/2026', status: 'disabled' },
+    { id: 4, name: 'Banner Smart Home Sale', order: 4, pages: ['FPT Smart Home', 'Smart Tivi'], link: '/fpt-smart-home/sale', bannerType: 'normal', target: '_self', period: '01/07/2026 – 15/07/2026', createdAt: '25/06/2026', status: 'disabled' },
     { id: 5, name: 'Banner Ưu đãi Thanh toán Online', order: 5, pages: ['Trang chủ'], link: '/checkout/uu-dai-online', bannerType: 'checkout', target: '_self', period: 'Liên tục', createdAt: '10/03/2026', status: 'active' },
-    { id: 6, name: 'Banner Giới thiệu Access Point', order: 6, pages: ['Danh mục Camera', 'Smart Tivi', 'FPT Smart Home'], link: '/access-point', bannerType: 'normal', target: '_parent', period: '01/06/2026 – 30/06/2026', createdAt: '15/05/2026', status: 'expired' },
+    { id: 6, name: 'Banner Giới thiệu Access Point', order: 6, pages: ['Danh mục Camera', 'Smart Tivi', 'FPT Smart Home'], link: '/access-point', bannerType: 'normal', target: '_blank', period: '01/06/2026 – 30/06/2026', createdAt: '15/05/2026', status: 'expired' },
   ]; }
   POPUPS() { return [
     { id: 1, name: 'Flash Sale T5', type: 'menu-page', pages: ['Trang chủ'], period: '15/05/2026 – 20/05/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'running' },
@@ -4728,7 +4728,7 @@ class Component extends DCLogic {
         section(3, 'share-01-line', 'Cấu hình Liên kết & Áp dụng',
           h('div', { style: { display: 'flex', gap: 12 } },
             h('div', { style: { flex: 1 } }, this.field('Loại banner', h(DS.Select, { options: [{ value: 'normal', label: 'Trang thường (Menu Trang)' }, { value: 'checkout', label: 'Trang Checkout' }], value: bannerType, onChange: v => this.setState({ bannerEditorType: v }) }))),
-            h('div', { style: { width: 140 } }, this.field('Target', h(DS.Select, { options: ['_self', '_blank', '_parent', '_top'], defaultValue: r ? r.target : '_self' })))
+            h('div', { style: { width: 190 } }, this.field('Target', h(DS.Select, { options: [{ value: '_self', label: '_self (Mở cùng tab)' }, { value: '_blank', label: '_blank (Mở tab mới)' }], defaultValue: r ? r.target : '_self' }), true))
           ),
           this.field('Link URL đích', h(DS.Input, { defaultValue: r ? r.link : '', placeholder: '/khuyen-mai-thang-6' }), true),
           bannerType !== 'checkout'
