@@ -8629,17 +8629,18 @@ class Component extends DCLogic {
   }
 
     // ===== Payment methods =====
-  PAYMENT_METHODS_DEF() {
+  // Danh mục đầy đủ các phương thức thanh toán dùng cho "Danh sách nội dung PTTT" (mỗi cấu hình cấu hình đồng thời cho cả danh mục này).
+  PAYMENT_METHOD_CATALOG() {
     return [
-      { id: 'vietqr', name: 'Thanh toán bằng VietQR', shortName: 'VietQR', source: 'Payment Hub' },
-      { id: 'momo', name: 'Ví điện tử Momo', shortName: 'Momo', source: 'Payment Hub' },
-      { id: 'zalopay', name: 'Ví Zalopay', shortName: 'ZaloPay', source: 'Payment Hub' },
+      { id: 'vietqr', name: 'VietQR' },
+      { id: 'foxpay-atm', name: 'DKOnline-FoxPay-ATM' },
+      { id: 'foxpay-token', name: 'DKOnline-FoxPay-Token' },
+      { id: 'zalopay-bank', name: 'DKOL-ZaloPay-Chuyển Khoản' },
+      { id: 'zalopay', name: 'DKOL-ZaloPay-Ví ZaloPay' },
+      { id: 'onepay-apple', name: 'DKOL-Onepay-Apple' },
+      { id: 'cod', name: 'DKOL-COD' },
+      { id: 'momo', name: 'DKOL-Momo-QR' },
     ];
-  }
-  PAYMENT_METHOD_LABEL(methodId) {
-    if (methodId === 'system') return 'Tất cả';
-    const def = this.PAYMENT_METHODS_DEF().find(m => m.id === methodId);
-    return def ? def.shortName : methodId;
   }
   renderDatePickerModal() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -8728,542 +8729,101 @@ class Component extends DCLogic {
       )
     );
   }
-  // Mở Inline Full-Page Editor cho 1 dòng cấu hình PTTT (r = dòng đang sửa, null/'new' = tạo mới) — theo CLAUDE.md, Create/Edit luôn dùng full-page editor, không dùng Drawer.
-  // Khi sửa (r truyền vào): không cho thêm gói mới — chỉ sửa/xóa các gói đã có sẵn từ bước tạo trước đó — nên mỗi gói giữ mô tả riêng thay vì 1 mô tả dùng chung.
+  // Mở Inline Full-Page Editor cho 1 dòng "nội dung PTTT" (r = dòng đang sửa, null/'new' = tạo mới) — theo CLAUDE.md, Create/Edit luôn dùng full-page editor, không dùng Drawer.
+  // Mỗi cấu hình gồm: tên, gói bán áp dụng (hoặc áp dụng tất cả), và Thời gian áp dụng (bắt đầu–kết thúc) + Mô tả riêng cho từng PTTT trong PAYMENT_METHOD_CATALOG().
   openPayEditor(r) {
-    const cfg = r ? this.getSkuMethodCfg(r.skus[0], r.methodId) : { active: true, startDate: '', endDate: '', descriptions: [] };
-    let payEditDescriptions;
-    if (r) {
-      payEditDescriptions = {};
-      r.skus.forEach(code => {
-        const skuCfg = this.getSkuMethodCfg(code, r.methodId);
-        payEditDescriptions[code] = (skuCfg.descriptions && skuCfg.descriptions.length) ? [...skuCfg.descriptions] : [''];
-      });
-    } else {
-      payEditDescriptions = [''];
-    }
+    const methods = {};
+    this.PAYMENT_METHOD_CATALOG().forEach(m => {
+      const src = r && r.methods && r.methods[m.id];
+      methods[m.id] = {
+        start: src && src.start ? new Date(src.start + 'T00:00:00') : null,
+        end: src && src.end ? new Date(src.end + 'T00:00:00') : null,
+        descriptions: (src && src.descriptions && src.descriptions.length) ? [...src.descriptions] : [''],
+      };
+    });
     this.setState({
       payEditor: r || 'new',
-      payEditMethodId: r ? r.methodId : this.PAYMENT_METHODS_DEF()[0].id,
-      payEditStart: cfg.startDate ? new Date(cfg.startDate + 'T00:00:00') : null,
-      payEditEnd: cfg.endDate ? new Date(cfg.endDate + 'T00:00:00') : null,
-      payEditDescriptions,
-      payEditSkuSelected: r ? [...r.skus] : [],
-      payEditSkuFilter: 'all',
-      payEditSkuSearch: '',
-      payEditSkuCheckAll: false,
+      payCfgName: r ? r.name : '',
+      payCfgApplyAll: r ? !!r.applyAll : false,
+      payCfgSkus: r ? [...(r.skus || [])] : [],
+      payCfgMethods: methods,
+      payEdSkuSource: 'ecp',
+      payEdSkuFilter: 'internet',
+      payEdSkuSearch: '',
     });
   }
   closePayEditor() {
-    this.setState({ payEditor: undefined, payEditMethodId: undefined, payEditStart: undefined, payEditEnd: undefined, payEditDescriptions: undefined, payEditSkuSelected: undefined, payEditSkuFilter: undefined, payEditSkuSearch: undefined, payEditSkuCheckAll: undefined, payEditFocusSku: undefined });
+    this.setState({ payEditor: undefined, payCfgName: undefined, payCfgApplyAll: undefined, payCfgSkus: undefined, payCfgMethods: undefined, payEdSkuSource: undefined, payEdSkuFilter: undefined, payEdSkuSearch: undefined });
   }
-  // Xóa 1 gói khỏi cấu hình đang sửa (chỉ dùng ở chế độ sửa) — gói bị xóa sẽ được tắt (active:false) cho PTTT này khi lưu.
-  removePayEditSku(code) {
-    const map = { ...(this.state.payEditDescriptions || {}) };
-    delete map[code];
-    this.setState({
-      payEditSkuSelected: (this.state.payEditSkuSelected || []).filter(c => c !== code),
-      payEditDescriptions: map,
-      payEditFocusSku: this.state.payEditFocusSku === code ? undefined : this.state.payEditFocusSku,
-    });
+  setPayCfgPeriod(methodId, start, end) {
+    const m = { ...(this.state.payCfgMethods || {}) };
+    m[methodId] = { ...m[methodId], start, end };
+    this.setState({ payCfgMethods: m });
   }
-  // Bấm 1 gói ở danh sách bên trái (chế độ sửa) → cuộn/focus tới card mô tả tương ứng bên phải.
-  focusPayEditSku(code) {
-    this.setState({ payEditFocusSku: code });
-    const el = document.getElementById('pay-desc-' + code);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  addPayCfgDescLine(methodId) {
+    const m = { ...(this.state.payCfgMethods || {}) };
+    m[methodId] = { ...m[methodId], descriptions: [...(m[methodId].descriptions || ['']), ''] };
+    this.setState({ payCfgMethods: m });
   }
-  addPayEditDescLine(code) {
-    const map = { ...(this.state.payEditDescriptions || {}) };
-    map[code] = [...(map[code] || ['']), ''];
-    this.setState({ payEditDescriptions: map });
-  }
-  updatePayEditDescLine(code, idx, val) {
-    const map = { ...(this.state.payEditDescriptions || {}) };
-    const arr = [...(map[code] || [''])];
+  updatePayCfgDescLine(methodId, idx, val) {
+    const m = { ...(this.state.payCfgMethods || {}) };
+    const arr = [...(m[methodId].descriptions || [''])];
     arr[idx] = val;
-    map[code] = arr;
-    this.setState({ payEditDescriptions: map });
+    m[methodId] = { ...m[methodId], descriptions: arr };
+    this.setState({ payCfgMethods: m });
   }
-  removePayEditDescLine(code, idx) {
-    const map = { ...(this.state.payEditDescriptions || {}) };
-    map[code] = (map[code] || ['']).filter((_, i) => i !== idx);
-    this.setState({ payEditDescriptions: map });
+  removePayCfgDescLine(methodId, idx) {
+    const m = { ...(this.state.payCfgMethods || {}) };
+    m[methodId] = { ...m[methodId], descriptions: (m[methodId].descriptions || ['']).filter((_, i) => i !== idx) };
+    this.setState({ payCfgMethods: m });
   }
   savePayEditor() {
-    const isEdit = this.state.payEditor && this.state.payEditor !== 'new';
-    const methodId = isEdit ? this.state.payEditor.methodId : this.state.payEditMethodId;
+    const name = (this.state.payCfgName || '').trim();
+    if (!name) { this.toast('warning', 'Thiếu tên cấu hình', 'Vui lòng nhập tên cấu hình.'); return; }
+    const applyAll = !!this.state.payCfgApplyAll;
+    const skus = applyAll ? [] : (this.state.payCfgSkus || []);
+    if (!applyAll && !skus.length) { this.toast('warning', 'Chưa chọn gói bán', 'Hãy chọn ít nhất 1 gói bán hoặc bật "Áp dụng cho tất cả các gói".'); return; }
     const fmt = d => d ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') : '';
-    const startDate = fmt(this.state.payEditStart), endDate = fmt(this.state.payEditEnd);
-    const cfg = this.getPayConfig();
-    const newCfg = { ...cfg };
-    const skus = this.state.payEditSkuSelected || [];
-    if (!skus.length) { this.toast('warning', 'Chưa chọn gói', 'Hãy chọn ít nhất 1 gói cước'); return; }
-    if (isEdit) {
-      const descMap = this.state.payEditDescriptions || {};
-      skus.forEach(code => {
-        const descriptions = (descMap[code] || []).filter(d => d.trim());
-        newCfg[code] = { ...(newCfg[code] || {}), [methodId]: { active: true, startDate, endDate, descriptions } };
-      });
-      // Gói bị xóa khỏi cấu hình trong lúc sửa (có trong bản gốc nhưng không còn trong danh sách hiện tại) — tắt PTTT này cho gói đó.
-      const removed = (this.state.payEditor.skus || []).filter(code => !skus.includes(code));
-      removed.forEach(code => {
-        newCfg[code] = { ...(newCfg[code] || {}), [methodId]: { active: false, startDate: '', endDate: '', descriptions: [] } };
-      });
-    } else {
-      const descriptions = (this.state.payEditDescriptions || []).filter(d => d.trim());
-      skus.forEach(code => { newCfg[code] = { ...(newCfg[code] || {}), [methodId]: { active: true, startDate, endDate, descriptions } }; });
-    }
-    const now = new Date();
-    const pad = n => String(n).padStart(2, '0');
-    const timeStr = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-    const listData = this.getPayListData();
-    const entry = { id: isEdit ? this.state.payEditor.id : Date.now() + Math.random(), time: timeStr, actor: 'Admin User', channel: 'Global', methodId, skus: [...skus] };
-    const nextList = isEdit ? listData.map(x => x.id === entry.id ? entry : x) : [entry, ...listData];
-    this.setState({ payConfig: newCfg, payListData: nextList });
-    this.closePayEditor();
-    this.toast('success', isEdit ? 'Đã lưu cấu hình' : 'Đã thêm cấu hình', 'Áp dụng cho ' + skus.length + ' gói cước.');
-  }
-  renderPayEditor() {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const r = this.state.payEditor;
-    const isEdit = !!(r && r !== 'new');
-    const methodId = isEdit ? r.methodId : (this.state.payEditMethodId || this.PAYMENT_METHODS_DEF()[0].id);
-    const methodDef = this.PAYMENT_METHODS_DEF().find(m => m.id === methodId);
-    const back = () => this.closePayEditor();
-    const selected = this.state.payEditSkuSelected || [];
-    const allSkusMap = {}; this.SKUS().forEach(s => { allSkusMap[s.code] = s; });
-
-    // ── Chế độ sửa: không cho thêm gói mới, chỉ sửa/xóa các gói đã có sẵn từ bước tạo trước — mỗi gói có mô tả riêng ──
-    if (isEdit) {
-      const descMap = this.state.payEditDescriptions || {};
-      const editSkuSearch = (this.state.payEditSkuSearch || '').toLowerCase();
-      const filteredSelected = editSkuSearch
-        ? selected.filter(code => {
-            const sku = allSkusMap[code];
-            return code.toLowerCase().includes(editSkuSearch) || (sku && sku.name.toLowerCase().includes(editSkuSearch));
-          })
-        : selected;
-      return this.editorShell(
-        'Chỉnh sửa cấu hình nhanh PTTT',
-        r.skus.join(', '),
-        back,
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1.36fr 3fr', gap: 16, alignItems: 'start' } },
-          // ── Block trái: các gói cước đã áp dụng — chỉ xem/xóa, không thêm mới ──
-          h('div', { style: { position: 'sticky', top: 8 } },
-            this.listCard(
-              this.toolbar(
-                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-                  h(DS.Icon, { name: 'file-doc-line', size: 16, color: 'var(--color-text-subtle)' }),
-                  h('span', { style: { fontWeight: 700, fontSize: 13.5 } }, 'Gói cước áp dụng')
-                ),
-                h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, selected.length + ' gói')
-              ),
-              h('div', { style: { padding: 16 } },
-                selected.length === 0
-                  ? h('div', { style: { textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, padding: '24px 0' } }, 'Không còn gói nào trong cấu hình này')
-                  : h('div', null,
-                      h('div', { style: { marginBottom: 8 } },
-                        h(DS.Input, { placeholder: 'Tìm theo mã hoặc tên gói...', leadingIcon: 'search-medium-line', value: this.state.payEditSkuSearch || '', onChange: e => this.setState({ payEditSkuSearch: e.target ? e.target.value : e }) })
-                      ),
-                      filteredSelected.length === 0
-                        ? h('div', { style: { textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, padding: '20px 0' } }, 'Không tìm thấy gói phù hợp')
-                        : h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 440, overflowY: 'auto', overflowX: 'hidden' } },
-                            filteredSelected.map(code => {
-                              const sku = allSkusMap[code];
-                              const isFocused = this.state.payEditFocusSku === code;
-                              return h('div', {
-                                key: code, onClick: () => this.focusPayEditSku(code),
-                                style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', border: '1.5px solid ' + (isFocused ? 'var(--color-accent)' : 'var(--color-border)'), background: isFocused ? 'var(--color-accent-bg)' : 'transparent', transition: 'all .15s' }
-                              },
-                                h('div', { style: { flex: 1, minWidth: 0 } },
-                                  h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-                                    h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isFocused ? 'var(--color-accent-text)' : 'var(--color-text)' } }, code),
-                                    sku && h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
-                                  ),
-                                  sku && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
-                                ),
-                                h(DS.IconButton, { icon: 'trash-line', label: 'Xóa gói', level: 'tertiary', size: 'sm', onClick: e => { e.stopPropagation(); this.removePayEditSku(code); } })
-                              );
-                            })
-                          )
-                    )
-              )
-            )
-          ),
-
-          // ── Block phải: thông tin cấu hình + mô tả ưu đãi riêng cho từng gói ──
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 } },
-            this.listCard(
-              this.toolbar(
-                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-                  h(DS.Icon, { name: 'settings-01-line', size: 16, color: 'var(--color-text-subtle)' }),
-                  h('span', { style: { fontWeight: 700, fontSize: 13.5 } }, 'Thông tin cấu hình')
-                ),
-                h(DS.Badge, { theme: 'brand' }, methodDef.name)
-              ),
-              h('div', { style: { padding: 16, display: 'flex', flexDirection: 'column', gap: 18 } },
-                h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-                  this.field('Phương thức thanh toán', h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, height: 48, padding: '0 14px', boxSizing: 'border-box', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)' } },
-                    h(DS.Icon, { name: 'lock-01-line', size: 14, color: 'var(--color-text-subtle)' }),
-                    this.payLogo(methodDef.shortName, 20),
-                    h('span', { style: { fontSize: 13 } }, methodDef.name)
-                  )),
-                  this.field('Thời gian áp dụng', h(DS.DateRangePicker, {
-                    startDate: this.state.payEditStart || null,
-                    endDate: this.state.payEditEnd || null,
-                    placeholderStart: 'Ngày bắt đầu',
-                    placeholderEnd: 'Ngày hết hạn',
-                    showTime: true,
-                    containerStyle: { width: '100%' },
-                    onChange: range => this.setState({ payEditStart: range.start, payEditEnd: range.end }),
-                  }), true)
-                )
-              )
-            ),
-
-            h(DS.Divider, null),
-
-            // ── Mô tả ưu đãi kèm theo — tách riêng theo từng gói đã thêm từ bước trước ──
-            selected.length === 0
-              ? null
-              : selected.map(code => {
-                  const sku = allSkusMap[code];
-                  const descArr = descMap[code] && descMap[code].length ? descMap[code] : [''];
-                  const isFocused = this.state.payEditFocusSku === code;
-                  return h('div', { key: code, id: 'pay-desc-' + code, style: { borderRadius: 'var(--radius-lg)', outline: '2px solid ' + (isFocused ? 'var(--color-accent)' : 'transparent'), outlineOffset: 3, transition: 'outline-color .3s ease' } },
-                    this.listCard(
-                      this.toolbar(
-                        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-                          h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace' } }, code),
-                          sku && h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, sku.name)
-                        ),
-                        h(DS.Button, { level: 'secondary', size: 'xs', leadingIcon: 'plus-line', onClick: () => this.addPayEditDescLine(code) }, 'Thêm dòng')
-                      ),
-                      h('div', { style: { padding: 16 } },
-                        h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } }, 'MÔ TẢ ƯU ĐÃI KÈM THEO'),
-                        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                          descArr.map((desc, idx) =>
-                            h('div', { key: idx, style: { display: 'flex', alignItems: 'center', gap: 6 } },
-                              h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'VD: Giảm 50k khi thanh toán Online', value: desc, onChange: e => this.updatePayEditDescLine(code, idx, e.target ? e.target.value : e) })),
-                              h(DS.IconButton, { icon: 'trash-line', label: 'Xóa dòng', level: 'tertiary', size: 'sm', onClick: () => this.removePayEditDescLine(code, idx) })
-                            )
-                          )
-                        )
-                      )
-                    )
-                  );
-                })
-          )
-        ),
-        () => this.savePayEditor(),
-        'Lưu thay đổi'
-      );
-    }
-
-    // ── Chế độ tạo mới: chọn gói từ toàn bộ danh sách + 1 mô tả dùng chung cho tất cả gói vừa chọn ──
-    const descriptions = this.state.payEditDescriptions && this.state.payEditDescriptions.length ? this.state.payEditDescriptions : [''];
-    const filter = this.state.payEditSkuFilter || 'all';
-    const search = (this.state.payEditSkuSearch || '').toLowerCase();
-    const groupMap = { internet: 'Internet', cam: 'Camera', tv: 'Truyền hình' };
-    const allSkus = this.SKUS().filter(s => s.status === 'active');
-    const filteredSkus = allSkus.filter(s => {
-      if (filter !== 'all' && s.group !== groupMap[filter]) return false;
-      if (search && !s.code.toLowerCase().includes(search) && !s.name.toLowerCase().includes(search)) return false;
-      return true;
+    const methods = {};
+    const draftMethods = this.state.payCfgMethods || {};
+    Object.keys(draftMethods).forEach(mid => {
+      const src = draftMethods[mid];
+      methods[mid] = { start: fmt(src.start), end: fmt(src.end), descriptions: (src.descriptions || []).filter(d => d.trim()) };
     });
-    const toggleSku = (code) => { const sel = this.state.payEditSkuSelected || []; const idx = sel.indexOf(code); this.setState({ payEditSkuSelected: idx >= 0 ? sel.filter(c => c !== code) : [...sel, code] }); };
-    // ── Ghi đè nội dung hiện có: đồng bộ hasContent/overwrite-warning với module "Thông tin checkout" ──
-    const hasContent = code => (this.getSkuMethodCfg(code, methodId).descriptions || []).some(d => (d || '').trim());
-    const selectedWithContent = selected.filter(hasContent);
-    const showOverwriteWarning = selected.length > 1 && selectedWithContent.length > 0;
-    const filterBtns = [
-      { id: 'all', label: 'Tất cả' },
-      { id: 'internet', label: 'Internet', icon: 'globe-01-line' },
-      { id: 'cam', label: 'Cam', icon: 'camera-01-line' },
-      { id: 'tv', label: 'TV', icon: 'tv-01-line' },
-    ];
-    const renderSkuItem = (sku) => {
-      const isSel = selected.includes(sku.code);
-      return h('div', { key: sku.code, onClick: () => toggleSku(sku.code), style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2, background: isSel ? 'var(--color-accent-bg)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent' } },
-        h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(sku.code) })),
-        h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
-            h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
-          ),
-          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name),
-          h('div', { style: { display: 'flex', gap: 3, flexWrap: 'wrap' } },
-            hasContent(sku.code)
-              ? h('span', { style: { fontSize: 10.5, fontWeight: 600, color: 'var(--color-accent-text)', background: 'var(--color-accent-bg)', padding: '1px 6px', borderRadius: 4 } }, 'Đã có nội dung')
-              : h('span', { style: { fontSize: 10.5, fontWeight: 600, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 6px', borderRadius: 4 } }, 'Chưa có nội dung')
-          )
-        )
-      );
-    };
-
-    return this.editorShell(
-      'Thêm cấu hình PTTT',
-      'Tạo cấu hình mới',
-      back,
-      h('div', { style: { display: 'grid', gridTemplateColumns: '1.36fr 3fr', gap: 16, alignItems: 'start' } },
-        // ── Block trái: Gán gói cước (SKU) áp dụng — khung trắng + header, cùng tỉ lệ với "DANH SÁCH GÓI CƯỚC (SKU)" ──
-        h('div', { style: { position: 'sticky', top: 8 } },
-          this.listCard(
-            this.toolbar(
-              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-                h(DS.Icon, { name: 'file-doc-line', size: 16, color: 'var(--color-text-subtle)' }),
-                h('span', { style: { fontWeight: 700, fontSize: 13.5 } }, 'Gán gói cước (SKU) áp dụng'),
-                h('span', { style: { color: 'var(--color-danger)', fontWeight: 700 } }, '*')
-              ),
-              h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
-                selected.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, 'Đã chọn ' + selected.length),
-                h(DS.Checkbox, { label: 'Chọn tất cả', checked: !!this.state.payEditSkuCheckAll, onChange: v => this.setState({ payEditSkuCheckAll: v, payEditSkuSelected: v ? filteredSkus.map(s => s.code) : [] }) })
-              )
-            ),
-            h('div', { style: { padding: 16 } },
-              h('div', { style: { marginBottom: 8 } },
-                h(DS.Input, { placeholder: 'Nhập mã hoặc tên SKU để lọc nhanh...', leadingIcon: 'search-medium-line', value: this.state.payEditSkuSearch || '', onChange: e => this.setState({ payEditSkuSearch: e.target ? e.target.value : e }) })
-              ),
-              h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
-                filterBtns.map(f => h(DS.Tag, { key: f.id, selected: filter === f.id, onClick: () => this.setState({ payEditSkuFilter: f.id }) }, f.label))
-              ),
-              h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 440, overflowY: 'auto', overflowX: 'hidden' } }, filteredSkus.map(sku => renderSkuItem(sku)))
-            )
-          )
-        ),
-
-        // ── Block phải: cảnh báo ghi đè (nếu có) + thông tin còn lại + mô tả ──
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 } },
-        showOverwriteWarning && h(DS.Alert, { theme: 'warning', title: 'Chỉnh sửa sẽ ghi đè nội dung hiện có', style: { borderRadius: 10 } },
-          'Đang chọn ' + selected.length + ' gói, trong đó ' + selectedWithContent.length + ' gói (' + selectedWithContent.join(', ') + ') đã có nội dung ưu đãi. Mọi thay đổi bên dưới sẽ áp dụng đồng loạt và ghi đè — nội dung cũ của các gói này sẽ bị xóa.'
-        ),
-        this.listCard(
-          this.toolbar(
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-              h(DS.Icon, { name: 'settings-01-line', size: 16, color: 'var(--color-text-subtle)' }),
-              h('span', { style: { fontWeight: 700, fontSize: 13.5 } }, 'Thông tin cấu hình')
-            )
-          ),
-          h('div', { style: { padding: 16, display: 'flex', flexDirection: 'column', gap: 18 } },
-            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-              this.field('Phương thức thanh toán', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                  this.PAYMENT_METHODS_DEF().map(m => {
-                    const isSelM = methodId === m.id;
-                    return h('div', {
-                      key: m.id, onClick: () => this.setState({ payEditMethodId: m.id }),
-                      style: { display: 'flex', alignItems: 'center', gap: 10, height: 48, padding: '0 14px', boxSizing: 'border-box', borderRadius: 'var(--radius-base)', cursor: 'pointer', border: '1.5px solid ' + (isSelM ? 'var(--color-accent)' : 'var(--color-border)'), background: isSelM ? 'var(--color-accent-bg)' : 'var(--color-surface)', transition: 'all .15s' }
-                    },
-                      this.payLogo(m.shortName, 24),
-                      h('span', { style: { flex: 1, fontSize: 13.5, fontWeight: isSelM ? 600 : 400, color: isSelM ? 'var(--color-accent-text)' : 'var(--color-text)' } }, m.name),
-                      isSelM && h(DS.Icon, { name: 'check-circle-solid', size: 16, color: 'var(--color-accent)' })
-                    );
-                  })
-                ), true),
-              this.field('Thời gian áp dụng', h(DS.DateRangePicker, {
-                startDate: this.state.payEditStart || null,
-                endDate: this.state.payEditEnd || null,
-                placeholderStart: 'Ngày bắt đầu',
-                placeholderEnd: 'Ngày hết hạn',
-                showTime: true,
-                containerStyle: { width: '100%' },
-                onChange: range => this.setState({ payEditStart: range.start, payEditEnd: range.end }),
-              }), true)
-            ),
-
-            h(DS.Divider, null),
-
-            // ── Mô tả ưu đãi kèm theo ──
-            h('div', null,
-              h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
-                h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' } }, 'MÔ TẢ ƯU ĐÃI KÈM THEO'),
-                h(DS.Button, { level: 'secondary', size: 'xs', leadingIcon: 'plus-line', onClick: () => this.setState({ payEditDescriptions: [...descriptions, ''] }) }, 'Thêm dòng')
-              ),
-              h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                descriptions.map((desc, idx) =>
-                  h('div', { key: idx, style: { display: 'flex', alignItems: 'center', gap: 6 } },
-                    h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'VD: Giảm 50k khi thanh toán Online', value: desc, onChange: e => { const d = [...descriptions]; d[idx] = e.target ? e.target.value : e; this.setState({ payEditDescriptions: d }); } })),
-                    h(DS.IconButton, { icon: 'trash-line', label: 'Xóa dòng', level: 'tertiary', size: 'sm', onClick: () => this.setState({ payEditDescriptions: descriptions.filter((_, i) => i !== idx) }) })
-                  )
-                )
-              )
-            )
-          )
-        )
-        )
-      ),
-      () => this.savePayEditor(),
-      'Tạo cấu hình'
-    );
-  }
-  getPayListData() { return this.state.payListData || this.PAYMENT_LIST_DATA(); }
-  savePayChannelConfig(channelId) {
-    const selected = this.state.paySkuSelected || [];
-    if (!selected.length) { this.toast('warning', 'Chưa chọn gói', 'Hãy chọn ít nhất 1 gói cước'); return; }
-    const primaryCfg = this.getPayConfig()[selected[0]] || {};
-    const cfg = this.getPayConfig();
-    const newCfg = { ...cfg };
-    selected.forEach(code => { newCfg[code] = JSON.parse(JSON.stringify(primaryCfg)); });
-    const ch = this.CHANNELS().find(c => c.id === channelId);
-    const chName = ch ? ch.name : channelId;
+    const isEdit = this.state.payEditor && this.state.payEditor !== 'new';
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
-    const timeStr = pad(now.getDate()) + '/' + pad(now.getMonth()+1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-    // Nhật ký: mỗi lần lưu tạo 1 dòng ghi nhận cho mỗi PTTT đang bật, áp dụng cho toàn bộ gói cước đã chọn.
-    const newEntries = this.PAYMENT_METHODS_DEF()
-      .filter(m => primaryCfg[m.id] && primaryCfg[m.id].active)
-      .map(m => ({ id: Date.now() + Math.random(), time: timeStr, actor: 'Admin User', channel: chName, methodId: m.id, skus: [...selected] }));
-    this.setState({ payConfig: newCfg, payListData: [...newEntries, ...this.getPayListData()] });
-    this.toast('success', 'Đã lưu cấu hình', 'Áp dụng cho ' + selected.length + ' gói cước');
+    const nowStr = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    const actor = 'Admin User';
+    const list = this.getPayConfigList();
+    let nextList;
+    if (isEdit) {
+      const orig = this.state.payEditor;
+      nextList = list.map(x => x.id === orig.id ? { ...orig, name, applyAll, skus, methods, updatedAt: nowStr, updatedBy: actor } : x);
+    } else {
+      const entry = { id: Date.now() + Math.random(), name, applyAll, skus, methods, createdAt: nowStr, createdBy: actor, updatedAt: nowStr, updatedBy: actor };
+      nextList = [entry, ...list];
+    }
+    this.setState({ payConfigList: nextList });
+    this.closePayEditor();
+    this.toast('success', isEdit ? 'Đã lưu cấu hình' : 'Đã tạo cấu hình', name);
   }
-  PAYMENT_LIST_DATA() {
-    return [
-      { id: 1, time: '01/06/2026 14:15:22', actor: 'huyennk', channel: 'Global', methodId: 'momo', skus: ['INT-GIGA', 'INT-SKY'] },
-      { id: 2, time: '01/06/2026 10:30:05', actor: 'Test003', channel: 'Global', methodId: 'vietqr', skus: ['INT-GIGA', 'INT-SKY', 'INT-META', 'INT-LUX500', 'INT-LUX800', 'CAM-IQ3', 'CAM-IQ4S', 'SA-SMAX', 'DEV-WIFI7', 'MODEM-AX1800GZ', 'INT-LUX1000', 'INT-COMBO200', 'INT-BIZ500', 'CAM-IQ5', 'CAM-OUTDOOR', 'SA-KPLUS', 'SA-HBOMAX', 'DEV-MESH', 'DEV-ONT10G', 'CLOUD-CAM7'] },
-      { id: 3, time: '30/05/2026 15:48:37', actor: 'Trần Minh Khoa', channel: 'Global', methodId: 'zalopay', skus: ['INT-GIGA'] },
-      { id: 4, time: '29/05/2026 09:12:04', actor: 'Nguyễn Thị Thùy', channel: 'Global', methodId: 'momo', skus: ['INT-META'] },
-    ];
+  deletePayConfig(r) {
+    this.confirm('Xóa cấu hình?', 'Cấu hình "' + r.name + '" sẽ bị xóa khỏi danh sách nội dung PTTT.', () => {
+      this.setState({ payConfigList: this.getPayConfigList().filter(x => x.id !== r.id) });
+      this.closeModal();
+      this.toast('success', 'Đã xóa cấu hình', r.name);
+    }, true);
   }
-  defaultPayConfig() {
-    return {
-      'INT-GIGA': {
-        vietqr: { active: true, startDate: '2026-06-01', endDate: '2026-12-31', descriptions: ['Giảm 50k khi thanh toán Online'] },
-        momo: { active: true, startDate: '2026-06-01', endDate: '2026-12-31', descriptions: [] },
-        zalopay: { active: true, startDate: '2026-06-01', endDate: '2026-12-31', descriptions: [] },
-      },
-      'INT-SKY': {
-        vietqr: { active: true, startDate: '2026-06-01', endDate: '2026-12-31', descriptions: [] },
-        momo: { active: true, startDate: '2026-06-01', endDate: '2026-12-31', descriptions: [] },
-        zalopay: { active: false, startDate: '', endDate: '', descriptions: [] },
-      },
-      'INT-META': {
-        vietqr: { active: true, startDate: '2026-06-01', endDate: '2026-12-31', descriptions: ['Giảm 50k khi thanh toán Online', ''] },
-        momo: { active: false, startDate: '', endDate: '', descriptions: [] },
-        zalopay: { active: false, startDate: '', endDate: '', descriptions: [] },
-      },
-      'INT-LUX500': {
-        vietqr: { active: false, startDate: '', endDate: '', descriptions: [] },
-        momo: { active: false, startDate: '', endDate: '', descriptions: [] },
-        zalopay: { active: false, startDate: '', endDate: '', descriptions: [] },
-      },
-    };
-  }
-  getPayConfig() { return this.state.payConfig || this.defaultPayConfig(); }
-  getSkuMethodCfg(skuCode, methodId) {
-    const cfg = this.getPayConfig();
-    return (cfg[skuCode] && cfg[skuCode][methodId]) || { active: false, startDate: '', endDate: '', descriptions: [] };
-  }
-  updPayConfig(skuCode, methodId, updates) {
-    const cfg = this.getPayConfig();
-    const cur = this.getSkuMethodCfg(skuCode, methodId);
-    this.setState({ payConfig: { ...cfg, [skuCode]: { ...(cfg[skuCode] || {}), [methodId]: { ...cur, ...updates } } } });
-  }
-  payLogo(nameOrId, size) {
-    const h = React.createElement;
-    const r = Math.round(size * 0.22);
-    const boxImg = (src, alt) => h('div', { style: { width: size, height: size, borderRadius: r, background: '#fff', border: '1px solid #dde3ec', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 2, boxSizing: 'border-box' } },
-      h('img', { src, alt, style: { width: '100%', height: '100%', objectFit: 'contain', display: 'block' } })
-    );
-    const colorImg = (src, bg, alt) => h('div', { style: { width: size, height: size, borderRadius: r, background: bg, flexShrink: 0, overflow: 'hidden' } },
-      h('img', { src, alt, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } })
-    );
-    const map = {
-      momo: () => colorImg('https://www.google.com/s2/favicons?domain=momo.vn&sz=128', '#AE2070', 'Momo'),
-      Momo: () => colorImg('https://www.google.com/s2/favicons?domain=momo.vn&sz=128', '#AE2070', 'Momo'),
-      zalopay: () => boxImg('assets/Zalo.png', 'ZaloPay'),
-      ZaloPay: () => boxImg('assets/Zalo.png', 'ZaloPay'),
-      vietqr: () => boxImg('assets/Viet QR.png', 'VietQR'),
-      VietQR: () => boxImg('assets/Viet QR.png', 'VietQR'),
-      VNPay: () => colorImg('https://www.google.com/s2/favicons?domain=vnpay.vn&sz=128', '#005BAA', 'VNPay'),
-      Napas: () => boxImg('uploads/pasted-1781777722027-0.png', 'Napas'),
-    };
-    return (map[nameOrId] || (() => h('div', { style: { width: size, height: size, borderRadius: r, background: 'var(--color-surface-sunken)', flexShrink: 0 } })))();
-  }
-
-  renderPayment() {
-    if (this.state.payEditor !== undefined) return this.renderPayEditor();
+  // Picker "DANH SÁCH SẢN PHẨM" (Gói bán) dùng trong Inline Full-Page Editor của "Danh sách nội dung PTTT" — cùng bố cục
+  // (tab nguồn ECP/FCP + danh mục + tìm kiếm + checkbox) đang dùng ở module Thông tin checkout / QLCS, chọn thẳng vào payCfgSkus.
+  renderPaySkuPicker() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const tab = this.state.payTab || 'config';
-    const tabDesc = {
-      config: 'Cấu hình ưu đãi và mô tả hiển thị cho từng phương thức thanh toán.',
-      list: 'Nhật ký ghi nhận các thay đổi cấu hình phương thức thanh toán đã áp dụng trong hệ thống, nhóm theo từng phương thức và gói cước liên quan.',
-    };
-    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 0 } },
-      h(DS.Tabs, { value: tab, onChange: v => this.setState({ payTab: v }), items: [
-        { value: 'config', label: 'Cấu hình Ưu đãi & Mô tả', icon: 'settings-01-line' },
-        { value: 'list', label: 'Danh sách cấu hình PTTT', icon: 'file-doc-line' },
-      ]}),
-      h('div', { style: { fontSize: 13, color: 'var(--color-text-subtle)', lineHeight: 1.5, padding: '10px 2px 16px' } }, tabDesc[tab]),
-      tab === 'config' ? this.renderPaymentConfig() : this.renderPaymentListTab()
-    );
-  }
-  PAYMENT_HIDDEN_CHANNELS() {
-    return ['tdw', 'hifpt', 'fptvn'];
-  }
-  renderPaymentConfig() {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const openCh = this.state.payChannelOpen !== undefined ? this.state.payChannelOpen : 'global';
-    const payInherit = this.state.payInherit || {};
-    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
-      // Giai đoạn hiện tại: tạm ẩn 3 kênh tongdaiwifi/App HiFPT/Website fpt.vn, chỉ giữ Global (chỉ ẩn UI, state/data theo kênh vẫn giữ nguyên để đồng bộ khi hiện lại ở giai đoạn sau).
-      this.CHANNELS().filter(c => !this.PAYMENT_HIDDEN_CHANNELS().includes(c.id)).map(c => {
-        const isOpen = openCh === c.id;
-        const isGlobal = c.id === 'global';
-        const inherit = !isGlobal && (payInherit[c.id] !== false);
-        return h(DS.Card, { key: c.id, style: { padding: 0, overflow: 'visible' } },
-          h('div', {
-            onClick: () => {
-              if (!isGlobal && inherit && openCh !== c.id) {
-                this.openModal({ kind: 'confirm',
-                  title: 'Tạo cấu hình riêng cho ' + c.full + '?',
-                  message: 'Kênh này đang dùng cấu hình Global. Sau khi xác nhận, cấu hình riêng sẽ được tạo và ghi đè Global cho kênh này.',
-                  onYes: () => { this.setState(s => ({ payInherit: { ...(s.payInherit || {}), [c.id]: false }, payChannelOpen: c.id, paySkuSelected: [], paySkuSearch: '', paySkuFilter: 'internet', paySkuCheckAll: false })); this.closeModal(); this.toast('brand', 'Bật tùy chỉnh riêng', c.full + ' đang được cấu hình độc lập.'); }
-                });
-              } else {
-                this.setState(s => { const opening = s.payChannelOpen !== c.id; return { payChannelOpen: opening ? c.id : null, ...(opening ? { paySkuSelected: [], paySkuSearch: '', paySkuFilter: 'internet', paySkuCheckAll: false } : {}) }; });
-              }
-            },
-            style: { display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', cursor: 'pointer', background: isOpen ? 'var(--color-surface-alt)' : 'transparent', borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)', transition: 'background .18s cubic-bezier(.2,0,0,1)', height: 56, boxSizing: 'border-box' }
-          },
-            h('span', { className: 'fpt-chevron' + (isOpen ? ' fpt-chevron-open' : '') },
-              h(DS.Icon, { name: 'chevron-right-01-line', size: 18, color: 'var(--color-text-subtle)' })
-            ),
-            h(DS.Icon, { name: c.icon, size: 18, color: 'var(--color-accent)' }),
-            h('span', { style: { fontWeight: 700, fontSize: 14.5 } }, c.full),
-            h('div', { style: { flex: 1 } }),
-            !isGlobal && h(DS.Button, {
-              level: 'secondary', size: 'sm', leadingIcon: 'upload-cloud-line',
-              style: { marginRight: 8, visibility: inherit ? 'hidden' : 'visible', pointerEvents: inherit ? 'none' : 'auto' },
-              onClick: e => { e.stopPropagation(); this.openModal({ kind: 'confirm', title: 'Đồng bộ ' + c.full + ' theo Global?', message: 'Các tùy chỉnh riêng của kênh này sẽ bị xóa. Kênh sẽ chuyển về dùng cấu hình Global.', onYes: () => { this.setState(s => ({ payInherit: { ...(s.payInherit || {}), [c.id]: true }, payChannelOpen: s.payChannelOpen === c.id ? null : s.payChannelOpen })); this.closeModal(); this.toast('info', 'Đã đồng bộ', c.full + ' đã chuyển về dùng cấu hình Global.'); }, danger: true }); }
-            }, 'Đồng bộ theo Global'),
-            !isGlobal ? this.statusBadge(inherit ? 'global' : 'custom') : null
-          ),
-          isOpen && h('div', { className: 'fpt-accordion-body', style: { padding: '18px 20px', borderTop: '1px solid var(--color-border)' } },
-            !isGlobal ? h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, background: 'var(--color-accent-bg)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 7, padding: '9px 13px', marginBottom: 14, fontSize: 12, color: 'var(--color-text-subtle)' } },
-              h(DS.Icon, { name: 'edit-01-line', size: 15, color: 'var(--color-accent-text)' }),
-              h('span', null, 'Đang chỉnh sửa cấu hình riêng cho kênh này. Nhấn "Đồng bộ theo Global" trên thanh kênh để khôi phục về cấu hình gốc.')
-            ) : null,
-            this.renderPaymentChannelBody(c)
-          )
-        );
-      })
-    );
-  }
-  renderPaymentChannelBody(channel) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const selected = this.state.paySkuSelected || [];
-    const filter = this.state.paySkuFilter || 'internet';
-    const search = (this.state.paySkuSearch || '').toLowerCase();
-    const methods = this.PAYMENT_METHODS_DEF();
-    const methodTag = { vietqr: 'QR', momo: 'Momo', zalopay: 'Zalo' };
-    // ── Tab bậc 1 — nguồn hệ thống: ECP / FCP. 2 hệ thống cùng đổ dữ liệu sản phẩm về nên có thể trùng SKU,
-    // chỉ cần cấu hình PTTT ở đúng 1 tab nguồn là đủ cho gói đó. ──
-    const skuSource = this.state.paySkuSource || 'ecp';
-    const sourceTabDefs = [
-      { id: 'ecp', label: 'ECP' },
-      { id: 'fcp', label: 'FCP' },
-    ];
-    // ── Tab bậc 2 — danh mục sản phẩm, lồng bên trong mỗi tab nguồn ──
+    const selected = this.state.payCfgSkus || [];
+    const skuSource = this.state.payEdSkuSource || 'ecp';
+    const filter = this.state.payEdSkuFilter || 'internet';
+    const search = (this.state.payEdSkuSearch || '').toLowerCase();
+    const sourceTabDefs = [{ id: 'ecp', label: 'ECP' }, { id: 'fcp', label: 'FCP' }];
     const isInternetSku = s => s.group === 'Internet' && s.kind === 'Dịch vụ';
     const isCameraSku = s => s.group === 'Camera';
     const isSaSku = s => s.group === 'Truyền hình' && s.kind === 'Dịch vụ';
@@ -9273,34 +8833,19 @@ class Component extends DCLogic {
       { id: 'sa', label: 'Gói SA', match: isSaSku },
       { id: 'other', label: 'Thiết bị khác', match: s => !isInternetSku(s) && !isCameraSku(s) && !isSaSku(s) },
     ];
-    const filterBtns = catDefs;
-    const allSkus = this.SKUS().filter(s => s.status === 'active' && (s.source || 'ECP').toLowerCase() === skuSource);
     const activeCatDef = catDefs.find(c => c.id === filter) || catDefs[0];
+    const allSkus = this.SKUS().filter(s => s.status === 'active' && (s.source || 'ECP').toLowerCase() === skuSource);
     const filteredSkus = allSkus.filter(s => {
       if (!activeCatDef.match(s)) return false;
       if (search && !s.code.toLowerCase().includes(search) && !s.name.toLowerCase().includes(search)) return false;
       return true;
     });
-    const primarySku = selected[0] ? this.SKUS().find(s => s.code === selected[0]) : null;
-    const toggleSku = (code) => { const sel = this.state.paySkuSelected || []; const idx = sel.indexOf(code); this.setState({ paySkuSelected: idx >= 0 ? sel.filter(c => c !== code) : [...sel, code] }); };
-    // ── Ghi đè nội dung hiện có — savePayChannelConfig clones selected[0]'s toàn bộ cấu hình (mọi PTTT) sang mọi gói đã chọn,
-    // nên cảnh báo nếu gói khác selected[0] đã có sẵn mô tả ưu đãi (đồng bộ hasContent/overwrite-warning với module "Thông tin checkout"). ──
-    const hasContent = code => methods.some(m => {
-      const c = (this.getPayConfig()[code] || {})[m.id];
-      return c && (c.descriptions || []).some(d => (d || '').trim());
-    });
-    const selectedWithContent = selected.filter(hasContent);
-    const showOverwriteWarning = selected.length > 1 && selectedWithContent.length > 0;
-    const CHIP_LIMIT = 8;
-    const payChipsExpanded = !!this.state.payChipsExpanded;
-    const togglePayChipsExpanded = () => this.setState(st => ({ payChipsExpanded: !st.payChipsExpanded }));
-    const visibleSelected = (payChipsExpanded || selected.length <= CHIP_LIMIT) ? selected : selected.slice(0, CHIP_LIMIT);
-    const hiddenSelectedCount = selected.length - visibleSelected.length;
-    const inputSt ={ width: '100%', padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: 'var(--color-surface)', color: 'var(--color-text)', boxSizing: 'border-box', outline: 'none' };
+    const toggleSku = code => {
+      const set = new Set(selected);
+      set.has(code) ? set.delete(code) : set.add(code);
+      this.setState({ payCfgSkus: Array.from(set) });
+    };
     const renderSkuItem = (sku) => {
-      const cfg = this.getPayConfig()[sku.code] || {};
-      const activeMethods = methods.filter(m => cfg[m.id] && cfg[m.id].active);
-      const allOff = activeMethods.length === 0;
       const isSel = selected.includes(sku.code);
       return h('div', { key: sku.code, onClick: () => toggleSku(sku.code), style: { display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2, background: isSel ? 'var(--color-accent-bg)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent' } },
         h('div', { style: { paddingTop: 2 }, onClick: e => e.stopPropagation() },
@@ -9311,287 +8856,240 @@ class Component extends DCLogic {
             h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
             h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
           ),
-          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name),
-          h('div', { style: { display: 'flex', gap: 3, flexWrap: 'wrap' } },
-            allOff
-              ? h('span', { style: { fontSize: 10.5, fontWeight: 600, color: 'var(--color-danger-text)', background: 'var(--color-danger-bg)', padding: '1px 6px', borderRadius: 4 } }, 'Tắt PTTT')
-              : activeMethods.map(m => h('span', { key: m.id, style: { fontSize: 10.5, fontWeight: 600, color: 'var(--color-text-muted)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4 } }, methodTag[m.id]))
-          )
+          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
         )
       );
     };
-    const renderMethodCard = (method) => {
-      if (!selected.length) return null;
-      const cfg = this.getSkuMethodCfg(selected[0], method.id);
-      const isActive = cfg.active;
-      const coverageBadge = h(DS.Badge, { theme: isActive ? 'brand' : 'neutral', dot: true }, isActive ? 'Đang bật' : 'Đang tắt');
-      return h('div', { key: method.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface)', marginBottom: 12 } },
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: isActive ? '1px solid var(--color-border)' : 'none' } },
-          this.payLogo(method.id, 36),
-          h('div', { style: { flex: 1 } },
-            h('div', { style: { fontWeight: 700, fontSize: 14 } }, method.name),
-            h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Nguồn: ' + method.source)
-          ),
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-            coverageBadge,
-            h(DS.Switch, { checked: isActive, size: 'sm', onChange: v => this.updPayConfig(selected[0], method.id, { active: v }) })
+    return h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px', maxWidth: 480 } },
+      h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } }, 'DANH SÁCH SẢN PHẨM'),
+      h('div', {
+        role: 'tablist', title: '2 hệ thống cùng đổ dữ liệu sản phẩm về — nếu 1 sản phẩm trùng ở cả ECP và FCP, chỉ cần chọn ở đúng 1 tab nguồn là đủ.',
+        style: { display: 'flex', gap: 3, padding: 3, background: 'var(--color-surface-sunken)', borderRadius: 'var(--radius-full)', marginBottom: 10 }
+      },
+        sourceTabDefs.map(t => {
+          const active = t.id === skuSource;
+          return h('button', {
+            key: t.id, type: 'button', role: 'tab', 'aria-selected': active,
+            onClick: () => this.setState({ payEdSkuSource: t.id, payEdSkuFilter: 'internet', payEdSkuSearch: '' }),
+            style: {
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '7px 10px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: active ? 700 : 500,
+              color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
+              background: active ? 'var(--color-surface)' : 'transparent',
+              border: 'none', borderRadius: 'var(--radius-full)',
+              boxShadow: active ? 'var(--shadow-sm)' : 'none',
+              cursor: 'pointer', transition: 'color var(--dur-fast), background var(--dur-fast)'
+            }
+          }, t.label);
+        })
+      ),
+      h('div', { style: { marginBottom: 8 } },
+        h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.payEdSkuSearch || '', onChange: e => this.setState({ payEdSkuSearch: e.target ? e.target.value : e }) })
+      ),
+      h('div', { style: { fontSize: 9.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 } }, 'Danh mục'),
+      h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
+        catDefs.map(f => h(DS.Tag, { key: f.id, size: 'sm', selected: filter === f.id, onClick: () => this.setState({ payEdSkuFilter: f.id }) }, f.label))
+      ),
+      h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 380, overflowY: 'auto', overflowX: 'hidden' } },
+        filteredSkus.length ? filteredSkus.map(sku => renderSkuItem(sku)) : h('div', { style: { padding: '16px 6px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy SKU phù hợp.')
+      ),
+      selected.length > 0 && h('div', { style: { marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border)', fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Đã chọn ' + selected.length + ' gói.')
+    );
+  }
+  renderPayEditor() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const r = this.state.payEditor;
+    const isEdit = !!(r && r !== 'new');
+    const back = () => this.closePayEditor();
+    const applyAll = !!this.state.payCfgApplyAll;
+    const methods = this.state.payCfgMethods || {};
+    const methodCatalog = this.PAYMENT_METHOD_CATALOG();
+
+    return this.editorShell(
+      isEdit ? 'Chỉnh sửa' : 'Tạo mới',
+      isEdit ? r.name : 'Tạo cấu hình nội dung PTTT',
+      back,
+      // Bố cục 2 cột: Trái = Tên cấu hình & Gói bán (khối cấu hình gọn, rộng cố định vừa đủ cho picker SKU);
+      // Phải = Phương thức thanh toán & ưu đãi (khối nội dung chính, giãn hết phần còn lại vì mỗi PTTT giờ có
+      // thêm khoảng thời gian bắt đầu–kết thúc + nhiều dòng mô tả, cần nhiều bề ngang hơn khối bên trái).
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(360px, 420px) 1fr', gap: 20, alignItems: 'stretch' } },
+        // ── Trái: Thông tin chung: Tên cấu hình / Gói bán — bọc ngoài không sticky (cao bằng hàng grid, nhờ
+        // alignItems:'stretch') để khối bên trong "sticky" có chỗ bám lại khi cột phải (PTTT) dài hơn nhiều ──
+        h('div', null,
+          h('div', { style: { position: 'sticky', top: 64 } },
+            this.listCard(
+              h('div', { style: { padding: 20, display: 'flex', flexDirection: 'column', gap: 18 } },
+                this.field('Tên cấu hình', h(DS.Input, {
+                  value: this.state.payCfgName || '', placeholder: 'Nhập tên cấu hình...',
+                  onChange: e => this.setState({ payCfgName: e.target ? e.target.value : e }),
+                }), true),
+                h('div', null,
+                  h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 } },
+                    h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Gói bán', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+                    h(DS.Checkbox, { label: 'Áp dụng cho tất cả các gói', checked: applyAll, onChange: v => this.setState({ payCfgApplyAll: v }) })
+                  ),
+                  applyAll
+                    ? h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', fontStyle: 'italic', padding: '10px 2px' } }, 'Cấu hình sẽ áp dụng cho tất cả các gói bán hiện có.')
+                    : this.renderPaySkuPicker()
+                )
+              )
+            )
           )
         ),
-        isActive
-          ? h('div', { style: { padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14 } },
-              h('div', null,
-                h('label', { style: { display: 'block', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 6 } }, 'Thời gian áp dụng'),
-                h(DS.DateRangePicker, {
-                  startDate: cfg.startDate ? new Date(cfg.startDate + 'T00:00:00') : null,
-                  endDate: cfg.endDate ? new Date(cfg.endDate + 'T00:00:00') : null,
-                  placeholderStart: 'Ngày bắt đầu',
-                  placeholderEnd: 'Ngày hết hạn',
-                  showTime: true,
-                  containerStyle: { width: '100%' },
-                  onChange: range => {
-                    const fmt = d => d ? d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') : '';
-                    this.updPayConfig(selected[0], method.id, { startDate: fmt(range.start), endDate: fmt(range.end) });
-                  },
-                })
-              ),
-              h('div', null,
-                h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
-                  h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' } }, 'MÔ TẢ ƯU ĐÃI KÈM THEO'),
-                  h(DS.Button, { level: 'secondary', size: 'xs', leadingIcon: 'plus-line', onClick: () => this.updPayConfig(selected[0], method.id, { descriptions: [...(cfg.descriptions || []), ''] }) }, 'Thêm dòng')
+
+        // ── Phải: Danh sách phương thức thanh toán — mỗi PTTT là 1 thẻ (Icon+Tên ở đầu để định vị nhanh,
+        // rồi đến Thời gian áp dụng, cuối cùng là Mô tả) thay vì bảng lưới nhiều cột dồn hết vào 1 hàng ──
+        this.listCard(
+          this.toolbar(
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+              h(DS.Icon, { name: 'file-check-line', size: 16, color: 'var(--color-text-subtle)' }),
+              h('span', { style: { fontWeight: 700, fontSize: 13.5 } }, 'Phương thức thanh toán & ưu đãi')
+            )
+          ),
+          h('div', { style: { padding: 16, display: 'flex', flexDirection: 'column', gap: 12 } },
+            methodCatalog.map(m => {
+              const cfg = methods[m.id] || { start: null, end: null, descriptions: [''] };
+              const descArr = cfg.descriptions && cfg.descriptions.length ? cfg.descriptions : [''];
+              return h('div', {
+                key: m.id,
+                style: { border: '1px solid var(--color-border-pale)', borderRadius: 10, padding: 14, background: 'var(--color-surface-alt)' }
+              },
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 } },
+                  this.payLogo(m.id, 30),
+                  h('span', { style: { fontWeight: 700, fontSize: 14 } }, m.name)
                 ),
-                h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                  (cfg.descriptions || []).map((desc, idx) =>
-                    h('div', { key: idx, style: { display: 'flex', alignItems: 'center', gap: 6 } },
-                      h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'VD: Giảm 50k khi thanh toán Online', value: desc, onChange: e => { const d = [...(cfg.descriptions || [])]; d[idx] = e.target ? e.target.value : e; this.updPayConfig(selected[0], method.id, { descriptions: d }); } })),
-                      h(DS.IconButton, { icon: 'trash-line', label: 'Xóa dòng', level: 'tertiary', size: 'sm', onClick: () => this.updPayConfig(selected[0], method.id, { descriptions: (cfg.descriptions || []).filter((_, i) => i !== idx) }) })
+                h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+                  this.field('Thời gian áp dụng', h(DS.DateRangePicker, {
+                    startDate: cfg.start, endDate: cfg.end,
+                    placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc',
+                    containerStyle: { width: '100%' },
+                    onChange: ({ start, end }) => this.setPayCfgPeriod(m.id, start, end),
+                  })),
+                  h('div', null,
+                    h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Mô tả ưu đãi'),
+                    h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+                      descArr.map((desc, idx) =>
+                        h('div', { key: idx, style: { display: 'flex', alignItems: 'center', gap: 6 } },
+                          h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Nhập mô tả ưu đãi...', value: desc, onChange: e => this.updatePayCfgDescLine(m.id, idx, e.target ? e.target.value : e) })),
+                          h(DS.IconButton, { icon: 'trash-line', label: 'Xóa dòng', level: 'tertiary', size: 'sm', onClick: () => this.removePayCfgDescLine(m.id, idx) })
+                        )
+                      ),
+                      h(DS.Button, { level: 'secondary', size: 'xs', leadingIcon: 'plus-line', style: { alignSelf: 'flex-start' }, onClick: () => this.addPayCfgDescLine(m.id) }, 'Thêm dòng')
                     )
                   )
                 )
-              )
-            )
-          : h('div', { style: { padding: '12px 16px', fontSize: 13, color: 'var(--color-text-subtle)' } }, 'Phương thức này đang tắt đối với gói cước này. Tick chọn bên phải để kích hoạt.')
-      );
-    };
-    return h('div', { style: { display: 'grid', gridTemplateColumns: '1.36fr 3fr', gap: 16, alignItems: 'stretch' } },
-      // (bọc ngoài không sticky, cao bằng hàng grid → cho phép khối bên trong "sticky" bám lại khi cột phải dài hơn)
-      h('div', null,
-        h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px', position: 'sticky', top: 8 } },
-          h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } }, 'DANH SÁCH SẢN PHẨM'),
-
-          // ── Bậc 1 (chính): nguồn hệ thống ECP / FCP — pill-tab to, nổi bật để phân biệt rõ với bộ lọc danh mục bên dưới ──
-          h('div', {
-            role: 'tablist', title: '2 hệ thống cùng đổ dữ liệu sản phẩm về — nếu 1 sản phẩm trùng ở cả ECP và FCP, chỉ cần cấu hình PTTT ở đúng 1 tab nguồn là đủ.',
-            style: { display: 'flex', gap: 3, padding: 3, background: 'var(--color-surface-sunken)', borderRadius: 'var(--radius-full)', marginBottom: 10 }
-          },
-            sourceTabDefs.map(t => {
-              const active = t.id === skuSource;
-              return h('button', {
-                key: t.id, type: 'button', role: 'tab', 'aria-selected': active,
-                onClick: () => this.setState({ paySkuSource: t.id, paySkuFilter: 'internet', paySkuSearch: '' }),
-                style: {
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  padding: '7px 10px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: active ? 700 : 500,
-                  color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
-                  background: active ? 'var(--color-surface)' : 'transparent',
-                  border: 'none', borderRadius: 'var(--radius-full)',
-                  boxShadow: active ? 'var(--shadow-sm)' : 'none',
-                  cursor: 'pointer', transition: 'color var(--dur-fast), background var(--dur-fast)'
-                }
-              }, t.label);
+              );
             })
-          ),
-
-          h('div', { style: { marginBottom: 6 } },
-            h(DS.Checkbox, { label: 'Chọn tất cả', checked: !!(this.state.paySkuCheckAll), onChange: v => this.setState({ paySkuCheckAll: v, paySkuSelected: v ? filteredSkus.map(s => s.code) : [] }) })
-          ),
-          h('div', { style: { marginBottom: 8 } },
-            h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.paySkuSearch || '', onChange: e => this.setState({ paySkuSearch: e.target.value }) })
-          ),
-
-          // ── Bậc 2 (phụ): danh mục sản phẩm — chip nhỏ, thuộc phạm vi tab nguồn đang chọn ──
-          h('div', { style: { fontSize: 9.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 } }, 'Danh mục'),
-          h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
-            filterBtns.map(f => h(DS.Tag, { key: f.id, size: 'sm', selected: filter === f.id, onClick: () => this.setState({ paySkuFilter: f.id }) }, f.label))
-          ),
-          h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 512, overflowY: 'auto', overflowX: 'hidden' } }, filteredSkus.map(sku => renderSkuItem(sku)))
+          )
         )
       ),
-      h('div', null,
-        selected.length > 0
-          ? h('div', null,
-              showOverwriteWarning && h(DS.Alert, { theme: 'warning', title: 'Chỉnh sửa sẽ ghi đè nội dung hiện có', style: { borderRadius: 10, marginBottom: 14 } },
-                'Đang chọn ' + selected.length + ' gói, trong đó ' + selectedWithContent.length + ' gói (' + selectedWithContent.join(', ') + ') đã có nội dung ưu đãi. Mọi thay đổi bên dưới sẽ áp dụng đồng loạt và ghi đè — nội dung cũ của các gói này sẽ bị xóa.'
-              ),
-              h('div', { style: { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 16px', marginBottom: 14 } },
-                h('div', { style: { fontWeight: 700, fontSize: 14, marginBottom: selected.length > 1 ? 8 : 0 } },
-                  selected.length === 1
-                    ? h('span', null, 'Cấu hình PTTT cho gói: ', h('span', { style: { color: 'var(--color-accent)' } }, (primarySku ? primarySku.name : selected[0]) + ' (' + selected[0] + ')'))
-                    : h('span', null, 'Cấu hình cho ', h('span', { style: { color: 'var(--color-accent)' } }, selected.length + ' gói đã chọn'), ':')
-                ),
-                selected.length > 1 && h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', marginBottom: 6 } },
-                  visibleSelected.map(code => h(DS.Tag, { key: code, color: 'var(--color-accent)', onClose: () => toggleSku(code) }, code)),
-                  hiddenSelectedCount > 0 && h('button', { type: 'button', onClick: togglePayChipsExpanded,
-                    style: { fontSize: 11.5, fontWeight: 700, color: 'var(--color-accent-text)', background: 'var(--color-accent-bg)', border: '1px solid var(--color-border)', borderRadius: 20, padding: '4px 10px', cursor: 'pointer' } },
-                    '+' + hiddenSelectedCount + ' khác'
-                  ),
-                  payChipsExpanded && selected.length > CHIP_LIMIT && h('button', { type: 'button', onClick: togglePayChipsExpanded,
-                    style: { fontSize: 11.5, fontWeight: 700, color: 'var(--color-text-subtle)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 2px', textDecoration: 'underline' } },
-                    'Thu gọn'
-                  )
-                ),
-                selected.length > 1 && h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Hiển thị cấu hình của gói đầu tiên — lưu sẽ áp dụng đồng loạt cho tất cả gói đã chọn.')
-              ),
-              methods.map(method => renderMethodCard(method)),
-              h('div', { style: { display: 'flex', justifyContent: 'flex-end', paddingTop: 4 } },
-                h(DS.Button, { level: 'primary', leadingIcon: 'check-line', onClick: () => this.savePayChannelConfig(channel.id) },
-                  selected.length > 1 ? 'Lưu cho ' + selected.length + ' gói' : 'Lưu cấu hình'
-                )
-              )
-            )
-          : h('div', { style: { background: 'var(--color-surface)', border: '1.5px dashed var(--color-border)', borderRadius: 10, padding: '52px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center' } },
-              h('div', { style: { width: 52, height: 52, borderRadius: 14, background: 'var(--color-surface-alt)', border: '1.5px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 } },
-                h(DS.Icon, { name: 'settings-01-line', size: 24, color: 'var(--color-text-subtle)' })
-              ),
-              h('div', { style: { fontWeight: 700, fontSize: 15, color: 'var(--color-text)' } }, 'Chưa chọn gói cước nào'),
-              h('div', { style: { fontSize: 13, color: 'var(--color-text-subtle)', maxWidth: 360, lineHeight: 1.6 } }, 'Tick chọn một hoặc nhiều gói cước từ danh sách bên trái để xem và chỉnh sửa cấu hình phương thức thanh toán.'),
-              h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '8px 14px', marginTop: 6, fontSize: 12, color: 'var(--color-text-subtle)' } },
-                h(DS.Icon, { name: 'info-circle-line', size: 14, color: 'var(--color-accent)' }),
-                h('span', null, 'Có thể chọn nhiều gói cùng lúc — lưu sẽ áp dụng cấu hình đồng loạt cho tất cả gói đã chọn')
-              )
-            )
-      )
+      () => this.savePayEditor(),
+      'Lưu'
     );
+  }
+  getPayConfigList() { return this.state.payConfigList || this.PAYMENT_CONFIG_LIST_DATA(); }
+  PAYMENT_CONFIG_LIST_DATA() {
+    return [
+      { id: 1, name: 'Cấu hình 1', applyAll: false, skus: ['INT-GIGA', 'INT-SKY', 'INT-META'],
+        methods: { vietqr: { start: '2026-07-01', end: '2026-07-31', descriptions: ['Ưu đãi thanh toán 50K'] }, 'foxpay-atm': { start: '2026-07-01', end: '2026-07-16', descriptions: ['Ưu đãi thanh toán 50K'] }, 'foxpay-token': { start: '2026-07-01', end: '2026-07-16', descriptions: ['Ưu đãi thanh toán 50K'] }, 'zalopay-bank': { start: '2026-07-15', end: '2026-08-14', descriptions: [] }, zalopay: { start: '2026-07-01', end: '2026-07-16', descriptions: ['Ưu đãi thanh toán 50K'] }, 'onepay-apple': { start: '2026-07-15', end: '2026-08-14', descriptions: [] }, cod: { start: '2026-07-15', end: '2026-08-14', descriptions: [] }, momo: { start: '2026-07-15', end: '2026-08-14', descriptions: [] } },
+        createdAt: '16/07/2026 16:07', createdBy: 'Đặng Xuân Phong', updatedAt: '23/07/2026 11:14', updatedBy: 'tannn40' },
+      { id: 2, name: 'Pentest', applyAll: false, skus: ['INT-GIGA'], methods: {},
+        createdAt: '22/07/2026 17:17', createdBy: 'tannn40', updatedAt: '22/07/2026 17:17', updatedBy: 'tannn40' },
+      { id: 3, name: 'Cấu hình test', applyAll: false, skus: ['INT-GIGA'], methods: {},
+        createdAt: '11/07/2026 01:22', createdBy: 'Phạm Chí Hiếu', updatedAt: '22/07/2026 14:46', updatedBy: 'Phạm Chí Hiếu' },
+      { id: 4, name: 'UAT 1', applyAll: false, skus: ['INT-GIGA'], methods: {},
+        createdAt: '14/07/2026 11:14', createdBy: 'thanhvt58', updatedAt: '22/07/2026 14:46', updatedBy: 'Phạm Chí Hiếu' },
+      { id: 5, name: 'Test tất cả', applyAll: true, skus: [], methods: {},
+        createdAt: '15/07/2026 13:43', createdBy: 'Test003', updatedAt: '15/07/2026 13:43', updatedBy: 'Test003' },
+      { id: 6, name: 'Skyeyes3play4 (1 cam) - uat (PTTT)', applyAll: false, skus: ['CAM-IQ3'], methods: {},
+        createdAt: '14/07/2026 10:36', createdBy: 'Đỗ Liên Thảo', updatedAt: '14/07/2026 10:36', updatedBy: 'Đỗ Liên Thảo' },
+    ];
+  }
+  payLogo(nameOrId, size) {
+    const h = React.createElement;
+    const r = Math.round(size * 0.22);
+    const boxImg = (src, alt) => h('div', { style: { width: size, height: size, borderRadius: r, background: '#fff', border: '1px solid #dde3ec', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 2, boxSizing: 'border-box' } },
+      h('img', { src, alt, style: { width: '100%', height: '100%', objectFit: 'contain', display: 'block' } })
+    );
+    const colorImg = (src, bg, alt) => h('div', { style: { width: size, height: size, borderRadius: r, background: bg, flexShrink: 0, overflow: 'hidden' } },
+      h('img', { src, alt, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } })
+    );
+    // Badge chữ dùng cho các PTTT chưa có ảnh logo thật (FoxPay/Onepay/COD) — cùng khuôn kích thước với boxImg/colorImg ở trên.
+    const textBadge = (text, bg, fg) => h('div', { style: { width: size, height: size, borderRadius: r, background: bg, color: fg || '#fff', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: Math.max(7, Math.round(size * 0.24)), fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1 } }, text);
+    const map = {
+      momo: () => colorImg('https://www.google.com/s2/favicons?domain=momo.vn&sz=128', '#AE2070', 'Momo'),
+      Momo: () => colorImg('https://www.google.com/s2/favicons?domain=momo.vn&sz=128', '#AE2070', 'Momo'),
+      zalopay: () => boxImg('assets/Zalo.png', 'ZaloPay'),
+      ZaloPay: () => boxImg('assets/Zalo.png', 'ZaloPay'),
+      vietqr: () => boxImg('assets/Viet QR.png', 'VietQR'),
+      VietQR: () => boxImg('assets/Viet QR.png', 'VietQR'),
+      VNPay: () => colorImg('https://www.google.com/s2/favicons?domain=vnpay.vn&sz=128', '#005BAA', 'VNPay'),
+      Napas: () => boxImg('uploads/pasted-1781777722027-0.png', 'Napas'),
+      'foxpay-atm': () => textBadge('ATM', '#1f2937'),
+      'foxpay-token': () => textBadge('TOK', '#2563eb'),
+      'zalopay-bank': () => textBadge('BANK', '#0284c7'),
+      'onepay-apple': () => textBadge('Pay', '#111111'),
+      cod: () => textBadge('COD', '#f59e0b', '#111'),
+    };
+    return (map[nameOrId] || (() => h('div', { style: { width: size, height: size, borderRadius: r, background: 'var(--color-surface-sunken)', flexShrink: 0 } })))();
+  }
+
+  // Không chia tab nữa — vào module là thấy ngay bảng "Danh sách nội dung PTTT"; Tạo mới/Sửa mở Inline Full-Page Editor (renderPayEditor).
+  renderPayment() {
+    if (this.state.payEditor !== undefined) return this.renderPayEditor();
+    return this.renderPaymentListTab();
   }
   renderPaymentListTab() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
 
-    // Nhóm theo PTTT hiện có: VietQR/Momo/ZaloPay (theo PAYMENT_METHODS_DEF) rồi Hệ thống (system) sau cùng.
-    const groupOrder = [...this.PAYMENT_METHODS_DEF().map(m => m.id), 'system'];
-    const groupIndex = id => { const i = groupOrder.indexOf(id); return i === -1 ? groupOrder.length : i; };
-
-    // Sort state
-    const sort = this.state.payListSort || { key: null, dir: 'asc' };
-
-    // Parse "DD/MM/YYYY HH:mm:ss" → timestamp cho sắp xếp theo thời gian
-    const parseTime = (s) => {
-      if (!s) return 0;
-      const [datePart, timePart] = s.split(' ');
-      const [dd, mm, yyyy] = (datePart || '').split('/');
-      const [hh, mi, ss] = (timePart || '00:00:00').split(':');
-      return new Date(+yyyy, +mm - 1, +dd, +hh, +mi, +(ss || 0)).getTime();
-    };
-
-    // Sắp xếp: nhóm theo PTTT là ưu tiên hàng đầu; trong mỗi nhóm sắp theo Thời gian (mới nhất trước) hoặc theo lựa chọn của người dùng
-    const data = [...this.getPayListData()].sort((a, b) => {
-      const gi = groupIndex(a.methodId) - groupIndex(b.methodId);
-      if (gi !== 0) return gi;
-      if (!sort.key) return parseTime(b.time) - parseTime(a.time);
-      let av, bv;
-      if (sort.key === 'time') { av = parseTime(a.time); bv = parseTime(b.time); }
-      else { av = (a.actor || '').toLowerCase(); bv = (b.actor || '').toLowerCase(); }
-      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
-      return sort.dir === 'asc' ? cmp : -cmp;
+    const search = (this.state.paycfgSearch || '').toLowerCase();
+    const skuFilter = this.state.paycfgSkuFilter || 'all';
+    const data = this.getPayConfigList().filter(r => {
+      if (search && !(r.name || '').toLowerCase().includes(search)) return false;
+      if (skuFilter !== 'all' && !r.applyAll && !(r.skus || []).includes(skuFilter)) return false;
+      return true;
     });
+    const sliced = this.sliceData(data, 'paycfg');
+    const pg = this.state.paycfg_pg || 1;
+    const sz = this.state.paycfg_sz || 10;
 
-    // Toggle sort: none → asc → desc → none
-    const toggleSort = (key) => {
-      const cur = this.state.payListSort || { key: null, dir: 'asc' };
-      if (cur.key !== key) this.setState({ payListSort: { key, dir: 'asc' } });
-      else if (cur.dir === 'asc') this.setState({ payListSort: { key, dir: 'desc' } });
-      else this.setState({ payListSort: { key: null, dir: 'asc' } });
-    };
+    const skuOptions = [{ value: 'all', label: 'Gói bán' }, ...this.SKUS().filter(s => s.status === 'active').map(s => ({ value: s.code, label: s.code }))];
 
-    // Dual-arrow sort icon (up = asc, down = desc, both gray = inactive)
-    const sortIcon = (key) => {
-      const cur = this.state.payListSort || { key: null, dir: 'asc' };
-      const isAsc  = cur.key === key && cur.dir === 'asc';
-      const isDesc = cur.key === key && cur.dir === 'desc';
-      const accent = 'var(--color-accent)';
-      const muted  = 'var(--color-border-strong)';
-      return h('button', {
-        onClick: e => { e.stopPropagation(); toggleSort(key); },
-        title: isAsc ? 'Đang sắp xếp tăng dần — nhấn để giảm dần' : isDesc ? 'Đang sắp xếp giảm dần — nhấn để bỏ sắp xếp' : 'Nhấn để sắp xếp tăng dần',
-        style: { display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 16, height: 18, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, marginLeft: 3, gap: 1, flexShrink: 0, verticalAlign: 'middle' }
-      },
-        h('svg', { width: 10, height: 6, viewBox: '0 0 10 6', style: { display: 'block' } },
-          h('path', { d: 'M5 0.5 L9 5.5 H1 Z', fill: isAsc ? accent : muted })
-        ),
-        h('svg', { width: 10, height: 6, viewBox: '0 0 10 6', style: { display: 'block' } },
-          h('path', { d: 'M5 5.5 L9 0.5 H1 Z', fill: isDesc ? accent : muted })
-        )
+    const chipList = (theme, MAX, list, allBadge) => {
+      if (allBadge) return h(DS.Badge, { theme: 'brand' }, allBadge);
+      const visible = (list || []).slice(0, MAX);
+      const overflow = (list || []).length - MAX;
+      return h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4 } },
+        ...visible.map(v => h(DS.Badge, { key: v, theme }, v)),
+        overflow > 0 && h(DS.Badge, { key: '__more', theme: 'neutral', title: list.slice(MAX).join(', ') }, '+' + overflow + ' more')
       );
     };
 
-    // Sortable header cell
-    const sh = (label, key) => h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 1, userSelect: 'none' } },
-      h('span', null, label),
-      sortIcon(key)
-    );
-
-    const payPg = this.state.payList_pg || 1;
-    const paySz = this.state.payList_sz || 10;
-    const sliced = this.sliceData(data, 'payList');
-
-    // Icon PTTT: dùng logo có sẵn cho VietQR/Momo/ZaloPay, icon hệ thống cho dòng "Tất cả"
-    const methodIcon = (methodId, size) => {
-      if (methodId === 'system') {
-        const r2 = Math.round(size * 0.22);
-        return h('div', { style: { width: size, height: size, borderRadius: r2, background: 'var(--color-surface-sunken)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' } },
-          h(DS.Icon, { name: 'settings-01-line', size: Math.round(size * 0.6), color: 'var(--color-text-subtle)' })
-        );
-      }
-      return this.payLogo(this.PAYMENT_METHOD_LABEL(methodId), size);
-    };
-
     const columns = [
-      { key: 'stt', header: 'STT', width: 60, align: 'center',
-        render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (payPg - 1) * paySz + sliced.indexOf(r) + 1) },
-      { key: 'method', header: 'PTTT tác động', width: 200, render: (_, r) => {
-        const idx = sliced.indexOf(r);
-        const prev = idx > 0 ? sliced[idx - 1] : null;
-        if (prev && prev.methodId === r.methodId) return null; // cùng nhóm với dòng trên → để trống cho hiệu ứng gộp nhóm
-        return h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' } },
-          methodIcon(r.methodId, 20),
-          h('span', { style: { fontWeight: 600 } }, this.PAYMENT_METHOD_LABEL(r.methodId))
-        );
-      } },
-      { key: 'time', header: sh('Thời gian cập nhật', 'time'), width: 180, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, whiteSpace: 'nowrap' } }, r.time) },
-      { key: 'skus', header: 'Gói cước (SKU)', width: 420, render: (_, r) => {
-        if (r.methodId === 'system') return h(DS.Badge, { theme: 'brand' }, 'Tất cả gói');
-        const MAX = 5;
-        const skus = r.skus || [];
-        const visible = skus.slice(0, MAX);
-        const overflow = skus.length - MAX;
-        return h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' } },
-          ...visible.map(code => h(DS.Badge, { key: code, theme: 'neutral' }, code)),
-          overflow > 0 && h(DS.Badge, { key: '__more', theme: 'neutral', title: skus.slice(MAX).join(', ') }, '+' + overflow)
-        );
-      } },
-      { key: 'act', header: 'Thao tác', width: 110, align: 'right', sticky: true, render: (_, r) => {
-        if (r.methodId === 'system') return h('span', { style: { fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Hệ thống');
-        return this.rowActions([
+      { key: 'stt', header: 'STT', width: 56, align: 'center',
+        render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (pg - 1) * sz + sliced.indexOf(r) + 1) },
+      { key: 'name', header: 'Tên cấu hình', width: 220, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
+      { key: 'skus', header: 'Gói bán', width: 280, render: (_, r) => chipList('neutral', 4, r.skus, r.applyAll ? 'Tất cả gói' : null) },
+      { key: 'updatedAt', header: 'Thời gian cập nhật', width: 150, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
+      { key: 'updatedBy', header: 'Người cập nhật', width: 140, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedBy || '—') },
+      { key: 'createdAt', header: 'Thời gian tạo', width: 150, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
+      { key: 'createdBy', header: 'Người tạo', width: 140, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.createdBy || '—') },
+      { key: 'act', header: 'Thao tác', width: 100, align: 'right', render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openPayEditor(r) },
-        ]);
-      } },
+          { icon: 'trash-line', label: 'Xóa', onClick: () => this.deletePayConfig(r) },
+        ]) },
     ];
 
     return this.listCard(
-      // ── Header toolbar ──
       this.toolbar(
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-          h(DS.Icon, { name: 'file-check-line', size: 17, color: 'var(--color-text-subtle)' }),
-          h('span', { style: { fontWeight: 700, fontSize: 14 } }, 'Danh sách cấu hình Phương thức Thanh toán')
-        )
+        h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
+          this.search('Tìm kiếm tên cấu hình...', 'paycfgSearch'),
+          h('div', { style: { width: 180, flexShrink: 0 } }, h(DS.Select, { options: skuOptions, value: skuFilter, onChange: v => this.setState({ paycfgSkuFilter: v, paycfg_pg: 1 }) }))
+        ),
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openPayEditor(null) }, 'Tạo Mới')
       ),
-      // ── Table with horizontal scroll ──
-      h('div', {
-        className: 'fpt-scroll fpt-drag-scroll',
-        style: { overflowX: 'auto' },
-        onScroll: e => { e.currentTarget.classList.toggle('fpt-table-scrolled', e.currentTarget.scrollLeft > 2); }
-      },
-        h(DS.Table, { dense: true, style: { border: 'none', borderRadius: 0, overflow: 'visible', minWidth: 760 }, rowKey: 'id', columns, data: sliced })
-      ),
-      this.renderPagBar(data.length, 'payList', 'cấu hình')
+      this.tbl(columns, sliced, 'id'),
+      this.renderPagBar(data.length, 'paycfg', 'cấu hình')
     );
   }
 

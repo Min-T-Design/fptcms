@@ -352,6 +352,14 @@
       return function () { document.removeEventListener("mousedown", fn); };
     }, [open]);
 
+    // Mở panel lên là phải nhảy calendar tới đúng tháng của giá trị đã chọn — nếu không, sửa 1 khoảng
+    // ngày ở quá khứ/tương lai xa sẽ luôn mở ra tháng hiện tại, buộc người dùng bấm prev/next nhiều lần mới thấy lại lựa chọn cũ.
+    React.useEffect(function () {
+      if (!open) return;
+      var seed = rs || re;
+      if (seed) setLeftView({ year: seed.getFullYear(), month: seed.getMonth() });
+    }, [open]);
+
     function dayClick(d) {
       if (picking === "start" || !rs) {
         if (!ctrl) { setIS(d); setIE(null); }
