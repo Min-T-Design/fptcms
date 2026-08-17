@@ -9043,17 +9043,27 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
 
     const search = (this.state.paycfgSearch || '').toLowerCase();
-    const skuFilter = this.state.paycfgSkuFilter || 'all';
+    const dateRange = this.state.paycfgDateRange || { start: null, end: null };
+    // "Thời gian tạo" được lưu dạng chuỗi "dd/MM/yyyy HH:mm" — chỉ so sánh phần ngày (bỏ giờ)
+    // vì bộ lọc khoảng thời gian ở toolbar chỉ cho chọn ngày, không chọn giờ.
+    const dateOnly = d => d && new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const parseCreatedAt = str => {
+      const day = (str || '').split(' ')[0].split('/');
+      return day.length === 3 ? new Date(+day[2], +day[1] - 1, +day[0]) : null;
+    };
     const data = this.getPayConfigList().filter(r => {
       if (search && !(r.name || '').toLowerCase().includes(search)) return false;
-      if (skuFilter !== 'all' && !r.applyAll && !(r.skus || []).includes(skuFilter)) return false;
+      if (dateRange.start || dateRange.end) {
+        const created = parseCreatedAt(r.createdAt);
+        if (!created) return false;
+        if (dateRange.start && created < dateOnly(dateRange.start)) return false;
+        if (dateRange.end && created > dateOnly(dateRange.end)) return false;
+      }
       return true;
     });
     const sliced = this.sliceData(data, 'paycfg');
     const pg = this.state.paycfg_pg || 1;
     const sz = this.state.paycfg_sz || 10;
-
-    const skuOptions = [{ value: 'all', label: 'Gói bán' }, ...this.SKUS().filter(s => s.status === 'active').map(s => ({ value: s.code, label: s.code }))];
 
     const chipList = (theme, MAX, list, allBadge) => {
       if (allBadge) return h(DS.Badge, { theme: 'brand' }, allBadge);
@@ -9084,7 +9094,12 @@ class Component extends DCLogic {
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
           this.search('Tìm kiếm tên cấu hình...', 'paycfgSearch'),
-          h('div', { style: { width: 180, flexShrink: 0 } }, h(DS.Select, { options: skuOptions, value: skuFilter, onChange: v => this.setState({ paycfgSkuFilter: v, paycfg_pg: 1 }) }))
+          h('div', { style: { width: 360, flexShrink: 0 } }, h(DS.DateRangePicker, {
+            showTime: false, placeholderStart: 'Từ ngày tạo', placeholderEnd: 'Đến ngày tạo',
+            startDate: dateRange.start, endDate: dateRange.end,
+            onChange: v => this.setState({ paycfgDateRange: v, paycfg_pg: 1 }),
+            containerStyle: { width: '100%' }
+          }))
         ),
         h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openPayEditor(null) }, 'Tạo Mới')
       ),
