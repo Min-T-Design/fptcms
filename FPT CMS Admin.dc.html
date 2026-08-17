@@ -3710,8 +3710,8 @@ class Component extends DCLogic {
             this.field('Tên Block', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'Nhập tên block...' }), true),
             this.field('Mã Block', h(DS.Input, { defaultValue: r ? r.code : '', placeholder: 'VD: blk-card-internet' }), true),
             this.field('Tên rút gọn', h(DS.Input, { placeholder: 'VD: Card Chuẩn' }), true),
-            this.field('Loại Block (Layout)', h(DS.Select, { options: [{ value: 'slider', label: 'Slider' }, { value: 'grid', label: 'Grid' }, { value: 'row', label: 'Row' }, { value: 'accordion', label: 'Accordion' }, { value: 'list', label: 'List' }], value: layout, onChange: v => this.setState({ blkLayout: v }) }), true),
-            this.field('Loại dữ liệu', h(DS.Select, { options: [{ value: 'goi-cuoc', label: 'Gói cước' }, { value: 'tin-tuc', label: 'Tin tức / Bài viết' }, { value: 'faq', label: 'Câu hỏi / FAQ' }, { value: 'banner', label: 'Banner' }, { value: 'popup', label: 'Popup' }], value: ds, onChange: v => this.setState({ blkDataSource: v }) }), true),
+            this.field('Loại Block (Layout)', h(DS.Select, { options: [{ value: 'slider', label: 'Slider' }, { value: 'tabs', label: 'Tabs' }, { value: 'row', label: 'Row' }], value: layout, onChange: v => this.setState({ blkLayout: v }) }), true),
+            this.field('Loại dữ liệu', h(DS.Select, { options: [{ value: 'goi-cuoc', label: 'Dịch vụ' }, { value: 'tin-tuc', label: 'Tin tức' }, { value: 'faq', label: 'Câu hỏi' }], value: ds, onChange: v => this.setState({ blkDataSource: v }) }), true),
             this.field('Thứ tự hiển thị', h(DS.Input, { type: 'number', defaultValue: r && r.order != null ? String(r.order) : '1' }))
           ),
           dynSection,
