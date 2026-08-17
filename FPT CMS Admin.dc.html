@@ -3272,7 +3272,7 @@ class Component extends DCLogic {
   openSectionDrawer(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const PAGES = this.PAGES().map(p => p.name);
-    const TYPES = ['HTML - Layout category', 'HTML - Layout experience', 'HTML - Layout banner', 'HTML - Layout article', 'HTML - Video', 'HTML - Layout gaming', 'Tabs', 'Row', 'Row VAT', 'Question', 'Form liên hệ'];
+    const TYPES = ['Tabs (Gộp nhóm Section)', 'Row (Sản phẩm SKU)', 'Row-VAT (Block sản phẩm SA)', 'FAQ (Hỏi đáp / Faqs)', 'Form Lead (Thu lead Doanh nghiệp)', 'Layout Category (Danh mục dịch vụ)', 'Layout Experience (Khối trải nghiệm)', 'Layout Banner (Banner / Slider)', 'Layout Article (Bài viết / Tin tức)', 'Video (Khối video giới thiệu)', 'Layout Gaming (Khối internet gaming)'];
     const allBlocks = this.BLOCKS().map(b => b.name);
     this.openDrawer({
       title: r ? 'Sửa Section' : 'Tạo Section mới',
@@ -3378,7 +3378,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.setState({ secEditor: undefined, secEditorBlocks: undefined });
     const PAGES = this.PAGES().map(p => p.name);
-    const TYPES = ['HTML - Layout category', 'HTML - Layout experience', 'HTML - Layout banner', 'HTML - Layout article', 'HTML - Video', 'HTML - Layout gaming', 'Tabs', 'Row', 'Row VAT', 'Question', 'Form liên hệ'];
+    const TYPES = ['Tabs (Gộp nhóm Section)', 'Row (Sản phẩm SKU)', 'Row-VAT (Block sản phẩm SA)', 'FAQ (Hỏi đáp / Faqs)', 'Form Lead (Thu lead Doanh nghiệp)', 'Layout Category (Danh mục dịch vụ)', 'Layout Experience (Khối trải nghiệm)', 'Layout Banner (Banner / Slider)', 'Layout Article (Bài viết / Tin tức)', 'Video (Khối video giới thiệu)', 'Layout Gaming (Khối internet gaming)'];
     const allBlocks = this.BLOCKS().map(b => b.name);
     const selBlocks = this.state.secEditorBlocks || [];
     const toggleBlock = (b) => { const cur = this.state.secEditorBlocks || []; this.setState({ secEditorBlocks: cur.includes(b) ? cur.filter(x => x !== b) : [...cur, b] }); };
