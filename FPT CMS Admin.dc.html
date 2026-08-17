@@ -9043,7 +9043,11 @@ class Component extends DCLogic {
       return day.length === 3 ? new Date(+day[2], +day[1] - 1, +day[0]) : null;
     };
     const data = this.getPayConfigList().filter(r => {
-      if (search && !(r.name || '').toLowerCase().includes(search)) return false;
+      if (search) {
+        const matchName = (r.name || '').toLowerCase().includes(search);
+        const matchSku = (r.skus || []).some(s => s.toLowerCase().includes(search));
+        if (!matchName && !matchSku) return false;
+      }
       if (dateRange.start || dateRange.end) {
         const created = parseCreatedAt(r.createdAt);
         if (!created) return false;
@@ -9084,7 +9088,7 @@ class Component extends DCLogic {
     return this.listCard(
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
-          this.search('Tìm kiếm tên cấu hình...', 'paycfgSearch'),
+          this.search('Tìm kiếm tên cấu hình, gói bán...', 'paycfgSearch'),
           h('div', { style: { width: 360, flexShrink: 0 } }, h(DS.DateRangePicker, {
             showTime: false, placeholderStart: 'Từ ngày tạo', placeholderEnd: 'Đến ngày tạo',
             startDate: dateRange.start, endDate: dateRange.end,
