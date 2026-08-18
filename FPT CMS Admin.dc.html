@@ -3779,7 +3779,7 @@ class Component extends DCLogic {
         h('div', null,
           h('div', { style: { display: 'flex', gap: 10, marginBottom: 12 } },
             h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Tìm kiếm bài viết...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch, onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) })),
-            h('div', { style: { width: 190 } }, h(DS.Select, { options: [{ value: '', label: '-- Tất cả danh mục --' }, 'Tin công nghệ', 'Hướng dẫn', 'Tin thể thao', 'Khuyến mãi', 'Sản phẩm'], value: s.blkPickerCat || '', onChange: v => this.setState({ blkPickerCat: v }) }))
+            h('div', { style: { width: 260, flexShrink: 0 } }, h(DS.Select, { options: [{ value: '', label: '-- Tất cả chuyên mục --' }, 'Tin công nghệ', 'Hướng dẫn', 'Tin thể thao', 'Khuyến mãi', 'Sản phẩm'], value: s.blkPickerCat || '', onChange: v => this.setState({ blkPickerCat: v }) }))
           ),
           pickerTable(
             [h('th', { style: { width: 40, textAlign: 'center', padding: '8px 10px' } }, h(DS.Checkbox, { checked: allChk, onChange: () => this.setState({ blkPickerSelected: allChk ? {} : Object.fromEntries(flt.map(a => [a.id, true])) }) })), th('Tiêu đề bài viết'), th('Danh mục'), th('Ngày xuất bản', 100)],
