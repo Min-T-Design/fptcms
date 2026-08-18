@@ -2892,6 +2892,11 @@ class Component extends DCLogic {
     { id:6, name:'Ultrafast',                        code:'ultrafast',                         section:'Ultra Fast, best-dvi, Best sellers', layout:'Grid',      datasource:'Dịch vụ số', datasourceKey:'tin-tuc',  order:null, createdAt:'26/03/2026 11:37' },
     { id:7, name:'Hyperfast',                        code:'hyperfast',                         section:'—',                                  layout:'Slider',    datasource:'Dịch vụ số', datasourceKey:'tin-tuc',  order:null, createdAt:'26/03/2026 11:34' },
     { id:8, name:'Block Gói cước Internet Giga',     code:'block-goi-internet-giga',           section:'Danh sách gói Internet (LDP)',        layout:'Slider',    datasource:'Gói cước',   datasourceKey:'goi-cuoc', order:1,    createdAt:'12/04/2026 15:45' },
+    { id:9, name:'Combo Internet Truyền hình',       code:'combo-internet-truyen-hinh',        section:'Combo tiết kiệm',                    layout:'Grid',      datasource:'Gói cước',   datasourceKey:'goi-cuoc', order:2,    createdAt:'02/04/2026 10:12' },
+    { id:10, name:'FPT Camera An Ninh',              code:'fpt-camera-an-ninh',                section:'Thiết bị thông minh',                layout:'Slider',    datasource:'Sản phẩm',   datasourceKey:'goi-cuoc', order:null, createdAt:'28/03/2026 08:20' },
+    { id:11, name:'Smart Home Voice Control',        code:'smart-home-voice-control',          section:'Thiết bị thông minh',                layout:'Grid',      datasource:'Sản phẩm',   datasourceKey:'goi-cuoc', order:null, createdAt:'20/03/2026 09:15' },
+    { id:12, name:'Tin tức công nghệ nổi bật',       code:'tin-tuc-cong-nghe-noi-bat',         section:'Tin tức',                            layout:'Grid',      datasource:'Bài viết',   datasourceKey:'tin-tuc',  order:null, createdAt:'15/03/2026 14:02' },
+    { id:13, name:'Đánh giá khách hàng',             code:'danh-gia-khach-hang',               section:'—',                                  layout:'Slider',    datasource:'Testimonial',datasourceKey:'tin-tuc',  order:null, createdAt:'10/03/2026 11:40' },
   ]; }
   MENU() { return [
     { id: 1,  pid: 0,  level: 0, name: 'Sản phẩm dịch vụ',                   type: 'category', pos: 'Header', url: '/san-pham',                               target: '_self',  order: 0, date: '29/01/2026 09:40' },
@@ -3222,7 +3227,7 @@ class Component extends DCLogic {
         render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 12 } }, idxMap.get(r.id) || '') },
       { key: 'page', header: 'Tên trang', width: 170,
         render: (_, r) => h('span', { style: { fontSize: 13 } }, r.page) },
-      { key: 'section', header: 'Section',
+      { key: 'section', header: 'Section', width: 240,
         render: (_, r) => h('div', null,
           h('strong', null, r.name),
           h('div', { style: { color: '#f43f5e', fontSize: 11, marginTop: 2, fontWeight: 500, fontFamily: 'monospace' } }, r.code)
@@ -3382,6 +3387,8 @@ class Component extends DCLogic {
     const allBlocks = this.BLOCKS().map(b => b.name);
     const selBlocks = this.state.secEditorBlocks || [];
     const toggleBlock = (b) => { const cur = this.state.secEditorBlocks || []; this.setState({ secEditorBlocks: cur.includes(b) ? cur.filter(x => x !== b) : [...cur, b] }); };
+    const blockQuery = (this.state.secBlockSearch || '').toLowerCase();
+    const shownBlocks = blockQuery ? allBlocks.filter(b => b.toLowerCase().includes(blockQuery)) : allBlocks;
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -3435,9 +3442,10 @@ class Component extends DCLogic {
           )
         ),
         section(5, 'dots-grid-line', 'Gắn Blocks',
+          allBlocks.length > 10 ? h(DS.Input, { placeholder: 'Tìm kiếm block...', leadingIcon: 'search-medium-line', value: this.state.secBlockSearch || '', onChange: e => this.setState({ secBlockSearch: e.target ? e.target.value : e }) }) : null,
           h('div', { className: 'fpt-scroll', style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', maxHeight: 220, overflowY: 'auto' } },
-            allBlocks.length === 0 ? h('div', { style: { padding: 14, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, 'Chưa có block nào.')
-              : allBlocks.map(b => { const ck = selBlocks.includes(b); return h('div', { key: b, onClick: () => toggleBlock(b), style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--color-border-pale)', background: ck ? 'var(--color-accent-bg)' : 'transparent', transition: 'background .15s' } },
+            shownBlocks.length === 0 ? h('div', { style: { padding: 14, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, allBlocks.length === 0 ? 'Chưa có block nào.' : 'Không tìm thấy block phù hợp.')
+              : shownBlocks.map(b => { const ck = selBlocks.includes(b); return h('div', { key: b, onClick: () => toggleBlock(b), style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--color-border-pale)', background: ck ? 'var(--color-accent-bg)' : 'transparent', transition: 'background .15s' } },
                 h('div', { style: { width: 16, height: 16, borderRadius: 4, flexShrink: 0, border: '1.5px solid', borderColor: ck ? 'var(--color-accent)' : 'var(--color-border-strong)', background: ck ? 'var(--color-accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, ck && h(DS.Icon, { name: 'check-line', size: 11, color: '#fff' })),
                 h('span', { style: { fontSize: 13, fontWeight: ck ? 600 : 400, userSelect: 'none' } }, b)
               ); })
@@ -4371,9 +4379,9 @@ class Component extends DCLogic {
             this.field('Kiểu hiển thị', h(DS.Select, {
               options: [
                 { value: '', label: '— Chọn —' },
-                { value: 'default', label: 'Mặc định' },
-                { value: 'mega', label: 'Mega Menu' },
-                { value: 'dropdown', label: 'Dropdown' },
+                { value: 'new', label: 'New' },
+                { value: 'hot', label: 'Hot' },
+                { value: 'highlight', label: 'Highlight' },
               ],
               defaultValue: ''
             })),
