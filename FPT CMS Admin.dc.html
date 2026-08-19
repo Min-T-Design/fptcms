@@ -2901,32 +2901,32 @@ class Component extends DCLogic {
     { id:13, name:'Đánh giá khách hàng',             code:'danh-gia-khach-hang',               section:'—',                                  layout:'Slider',    datasource:'Testimonial',datasourceKey:'tin-tuc',  order:null, createdAt:'10/03/2026 11:40' },
   ]; }
   MENU() { return [
-    { id: 1,  pid: 0,  level: 0, name: 'Sản phẩm dịch vụ',                   type: 'category', pos: 'Header', url: '/san-pham',                               target: '_self',  order: 0, date: '29/01/2026 09:40' },
-    { id: 2,  pid: 1,  level: 1, name: 'Internet – Wifi',                     type: 'page',     pos: 'Header', url: 'internet',                                target: '_self',  order: 1, date: '29/01/2026 09:42' },
-    { id: 3,  pid: 2,  level: 2, name: 'Combo Internet thể thao giải trí',    type: 'page',     pos: 'Header', url: 'truyen-hinh-fpt-play',                    target: '_self',  order: 1, date: '29/01/2026 09:55' },
-    { id: 4,  pid: 2,  level: 2, name: 'Internet Wi-Fi 7',                    type: 'link',     pos: 'Header', url: '#',                                       target: '_self',  order: 2, date: '29/01/2026 10:33' },
-    { id: 5,  pid: 2,  level: 2, name: 'Internet cá nhân',                    type: 'page',     pos: 'Header', url: 'internet/ca-nhan',                        target: '_self',  order: 3, date: '02/02/2026 09:37' },
-    { id: 6,  pid: 2,  level: 2, name: 'Internet gia đình',                   type: 'page',     pos: 'Header', url: 'internet/gia-dinh',                       target: '_self',  order: 4, date: '03/02/2026 09:43' },
-    { id: 7,  pid: 2,  level: 2, name: 'Internet game thủ',                   type: 'page',     pos: 'Header', url: 'internet/game-thu',                       target: '_self',  order: 5, date: '03/02/2026 09:55' },
-    { id: 8,  pid: 2,  level: 2, name: 'Internet doanh nghiệp',               type: 'page',     pos: 'Header', url: 'internet/doanh-nghiep',                   target: '_self',  order: 6, date: '03/02/2026 09:55' },
-    { id: 9,  pid: 1,  level: 1, name: 'Truyền hình & Giải trí',              type: 'page',     pos: 'Header', url: 'truyen-hinh-fpt-play',                    target: '_self',  order: 2, date: '29/01/2026 09:43' },
-    { id: 10, pid: 9,  level: 2, name: 'FPT Play',                            type: 'page',     pos: 'Header', url: 'truyen-hinh-fpt-play',                    target: '_self',  order: 1, date: '03/02/2026 09:55' },
-    { id: 11, pid: 9,  level: 2, name: 'Nâng cấp gói combo thể thao',         type: 'link',     pos: 'Header', url: 'https://fpt.vn/nang-cap',                 target: '_blank', order: 2, date: '03/02/2026 09:56' },
-    { id: 12, pid: 9,  level: 2, name: 'Combo Internet Ngoại hạng Anh',       type: 'link',     pos: 'Header', url: 'https://fpt.vn/ngoai-hang-anh#section…',  target: '_self',  order: 3, date: '03/02/2026 09:57' },
-    { id: 13, pid: 9,  level: 2, name: 'Lịch thi đấu Ngoại hạng Anh',        type: 'link',     pos: 'Header', url: 'https://fpt.vn/ngoai-hang-anh/lich-thi…', target: '_blank', order: 4, date: '03/02/2026 09:58' },
-    { id: 14, pid: 1,  level: 1, name: 'Thiết bị thông minh',                 type: 'category', pos: 'Header', url: '—',                                       target: '_self',  order: 3, date: '29/01/2026 09:43' },
-    { id: 15, pid: 14, level: 2, name: 'FPT Camera',                          type: 'page',     pos: 'Header', url: 'fpt-camera',                              target: '_self',  order: 1, date: '03/02/2026 09:59' },
-    { id: 16, pid: 14, level: 2, name: 'FPT Smart Home',                      type: 'page',     pos: 'Header', url: 'fpt-smart-home',                          target: '_self',  order: 2, date: '03/02/2026 10:00' },
-    { id: 17, pid: 14, level: 2, name: 'Access Point',                        type: 'page',     pos: 'Header', url: 'access-point',                            target: '_self',  order: 3, date: '03/02/2026 10:00' },
-    { id: 18, pid: 14, level: 2, name: 'Smart Tivi',                          type: 'page',     pos: 'Header', url: 'smart-tivi',                              target: '_self',  order: 4, date: '03/02/2026 10:00' },
-    { id: 19, pid: 1,  level: 1, name: 'Dịch vụ',                             type: 'page',     pos: 'Header', url: 'dich-vu-so',                              target: '_self',  order: 4, date: '29/01/2026 09:42' },
-    { id: 20, pid: 19, level: 2, name: 'Dịch vụ F-Safe',                      type: 'page',     pos: 'Header', url: 'dich-vu-f-safe',                          target: '_self',  order: 1, date: '03/02/2026 10:01' },
-    { id: 21, pid: 0,  level: 0, name: 'Khuyến mãi',                          type: 'link',     pos: 'Header', url: '/khuyen-mai',                             target: '_self',  order: 1, date: '10/02/2026 08:00' },
-    { id: 22, pid: 0,  level: 0, name: 'Tin tức',                             type: 'category', pos: 'Header', url: '/tin-tuc',                                target: '_self',  order: 2, date: '10/02/2026 08:05' },
-    { id: 23, pid: 0,  level: 0, name: 'Hỗ trợ',                              type: 'page',     pos: 'Header', url: '/ho-tro',                                 target: '_self',  order: 3, date: '10/02/2026 08:10' },
-    { id: 24, pid: 0,  level: 0, name: 'Chính sách bảo mật',                  type: 'page',     pos: 'Footer', url: '/chinh-sach-bao-mat',                     target: '_self',  order: 0, date: '15/01/2026 10:00' },
-    { id: 25, pid: 0,  level: 0, name: 'Điều khoản sử dụng',                  type: 'page',     pos: 'Footer', url: '/dieu-khoan-su-dung',                     target: '_self',  order: 1, date: '15/01/2026 10:01' },
-    { id: 26, pid: 0,  level: 0, name: 'Liên hệ',                             type: 'page',     pos: 'Footer', url: '/lien-he',                                target: '_self',  order: 2, date: '15/01/2026 10:02' },
+    { id: 1,  pid: 0,  level: 0, name: 'Sản phẩm dịch vụ',                   type: 'category', pos: 'Header', url: '/san-pham',                               target: '_self',  order: 0, date: '29/01/2026 09:40', status: 'active' },
+    { id: 2,  pid: 1,  level: 1, name: 'Internet – Wifi',                     type: 'page',     pos: 'Header', url: 'internet',                                target: '_self',  order: 1, date: '29/01/2026 09:42', status: 'active' },
+    { id: 3,  pid: 2,  level: 2, name: 'Combo Internet thể thao giải trí',    type: 'page',     pos: 'Header', url: 'truyen-hinh-fpt-play',                    target: '_self',  order: 1, date: '29/01/2026 09:55', status: 'active' },
+    { id: 4,  pid: 2,  level: 2, name: 'Internet Wi-Fi 7',                    type: 'link',     pos: 'Header', url: '#',                                       target: '_self',  order: 2, date: '29/01/2026 10:33', status: 'inactive' },
+    { id: 5,  pid: 2,  level: 2, name: 'Internet cá nhân',                    type: 'page',     pos: 'Header', url: 'internet/ca-nhan',                        target: '_self',  order: 3, date: '02/02/2026 09:37', status: 'active' },
+    { id: 6,  pid: 2,  level: 2, name: 'Internet gia đình',                   type: 'page',     pos: 'Header', url: 'internet/gia-dinh',                       target: '_self',  order: 4, date: '03/02/2026 09:43', status: 'active' },
+    { id: 7,  pid: 2,  level: 2, name: 'Internet game thủ',                   type: 'page',     pos: 'Header', url: 'internet/game-thu',                       target: '_self',  order: 5, date: '03/02/2026 09:55', status: 'active' },
+    { id: 8,  pid: 2,  level: 2, name: 'Internet doanh nghiệp',               type: 'page',     pos: 'Header', url: 'internet/doanh-nghiep',                   target: '_self',  order: 6, date: '03/02/2026 09:55', status: 'active' },
+    { id: 9,  pid: 1,  level: 1, name: 'Truyền hình & Giải trí',              type: 'page',     pos: 'Header', url: 'truyen-hinh-fpt-play',                    target: '_self',  order: 2, date: '29/01/2026 09:43', status: 'active' },
+    { id: 10, pid: 9,  level: 2, name: 'FPT Play',                            type: 'page',     pos: 'Header', url: 'truyen-hinh-fpt-play',                    target: '_self',  order: 1, date: '03/02/2026 09:55', status: 'active' },
+    { id: 11, pid: 9,  level: 2, name: 'Nâng cấp gói combo thể thao',         type: 'link',     pos: 'Header', url: 'https://fpt.vn/nang-cap',                 target: '_blank', order: 2, date: '03/02/2026 09:56', status: 'active' },
+    { id: 12, pid: 9,  level: 2, name: 'Combo Internet Ngoại hạng Anh',       type: 'link',     pos: 'Header', url: 'https://fpt.vn/ngoai-hang-anh#section…',  target: '_self',  order: 3, date: '03/02/2026 09:57', status: 'inactive' },
+    { id: 13, pid: 9,  level: 2, name: 'Lịch thi đấu Ngoại hạng Anh',        type: 'link',     pos: 'Header', url: 'https://fpt.vn/ngoai-hang-anh/lich-thi…', target: '_blank', order: 4, date: '03/02/2026 09:58', status: 'active' },
+    { id: 14, pid: 1,  level: 1, name: 'Thiết bị thông minh',                 type: 'category', pos: 'Header', url: '—',                                       target: '_self',  order: 3, date: '29/01/2026 09:43', status: 'active' },
+    { id: 15, pid: 14, level: 2, name: 'FPT Camera',                          type: 'page',     pos: 'Header', url: 'fpt-camera',                              target: '_self',  order: 1, date: '03/02/2026 09:59', status: 'active' },
+    { id: 16, pid: 14, level: 2, name: 'FPT Smart Home',                      type: 'page',     pos: 'Header', url: 'fpt-smart-home',                          target: '_self',  order: 2, date: '03/02/2026 10:00', status: 'active' },
+    { id: 17, pid: 14, level: 2, name: 'Access Point',                        type: 'page',     pos: 'Header', url: 'access-point',                            target: '_self',  order: 3, date: '03/02/2026 10:00', status: 'active' },
+    { id: 18, pid: 14, level: 2, name: 'Smart Tivi',                          type: 'page',     pos: 'Header', url: 'smart-tivi',                              target: '_self',  order: 4, date: '03/02/2026 10:00', status: 'active' },
+    { id: 19, pid: 1,  level: 1, name: 'Dịch vụ',                             type: 'page',     pos: 'Header', url: 'dich-vu-so',                              target: '_self',  order: 4, date: '29/01/2026 09:42', status: 'active' },
+    { id: 20, pid: 19, level: 2, name: 'Dịch vụ F-Safe',                      type: 'page',     pos: 'Header', url: 'dich-vu-f-safe',                          target: '_self',  order: 1, date: '03/02/2026 10:01', status: 'active' },
+    { id: 21, pid: 0,  level: 0, name: 'Khuyến mãi',                          type: 'link',     pos: 'Header', url: '/khuyen-mai',                             target: '_self',  order: 1, date: '10/02/2026 08:00', status: 'active' },
+    { id: 22, pid: 0,  level: 0, name: 'Tin tức',                             type: 'category', pos: 'Header', url: '/tin-tuc',                                target: '_self',  order: 2, date: '10/02/2026 08:05', status: 'active' },
+    { id: 23, pid: 0,  level: 0, name: 'Hỗ trợ',                              type: 'page',     pos: 'Header', url: '/ho-tro',                                 target: '_self',  order: 3, date: '10/02/2026 08:10', status: 'active' },
+    { id: 24, pid: 0,  level: 0, name: 'Chính sách bảo mật',                  type: 'page',     pos: 'Footer', url: '/chinh-sach-bao-mat',                     target: '_self',  order: 0, date: '15/01/2026 10:00', status: 'active' },
+    { id: 25, pid: 0,  level: 0, name: 'Điều khoản sử dụng',                  type: 'page',     pos: 'Footer', url: '/dieu-khoan-su-dung',                     target: '_self',  order: 1, date: '15/01/2026 10:01', status: 'active' },
+    { id: 26, pid: 0,  level: 0, name: 'Liên hệ',                             type: 'page',     pos: 'Footer', url: '/lien-he',                                target: '_self',  order: 2, date: '15/01/2026 10:02', status: 'inactive' },
   ]; }
   BANNER_PAGES() { return ['Trang chủ', 'Danh mục Camera', 'Smart Tivi', 'FPT Smart Home', 'Internet - Wifi']; }
   BANNERS() { return [
@@ -4255,8 +4255,13 @@ class Component extends DCLogic {
   renderMenuList() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.menuSearch || '').toLowerCase();
+    const statusF = this.state.menuStatusFilter || 'all';
     const all = this.MENU();
-    const data = all.filter(m => !q || m.name.toLowerCase().includes(q) || (m.url || '').toLowerCase().includes(q));
+    const data = all.filter(m => {
+      if (q && !(m.name.toLowerCase().includes(q) || (m.url || '').toLowerCase().includes(q))) return false;
+      if (statusF !== 'all' && m.status !== statusF) return false;
+      return true;
+    });
 
     const pg  = this.state.menu_pg || 1;
     const sz  = this.state.menu_sz || 10;
@@ -4290,6 +4295,15 @@ class Component extends DCLogic {
       { key: 'target', header: 'Target',   width: 90,  align: 'center', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: r.target === '_blank' ? 'var(--color-warning-text)' : 'var(--color-text-muted)' } }, r.target) },
       { key: 'order',  header: 'Thứ tự',   width: 80,  align: 'center', render: (_, r) => h('span', { style: { color: 'var(--color-text-muted)' } }, r.order) },
       { key: 'date',   header: 'Ngày tạo', width: 160, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.date || '—') },
+      { key: 'active', header: 'Hoạt động', width: 90,  align: 'center', render: (_, r) => {
+          const isOn = (this.state.menuActiveMap || {})[r.id] !== undefined ? !!(this.state.menuActiveMap || {})[r.id] : r.status !== 'inactive';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-menu-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              this.setState(s => ({ menuActiveMap: { ...s.menuActiveMap, [r.id]: v } }));
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Menu "' + r.name + '".');
+            } })
+          );
+        } },
       { key: 'act',    header: 'Thao tác',  width: 80,  align: 'right',  render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openMenuForm(r) },
         { icon: 'trash-line',   label: 'Xóa', onClick: () => this.confirm('Xóa menu?', 'Menu "' + r.name + '" và các menu con sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa menu "' + r.name + '".'); }, true) },
@@ -4298,7 +4312,14 @@ class Component extends DCLogic {
 
     return this.listCard(
       this.toolbar(
-        this.search('Tìm theo tên / URL…', 'menuSearch'),
+        h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+          this.search('Tìm theo tên / URL…', 'menuSearch'),
+          h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
+            options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }],
+            value: statusF,
+            onChange: v => this.setState({ menuStatusFilter: v, menu_pg: 1 })
+          }))
+        ),
         h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openMenuForm(null) }, 'Tạo menu link')
       ),
       data.length ? this.tbl(columns, sliced, 'id', r => this.openMenuDetail(r)) : this.empty('Chưa có menu nào.'),
@@ -4345,6 +4366,11 @@ class Component extends DCLogic {
     );
 
     const hintBox = (msg) => h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, msg);
+
+    const statusToggle = h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+      h('span', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-subtle)' } }, 'Hoạt động'),
+      h(DS.Switch, { defaultChecked: isEdit ? r.status !== 'inactive' : true, size: 'sm' })
+    );
 
     let linkContent;
     if (type === 'link') {
@@ -4434,7 +4460,8 @@ class Component extends DCLogic {
         this.closeMenuForm();
         this.toast('success', isEdit ? 'Đã cập nhật' : 'Đã tạo', isEdit ? 'Menu "' + r.name + '" đã được cập nhật.' : 'Menu link mới đã được tạo thành công.');
       },
-      isEdit ? 'Lưu' : 'Tạo menu'
+      isEdit ? 'Lưu' : 'Tạo menu',
+      statusToggle
     );
   }
 
