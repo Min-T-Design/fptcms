@@ -9320,6 +9320,87 @@ class Component extends DCLogic {
       bulkBar
     );
   }
+  // Picker "DANH SÁCH SẢN PHẨM" (Gói bán áp dụng) dùng trong SEO bài viết — cùng bố cục (tab nguồn ECP/FCP +
+  // danh mục + tìm kiếm + checkbox) đang dùng ở module Thông tin checkout / Phương thức Thanh toán (renderPaySkuPicker).
+  renderNewsSeoSkuPicker() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const selected = this.state.newsSeoSkus || [];
+    const skuSource = this.state.newsSeoSkuSource || 'ecp';
+    const filter = this.state.newsSeoSkuFilter || 'internet';
+    const search = (this.state.newsSeoSkuSearch || '').toLowerCase();
+    const sourceTabDefs = [{ id: 'ecp', label: 'ECP' }, { id: 'fcp', label: 'FCP' }];
+    const isInternetSku = s => s.group === 'Internet' && s.kind === 'Dịch vụ';
+    const isCameraSku = s => s.group === 'Camera';
+    const isSaSku = s => s.group === 'Truyền hình' && s.kind === 'Dịch vụ';
+    const catDefs = [
+      { id: 'internet', label: 'Gói internet', match: isInternetSku },
+      { id: 'camera', label: 'Camera', match: isCameraSku },
+      { id: 'sa', label: 'Gói SA', match: isSaSku },
+      { id: 'other', label: 'Thiết bị khác', match: s => !isInternetSku(s) && !isCameraSku(s) && !isSaSku(s) },
+    ];
+    const activeCatDef = catDefs.find(c => c.id === filter) || catDefs[0];
+    const allSkus = this.SKUS().filter(s => s.status === 'active' && (s.source || 'ECP').toLowerCase() === skuSource);
+    const filteredSkus = allSkus.filter(s => {
+      if (!activeCatDef.match(s)) return false;
+      if (search && !s.code.toLowerCase().includes(search) && !s.name.toLowerCase().includes(search)) return false;
+      return true;
+    });
+    const toggleSku = code => {
+      const set = new Set(selected);
+      set.has(code) ? set.delete(code) : set.add(code);
+      this.setState({ newsSeoSkus: Array.from(set) });
+    };
+    const renderSkuItem = (sku) => {
+      const isSel = selected.includes(sku.code);
+      return h('div', { key: sku.code, onClick: () => toggleSku(sku.code), style: { display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2, background: isSel ? 'var(--color-accent-bg)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent' } },
+        h('div', { style: { paddingTop: 2 }, onClick: e => e.stopPropagation() },
+          h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(sku.code) })
+        ),
+        h('div', { style: { flex: 1, minWidth: 0 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
+            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+            h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
+          ),
+          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
+        )
+      );
+    };
+    return h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px', maxWidth: 480 } },
+      h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } }, 'DANH SÁCH SẢN PHẨM'),
+      h('div', {
+        role: 'tablist', title: '2 hệ thống cùng đổ dữ liệu sản phẩm về — nếu 1 sản phẩm trùng ở cả ECP và FCP, chỉ cần chọn ở đúng 1 tab nguồn là đủ.',
+        style: { display: 'flex', gap: 3, padding: 3, background: 'var(--color-surface-sunken)', borderRadius: 'var(--radius-full)', marginBottom: 10 }
+      },
+        sourceTabDefs.map(t => {
+          const active = t.id === skuSource;
+          return h('button', {
+            key: t.id, type: 'button', role: 'tab', 'aria-selected': active,
+            onClick: () => this.setState({ newsSeoSkuSource: t.id, newsSeoSkuFilter: 'internet', newsSeoSkuSearch: '' }),
+            style: {
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '7px 10px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: active ? 700 : 500,
+              color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
+              background: active ? 'var(--color-surface)' : 'transparent',
+              border: 'none', borderRadius: 'var(--radius-full)',
+              boxShadow: active ? 'var(--shadow-sm)' : 'none',
+              cursor: 'pointer', transition: 'color var(--dur-fast), background var(--dur-fast)'
+            }
+          }, t.label);
+        })
+      ),
+      h('div', { style: { marginBottom: 8 } },
+        h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.newsSeoSkuSearch || '', onChange: e => this.setState({ newsSeoSkuSearch: e.target ? e.target.value : e }) })
+      ),
+      h('div', { style: { fontSize: 9.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 } }, 'Danh mục'),
+      h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
+        catDefs.map(f => h(DS.Tag, { key: f.id, size: 'sm', selected: filter === f.id, onClick: () => this.setState({ newsSeoSkuFilter: f.id }) }, f.label))
+      ),
+      h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 380, overflowY: 'auto', overflowX: 'hidden' } },
+        filteredSkus.length ? filteredSkus.map(sku => renderSkuItem(sku)) : h('div', { style: { padding: '16px 6px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy SKU phù hợp.')
+      ),
+      selected.length > 0 && h('div', { style: { marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border)', fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Đã chọn ' + selected.length + ' gói.')
+    );
+  }
   renderArticleEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const catOpts   = this.NEWS_CATS().map(c => ({ value: c.name, label: c.name }));
@@ -9334,6 +9415,7 @@ class Component extends DCLogic {
       ),
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
     );
+    const seoSkuApplyAll = this.state.newsSeoSkuApplyAll !== undefined ? this.state.newsSeoSkuApplyAll : true;
     return this.editorShell(
       isNew ? 'Bài viết mới' : r.title,
       isNew ? 'Tin bài / Bài viết mới' : ('/tin-tuc/' + (r.slug || '')),
@@ -9409,15 +9491,32 @@ class Component extends DCLogic {
         ),
         // Full-width SEO section — gộp nhóm nâng cao, thu gọn mặc định để giữ trọng tâm ở nội dung chính
         h(DS.Accordion, { items: [{ title: 'Tối ưu SEO bài viết', icon: 'stars-01-line', content:
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 13, paddingTop: 4 } },
-            h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
-              this.field('Meta tiêu đề (SEO Title) ≤60 ký tự', h(DS.Input, { placeholder: 'Hiển thị trên Google' })),
-              this.field('Meta từ khoá', h(DS.Input, { placeholder: 'từ khoá 1, từ khoá 2' }))
+          h('div', { style: { paddingTop: 4 } },
+            // Hàng đầu, full-width — quyết định phạm vi áp dụng trước, chi phối toàn bộ nội dung 2 cột bên dưới
+            h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, paddingBottom: 14, marginBottom: 16, borderBottom: '1px solid var(--color-border)' } },
+              h('div', null,
+                h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Gói bán áp dụng'),
+                h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 } }, 'Chọn phạm vi gói cước được áp dụng thiết lập SEO bên dưới.')
+              ),
+              h(DS.Checkbox, { label: 'Áp dụng cho tất cả các gói', checked: seoSkuApplyAll, onChange: v => this.setState({ newsSeoSkuApplyAll: v }) })
             ),
-            this.field('Meta Description (≤160 ký tự)', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả ngắn cho công cụ tìm kiếm hiển thị trên Google…' })),
-            h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
-              this.field('Meta Robot', h(DS.Select, { options: ['index, follow', 'noindex, follow', 'index, nofollow', 'noindex, nofollow'], defaultValue: 'index, follow' })),
-              this.field('Canonical URL', h(DS.Input, { placeholder: 'https://fpt.vn/tin-tuc/…' }))
+            h('div', { style: { display: 'grid', gridTemplateColumns: '1.1fr 2fr', gap: 20, alignItems: 'start' } },
+              // Trái: cùng picker "DANH SÁCH SẢN PHẨM" (ECP/FCP + danh mục + tìm kiếm) dùng ở module Thông tin checkout / PTTT
+              h('div', null,
+                seoSkuApplyAll
+                  ? h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', fontStyle: 'italic', textAlign: 'center', padding: '20px 12px', border: '1px dashed var(--color-border)', borderRadius: 10 } }, 'Thiết lập SEO sẽ áp dụng cho tất cả các gói bán hiện có.')
+                  : this.renderNewsSeoSkuPicker()
+              ),
+              // Phải: các trường Meta SEO — thêm nhãn nhóm để cân bằng phân cấp thị giác với card "DANH SÁCH SẢN PHẨM" bên trái
+              h('div', { style: { display: 'flex', flexDirection: 'column', gap: 13 } },
+                h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' } }, 'Thẻ Meta'),
+                h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
+                  this.field('Meta tiêu đề (SEO Title) ≤60 ký tự', h(DS.Input, { placeholder: 'Hiển thị trên Google' })),
+                  this.field('Meta từ khoá', h(DS.Input, { placeholder: 'từ khoá 1, từ khoá 2' }))
+                ),
+                this.field('Meta Description (≤160 ký tự)', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả ngắn cho công cụ tìm kiếm hiển thị trên Google…' })),
+                this.field('Meta Robot', h(DS.Select, { options: ['index, follow', 'noindex, follow', 'index, nofollow', 'noindex, nofollow'], defaultValue: 'index, follow' }))
+              )
             )
           )
         }] })
