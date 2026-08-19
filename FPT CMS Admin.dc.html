@@ -181,7 +181,7 @@ class Component extends DCLogic {
     pageStatusFilter: 'all',
     secPageFilter: 'all',
     newsArtCat: 'all', newsArtStatus: 'all', newsArtFeatured: 'all', newsArtStatFilter: 'all',
-    newsSelRows: {}, newsSelAll: false, newsArtActive: {}, newsArtFeaturedMap: {},
+    newsSelRows: {}, newsSelAll: false, newsArtFeaturedMap: {},
     // ── Blocks module ──
     blkView: 'list', blkEditRow: null,
     blkLayout: 'slider', blkDataSource: 'goi-cuoc',
@@ -391,7 +391,7 @@ class Component extends DCLogic {
       draft: ['warning', 'Nháp'], locked: ['danger', 'Tạm khóa'],
       running: ['success', 'Đang chạy'], expired: ['danger', 'Hết hạn'], disabled: ['neutral', 'Đã tắt'],
       global: ['info', 'Dùng Global'], custom: ['brand', 'Tùy chỉnh riêng'],
-      publish: ['success', 'Đã xuất bản'], hidden: ['warning', 'Tạm ẩn'],
+      publish: ['success', 'Đã xuất bản'], published: ['success', 'Đã đăng'], hidden: ['warning', 'Tạm ẩn'],
     };
     const [theme, label] = map[status] || ['neutral', status];
     return h('div', { style: { display: 'flex' } }, h(DS.Badge, { theme, dot: true, style: { whiteSpace: 'nowrap' } }, label));
@@ -2947,7 +2947,7 @@ class Component extends DCLogic {
     { id: 1, cat: 'Thanh toán cước', q: 'Làm thế nào để thanh toán cước trực tuyến?', a: 'FPT Telecom hỗ trợ đa dạng hình thức thanh toán: ứng dụng Hi FPT, ví điện tử MoMo, VNPay, ZaloPay, chuyển khoản ngân hàng hoặc tại quầy giao dịch FPT.', lang: 'Tiếng Việt', order: 1, status: 'active', createdAt: '14/01/2026' },
     { id: 2, cat: 'Khắc phục sự cố', q: 'Wifi chập chờn phải xử lý thế nào?', a: 'Vui lòng khởi động lại modem, kiểm tra dây cáp và vị trí đặt thiết bị. Nếu vẫn không cải thiện, hãy liên hệ hotline 1900 6600 để được hỗ trợ kỹ thuật.', lang: 'Tiếng Việt', order: 1, status: 'active', createdAt: '18/01/2026' },
     { id: 3, cat: 'Chính sách & Thủ tục', q: 'Thủ tục lắp đặt Internet cần giấy tờ gì?', a: 'Khách hàng cá nhân chỉ cần cung cấp ảnh chụp Căn cước công dân (CCCD). Doanh nghiệp cần bổ sung Giấy phép kinh doanh và hợp đồng thuê nhà (nếu có).', lang: 'Tiếng Việt', order: 2, status: 'active', createdAt: '22/01/2026' },
-    { id: 4, cat: 'Thanh toán cước', q: 'Có thể thanh toán qua Momo không?', a: 'Có, FPT Telecom hỗ trợ thanh toán qua ví MoMo. Mở ứng dụng MoMo, chọn Thanh toán hóa đơn, tìm FPT Telecom và nhập mã khách hàng.', lang: 'Tiếng Việt', order: 2, status: 'draft', createdAt: '25/01/2026' },
+    { id: 4, cat: 'Thanh toán cước', q: 'Có thể thanh toán qua Momo không?', a: 'Có, FPT Telecom hỗ trợ thanh toán qua ví MoMo. Mở ứng dụng MoMo, chọn Thanh toán hóa đơn, tìm FPT Telecom và nhập mã khách hàng.', lang: 'Tiếng Việt', order: 2, status: 'inactive', createdAt: '25/01/2026' },
     { id: 5, cat: 'Dịch vụ GTGT', q: 'Fsafe bảo mật là gì và có tính phí riêng không?', a: 'Fsafe là dịch vụ bảo mật mạng do FPT Telecom cung cấp, bảo vệ thiết bị khỏi virus, phần mềm độc hại. Một số gói Internet đã bao gồm Fsafe miễn phí trong thời gian đầu.', lang: 'Tiếng Việt', order: 1, status: 'active', createdAt: '02/02/2026' },
     { id: 6, cat: 'Khắc phục sự cố', q: 'How to change the Wi-Fi password of FPT?', a: 'You can change the Wi-Fi password via the Hi FPT app (download the app, log in, go to Modem Management to change the name/password), or access 192.168.1.1 in your browser.', lang: 'English', order: 2, status: 'active', createdAt: '05/02/2026' },
     { id: 7, cat: 'Thanh toán cước', q: 'Thanh toán trễ hạn có bị cắt dịch vụ không?', a: 'Nếu quá 5 ngày kể từ ngày đến hạn thanh toán mà chưa thanh toán, dịch vụ có thể bị tạm ngưng. FPT Telecom sẽ gửi thông báo nhắc nhở qua SMS/App Hi FPT trước khi cắt dịch vụ.', lang: 'Tiếng Việt', order: 3, status: 'active', createdAt: '10/02/2026' },
@@ -2960,10 +2960,10 @@ class Component extends DCLogic {
     { id: 14, cat: 'Dịch vụ GTGT', q: 'Camera AI có cần đăng ký thêm gói Cloud không?', a: 'Camera hoạt động độc lập với bộ nhớ trong, tuy nhiên để lưu trữ trực tuyến và xem lại từ xa, khách hàng nên đăng ký thêm gói Cloud Camera theo nhu cầu lưu trữ.', lang: 'Tiếng Việt', order: 3, status: 'active', createdAt: '20/03/2026' },
   ]; }
   FAQ_CATS() { return [
-    { id: 1, name: 'Thanh toán cước', order: 1, count: 4, lang: 'Tiếng Việt', status: 'active' },
-    { id: 2, name: 'Khắc phục sự cố', order: 2, count: 4, lang: 'Tiếng Việt', status: 'active' },
-    { id: 3, name: 'Chính sách & Thủ tục', order: 3, count: 3, lang: 'Tiếng Việt', status: 'active' },
-    { id: 4, name: 'Dịch vụ GTGT', order: 4, count: 3, lang: 'Tiếng Việt', status: 'active' },
+    { id: 1, name: 'Thanh toán cước', order: 1, count: 4, lang: 'Tiếng Việt', status: 'active', createdAt: '01/01/2026' },
+    { id: 2, name: 'Khắc phục sự cố', order: 2, count: 4, lang: 'Tiếng Việt', status: 'active', createdAt: '01/01/2026' },
+    { id: 3, name: 'Chính sách & Thủ tục', order: 3, count: 3, lang: 'Tiếng Việt', status: 'active', createdAt: '05/01/2026' },
+    { id: 4, name: 'Dịch vụ GTGT', order: 4, count: 3, lang: 'Tiếng Việt', status: 'active', createdAt: '10/01/2026' },
   ]; }
   BADGE_TAG_CATEGORIES() {
     return [
@@ -3216,14 +3216,7 @@ class Component extends DCLogic {
             h('div', null, this.field('Meta tiêu đề', h(DS.Input, { defaultValue: r ? (r.metaTitle || '') : '', placeholder: 'Tiêu đề hiển thị trên Google' }), true)),
             h('div', null, this.field('Meta từ khóa', h(DS.Input, { defaultValue: r ? (r.metaKeywords || '') : '', placeholder: 'internet fpt, wifi 6, …' }), true))
           ),
-          this.field('Meta mô tả', h(DS.Textarea, { defaultValue: r ? (r.metaDesc || '') : '', placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 }), true),
-          this.field('Nhóm câu hỏi', h(DS.Select, {
-            placeholder: 'Chọn nhóm câu hỏi (FAQ)…',
-            searchable: true,
-            searchPlaceholder: 'Tìm nhóm câu hỏi…',
-            defaultValue: r ? (r.faqCat || '') : '',
-            options: this.FAQ_CATS().map(c => ({ value: c.name, label: c.name }))
-          }))
+          this.field('Meta mô tả', h(DS.Textarea, { defaultValue: r ? (r.metaDesc || '') : '', placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 }), true)
         ),
         section(3, 'image-line', 'Hình ảnh',
           this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤1MB', true)
@@ -3309,95 +3302,6 @@ class Component extends DCLogic {
       data.length ? this.renderPagBar(data.length, 'secs', 'section') : null
     );
   }
-  openSectionDrawer(r) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const PAGES = this.PAGES().map(p => p.name);
-    const TYPES = ['Tabs (Gộp nhóm Section)', 'Row (Sản phẩm SKU)', 'Row-VAT (Block sản phẩm SA)', 'FAQ (Hỏi đáp / Faqs)', 'Form Lead (Thu lead Doanh nghiệp)', 'Layout Category (Danh mục dịch vụ)', 'Layout Experience (Khối trải nghiệm)', 'Layout Banner (Banner / Slider)', 'Layout Article (Bài viết / Tin tức)', 'Video (Khối video giới thiệu)', 'Layout Gaming (Khối internet gaming)'];
-    const allBlocks = this.BLOCKS().map(b => b.name);
-    this.openDrawer({
-      title: r ? 'Sửa Section' : 'Tạo Section mới',
-      subtitle: r ? ('Trang: ' + r.page) : 'Section là component dùng chung',
-      width: 620,
-      initial: { secBlocks: r ? (r.blocks || []) : [] },
-      render: () => {
-        const selBlocks = this.state.form.secBlocks || [];
-        const toggleBlock = (b) => {
-          const cur = this.state.form.secBlocks || [];
-          this.setField('secBlocks', cur.includes(b) ? cur.filter(x => x !== b) : [...cur, b]);
-        };
-        return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-          // Alert dùng chung
-          h(DS.Alert, { theme: 'info', title: 'Lưu ý dùng chung' }, 'Khi cập nhật Section, tất cả các trang đang gán sẽ thay đổi đồng thời.'),
-          // Trang + Thứ tự
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
-            h('div', null, this.field('Chọn trang (Thuộc trang nào)', h(DS.Select, { options: PAGES, defaultValue: r ? r.page : PAGES[0], searchable: true, searchPlaceholder: 'Tìm trang…' }), true)),
-            h('div', null, this.field('Thứ tự hiển thị', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order != null ? r.order : '') : '' })))
-          ),
-          // Tên quản trị + Tiêu đề UI
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('Tên Section (Quản trị)', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Hero Banner Trang chủ' }), true)),
-            h('div', null, this.field('Tiêu đề Section (Hiển thị UI)', h(DS.Input, { defaultValue: r ? (r.title || '') : '', placeholder: 'VD: Khuyến mãi nổi bật' }), true))
-          ),
-          // Mã section + Loại
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('Mã Section (Dùng trong Code)', h(DS.Input, { defaultValue: r ? r.code : '', placeholder: 'VD: sec-hero-home' }), true)),
-            h('div', null, this.field('Loại Section', h(DS.Select, { options: TYPES, defaultValue: r ? r.type : TYPES[0], searchable: true, searchPlaceholder: 'Tìm loại Section…' }), true))
-          ),
-          // Mô tả
-          this.field('Mô tả ngắn', h(DS.Textarea, { rows: 2, placeholder: 'Nhập mô tả cho Section này...' })),
-          // Hệ thống hình ảnh
-          h(DS.Divider, { label: 'HỆ THỐNG HÌNH ẢNH' }),
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, minWidth: 0 } },
-            h('div', { style: { minWidth: 0 } }, this.field('URL Hình ảnh (Desktop)', h(DS.Input, { placeholder: 'Nhập link ảnh...' }))),
-            h('div', { style: { minWidth: 0 } }, this.field('URL Hình ảnh (Mobile)', h(DS.Input, { placeholder: 'Nhập link ảnh...' }))),
-            h('div', { style: { minWidth: 0 } }, this.field('Hình nền (Background)', h(DS.Input, { placeholder: 'Nhập link ảnh nền...' }))),
-            h('div', { style: { minWidth: 0 } }, this.field('Icon & Icon Active',
-              h('div', { style: { display: 'flex', gap: 8, minWidth: 0 } },
-                h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { placeholder: 'Icon URL' })),
-                h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { placeholder: 'Icon Active URL' }))
-              )
-            ))
-          ),
-          // CTA
-          h(DS.Divider, { label: 'NÚT XEM THÊM (CALL-TO-ACTION)' }),
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('Text hiển thị', h(DS.Input, { placeholder: 'VD: Xem chi tiết' }))),
-            h('div', null, this.field('Link URL đích', h(DS.Input, { placeholder: 'VD: /internet' })))
-          ),
-          // Cấu hình hiển thị
-          h(DS.Divider, { label: 'CẤU HÌNH HIỂN THỊ' }),
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, padding: '4px 0' } },
-            h('div', null, h(DS.Switch, { label: 'Trạng thái hoạt động', defaultChecked: r ? r.status === 'active' : true })),
-            h('div', null, h(DS.Switch, { label: 'Đánh dấu Nổi bật' })),
-            h('div', null, h(DS.Switch, { label: 'Hiển thị Bộ lọc (Filter)' })),
-            h('div', null, h(DS.Switch, { label: 'Hiển thị Breadcrumb' }))
-          ),
-          // Gắn Blocks
-          h(DS.Divider, { label: 'GẮN BLOCKS (THÀNH PHẦN CON)' }),
-          h('div', { className: 'fpt-scroll', style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', maxHeight: 220, overflowY: 'auto' } },
-            allBlocks.length === 0
-              ? h('div', { style: { padding: 14, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, 'Chưa có block nào.')
-              : allBlocks.map(b => {
-                  const ck = selBlocks.includes(b);
-                  return h('div', { key: b, onClick: () => toggleBlock(b),
-                    style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--color-border-pale)', background: ck ? 'var(--color-accent-bg)' : 'transparent', transition: 'background .15s' }
-                  },
-                    h('div', { style: { width: 16, height: 16, borderRadius: 4, flexShrink: 0, border: '1.5px solid', borderColor: ck ? 'var(--color-accent)' : 'var(--color-border-strong)', background: ck ? 'var(--color-accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .15s' } },
-                      ck && h(DS.Icon, { name: 'check-line', size: 11, color: '#fff' })
-                    ),
-                    h('span', { style: { fontSize: 13, fontWeight: ck ? 600 : 400, userSelect: 'none' } }, b)
-                  );
-                })
-          )
-        );
-      },
-      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Hủy'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'check-line', onClick: () => { this.closeDrawer(); this.toast('success', 'Đã lưu', 'Section đã được cập nhật trên các trang liên quan.'); } }, r ? 'Cập nhật' : 'Tạo Section')
-      )
-    });
-  }
-
   openSectionDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     this.openDrawer({ title: r.name, subtitle: 'Trang: ' + r.page, width: 480,
@@ -3418,7 +3322,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.setState({ secEditor: undefined, secEditorBlocks: undefined });
     const PAGES = this.PAGES().map(p => p.name);
-    const TYPES = ['Tabs (Gộp nhóm Section)', 'Row (Sản phẩm SKU)', 'Row-VAT (Block sản phẩm SA)', 'FAQ (Hỏi đáp / Faqs)', 'Form Lead (Thu lead Doanh nghiệp)', 'Layout Category (Danh mục dịch vụ)', 'Layout Experience (Khối trải nghiệm)', 'Layout Banner (Banner / Slider)', 'Layout Article (Bài viết / Tin tức)', 'Video (Khối video giới thiệu)', 'Layout Gaming (Khối internet gaming)'];
+    const TYPES = ['Slider (Thanh trượt)', 'Suggest (Gợi ý sản phẩm)', 'News (Tin tức & Sự kiện)', 'Row Slider (Hàng sản phẩm trượt ngang)'];
     const allBlocks = this.BLOCKS().map(b => b.name);
     const selBlocks = this.state.secEditorBlocks || [];
     const toggleBlock = (b) => { const cur = this.state.secEditorBlocks || []; this.setState({ secEditorBlocks: cur.includes(b) ? cur.filter(x => x !== b) : [...cur, b] }); };
@@ -3445,7 +3349,7 @@ class Component extends DCLogic {
             h('div', null, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order != null ? r.order : '') : '' })))
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('Tên quản trị', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Hero Banner Trang chủ' }), true)),
+            h('div', null, this.field('Tiêu đề section', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Hero Banner Trang chủ' }), true)),
             h('div', null, this.field('Tiêu đề hiển thị', h(DS.Input, { defaultValue: r ? (r.title || '') : '', placeholder: 'VD: Khuyến mãi nổi bật' }), true))
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
@@ -5171,13 +5075,14 @@ class Component extends DCLogic {
       return true;
     });
     const columns = [
-      { key: 'q', header: 'Câu hỏi', render: (_, r) => h('div', null,
+      { key: 'q', header: 'Câu hỏi', width: 340, render: (_, r) => h('div', null,
         h('div', { style: { fontWeight: 600, fontSize: 13.5 } }, r.q),
         r.a ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } }, r.a) : null
       )},
-      { key: 'cat', header: 'Danh mục', render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, r.cat) },
+      { key: 'cat', header: 'Danh mục', width: 150, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, r.cat) },
+      { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
       { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
-      { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => this.statusBadge(r.status) },
       { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' } }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa FAQ?', 'Câu hỏi sẽ bị xóa.', () => { const base = this.state.faqItems || this.FAQS(); this.setState({ faqItems: base.filter(f => f.id !== r.id) }); this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa câu hỏi.'); }, true) },
@@ -5214,11 +5119,12 @@ class Component extends DCLogic {
     const search = (this.state.faqCatSearch || '').toLowerCase();
     const data = this.FAQ_CATS().filter(c => c.name.toLowerCase().includes(search));
     const columns = [
-      { key: 'name', header: 'Tên danh mục', render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
-      { key: 'order', header: 'Thứ tự hiển thị', align: 'center' },
-      { key: 'lang', header: 'Ngôn ngữ', render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.lang || 'Tiếng Việt') },
-      { key: 'count', header: 'Số câu hỏi', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
-      { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'name', header: 'Tên danh mục', width: 260, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
+      { key: 'order', header: 'Thứ tự hiển thị', width: 120, align: 'center' },
+      { key: 'lang', header: 'Ngôn ngữ', width: 110, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.lang || 'Tiếng Việt') },
+      { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
+      { key: 'count', header: 'Số câu hỏi', width: 100, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
+      { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => this.statusBadge(r.status) },
       { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqCatEditor: r }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa danh mục?', 'Danh mục "' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa danh mục.'); }, true) },
@@ -5291,8 +5197,8 @@ class Component extends DCLogic {
       ),
       () => {
         const base = this.state.faqItems || this.FAQS();
-        if (r) { this.setState({ faqItems: base.map(f => f.id === r.id ? Object.assign({}, f, { cat: d.cat, lang: d.lang, q: d.q, a: d.answer, answer: d.answer, order: Number(d.order) || f.order, status: d.active ? 'active' : 'draft' }) : f) }); }
-        else { const newId = Math.max(0, ...base.map(f => f.id)) + 1; this.setState({ faqItems: base.concat([{ id: newId, cat: d.cat, lang: d.lang, q: d.q, a: d.answer, answer: d.answer, order: Number(d.order) || 1, status: d.active ? 'active' : 'draft' }]) }); }
+        if (r) { this.setState({ faqItems: base.map(f => f.id === r.id ? Object.assign({}, f, { cat: d.cat, lang: d.lang, q: d.q, a: d.answer, answer: d.answer, order: Number(d.order) || f.order, status: d.active ? 'active' : 'inactive' }) : f) }); }
+        else { const newId = Math.max(0, ...base.map(f => f.id)) + 1; this.setState({ faqItems: base.concat([{ id: newId, cat: d.cat, lang: d.lang, q: d.q, a: d.answer, answer: d.answer, order: Number(d.order) || 1, status: d.active ? 'active' : 'inactive' }]) }); }
         back(); this.toast('success', 'Đã lưu', 'Câu hỏi đã được lưu.');
       },
       isNew ? 'Thêm câu hỏi' : 'Lưu câu hỏi'
@@ -5303,8 +5209,8 @@ class Component extends DCLogic {
     this.openDrawer({ title: r.name, subtitle: 'Danh mục FAQ', width: 440,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên danh mục', r.name), this.detailRow('Thứ tự', String(r.order)),
-        this.detailRow('Ngôn ngữ', r.lang || 'Tiếng Việt'), this.detailRow('Số câu hỏi', String(r.count)),
-        this.detailRow('Trạng thái', this.statusBadge(r.status))
+        this.detailRow('Ngôn ngữ', r.lang || 'Tiếng Việt'), this.detailRow('Ngày tạo', r.createdAt || '—'),
+        this.detailRow('Số câu hỏi', String(r.count)), this.detailRow('Trạng thái', this.statusBadge(r.status))
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -9134,12 +9040,12 @@ class Component extends DCLogic {
 
   // ===== News (4 tabs) =====
   NEWS_ARTICLES() { return [
-    { id: 1, title: 'Lắp đặt mạng FPT khuyến mãi hè 2026 cực sốc', slug: 'lap-dat-mang-fpt-khuyen-mai-he-2026', cat: 'Tin khuyến mãi', subCat: '', type: 'article', author: 'Admin', channel: 'fpt-telecom', lang: 'vi', status: 'Published', featured: false, views: 342, date: '22/05/2026', sapo: 'FPT Telecom triển khai chương trình khuyến mãi lắp đặt internet hè 2026 với nhiều ưu đãi hấp dẫn.' },
-    { id: 2, title: 'FPT Camera ra mắt tính năng nhận diện AI thông minh mới', slug: 'fpt-camera-ra-mat-nhan-dien-ai', cat: 'Tin công nghệ', subCat: '', type: 'video', author: 'Phương Nam', channel: 'fpt-camera', lang: 'vi', status: 'Published', featured: true, views: 1205, date: '20/05/2026', sapo: 'Camera IQ4S mới nhất của FPT tích hợp AI nhận diện khuôn mặt và cảnh báo thông minh.' },
-    { id: 3, title: 'ASTON VILLA CHÍNH THỨC ĐĂNG QUANG CHAMPION UEFA EUROPA LEAGUE', slug: 'aston-villa-dang-quang-europa-league', cat: 'Sự kiện', subCat: '', type: 'article', author: 'Đức Nguyễn', channel: 'fpt-play', lang: 'vi', status: 'Draft', featured: false, views: 0, date: '21/05/2026', sapo: 'Aston Villa lần đầu tiên vô địch UEFA Europa League sau màn trình diễn xuất sắc.' },
-    { id: 4, title: 'Hướng dẫn thanh toán cước FPT online qua ứng dụng HiFPT', slug: 'huong-dan-thanh-toan-cuoc-online', cat: 'Hướng dẫn', subCat: '', type: 'guide', author: 'Admin', channel: 'fpt-telecom', lang: 'vi', status: 'Scheduled', featured: false, views: 0, date: '25/06/2026', sapo: 'Hướng dẫn chi tiết từng bước thanh toán cước internet FPT qua ứng dụng HiFPT trên điện thoại.' },
-    { id: 5, title: 'Ra mắt công nghệ Wi-Fi 7 — Tốc độ vượt trội cho ngôi nhà thông minh', slug: 'ra-mat-wifi-7-fpt', cat: 'Tin công nghệ', subCat: '', type: 'article', author: 'Trần Minh Khoa', channel: 'fpt-telecom', lang: 'vi', status: 'Published', featured: true, views: 876, date: '12/06/2026', sapo: 'Wi-Fi 7 mang lại tốc độ lên đến 46 Gbps với độ trễ siêu thấp, chuẩn bị ra mắt tại FPT Telecom.' },
-    { id: 6, title: 'Hướng dẫn cài đặt FPT Camera IQ3 tại nhà chỉ trong 5 phút', slug: 'huong-dan-cai-dat-camera-iq3', cat: 'Hướng dẫn', subCat: '', type: 'guide', author: 'Phương Nam', channel: 'fpt-camera', lang: 'vi', status: 'Hidden', featured: false, views: 198, date: '01/05/2026', sapo: 'Video hướng dẫn đơn giản giúp bạn tự lắp đặt FPT Camera IQ3 tại nhà mà không cần kỹ thuật viên.' },
+    { id: 1, title: 'Lắp đặt mạng FPT khuyến mãi hè 2026 cực sốc', slug: 'lap-dat-mang-fpt-khuyen-mai-he-2026', cat: 'Tin khuyến mãi', subCat: '', type: 'article', author: 'Admin', channel: 'fpt-telecom', lang: 'vi', status: 'published', featured: false, views: 342, date: '22/05/2026', sapo: 'FPT Telecom triển khai chương trình khuyến mãi lắp đặt internet hè 2026 với nhiều ưu đãi hấp dẫn.' },
+    { id: 2, title: 'FPT Camera ra mắt tính năng nhận diện AI thông minh mới', slug: 'fpt-camera-ra-mat-nhan-dien-ai', cat: 'Tin công nghệ', subCat: '', type: 'video', author: 'Phương Nam', channel: 'fpt-camera', lang: 'vi', status: 'published', featured: true, views: 1205, date: '20/05/2026', sapo: 'Camera IQ4S mới nhất của FPT tích hợp AI nhận diện khuôn mặt và cảnh báo thông minh.' },
+    { id: 3, title: 'ASTON VILLA CHÍNH THỨC ĐĂNG QUANG CHAMPION UEFA EUROPA LEAGUE', slug: 'aston-villa-dang-quang-europa-league', cat: 'Sự kiện', subCat: '', type: 'article', author: 'Đức Nguyễn', channel: 'fpt-play', lang: 'vi', status: 'draft', featured: false, views: 0, date: '21/05/2026', sapo: 'Aston Villa lần đầu tiên vô địch UEFA Europa League sau màn trình diễn xuất sắc.' },
+    { id: 4, title: 'Hướng dẫn thanh toán cước FPT online qua ứng dụng HiFPT', slug: 'huong-dan-thanh-toan-cuoc-online', cat: 'Hướng dẫn', subCat: '', type: 'guide', author: 'Admin', channel: 'fpt-telecom', lang: 'vi', status: 'expired', featured: false, views: 0, date: '25/06/2026', sapo: 'Hướng dẫn chi tiết từng bước thanh toán cước internet FPT qua ứng dụng HiFPT trên điện thoại.' },
+    { id: 5, title: 'Ra mắt công nghệ Wi-Fi 7 — Tốc độ vượt trội cho ngôi nhà thông minh', slug: 'ra-mat-wifi-7-fpt', cat: 'Tin công nghệ', subCat: '', type: 'article', author: 'Trần Minh Khoa', channel: 'fpt-telecom', lang: 'vi', status: 'published', featured: true, views: 876, date: '12/06/2026', sapo: 'Wi-Fi 7 mang lại tốc độ lên đến 46 Gbps với độ trễ siêu thấp, chuẩn bị ra mắt tại FPT Telecom.' },
+    { id: 6, title: 'Hướng dẫn cài đặt FPT Camera IQ3 tại nhà chỉ trong 5 phút', slug: 'huong-dan-cai-dat-camera-iq3', cat: 'Hướng dẫn', subCat: '', type: 'guide', author: 'Phương Nam', channel: 'fpt-camera', lang: 'vi', status: 'hidden', featured: false, views: 198, date: '01/05/2026', sapo: 'Video hướng dẫn đơn giản giúp bạn tự lắp đặt FPT Camera IQ3 tại nhà mà không cần kỹ thuật viên.' },
   ]; }
   NEWS_CATS() { return [
     { id: 1, name: 'Tin khuyến mãi', slug: 'tin-khuyen-mai', count: 8, status: 'active', parent: '', layout: 'grid', lang: 'vi', order: 1 },
@@ -9203,8 +9109,8 @@ class Component extends DCLogic {
     const selRows = this.state.newsSelRows || {};
     const selCount = Object.values(selRows).filter(Boolean).length;
     const all = this.NEWS_ARTICLES();
-    const pubCount = all.filter(a => a.status === 'Published').length;
-    const draftCount = all.filter(a => a.status === 'Draft').length;
+    const pubCount = all.filter(a => a.status === 'published').length;
+    const draftCount = all.filter(a => a.status === 'draft').length;
     const data = all.filter(a => {
       if (q && !a.title.toLowerCase().includes(q)) return false;
       if (catF !== 'all' && a.cat !== catF) return false;
@@ -9215,12 +9121,11 @@ class Component extends DCLogic {
     });
     const CH_LABEL = { 'fpt-telecom': 'FPT Telecom', 'fpt-play': 'FPT Play', 'fpt-camera': 'FPT Camera' };
     const CH_THEME = { 'fpt-telecom': 'brand', 'fpt-play': 'warning', 'fpt-camera': 'info' };
-    const ST_THEME = { Published: 'success', Draft: 'warning', Scheduled: 'info', Hidden: 'neutral' };
     // Stat cards
     const statDefs = [
       { key: 'all',       label: 'Tổng bài viết', value: all.length,    icon: 'file-doc-line',    color: 'var(--fpt-9)',    bg: 'var(--fpt-3)'              },
-      { key: 'Published', label: 'Đã xuất bản',   value: pubCount,      icon: 'check-circle-line', color: 'var(--green-9)',  textColor: 'var(--green-11)',  bg: 'var(--green-3)'  },
-      { key: 'Draft',     label: 'Bản nháp',       value: draftCount,   icon: 'edit-01-line',      color: 'var(--orange-9)', textColor: 'var(--orange-11)', bg: 'var(--orange-3)' },
+      { key: 'published', label: 'Đã đăng',        value: pubCount,      icon: 'check-circle-line', color: 'var(--green-9)',  textColor: 'var(--green-11)',  bg: 'var(--green-3)'  },
+      { key: 'draft',     label: 'Bản nháp',       value: draftCount,   icon: 'edit-01-line',      color: 'var(--orange-9)', textColor: 'var(--orange-11)', bg: 'var(--orange-3)' },
     ];
     const statCards = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 } },
       statDefs.map(s => h('div', { key: s.key,
@@ -9237,18 +9142,16 @@ class Component extends DCLogic {
     // Bulk bar — floating fixed bottom-center
     const selArts = data.filter(a => selRows[a.id]);
     const allFeatured = selArts.length > 0 && selArts.every(a => (this.state.newsArtFeaturedMap || {})[a.id] !== undefined ? !!(this.state.newsArtFeaturedMap || {})[a.id] : a.featured);
-    const allActive   = selArts.length > 0 && selArts.every(a => (this.state.newsArtActive || {})[a.id]   !== undefined ? !!(this.state.newsArtActive || {})[a.id]   : a.status === 'Published');
     const bulkBar = selCount > 0 ? h('div', { style: { position: 'fixed', bottom: 40, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', alignItems: 'center', gap: 6, padding: '10px 10px 10px 20px', background: 'var(--color-surface)', border: '1px solid var(--color-border-strong)', borderRadius: 100, boxShadow: '0 8px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08)', animation: 'fptScaleIn .18s cubic-bezier(.2,0,0,1)', whiteSpace: 'nowrap' } },
       h('span', { style: { fontSize: 13, fontWeight: 600, color: 'var(--fpt-11)', paddingRight: 6 } }, selCount + ' bài được chọn'),
       h('div', { style: { width: 1, height: 20, background: 'var(--color-border)', margin: '0 2px' } }),
       h(DS.Button, { size: 'sm', level: 'secondary', leadingIcon: 'star-01-line', onClick: () => { const next = !allFeatured; const m = { ...(this.state.newsArtFeaturedMap || {}) }; selArts.forEach(a => { m[a.id] = next; }); this.setState({ newsArtFeaturedMap: m }); this.toast(next ? 'success' : 'neutral', next ? 'Đã đánh dấu nổi bật' : 'Đã bỏ nổi bật', selCount + ' bài.'); } }, allFeatured ? 'Bỏ nổi bật' : 'Nổi bật'),
-      h(DS.Button, { size: 'sm', level: 'secondary', onClick: () => { const next = !allActive; const m = { ...(this.state.newsArtActive || {}) }; selArts.forEach(a => { m[a.id] = next; }); this.setState({ newsArtActive: m }); this.toast(next ? 'success' : 'info', next ? 'Đã bật hoạt động' : 'Đã ẩn', selCount + ' bài.'); } }, allActive ? 'Ẩn' : 'Bật hoạt động'),
       h(DS.Button, { size: 'sm', level: 'secondary', onClick: () => this.confirm('Xóa ' + selCount + ' bài?', 'Các bài đã chọn sẽ bị xóa vĩnh viễn.', () => { this.closeModal(); this.setState({ newsSelRows: {}, newsSelAll: false }); this.toast('success', 'Đã xóa', 'Xóa thành công.'); }, true) }, 'Xóa'),
       h(DS.Button, { size: 'sm', level: 'tertiary', onClick: () => this.setState({ newsSelRows: {}, newsSelAll: false }) }, 'Bỏ chọn'),
     ) : null;
     // Filters
     const catOpts = [{ value: 'all', label: 'Tất cả chuyên mục' }, ...this.NEWS_CATS().map(c => ({ value: c.name, label: c.name }))];
-    const stOpts  = [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'Published', label: 'Đã xuất bản' }, { value: 'Draft', label: 'Bản nháp' }, { value: 'Scheduled', label: 'Đặt lịch' }, { value: 'Hidden', label: 'Đã ẩn' }];
+    const stOpts  = [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'published', label: 'Đã đăng' }, { value: 'draft', label: 'Nháp' }, { value: 'expired', label: 'Hết hạn' }, { value: 'hidden', label: 'Tạm ẩn' }];
     const ftOpts  = [{ value: 'all', label: 'Tất cả bài' }, { value: 'featured', label: 'Chỉ bài nổi bật' }];
     const allSel  = data.length > 0 && data.every(a => selRows[a.id]);
     const columns = [
@@ -9283,14 +9186,7 @@ class Component extends DCLogic {
       { key: 'views',  header: 'Lượt xem', width: 78, align: 'right',
         render: (_, r) => h('span', { style: { fontWeight: 600, fontVariantNumeric: 'tabular-nums' } }, r.views.toLocaleString()) },
       { key: 'status', header: 'Trạng thái', width: 96, align: 'center',
-        render: (_, r) => h(DS.Badge, { theme: ST_THEME[r.status] || 'neutral' }, r.status) },
-      { key: 'active', header: 'Hoạt động', width: 76, align: 'center',
-        render: (_, r) => {
-          const isOn = (this.state.newsArtActive || {})[r.id] !== undefined ? !!(this.state.newsArtActive || {})[r.id] : r.status === 'Published';
-          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
-            h(DS.Switch, { key: 'sw-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => { this.setState(s => ({ newsArtActive: { ...s.newsArtActive, [r.id]: v } })); this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', r.title); } })
-          );
-        } },
+        render: (_, r) => this.statusBadge(r.status) },
       { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ newsArticleEdit: r }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa bài viết?', '"' + r.title + '" sẽ bị xóa vĩnh viễn.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa bài viết.'); }, true) },
@@ -9408,6 +9304,12 @@ class Component extends DCLogic {
     const subCatOpts = [{ value: '', label: '— Chuyên mục phụ —' }, ...catOpts];
     const isNew = !r || !r.id;
     const closeEditor = () => this.setState({ newsArticleEdit: null });
+    const slugInputRef = React.createRef();
+    const slugify = s => (s || '').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd').replace(/Đ/g, 'd')
+      .replace(/[^a-z0-9\s-]/g, '').trim()
+      .replace(/\s+/g, '-').replace(/-+/g, '-');
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -9423,28 +9325,28 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         // 1. Thông tin cơ bản — định danh & phân loại bài viết, luôn đứng đầu
         section(1, 'file-doc-line', 'Thông tin cơ bản',
-          this.field('Tiêu đề bài viết', h(DS.Input, { defaultValue: r ? r.title : '', placeholder: 'Nhập tiêu đề tin tức…' }), true),
+          this.field('Tiêu đề bài viết', h(DS.Input, {
+            defaultValue: r ? r.title : '', placeholder: 'Nhập tiêu đề tin tức…',
+            onChange: e => { if (slugInputRef.current) slugInputRef.current.value = slugify(e.target.value); }
+          }), true),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('URL Slug', h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', overflow: 'hidden', background: 'var(--color-surface)', height: 'var(--control-h-md)', boxSizing: 'border-box' } },
-              h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 10px', fontSize: 13, color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)', background: 'var(--color-surface-alt)', whiteSpace: 'nowrap' } }, '/tin-tuc/'),
-              h('input', { defaultValue: r ? r.slug : '', placeholder: 'url-bai-viet', style: { flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit' } })
-            ), true)),
+            h('div', null, this.field('URL Slug', h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', overflow: 'hidden', background: 'var(--color-surface-alt)', height: 'var(--control-h-md)', boxSizing: 'border-box' } },
+              h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 10px', fontSize: 13, color: 'var(--color-text-subtle)', borderRight: '1px solid var(--color-border)', background: 'var(--color-surface-alt)', whiteSpace: 'nowrap' } }, '/tin-tuc/'),
+              h('input', { ref: slugInputRef, defaultValue: r ? r.slug : '', placeholder: 'url-bai-viet', disabled: true, style: { flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text-subtle)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit', cursor: 'not-allowed' } })
+            ))),
             h('div', null, this.field('Tags', h(DS.Input, { defaultValue: r ? (r.tags || '') : '', placeholder: 'camera, khuyen-mai, wifi7' })))
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
             this.field('Loại nội dung', h(DS.Select, { options: [{ value: 'article', label: 'Tin bài / Bài viết' }, { value: 'video', label: 'Video bài viết' }, { value: 'promotion', label: 'Thông tin khuyến mãi' }, { value: 'guide', label: 'Hướng dẫn kỹ thuật' }], defaultValue: r ? (r.type || 'article') : 'article' }), true),
             this.field('Chuyên mục chính', h(DS.Select, { options: catOpts, defaultValue: r ? r.cat : catOpts[0] && catOpts[0].value, searchable: true, searchPlaceholder: 'Tìm chuyên mục…' }), true)
           ),
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            this.field('Chuyên mục phụ', h(DS.Select, { options: subCatOpts, defaultValue: r ? (r.subCat || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục…' })),
-            this.field('Kênh vận hành', h(DS.Select, { options: [{ value: 'fpt-telecom', label: 'FPT Telecom' }, { value: 'fpt-play', label: 'FPT Play' }, { value: 'fpt-camera', label: 'FPT Camera' }], defaultValue: r ? (r.channel || 'fpt-telecom') : 'fpt-telecom' }), true)
-          ),
+          this.field('Chuyên mục phụ', h(DS.Select, { options: subCatOpts, defaultValue: r ? (r.subCat || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục…' })),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
             this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || 'vi') : 'vi' })),
             this.field('Tác giả', h(DS.Select, { options: authorOpts, defaultValue: r ? r.author : authorOpts[0] && authorOpts[0].value, searchable: true, searchPlaceholder: 'Tìm tác giả…' }))
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            this.field('Trạng thái', h(DS.Select, { options: [{ value: 'Published', label: 'Đã xuất bản' }, { value: 'Draft', label: 'Bản nháp' }, { value: 'Scheduled', label: 'Đặt lịch' }, { value: 'Hidden', label: 'Đã ẩn' }], defaultValue: r ? r.status : 'Draft' }), true),
+            this.field('Trạng thái', h(DS.Select, { options: [{ value: 'published', label: 'Đã đăng' }, { value: 'draft', label: 'Nháp' }, { value: 'expired', label: 'Hết hạn' }, { value: 'hidden', label: 'Tạm ẩn' }], defaultValue: r ? r.status : 'draft' }), true),
             this.field('Ngày đăng', h('button', {
                 onClick: () => {
                   const v = (this.state.form || {}).newsDate || '';
@@ -9479,7 +9381,7 @@ class Component extends DCLogic {
         ),
         // 3. Hình ảnh đại diện — luôn có card riêng
         section(3, 'image-line', 'Hình ảnh đại diện',
-          this.uploadBox('Tải ảnh (tỷ lệ 16:9)', 'PNG / JPG · ≤2MB', true),
+          this.uploadBox('Tải ảnh (tỷ lệ 16:9)', 'PNG / JPG · ≤200KB', true),
           this.field('URL ảnh', h(DS.Input, { placeholder: 'https://… hoặc dán link' })),
           this.field('Alt text', h(DS.Input, { placeholder: 'Mô tả ảnh…' }), true),
           this.field('Caption', h(DS.Input, { placeholder: 'Chú thích…' })),
@@ -9524,7 +9426,7 @@ class Component extends DCLogic {
       () => { closeEditor(); this.toast('success', 'Đã xuất bản', 'Bài viết đã được xuất bản thành công.'); },
       'Xuất bản',
       h(React.Fragment, null,
-        !isNew && h(DS.Badge, { theme: r.status === 'Published' ? 'success' : r.status === 'Draft' ? 'warning' : r.status === 'Scheduled' ? 'info' : 'neutral' }, r.status),
+        !isNew && this.statusBadge(r.status),
         h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'file-doc-line', onClick: () => { closeEditor(); this.toast('info', 'Đã lưu nháp', 'Bài viết đã được lưu vào bản nháp.'); } }, 'Lưu nháp')
       )
     );
@@ -9777,7 +9679,6 @@ class Component extends DCLogic {
   ]; }
   openArticleDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const ST = { Published: 'success', Draft: 'warning', Scheduled: 'info', Hidden: 'neutral' };
     this.openDrawer({ title: r.title, subtitle: r.cat + ' · ' + r.date, width: 560,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         h('div', { style: { width: '100%', height: 72, borderRadius: 8, background: 'linear-gradient(135deg,var(--fpt-4),var(--fpt-8))', marginBottom: 8 } }),
@@ -9785,7 +9686,7 @@ class Component extends DCLogic {
         this.detailRow('Chuyên mục', r.cat), this.detailRow('Tác giả', r.author),
         this.detailRow('Kênh', r.channel), this.detailRow('Ngày đăng', r.date),
         this.detailRow('Lượt xem', r.views ? r.views.toLocaleString() : '0'),
-        this.detailRow('Trạng thái', h(DS.Badge, { theme: ST[r.status] || 'neutral' }, r.status))
+        this.detailRow('Trạng thái', this.statusBadge(r.status))
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),

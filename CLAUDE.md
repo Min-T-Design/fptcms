@@ -244,3 +244,20 @@ Mandatory behavior going forward, for both new selects and edits to existing one
 * Never hand-roll a text-filter input next to a plain `DS.Select` — pass `searchable`/`searchPlaceholder` instead, the same way dropdown-clipping is fixed by reusing `DS.Select` per §8, not by hand-rolling positioning.
 * This applies uniformly to filter-bar selects (list toolbars) and to form-field selects inside Inline Full-Page Editors (§1) — a select doesn't get an exemption for being "just a filter."
 * When the same option list is duplicated across a live editor and older drawer/modal code for the same entity (e.g. a `render*Editor` full-page version and an older `open*Drawer`/`open*Modal` version left over from before §1 was adopted), apply `searchable` to both — don't fix only the reachable one and leave a stale duplicate inconsistent.
+
+---
+
+## 12. Image Upload Size Limits
+
+Every `this.uploadBox(label, hint, required)` for a raster image (JPG/PNG/WebP — not applicable to SVG icons where file weight isn't a concern) must cap file size at:
+
+* **Desktop-facing image (or a single, non-split upload):** `≤200KB`
+* **Mobile-facing image, when the editor has a separate Desktop/Mobile pair for the same visual:** `≤150KB`
+
+This was already the dominant pattern before being written down here — see the paired calls in package cards, checkout icons, banners, and popups (`this.uploadBox('… - Desktop (ratio)', '≤200KB')` / `this.uploadBox('… - Mobile (ratio)', '≤150KB')`). Section 3 "Hình ảnh đại diện" of the News/Article editor was the one outlier still hinting `≤2MB` — fixed to `≤200KB` to match.
+
+Mandatory going forward:
+
+* Any **new** `uploadBox` call for a raster image defaults to this rule — `≤200KB` if it's a single upload, or the `Desktop ≤200KB` / `Mobile ≤150KB` pair if the editor needs distinct crops per breakpoint.
+* Don't invent other caps (`≤1MB`, `≤2MB`, `≤10MB`, or no cap at all) for new raster-image fields — those looser limits predate this rule and are legacy, not a pattern to copy.
+* This rule documents forward-looking behavior for new/edited fields; it does not itself mandate a repo-wide sweep of every pre-existing `uploadBox` call outside the one being touched — fix an outlier when you're already working in that editor, the same way §8/§9 outliers get fixed opportunistically rather than all at once.
