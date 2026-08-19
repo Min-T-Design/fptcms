@@ -219,3 +219,28 @@ Not every editor needs all six groups — skip what doesn't apply, but keep the 
 Use the existing `this.field(label, control, required)` red-asterisk convention for every required text/select/textarea field, and the mirrored `required` arg on `this.uploadBox(label, hint, required)` for required media fields. Never invent a different required-marker style. `DS.Switch` toggles are never marked required — a boolean always has a value, so "required" doesn't apply to them.
 
 Never wrap an editor's fields in an explanatory `DS.Alert` implying the record is shared/global (e.g. "cập nhật sẽ ảnh hưởng mọi trang đang gán…") unless the underlying data model actually supports that many-to-many relationship — check the field itself (a single-select "thuộc trang" means the record belongs to exactly one parent, not many) before writing copy that claims otherwise.
+
+---
+
+## 11. Searchable Dropdown Threshold
+
+Any `DS.Select` whose resolved `options` list has **5 or more entries** (count the actual rendered list — including any leading "— Tất cả —" / "— Chọn —" placeholder option — not just the data array) must be built with the search box shown in the reference screenshot for "Nhóm câu hỏi" (Danh mục FAQ) on the Page editor: a search input pinned to the top of the open menu, filtering options as you type.
+
+This is not a new component — `DS.Select` (`_ds/fpt-design-system-4069b42b-a7c3-46ff-acb7-dddf8f633b9e/_ds_bundle.js`) already implements it centrally via two props:
+
+```js
+h(DS.Select, {
+  options: myOptions,
+  value: current,
+  searchable: true,
+  searchPlaceholder: 'Tìm …',   // short, specific to the field (e.g. 'Tìm nhóm câu hỏi…', 'Tìm trang…')
+  onChange: v => …
+})
+```
+
+Mandatory behavior going forward, for both new selects and edits to existing ones:
+
+* **Count at build time, not just today's data.** For a select fed by a static/hardcoded array, count the literal entries. For a select fed by `this.SOME_DATA().map(...)` or similar, use the current data size — but if the list is a growing catalog (SKUs, pages, menu items, categories, badges/tags, templates…) rather than a fixed enum (Vai trò with 4 roles, Ngôn ngữ with 2, Trạng thái with 2–3 states), default to `searchable: true` even if today's count sits just under 5 — these lists only grow, and retrofitting every call site later is exactly the churn this rule exists to avoid.
+* Never hand-roll a text-filter input next to a plain `DS.Select` — pass `searchable`/`searchPlaceholder` instead, the same way dropdown-clipping is fixed by reusing `DS.Select` per §8, not by hand-rolling positioning.
+* This applies uniformly to filter-bar selects (list toolbars) and to form-field selects inside Inline Full-Page Editors (§1) — a select doesn't get an exemption for being "just a filter."
+* When the same option list is duplicated across a live editor and older drawer/modal code for the same entity (e.g. a `render*Editor` full-page version and an older `open*Drawer`/`open*Modal` version left over from before §1 was adopted), apply `searchable` to both — don't fix only the reachable one and leave a stale duplicate inconsistent.

@@ -928,7 +928,7 @@ class Component extends DCLogic {
         this.toolbar(
           h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
             this.search('Tìm kiếm tên gói bán, tên hiển thị…', 'skuSearch'),
-            h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: typeOptions, value: typeF, onChange: v => this.setState({ skuTypeFilter: v, pkg_pg: 1 }) })),
+            h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, { options: typeOptions, value: typeF, searchable: true, searchPlaceholder: 'Tìm loại sản phẩm…', onChange: v => this.setState({ skuTypeFilter: v, pkg_pg: 1 }) })),
             h('div', { style: { width: 160, flexShrink: 0 } }, h(DS.Select, { options: sourceOptions, value: sourceF, onChange: v => this.setState({ skuSourceFilter: v, pkg_pg: 1 }) }))
           ),
           h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 } },
@@ -2142,12 +2142,14 @@ class Component extends DCLogic {
                       )
                     : h(DS.Select, {
                         options: periodOptions, value: cy.period || '', placeholder: 'Chọn chu kỳ', disabled: periodLocked,
+                        searchable: true, searchPlaceholder: 'Tìm chu kỳ…',
                         onChange: onPeriodChange
                       })
                 )
               )
             : h('div', { style: { width: 160 } }, h(DS.Select, {
                 options: periodOptions, value: cy.period || '', placeholder: 'Chọn chu kỳ', disabled: periodLocked,
+                searchable: true, searchPlaceholder: 'Tìm chu kỳ…',
                 onChange: onPeriodChange
               }))
         ),
@@ -2508,12 +2510,12 @@ class Component extends DCLogic {
     const popupOptions = ['Popup Flash Sale', 'Popup Camera AI', 'Popup Ưu đãi Thanh toán', 'Popup Nhập mã KM', 'Popup Tri ân Khách hàng'];
     const fieldHint = t => t && h('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 4 } }, t);
     const bannerSelect = (label, def, hint) => h('div', null,
-      h(DS.Select, { label, options: ['— Không hiển thị —', ...bannerOptions], defaultValue: def || '— Không hiển thị —' }),
+      h(DS.Select, { label, options: ['— Không hiển thị —', ...bannerOptions], defaultValue: def || '— Không hiển thị —', searchable: true, searchPlaceholder: 'Tìm banner…' }),
       fieldHint(hint)
     );
     const popupBlock = (label, def, hint, extra) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
       h('div', null,
-        h(DS.Select, { label, options: ['— Không hiển thị —', ...popupOptions], defaultValue: def || '— Không hiển thị —' }),
+        h(DS.Select, { label, options: ['— Không hiển thị —', ...popupOptions], defaultValue: def || '— Không hiển thị —', searchable: true, searchPlaceholder: 'Tìm popup…' }),
         fieldHint(hint)
       ),
       extra
@@ -3283,7 +3285,7 @@ class Component extends DCLogic {
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center' } },
           this.search('Tìm kiếm theo tên section...', 'secSearch'),
-          h('div', { style: { width: 210 } }, h(DS.Select, { options: pageOptions, value: fp, onChange: v => this.setState({ secPageFilter: v, secs_pg: 1 }) }))
+          h('div', { style: { width: 210 } }, h(DS.Select, { options: pageOptions, value: fp, searchable: true, searchPlaceholder: 'Tìm trang…', onChange: v => this.setState({ secPageFilter: v, secs_pg: 1 }) }))
         ),
         h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ secEditor: null, secEditorBlocks: [] }) }, 'Tạo Section')
       ),
@@ -3316,7 +3318,7 @@ class Component extends DCLogic {
           h(DS.Alert, { theme: 'info', title: 'Lưu ý dùng chung' }, 'Khi cập nhật Section, tất cả các trang đang gán sẽ thay đổi đồng thời.'),
           // Trang + Thứ tự
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
-            h('div', null, this.field('Chọn trang (Thuộc trang nào)', h(DS.Select, { options: PAGES, defaultValue: r ? r.page : PAGES[0] }), true)),
+            h('div', null, this.field('Chọn trang (Thuộc trang nào)', h(DS.Select, { options: PAGES, defaultValue: r ? r.page : PAGES[0], searchable: true, searchPlaceholder: 'Tìm trang…' }), true)),
             h('div', null, this.field('Thứ tự hiển thị', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order != null ? r.order : '') : '' })))
           ),
           // Tên quản trị + Tiêu đề UI
@@ -3327,7 +3329,7 @@ class Component extends DCLogic {
           // Mã section + Loại
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
             h('div', null, this.field('Mã Section (Dùng trong Code)', h(DS.Input, { defaultValue: r ? r.code : '', placeholder: 'VD: sec-hero-home' }), true)),
-            h('div', null, this.field('Loại Section', h(DS.Select, { options: TYPES, defaultValue: r ? r.type : TYPES[0] }), true))
+            h('div', null, this.field('Loại Section', h(DS.Select, { options: TYPES, defaultValue: r ? r.type : TYPES[0], searchable: true, searchPlaceholder: 'Tìm loại Section…' }), true))
           ),
           // Mô tả
           this.field('Mô tả ngắn', h(DS.Textarea, { rows: 2, placeholder: 'Nhập mô tả cho Section này...' })),
@@ -3427,7 +3429,7 @@ class Component extends DCLogic {
         ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
-            h('div', null, this.field('Thuộc trang', h(DS.Select, { options: PAGES, defaultValue: r ? r.page : PAGES[0] }), true)),
+            h('div', null, this.field('Thuộc trang', h(DS.Select, { options: PAGES, defaultValue: r ? r.page : PAGES[0], searchable: true, searchPlaceholder: 'Tìm trang…' }), true)),
             h('div', null, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order != null ? r.order : '') : '' })))
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
@@ -3436,7 +3438,7 @@ class Component extends DCLogic {
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
             h('div', null, this.field('Mã Section', h(DS.Input, { defaultValue: r ? r.code : '', placeholder: 'VD: sec-hero-home' }), true)),
-            h('div', null, this.field('Loại Section', h(DS.Select, { options: TYPES, defaultValue: r ? r.type : TYPES[0] }), true))
+            h('div', null, this.field('Loại Section', h(DS.Select, { options: TYPES, defaultValue: r ? r.type : TYPES[0], searchable: true, searchPlaceholder: 'Tìm loại Section…' }), true))
           ),
           this.field('Mô tả ngắn', h(DS.Textarea, { rows: 2, placeholder: 'Nhập mô tả cho Section này...' }))
         ),
@@ -3800,7 +3802,7 @@ class Component extends DCLogic {
         h('div', null,
           h('div', { style: { display: 'flex', gap: 10, marginBottom: 12 } },
             h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Tìm kiếm bài viết...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch, onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) })),
-            h('div', { style: { width: 260, flexShrink: 0 } }, h(DS.Select, { options: [{ value: '', label: '-- Tất cả chuyên mục --' }, 'Tin công nghệ', 'Hướng dẫn', 'Tin thể thao', 'Khuyến mãi', 'Sản phẩm'], value: s.blkPickerCat || '', onChange: v => this.setState({ blkPickerCat: v }) }))
+            h('div', { style: { width: 260, flexShrink: 0 } }, h(DS.Select, { options: [{ value: '', label: '-- Tất cả chuyên mục --' }, 'Tin công nghệ', 'Hướng dẫn', 'Tin thể thao', 'Khuyến mãi', 'Sản phẩm'], value: s.blkPickerCat || '', searchable: true, searchPlaceholder: 'Tìm chuyên mục…', onChange: v => this.setState({ blkPickerCat: v }) }))
           ),
           pickerTable(
             [h('th', { style: { width: 40, textAlign: 'center', padding: '8px 10px' } }, h(DS.Checkbox, { checked: allChk, onChange: () => this.setState({ blkPickerSelected: allChk ? {} : Object.fromEntries(flt.map(a => [a.id, true])) }) })), th('Tiêu đề bài viết'), th('Danh mục'), th('Ngày xuất bản', 100)],
@@ -3836,7 +3838,7 @@ class Component extends DCLogic {
         h('div', null,
           h('div', { style: { display: 'flex', gap: 10, marginBottom: 12 } },
             h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Tìm kiếm câu hỏi...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch, onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) })),
-            h('div', { style: { width: 190 } }, h(DS.Select, { options: [{ value: '', label: '-- Tất cả danh mục --' }, 'Hỗ trợ kỹ thuật', 'Thanh toán cước', 'Chính sách', 'Thủ tục', 'Hướng dẫn'], value: s.blkPickerCat || '', onChange: v => this.setState({ blkPickerCat: v }) }))
+            h('div', { style: { width: 190 } }, h(DS.Select, { options: [{ value: '', label: '-- Tất cả danh mục --' }, 'Hỗ trợ kỹ thuật', 'Thanh toán cước', 'Chính sách', 'Thủ tục', 'Hướng dẫn'], value: s.blkPickerCat || '', searchable: true, searchPlaceholder: 'Tìm danh mục…', onChange: v => this.setState({ blkPickerCat: v }) }))
           ),
           pickerTable(
             [h('th', { style: { width: 40, textAlign: 'center', padding: '8px 10px' } }, h(DS.Checkbox, { checked: allChk, onChange: () => this.setState({ blkPickerSelected: allChk ? {} : Object.fromEntries(flt.map(f => [f.id, true])) }) })), th('Câu hỏi FAQ'), th('Danh mục', 160)],
@@ -4185,7 +4187,7 @@ class Component extends DCLogic {
           h('div', { style: { flex: 1, minWidth: 0, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 } },
             h('div', { style: { gridColumn: 'span 3' } },
               this.field('Liên kết Package gốc (từ Product Hub - PDH)',
-                h(DS.Select, { options: [{ value: '', label: '-- Không liên kết (Nhập tay thủ công) --' }, ...this.SKUS().map(sku => ({ value: sku.code, label: sku.code + ' - ' + sku.name }))], value: cf.pdh || '', onChange: v => setF('pdh', v) })
+                h(DS.Select, { options: [{ value: '', label: '-- Không liên kết (Nhập tay thủ công) --' }, ...this.SKUS().map(sku => ({ value: sku.code, label: sku.code + ' - ' + sku.name }))], value: cf.pdh || '', searchable: true, searchPlaceholder: 'Tìm SKU…', onChange: v => setF('pdh', v) })
               )
             ),
             this.field('Nhãn nổi bật (Badge)', h(DS.Input, { value: cf.badge || '', onChange: e => setF('badge', e.target ? e.target.value : e), placeholder: 'VD: Phù hợp cá nhân, gia đình nhỏ' })),
@@ -4355,6 +4357,7 @@ class Component extends DCLogic {
       linkContent = this.field('Chọn trang', h(DS.Select, {
         options: pageOpts,
         value: this.state.menuEditorPage || '',
+        searchable: true, searchPlaceholder: 'Tìm trang…',
         onChange: v => this.setState({ menuEditorPage: v })
       }), true);
     } else if (type === 'category') {
@@ -4369,7 +4372,7 @@ class Component extends DCLogic {
         section(1, 'menu-01-line', 'Thông tin cơ bản',
           this.field('Tên menu', h(DS.Input, { defaultValue: isEdit ? r.name : '', placeholder: 'Nhập tên menu...' }), true),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
-            this.field('Menu cha', h(DS.Select, { options: parentOpts, defaultValue: isEdit ? (r.pid ? String(r.pid) : '') : '' })),
+            this.field('Menu cha', h(DS.Select, { options: parentOpts, defaultValue: isEdit ? (r.pid ? String(r.pid) : '') : '', searchable: true, searchPlaceholder: 'Tìm menu cha…' })),
             this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: isEdit ? String(r.order) : '0' }), true)
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
@@ -4460,7 +4463,7 @@ class Component extends DCLogic {
         h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 120px', gap: 12 } },
           h('div', null,
             h('label', { style: lbSt }, 'Menu cha'),
-            h(DS.Select, { options: parentOpts, defaultValue: isEdit ? (r.pid ? String(r.pid) : '') : '', style: { width: '100%' } })
+            h(DS.Select, { options: parentOpts, defaultValue: isEdit ? (r.pid ? String(r.pid) : '') : '', searchable: true, searchPlaceholder: 'Tìm menu cha…', style: { width: '100%' } })
           ),
           h('div', null,
             h('label', { style: lbSt }, 'Thứ tự', req),
@@ -4591,6 +4594,7 @@ class Component extends DCLogic {
           h('div', { style: { width: 190, flexShrink: 0 } }, h(DS.Select, {
             options: [{ value: 'all', label: 'Tất cả trang' }, ...this.BANNER_PAGES().map(p => ({ value: p, label: p }))],
             value: pageF,
+            searchable: true, searchPlaceholder: 'Tìm trang…',
             onChange: v => this.setState({ bannerPageFilter: v, banners_pg: 1 })
           })),
           h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
@@ -4685,6 +4689,7 @@ class Component extends DCLogic {
           h('div', { style: { width: 210, flexShrink: 0 } }, h(DS.Select, {
             options: [{ value: 'all', label: 'Tất cả trang áp dụng' }, ...this.BANNER_PAGES().map(p => ({ value: p, label: p }))],
             value: pageF,
+            searchable: true, searchPlaceholder: 'Tìm trang…',
             onChange: v => this.setState({ popupPageFilter: v, popups_pg: 1 })
           })),
           h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
@@ -5142,7 +5147,7 @@ class Component extends DCLogic {
             h(DS.Select, { value: catF, options: [
               { value: 'all', label: 'Tất cả danh mục' },
               ...cats.map(c => ({ value: c, label: c }))
-            ], onChange: v => this.setState({ faqCatFilter: v, faqQ_pg: 1 }) })
+            ], searchable: true, searchPlaceholder: 'Tìm danh mục…', onChange: v => this.setState({ faqCatFilter: v, faqQ_pg: 1 }) })
           ),
         ),
         h('div', { style: { display: 'flex', gap: 8 } },
@@ -5424,7 +5429,7 @@ class Component extends DCLogic {
               { value: 'campaign', label: 'LDP Campaign Wi-Fi 7' },
               { value: 'thulead', label: 'LDP Thu Lead' },
               { value: 'customhtml', label: 'Custom HTML' },
-            ], onChange: v => this.setState({ ldpListTpl: v, ldp_pg: 1 }) })
+            ], searchable: true, searchPlaceholder: 'Tìm template…', onChange: v => this.setState({ ldpListTpl: v, ldp_pg: 1 }) })
           ),
           h('div', { style: { flex: '0 0 138px' } },
             h(DS.Select, { value: statF, options: [
@@ -5433,7 +5438,7 @@ class Component extends DCLogic {
               { value: 'hidden', label: 'Tạm ẩn' },
               { value: 'expired', label: 'Hết hạn' },
               { value: 'draft', label: 'Nháp' },
-            ], onChange: v => this.setState({ ldpListStatus: v, ldp_pg: 1 }) })
+            ], searchable: true, searchPlaceholder: 'Tìm trạng thái…', onChange: v => this.setState({ ldpListStatus: v, ldp_pg: 1 }) })
           ),
 
         ),
@@ -5655,7 +5660,7 @@ class Component extends DCLogic {
             h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 12px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0 } }, 'fpt.vn/'),
             h('div', { style: { flex: '1 1 180px', minWidth: 180 } }, h(DS.Select, {
               options: [{ value: '', label: '— Level 1 —', disabled: true }, ...FPT_CATS.map(c => ({ value: c.value, label: c.label }))],
-              value: slug1, onChange: v => { set('urlSlug1', v); set('urlSlug2', ''); }
+              value: slug1, searchable: true, searchPlaceholder: 'Tìm danh mục…', onChange: v => { set('urlSlug1', v); set('urlSlug2', ''); }
             })),
             h('span', { style: { display: 'flex', alignItems: 'center', color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
             h('div', { style: { flex: '1 1 180px', minWidth: 180 } }, h(DS.Input, { value: slug2, onChange: e => set('urlSlug2', e.target.value), placeholder: slug1 ? 'ten-ldp' : 'Level 2', disabled: !slug1 }))
@@ -9306,8 +9311,8 @@ class Component extends DCLogic {
         this.toolbar(
           h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
             h('div', { style: { width: 224 } }, h(DS.Input, { placeholder: 'Tìm theo tiêu đề…', leadingIcon: 'search-medium-line', value: this.state.newsSearch || '', onChange: e => this.setState({ newsSearch: typeof e === 'string' ? e : e.target.value, newsArt_pg: 1 }) })),
-            h('div', { style: { width: 176 } }, h(DS.Select, { options: catOpts,  value: catF,      onChange: v => this.setState({ newsArtCat: v, newsArt_pg: 1 }) })),
-            h('div', { style: { width: 176 } }, h(DS.Select, { options: stOpts,   value: statusF,   onChange: v => this.setState({ newsArtStatus: v, newsArt_pg: 1 }) })),
+            h('div', { style: { width: 176 } }, h(DS.Select, { options: catOpts,  value: catF,      searchable: true, searchPlaceholder: 'Tìm chuyên mục…', onChange: v => this.setState({ newsArtCat: v, newsArt_pg: 1 }) })),
+            h('div', { style: { width: 176 } }, h(DS.Select, { options: stOpts,   value: statusF,   searchable: true, searchPlaceholder: 'Tìm trạng thái…', onChange: v => this.setState({ newsArtStatus: v, newsArt_pg: 1 }) })),
             h('div', { style: { width: 152 } }, h(DS.Select, { options: ftOpts,   value: featuredF, onChange: v => this.setState({ newsArtFeatured: v, newsArt_pg: 1 }) }))
           ),
           h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ newsArticleEdit: {} }) }, 'Thêm Bài Viết')
@@ -9380,7 +9385,7 @@ class Component extends DCLogic {
               h('div', { style: { padding: 13, display: 'flex', flexDirection: 'column', gap: 10 } },
                 h(DS.Select, { label: 'Loại nội dung *', options: [{ value: 'article', label: 'Tin bài / Bài viết' }, { value: 'video', label: 'Video bài viết' }, { value: 'promotion', label: 'Thông tin khuyến mãi' }, { value: 'guide', label: 'Hướng dẫn kỹ thuật' }], defaultValue: r ? (r.type || 'article') : 'article' }),
                 h(DS.Select, { label: 'Chuyên mục chính *', options: catOpts, defaultValue: r ? r.cat : catOpts[0] && catOpts[0].value }),
-                h(DS.Select, { label: 'Chuyên mục phụ', options: subCatOpts, defaultValue: r ? (r.subCat || '') : '' }),
+                h(DS.Select, { label: 'Chuyên mục phụ', options: subCatOpts, defaultValue: r ? (r.subCat || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục…' }),
                 h(DS.Select, { label: 'Kênh vận hành *', options: [{ value: 'fpt-telecom', label: 'FPT Telecom' }, { value: 'fpt-play', label: 'FPT Play' }, { value: 'fpt-camera', label: 'FPT Camera' }], defaultValue: r ? (r.channel || 'fpt-telecom') : 'fpt-telecom' }),
                 h(DS.Select, { label: 'Ngôn ngữ', options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || 'vi') : 'vi' }),
                 h(DS.Select, { label: 'Tác giả', options: authorOpts, defaultValue: r ? r.author : authorOpts[0] && authorOpts[0].value }),
@@ -9472,7 +9477,7 @@ class Component extends DCLogic {
           ),
           // Right col
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-            this.field('Chuyên mục cha', h(DS.Select, { options: parentOpts, defaultValue: r ? (r.parent || '') : '' })),
+            this.field('Chuyên mục cha', h(DS.Select, { options: parentOpts, defaultValue: r ? (r.parent || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục cha…' })),
             this.field('Kiểu giao diện', h(DS.Select, { options: [{ value: 'default', label: 'Mặc định' }, { value: 'grid', label: 'Grid 3 cột' }, { value: 'list', label: 'Danh sách' }], defaultValue: r ? (r.layout || 'default') : 'default' })),
             this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || 'vi') : 'vi' })),
             h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 } },
@@ -9667,7 +9672,7 @@ class Component extends DCLogic {
         h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Tìm SKU…', leadingIcon: 'search-medium-line', value: this.state.tagSkuQ || '', onChange: v => this.setState({ tagSkuQ: v }) })),
         h('div', { style: { width: 148 } }, h(DS.Select, {
           options: cats.map(c => ({ value: c, label: c === 'all' ? 'Tất cả loại' : c })),
-          value: cat, onChange: v => this.setState({ tagSkuCat: v })
+          value: cat, searchable: true, searchPlaceholder: 'Tìm loại…', onChange: v => this.setState({ tagSkuCat: v })
         }))
       ),
       // Toolbar: count + chọn tất cả / bỏ chọn
@@ -9773,7 +9778,7 @@ class Component extends DCLogic {
           h(DS.Accordion, { items: [{ title: 'Cấu hình SEO', icon: 'stars-01-line', content: h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4 } }, h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } }, h('div', null, this.field('Meta tiêu đề', h(DS.Input, { placeholder: 'Hiển thị trên Google' }))), h('div', null, this.field('Meta từ khoá', h(DS.Input, { placeholder: 'từ khoá, phân cách dấu phẩy' })))), this.field('Meta mô tả', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả ngắn (≤160 ký tự)' }))) }] })
         ),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-          this.field('Chuyên mục cha', h(DS.Select, { options: parentOpts, defaultValue: r ? (r.parent || '') : '' })),
+          this.field('Chuyên mục cha', h(DS.Select, { options: parentOpts, defaultValue: r ? (r.parent || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục cha…' })),
           this.field('Kiểu giao diện', h(DS.Select, { options: [{ value: 'default', label: 'Mặc định' }, { value: 'grid', label: 'Grid 3 cột' }, { value: 'list', label: 'Danh sách' }], defaultValue: r ? (r.layout || 'default') : 'default' })),
           this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || 'vi') : 'vi' })),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 } },
@@ -9911,7 +9916,7 @@ class Component extends DCLogic {
       ]) },
     ];
     return this.listCard(
-      this.toolbar(h(React.Fragment, null, this.search('Tìm tên / email / SĐT…', 'userSearch'), h('div', { style: { width: 180 } }, h(DS.Select, { options: [{ value: 'all', label: 'Tất cả vai trò' }, 'Admin CMS', 'Biên tập viên', 'Người duyệt', 'Viewer'], value: fr, onChange: v => this.setState({ userRole: v }) }))), h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ userEditor: null }) }, 'Thêm người dùng mới')),
+      this.toolbar(h(React.Fragment, null, this.search('Tìm tên / email / SĐT…', 'userSearch'), h('div', { style: { width: 180 } }, h(DS.Select, { options: [{ value: 'all', label: 'Tất cả vai trò' }, 'Admin CMS', 'Biên tập viên', 'Người duyệt', 'Viewer'], value: fr, searchable: true, searchPlaceholder: 'Tìm vai trò…', onChange: v => this.setState({ userRole: v }) }))), h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ userEditor: null }) }, 'Thêm người dùng mới')),
       data.length ? this.tbl(columns, this.sliceData(data, 'users'), 'id', r => this.openUserDetail(r)) : this.empty('Không tìm thấy người dùng.'),
       data.length ? this.renderPagBar(data.length, 'users', 'người dùng') : null
     );
