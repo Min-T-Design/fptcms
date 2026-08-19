@@ -4882,8 +4882,8 @@ class Component extends DCLogic {
         ),
         section(2, 'image-line', 'Hình ảnh',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            this.uploadBox('Desktop (16:9)', 'JPG, PNG · tối đa 1MB'),
-            this.uploadBox('Mobile / Bottom Sheet (1:1)', 'JPG, PNG · tối đa 1MB')
+            this.uploadBox('Popup Desktop (16:9)', 'JPG, PNG · tối đa 200KB'),
+            this.uploadBox('Popup Mobile (1:1)', 'JPG, PNG · tối đa 150KB')
           )
         ),
         section(3, 'zap-line', 'Hành vi hiển thị',
@@ -5163,7 +5163,7 @@ class Component extends DCLogic {
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa FAQ?', 'Câu hỏi sẽ bị xóa.', () => { const base = this.state.faqItems || this.FAQS(); this.setState({ faqItems: base.filter(f => f.id !== r.id) }); this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa câu hỏi.'); }, true) },
       ]) },
     ];
-    const cats = ['Khắc phục sự cố', 'Thanh toán cước', 'Chính sách & Thủ tục', 'Dịch vụ GTGT'];
+    const cats = this.FAQ_CATS().map(c => c.name);
     return this.listCard(
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center' } },
@@ -5188,67 +5188,6 @@ class Component extends DCLogic {
       data.length ? this.tbl(columns, this.sliceData(data, 'faqQ'), 'id', r => this.openFaqDetail(r)) : this.empty('Chưa có câu hỏi.'),
       data.length ? this.renderPagBar(data.length, 'faqQ', 'câu hỏi') : null
     );
-  }
-  openFaqDrawer(r) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const setD = patch => this.setState(s => ({ faqDraft: Object.assign({}, s.faqDraft, patch) }));
-    const linkSvg = h('svg', { viewBox: '0 0 277.279 277.279', width: 13, height: 13, fill: 'currentColor', style: { display: 'block' } },
-      h('path', { d: 'M149.245,191.671l-42.425,42.426c0,0,0,0.001-0.001,0.001c0,0,0,0.001-0.001,0.001c-17.544,17.545-46.092,17.546-63.638,0c-8.5-8.5-13.18-19.801-13.18-31.82c0-12.018,4.68-23.317,13.177-31.817c0.001-0.001,0.002-0.002,0.003-0.003l42.425-42.426c5.857-5.858,5.857-15.356-0.001-21.213c-5.857-5.857-15.355-5.857-21.213,0l-42.425,42.426c-0.003,0.003-0.006,0.007-0.009,0.01C7.798,163.42,0,182.251,0,202.279c0,20.033,7.801,38.867,21.967,53.033C36.589,269.933,55.794,277.244,75,277.244c19.206,0,38.412-7.311,53.032-21.932c0,0,0-0.001,0-0.001c0.001,0,0.001-0.001,0.001-0.001l42.425-42.426c5.857-5.857,5.857-15.355-0.001-21.213C164.601,185.814,155.104,185.814,149.245,191.671z' }),
-      h('path', { d: 'M277.279,75c0-20.033-7.802-38.867-21.968-53.033c-29.243-29.242-76.824-29.241-106.065,0c-0.001,0.002-0.003,0.003-0.004,0.005l-42.424,42.423c-5.858,5.857-5.858,15.356,0,21.213c2.93,2.93,6.768,4.394,10.607,4.394c3.838,0,7.678-1.465,10.606-4.394l42.424-42.423c0.001-0.002,0.003-0.003,0.005-0.005c17.544-17.544,46.092-17.545,63.638,0c8.499,8.5,13.181,19.801,13.181,31.82c0,12.018-4.68,23.317-13.178,31.817c-0.001,0.001-0.002,0.002-0.003,0.003l-42.425,42.426c-5.857,5.857-5.857,15.355,0.001,21.213c2.929,2.929,6.768,4.394,10.606,4.394c3.839,0,7.678-1.465,10.607-4.394l42.425-42.426c0.003-0.003,0.006-0.007,0.009-0.01C269.48,113.859,277.279,95.028,277.279,75z' }),
-      h('path', { d: 'M85.607,191.671c2.929,2.929,6.768,4.394,10.606,4.394c3.839,0,7.678-1.465,10.607-4.394l84.852-84.852c5.858-5.857,5.858-15.355,0-21.213c-5.857-5.857-15.355-5.857-21.213,0l-84.852,84.851C79.749,176.316,79.749,185.814,85.607,191.671z' })
-    );
-    this.setState({ faqDraft: {
-      cat: r ? r.cat : 'Thanh toán cước',
-      lang: r ? (r.lang || 'Tiếng Việt') : 'Tiếng Việt',
-      q: r ? r.q : '',
-      answer: r ? (r.answer || r.a || '') : '',
-      order: r ? String(r.order) : '1',
-      active: r ? r.status === 'active' : true,
-    }});
-    this.openDrawer({
-      title: r ? 'Sửa câu hỏi' : 'Thêm câu hỏi (FAQ)', subtitle: 'Ngân hàng câu hỏi thường gặp', width: 560,
-      render: () => { const d = this.state.faqDraft || {}; return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        h('div', { style: { display: 'flex', gap: 12 } },
-          h('div', { style: { flex: 1 } }, this.field('Danh mục', h(DS.Select, { options: [
-            { value: 'Thanh toán cước', label: 'Thanh toán cước' },
-            { value: 'Khắc phục sự cố', label: 'Khắc phục sự cố' },
-            { value: 'Chính sách & Thủ tục', label: 'Chính sách & Thủ tục' },
-            { value: 'Dịch vụ GTGT', label: 'Dịch vụ GTGT' },
-          ], value: d.cat, onChange: v => setD({ cat: v }) }), true)),
-          h('div', { style: { flex: 1 } }, this.field('Ngôn ngữ', h(DS.Select, { options: [
-            { value: 'Tiếng Việt', label: 'Tiếng Việt' },
-            { value: 'English', label: 'English' },
-          ], value: d.lang, onChange: v => setD({ lang: v }) }), true))
-        ),
-        this.field('Câu hỏi', h(DS.Input, { value: d.q, onChange: e => setD({ q: e && e.target ? e.target.value : e }) }), true),
-        this.field('Câu trả lời (Rich Text)', h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
-          h('div', { style: { display: 'flex', gap: 4, padding: '6px 10px', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)', flexWrap: 'wrap' } },
-            ...['B', 'I', 'U'].map(t => h('button', { key: t, type: 'button', style: { background: 'none', border: '1px solid var(--color-border)', borderRadius: 5, padding: '3px 8px', fontSize: 12, cursor: 'pointer', color: 'var(--color-text)', fontFamily: 'inherit', fontWeight: t === 'B' ? 700 : 400, fontStyle: t === 'I' ? 'italic' : 'normal', textDecoration: t === 'U' ? 'underline' : 'none' } }, t)),
-            h('button', { type: 'button', style: { background: 'none', border: '1px solid var(--color-border)', borderRadius: 5, padding: '3px 8px', fontSize: 12, cursor: 'pointer', color: 'var(--color-text)', display: 'flex', alignItems: 'center' } }, linkSvg)
-          ),
-          h('textarea', { style: { width: '100%', minHeight: 130, border: 'none', background: 'var(--color-surface)', color: 'var(--color-text)', padding: '10px 14px', fontSize: 13.5, resize: 'vertical', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }, placeholder: 'Nội dung hướng dẫn chi tiết…', value: d.answer, onChange: e => setD({ answer: e.target.value }) })
-        ), true),
-        h('div', { style: { display: 'flex', gap: 12, alignItems: 'flex-end' } },
-          h('div', { style: { width: 120 } }, this.field('Thứ tự', h(DS.Input, { type: 'number', value: d.order, onChange: e => setD({ order: e && e.target ? e.target.value : e }) }))),
-          h(DS.Checkbox, { checked: d.active, onChange: v => setD({ active: typeof v === 'boolean' ? v : v && v.target ? v.target.checked : !d.active }), label: 'Trạng thái hoạt động' })
-        )
-      ); },
-      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Hủy'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'check-line', onClick: () => {
-          const d = this.state.faqDraft || {};
-          const base = this.state.faqItems || this.FAQS();
-          if (r) {
-            this.setState({ faqItems: base.map(f => f.id === r.id ? Object.assign({}, f, { cat: d.cat, lang: d.lang, q: d.q, a: d.answer, answer: d.answer, order: Number(d.order) || f.order, status: d.active ? 'active' : 'draft' }) : f) });
-          } else {
-            const newId = Math.max(0, ...base.map(f => f.id)) + 1;
-            this.setState({ faqItems: base.concat([{ id: newId, cat: d.cat, lang: d.lang || 'Tiếng Việt', q: d.q, a: d.answer, answer: d.answer, order: Number(d.order) || 1, status: d.active ? 'active' : 'draft' }]) });
-          }
-          this.closeDrawer();
-          this.toast('success', 'Đã lưu', 'Câu hỏi đã được lưu.');
-        } }, 'Lưu Câu hỏi')
-      )
-    });
   }
   renderFaqCats() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -5281,21 +5220,6 @@ class Component extends DCLogic {
       this.renderPagBar(data.length, 'faqCat', 'danh mục')
     );
   }
-  faqCatForm(r) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, marginTop: 4 } },
-      this.field('Tên danh mục', h(DS.Input, { defaultValue: r ? r.name : '' }), true),
-      h('div', { style: { display: 'flex', gap: 12 } },
-        h('div', { style: { flex: 1 } }, this.field('Thứ tự hiển thị', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order) : '1' }))),
-        h('div', { style: { flex: 1 } }, this.field('Ngôn ngữ', h(DS.Select, { options: [
-          { value: 'Tiếng Việt', label: 'Tiếng Việt' },
-          { value: 'English', label: 'English' },
-        ], defaultValue: r ? (r.lang || 'Tiếng Việt') : 'Tiếng Việt' })))
-      ),
-      h('div', { style: { display: 'flex', alignItems: 'center', marginTop: 4 } }, h(DS.Checkbox, { defaultChecked: r ? r.status === 'active' : true, label: 'Trạng thái hoạt động' })),
-      h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 6 } }, h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy'), h(DS.Button, { level: 'primary', onClick: () => { this.closeModal(); this.toast('success', 'Đã lưu', 'Danh mục đã được lưu.'); } }, 'Lưu Danh mục'))
-    );
-  }
 
   openFaqDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -5315,19 +5239,34 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.setState({ faqEditor: undefined, faqDraft: null });
     const setD = patch => this.setState(s => ({ faqDraft: Object.assign({}, s.faqDraft, patch) }));
-    const d = this.state.faqDraft || { cat: 'Thanh toán cước', lang: 'Tiếng Việt', q: '', answer: '', order: '1', active: true };
+    const catOpts = this.FAQ_CATS().map(c => ({ value: c.name, label: c.name }));
+    const d = this.state.faqDraft || { cat: catOpts[0] && catOpts[0].value, lang: 'Tiếng Việt', q: '', answer: '', order: '1', active: true };
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+        h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
+      ),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
+    );
     return this.editorShell(
       isNew ? 'Thêm câu hỏi (FAQ)' : 'Chỉnh sửa câu hỏi', 'Ngân hàng câu hỏi thường gặp', back,
-      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        h('div', { style: { display: 'flex', gap: 12 } },
-          h('div', { style: { flex: 1 } }, this.field('Danh mục', h(DS.Select, { options: [{ value: 'Thanh toán cước', label: 'Thanh toán cước' }, { value: 'Khắc phục sự cố', label: 'Khắc phục sự cố' }, { value: 'Chính sách & Thủ tục', label: 'Chính sách & Thủ tục' }, { value: 'Dịch vụ GTGT', label: 'Dịch vụ GTGT' }], value: d.cat, onChange: v => setD({ cat: v }) }), true)),
-          h('div', { style: { flex: 1 } }, this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], value: d.lang, onChange: v => setD({ lang: v }) }), true))
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
+          h(DS.Switch, { checked: d.active, onChange: v => setD({ active: !!v }) })
         ),
-        this.field('Câu hỏi', h(DS.Input, { value: d.q, onChange: e => setD({ q: e && e.target ? e.target.value : e }) }), true),
-        this.field('Câu trả lời', h(DS.Textarea, { rows: 5, value: d.answer, onChange: e => setD({ answer: e && e.target ? e.target.value : e }), placeholder: 'Nội dung hướng dẫn chi tiết…' }), true),
-        h('div', { style: { display: 'flex', gap: 12, alignItems: 'flex-end' } },
-          h('div', { style: { width: 120 } }, this.field('Thứ tự', h(DS.Input, { type: 'number', value: d.order, onChange: e => setD({ order: e && e.target ? e.target.value : e }) }))),
-          h(DS.Checkbox, { checked: d.active, onChange: v => setD({ active: typeof v === 'boolean' ? v : !d.active }), label: 'Trạng thái hoạt động' })
+        section(1, 'file-doc-line', 'Thông tin cơ bản',
+          h('div', { style: { display: 'flex', gap: 12 } },
+            h('div', { style: { flex: 1 } }, this.field('Danh mục', h(DS.Select, { options: catOpts, value: d.cat, onChange: v => setD({ cat: v }), searchable: true, searchPlaceholder: 'Tìm danh mục…' }), true)),
+            h('div', { style: { flex: 1 } }, this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], value: d.lang, onChange: v => setD({ lang: v }) }), true))
+          ),
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
+            this.field('Câu hỏi', h(DS.Input, { value: d.q, onChange: e => setD({ q: e && e.target ? e.target.value : e }) }), true),
+            this.field('Thứ tự', h(DS.Input, { type: 'number', value: d.order, onChange: e => setD({ order: e && e.target ? e.target.value : e }) }))
+          )
+        ),
+        section(2, 'menu-01-line', 'Nội dung trả lời',
+          this.field('Câu trả lời', h(DS.Textarea, { rows: 6, value: d.answer, onChange: e => setD({ answer: e && e.target ? e.target.value : e }), placeholder: 'Nội dung hướng dẫn chi tiết…' }), true)
         )
       ),
       () => {
@@ -5358,13 +5297,18 @@ class Component extends DCLogic {
     const isNew = !r; const back = () => this.setState({ faqCatEditor: undefined });
     return this.editorShell(
       isNew ? 'Thêm danh mục FAQ' : 'Chỉnh sửa: ' + r.name, '', back,
-      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        this.field('Tên danh mục', h(DS.Input, { defaultValue: r ? r.name : '' }), true),
-        h('div', { style: { display: 'flex', gap: 12 } },
-          h('div', { style: { flex: 1 } }, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order) : '1' }))),
-          h('div', { style: { flex: 1 } }, this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], defaultValue: r ? (r.lang || 'Tiếng Việt') : 'Tiếng Việt' })))
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
+          h(DS.Switch, { defaultChecked: r ? r.status === 'active' : true })
         ),
-        h(DS.Checkbox, { defaultChecked: r ? r.status === 'active' : true, label: 'Trạng thái hoạt động' })
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+          this.field('Tên danh mục', h(DS.Input, { defaultValue: r ? r.name : '' }), true),
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
+            this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], defaultValue: r ? (r.lang || 'Tiếng Việt') : 'Tiếng Việt' })),
+            this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order) : '1' }))
+          )
+        )
       ),
       () => { back(); this.toast('success', 'Đã lưu', 'Danh mục đã được lưu.'); },
       isNew ? 'Thêm danh mục' : 'Lưu danh mục'
@@ -9363,107 +9307,107 @@ class Component extends DCLogic {
     const subCatOpts = [{ value: '', label: '— Chuyên mục phụ —' }, ...catOpts];
     const isNew = !r || !r.id;
     const closeEditor = () => this.setState({ newsArticleEdit: null });
-    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-      h('div', { style: { position: 'sticky', top: -24, zIndex: 10, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
-        h(DS.IconButton, { icon: 'arrow-left-line', label: 'Quay lại', level: 'tertiary', size: 'sm', onClick: closeEditor }),
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 } },
-          h('span', { style: { cursor: 'pointer', color: 'var(--color-text-muted)' }, onClick: closeEditor }, 'Quản lý Tin tức'),
-          h(DS.Icon, { name: 'chevron-right-line', size: 14, color: 'var(--color-text-subtle)' }),
-          h('span', { style: { cursor: 'pointer', color: 'var(--color-text-muted)' }, onClick: closeEditor }, 'Danh sách Bài viết'),
-          h(DS.Icon, { name: 'chevron-right-line', size: 14, color: 'var(--color-text-subtle)' }),
-          h('span', { style: { color: 'var(--color-text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 360 } }, isNew ? 'Bài viết mới' : r.title),
-        ),
-        h('div', { style: { flex: 1 } }),
-        !isNew && h(DS.Badge, { theme: r.status === 'Published' ? 'success' : r.status === 'Draft' ? 'warning' : r.status === 'Scheduled' ? 'info' : 'neutral' }, r.status),
-        h(DS.Button, { level: 'tertiary', size: 'sm', onClick: closeEditor }, 'Hủy'),
-        h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'file-doc-line', onClick: () => { closeEditor(); this.toast('info', 'Đã lưu nháp', 'Bài viết đã được lưu vào bản nháp.'); } }, 'Lưu nháp'),
-        h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', onClick: () => { closeEditor(); this.toast('success', 'Đã xuất bản', 'Bài viết đã được xuất bản thành công.'); } }, 'Xuất bản'),
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+        h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
       ),
-      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 296px', gap: 16, alignItems: 'start' } },
-          // LEFT
-          h('div', { style: { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 } },
-            this.field('Tiêu đề bài viết', h(DS.Input, { defaultValue: r ? r.title : '', placeholder: 'Nhập tiêu đề tin tức…' }), true),
-            h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-              h('div', null, this.field('URL Slug', h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', overflow: 'hidden', background: 'var(--color-surface)', height: 'var(--control-h-sm)', boxSizing: 'border-box' } },
-                h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 10px', fontSize: 13, color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)', background: 'var(--color-surface-alt)', whiteSpace: 'nowrap' } }, '/tin-tuc/'),
-                h('input', { defaultValue: r ? r.slug : '', placeholder: 'url-bai-viet', style: { flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit' } })
-              ), true)),
-              h('div', null, this.field('Tags', h(DS.Input, { defaultValue: r ? (r.tags || '') : '', placeholder: 'camera, khuyen-mai, wifi7' })))
-            ),
-            this.field('Mô tả ngắn / Sa-po', h(DS.Textarea, { defaultValue: r ? (r.sapo || '') : '', rows: 3, placeholder: 'Nhập mô tả dẫn dắt bài viết (2–3 câu)…' }), true),
-            this.field('Nội dung chi tiết',
-              h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 8, overflow: 'hidden' } },
-                h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 3, padding: '6px 8px', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)', alignItems: 'center' } },
-                  ['B','I','U'].map(t => h('button', { key: t, type: 'button', style: { minWidth: 28, height: 26, borderRadius: 5, fontSize: 12, fontWeight: 700, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text)', padding: '0 6px' } }, t)),
-                  h('div', { style: { width: 1, height: 16, background: 'var(--color-border)', margin: '0 3px' } }),
-                  ['H1','H2','H3'].map(t => h('button', { key: t, type: 'button', style: { height: 26, borderRadius: 5, fontSize: 11, fontWeight: 700, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text)', padding: '0 7px' } }, t)),
-                  h('div', { style: { width: 1, height: 16, background: 'var(--color-border)', margin: '0 3px' } }),
-                  h('button', { type: 'button', style: { display: 'flex', alignItems: 'center', gap: 4, height: 26, borderRadius: 5, fontSize: 11, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text)', padding: '0 8px' } }, h(DS.Icon, { name: 'link-external-line', size: 14 }), 'Link'),
-                  h('button', { type: 'button', style: { display: 'flex', alignItems: 'center', gap: 4, height: 26, borderRadius: 5, fontSize: 11, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text)', padding: '0 8px' } }, h(DS.Icon, { name: 'image-line', size: 14 }), 'Ảnh'),
-                ),
-                h(DS.Textarea, { rows: 9, placeholder: 'Nhập nội dung chi tiết bài viết…', style: { borderRadius: 0, borderTop: 'none', resize: 'vertical' } })
-              ), true)
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
+    );
+    return this.editorShell(
+      isNew ? 'Bài viết mới' : r.title,
+      isNew ? 'Tin bài / Bài viết mới' : ('/tin-tuc/' + (r.slug || '')),
+      closeEditor,
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        // 1. Thông tin cơ bản — định danh & phân loại bài viết, luôn đứng đầu
+        section(1, 'file-doc-line', 'Thông tin cơ bản',
+          this.field('Tiêu đề bài viết', h(DS.Input, { defaultValue: r ? r.title : '', placeholder: 'Nhập tiêu đề tin tức…' }), true),
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+            h('div', null, this.field('URL Slug', h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', overflow: 'hidden', background: 'var(--color-surface)', height: 'var(--control-h-sm)', boxSizing: 'border-box' } },
+              h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 10px', fontSize: 13, color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)', background: 'var(--color-surface-alt)', whiteSpace: 'nowrap' } }, '/tin-tuc/'),
+              h('input', { defaultValue: r ? r.slug : '', placeholder: 'url-bai-viet', style: { flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit' } })
+            ), true)),
+            h('div', null, this.field('Tags', h(DS.Input, { defaultValue: r ? (r.tags || '') : '', placeholder: 'camera, khuyen-mai, wifi7' })))
           ),
-          // RIGHT sidebar
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-            // Settings card
-            h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
-              h('div', { style: { padding: '8px 14px', fontSize: 11, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--color-text-subtle)', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-alt)' } }, 'Cài đặt bài viết'),
-              h('div', { style: { padding: 13, display: 'flex', flexDirection: 'column', gap: 10 } },
-                h(DS.Select, { label: 'Loại nội dung *', options: [{ value: 'article', label: 'Tin bài / Bài viết' }, { value: 'video', label: 'Video bài viết' }, { value: 'promotion', label: 'Thông tin khuyến mãi' }, { value: 'guide', label: 'Hướng dẫn kỹ thuật' }], defaultValue: r ? (r.type || 'article') : 'article' }),
-                h(DS.Select, { label: 'Chuyên mục chính *', options: catOpts, defaultValue: r ? r.cat : catOpts[0] && catOpts[0].value }),
-                h(DS.Select, { label: 'Chuyên mục phụ', options: subCatOpts, defaultValue: r ? (r.subCat || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục…' }),
-                h(DS.Select, { label: 'Kênh vận hành *', options: [{ value: 'fpt-telecom', label: 'FPT Telecom' }, { value: 'fpt-play', label: 'FPT Play' }, { value: 'fpt-camera', label: 'FPT Camera' }], defaultValue: r ? (r.channel || 'fpt-telecom') : 'fpt-telecom' }),
-                h(DS.Select, { label: 'Ngôn ngữ', options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || 'vi') : 'vi' }),
-                h(DS.Select, { label: 'Tác giả', options: authorOpts, defaultValue: r ? r.author : authorOpts[0] && authorOpts[0].value }),
-                h(DS.Select, { label: 'Trạng thái', options: [{ value: 'Published', label: 'Đã xuất bản' }, { value: 'Draft', label: 'Bản nháp' }, { value: 'Scheduled', label: 'Đặt lịch' }, { value: 'Hidden', label: 'Đã ẩn' }], defaultValue: r ? r.status : 'Draft' }),
-                this.field('Ngày đăng', h('button', {
-                    onClick: () => {
-                      const v = (this.state.form || {}).newsDate || '';
-                      const parseD = s => { if(!s) return null; const [dt]=s.split(' '); const [dd,mm,yyyy]=dt.split('/'); return new Date(+yyyy,+mm-1,+dd); };
-                      const d = parseD(v); const p = v.split(' ')[1];
-                      const t = p ? {h:+p.split(':')[0],m:+p.split(':')[1]} : {h:new Date().getHours(),m:0};
-                      const now = new Date();
-                      this.setState({showDatePicker:'news',dpViewMonth:d?d.getMonth():now.getMonth(),dpViewYear:d?d.getFullYear():now.getFullYear(),dpTempDate:d,dpHour:t.h,dpMinute:t.m});
-                    },
-                    style: { width:'100%',height:40,display:'flex',alignItems:'center',gap:8,padding:'0 12px',border:'1px solid var(--color-border)',borderRadius:'var(--radius-base)',background:'var(--color-surface)',cursor:'pointer',fontSize:13,fontFamily:'inherit',color:(this.state.form||{}).newsDate?'var(--color-text)':'var(--color-text-muted)',textAlign:'left' }
-                  },
-                    h(DS.Icon, { name:'calendar-line', size:15, color:'var(--color-accent)' }),
-                    (this.state.form||{}).newsDate || 'DD/MM/YYYY HH:MM'
-                  )),
-                h('div', { style: { borderTop: '1px solid var(--color-border)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 8 } },
-                  h(DS.Switch, { label: 'Bài nổi bật', defaultChecked: r ? r.featured : false }),
-                  h(DS.Switch, { label: 'Cho phép bình luận', defaultChecked: true })
-                )
-              )
-            ),
-            // Thumbnail card
-            h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
-              h('div', { style: { padding: '8px 14px', fontSize: 11, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--color-text-subtle)', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-alt)' } }, 'Ảnh thumbnail'),
-              h('div', { style: { padding: 13, display: 'flex', flexDirection: 'column', gap: 10 } },
-                this.uploadBox('Tải ảnh (tỷ lệ 16:9)', 'PNG / JPG · ≤2MB'),
-                h(DS.Input, { label: 'URL ảnh', placeholder: 'https://… hoặc dán link' }),
-                h(DS.Input, { label: 'Alt text *', placeholder: 'Mô tả ảnh…' }),
-                h(DS.Input, { label: 'Caption', placeholder: 'Chú thích…' }),
-                h(DS.Input, { label: 'Media URL (video/embed)', placeholder: 'URL YouTube hoặc iframe…' })
-              )
-            )
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+            this.field('Loại nội dung', h(DS.Select, { options: [{ value: 'article', label: 'Tin bài / Bài viết' }, { value: 'video', label: 'Video bài viết' }, { value: 'promotion', label: 'Thông tin khuyến mãi' }, { value: 'guide', label: 'Hướng dẫn kỹ thuật' }], defaultValue: r ? (r.type || 'article') : 'article' }), true),
+            this.field('Chuyên mục chính', h(DS.Select, { options: catOpts, defaultValue: r ? r.cat : catOpts[0] && catOpts[0].value, searchable: true, searchPlaceholder: 'Tìm chuyên mục…' }), true)
+          ),
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+            this.field('Chuyên mục phụ', h(DS.Select, { options: subCatOpts, defaultValue: r ? (r.subCat || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục…' })),
+            this.field('Kênh vận hành', h(DS.Select, { options: [{ value: 'fpt-telecom', label: 'FPT Telecom' }, { value: 'fpt-play', label: 'FPT Play' }, { value: 'fpt-camera', label: 'FPT Camera' }], defaultValue: r ? (r.channel || 'fpt-telecom') : 'fpt-telecom' }), true)
+          ),
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+            this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || 'vi') : 'vi' })),
+            this.field('Tác giả', h(DS.Select, { options: authorOpts, defaultValue: r ? r.author : authorOpts[0] && authorOpts[0].value, searchable: true, searchPlaceholder: 'Tìm tác giả…' }))
+          ),
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+            this.field('Trạng thái', h(DS.Select, { options: [{ value: 'Published', label: 'Đã xuất bản' }, { value: 'Draft', label: 'Bản nháp' }, { value: 'Scheduled', label: 'Đặt lịch' }, { value: 'Hidden', label: 'Đã ẩn' }], defaultValue: r ? r.status : 'Draft' }), true),
+            this.field('Ngày đăng', h('button', {
+                onClick: () => {
+                  const v = (this.state.form || {}).newsDate || '';
+                  const parseD = s => { if(!s) return null; const [dt]=s.split(' '); const [dd,mm,yyyy]=dt.split('/'); return new Date(+yyyy,+mm-1,+dd); };
+                  const d = parseD(v); const p = v.split(' ')[1];
+                  const t = p ? {h:+p.split(':')[0],m:+p.split(':')[1]} : {h:new Date().getHours(),m:0};
+                  const now = new Date();
+                  this.setState({showDatePicker:'news',dpViewMonth:d?d.getMonth():now.getMonth(),dpViewYear:d?d.getFullYear():now.getFullYear(),dpTempDate:d,dpHour:t.h,dpMinute:t.m});
+                },
+                style: { width:'100%',height:40,display:'flex',alignItems:'center',gap:8,padding:'0 12px',border:'1px solid var(--color-border)',borderRadius:'var(--radius-base)',background:'var(--color-surface)',cursor:'pointer',fontSize:13,fontFamily:'inherit',color:(this.state.form||{}).newsDate?'var(--color-text)':'var(--color-text-muted)',textAlign:'left' }
+              },
+                h(DS.Icon, { name:'calendar-line', size:15, color:'var(--color-accent)' }),
+                (this.state.form||{}).newsDate || 'DD/MM/YYYY HH:MM'
+              ))
           )
         ),
-        // Full-width SEO section
+        // 2. Nội dung bài viết — sa-po & nội dung chi tiết
+        section(2, 'menu-01-line', 'Nội dung bài viết',
+          this.field('Mô tả ngắn / Sa-po', h(DS.Textarea, { defaultValue: r ? (r.sapo || '') : '', rows: 3, placeholder: 'Nhập mô tả dẫn dắt bài viết (2–3 câu)…' }), true),
+          this.field('Nội dung chi tiết',
+            h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 8, overflow: 'hidden' } },
+              h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 3, padding: '6px 8px', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)', alignItems: 'center' } },
+                ['B','I','U'].map(t => h('button', { key: t, type: 'button', style: { minWidth: 28, height: 26, borderRadius: 5, fontSize: 12, fontWeight: 700, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text)', padding: '0 6px' } }, t)),
+                h('div', { style: { width: 1, height: 16, background: 'var(--color-border)', margin: '0 3px' } }),
+                ['H1','H2','H3'].map(t => h('button', { key: t, type: 'button', style: { height: 26, borderRadius: 5, fontSize: 11, fontWeight: 700, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text)', padding: '0 7px' } }, t)),
+                h('div', { style: { width: 1, height: 16, background: 'var(--color-border)', margin: '0 3px' } }),
+                h('button', { type: 'button', style: { display: 'flex', alignItems: 'center', gap: 4, height: 26, borderRadius: 5, fontSize: 11, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text)', padding: '0 8px' } }, h(DS.Icon, { name: 'link-external-line', size: 14 }), 'Link'),
+                h('button', { type: 'button', style: { display: 'flex', alignItems: 'center', gap: 4, height: 26, borderRadius: 5, fontSize: 11, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text)', padding: '0 8px' } }, h(DS.Icon, { name: 'image-line', size: 14 }), 'Ảnh'),
+              ),
+              h(DS.Textarea, { rows: 9, placeholder: 'Nhập nội dung chi tiết bài viết…', style: { borderRadius: 0, borderTop: 'none', resize: 'vertical' } })
+            ), true)
+        ),
+        // 3. Hình ảnh đại diện — luôn có card riêng
+        section(3, 'image-line', 'Hình ảnh đại diện',
+          this.uploadBox('Tải ảnh (tỷ lệ 16:9)', 'PNG / JPG · ≤2MB', true),
+          this.field('URL ảnh', h(DS.Input, { placeholder: 'https://… hoặc dán link' })),
+          this.field('Alt text', h(DS.Input, { placeholder: 'Mô tả ảnh…' }), true),
+          this.field('Caption', h(DS.Input, { placeholder: 'Chú thích…' })),
+          this.field('Media URL (video/embed)', h(DS.Input, { placeholder: 'URL YouTube hoặc iframe…' }))
+        ),
+        // 4. Cấu hình hiển thị — các toggle phụ, gộp chung một nhóm
+        section(4, 'settings-01-line', 'Cấu hình hiển thị',
+          h(DS.Switch, { label: 'Bài nổi bật', defaultChecked: r ? r.featured : false })
+        ),
+        // Full-width SEO section — gộp nhóm nâng cao, thu gọn mặc định để giữ trọng tâm ở nội dung chính
         h(DS.Accordion, { items: [{ title: 'Tối ưu SEO bài viết', icon: 'stars-01-line', content:
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 13, paddingTop: 4 } },
             h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
-              h(DS.Input, { label: 'Meta tiêu đề (SEO Title) ≤60 ký tự', placeholder: 'Hiển thị trên Google' }),
-              h(DS.Input, { label: 'Meta từ khoá', placeholder: 'từ khoá 1, từ khoá 2' })
+              this.field('Meta tiêu đề (SEO Title) ≤60 ký tự', h(DS.Input, { placeholder: 'Hiển thị trên Google' })),
+              this.field('Meta từ khoá', h(DS.Input, { placeholder: 'từ khoá 1, từ khoá 2' }))
             ),
             this.field('Meta Description (≤160 ký tự)', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả ngắn cho công cụ tìm kiếm hiển thị trên Google…' })),
             h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
-              h(DS.Select, { label: 'Meta Robot', options: ['index, follow', 'noindex, follow', 'index, nofollow', 'noindex, nofollow'], defaultValue: 'index, follow' }),
-              h(DS.Input, { label: 'Canonical URL', placeholder: 'https://fpt.vn/tin-tuc/…' })
+              this.field('Meta Robot', h(DS.Select, { options: ['index, follow', 'noindex, follow', 'index, nofollow', 'noindex, nofollow'], defaultValue: 'index, follow' })),
+              this.field('Canonical URL', h(DS.Input, { placeholder: 'https://fpt.vn/tin-tuc/…' }))
             )
           )
         }] })
+      ),
+      () => { closeEditor(); this.toast('success', 'Đã xuất bản', 'Bài viết đã được xuất bản thành công.'); },
+      'Xuất bản',
+      h(React.Fragment, null,
+        !isNew && h(DS.Badge, { theme: r.status === 'Published' ? 'success' : r.status === 'Draft' ? 'warning' : r.status === 'Scheduled' ? 'info' : 'neutral' }, r.status),
+        h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'file-doc-line', onClick: () => { closeEditor(); this.toast('info', 'Đã lưu nháp', 'Bài viết đã được lưu vào bản nháp.'); } }, 'Lưu nháp')
+      )
     );
   }
   renderNewsCats() {
@@ -9557,44 +9501,6 @@ class Component extends DCLogic {
       data.length ? this.renderPagBar(data.length, 'newsAuthor', 'tác giả') : null
     );
   }
-  openAuthorDrawer(r) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    this.openDrawer({
-      title: r ? 'Sửa tác giả' : 'Thêm tác giả mới', subtitle: 'Hồ sơ biên tập viên', width: 640,
-      render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        h('div', { style: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18, alignItems: 'start' } },
-          // Left
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-            this.field('Tên tác giả / Bút danh', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'Nhập tên tác giả' }), true),
-            this.field('Biệt danh (slug)', h(DS.Input, { defaultValue: r ? r.slug : '', placeholder: 'tac-gia-mau' }), true),
-            this.field('Tiểu sử / Mô tả ngắn', h(DS.Textarea, { rows: 3, defaultValue: r ? r.bio : '', placeholder: 'Tiểu sử tóm tắt tác giả' })),
-            h('div', null,
-              h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
-                h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Liên kết mạng xã hội'),
-                h(DS.Button, { size: 'sm', level: 'secondary', leadingIcon: 'plus-line', onClick: () => this.toast('info', 'Thêm liên kết', 'Thêm dòng liên kết mạng xã hội.') }, 'Thêm')
-              ),
-              h('div', { style: { display: 'flex', gap: 8 } },
-                h('div', { style: { width: 130 } }, h(DS.Select, { options: [{ value: 'facebook', label: 'Facebook' }, { value: 'twitter', label: 'Twitter / X' }, { value: 'linkedin', label: 'LinkedIn' }, { value: 'website', label: 'Website' }], defaultValue: 'facebook' })),
-                h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'https://facebook.com/...' }))
-              )
-            )
-          ),
-          // Right
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-            h('div', { style: { display: 'flex', justifyContent: 'center', marginBottom: 4 } }, h(DS.Avatar, { name: r ? r.name : 'New Author', size: 'xl' })),
-            this.uploadBox('Tải ảnh đại diện', 'PNG / JPG · ≤1MB'),
-            this.field('Email', h(DS.Input, { defaultValue: r ? r.email : '', placeholder: 'example@fpt.com.vn' })),
-            this.field('Số điện thoại', h(DS.Input, { defaultValue: r ? r.phone : '', placeholder: 'Số điện thoại liên hệ' })),
-            h('div', { style: { marginTop: 4 } }, h(DS.Switch, { label: 'Trạng thái hoạt động', defaultChecked: !r || r.status === 'active' }))
-          )
-        )
-      ),
-      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Hủy'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'check-line', onClick: () => { this.closeDrawer(); this.toast('success', 'Đã lưu', 'Thông tin tác giả đã được lưu.'); } }, 'Lưu Tác giả')
-      )
-    });
-  }
   renderNewsTags() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const columns = [
@@ -9611,15 +9517,6 @@ class Component extends DCLogic {
       this.toolbar(h('div', { style: { fontSize: 13.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Thư viện thẻ từ khóa dùng chung'), h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ tagEditor: null }) }, 'Thêm Tag')),
       this.tbl(columns, this.sliceData(this.NEWS_TAGS(), 'newsTag'), 'id', r => this.openTagDetail(r)),
       this.renderPagBar(this.NEWS_TAGS().length, 'newsTag', 'tag')
-    );
-  }
-  tagForm(r) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, marginTop: 4 } },
-      this.field('Tên Tag', h(DS.Input, { defaultValue: r ? r.name : '' }), true),
-      this.field('URL Slug', h(DS.Input, { defaultValue: r ? r.slug : '' }), true),
-      this.field('Trạng thái', h(DS.Select, { options: [{ value: 'active', label: 'Active' }, { value: 'draft', label: 'Draft' }], defaultValue: r ? r.status : 'active' }), true),
-      h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 6 } }, h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy'), h(DS.Button, { level: 'primary', onClick: () => { this.closeModal(); this.toast('success', 'Đã lưu', 'Tag đã được lưu.'); } }, 'Lưu Tag'))
     );
   }
   renderTagMapping() {
@@ -9797,22 +9694,27 @@ class Component extends DCLogic {
     const parentOpts = [{ value: '', label: '— Chuyên mục cha —' }, ...this.NEWS_CATS().filter(c => !r || c.id !== r.id).map(c => ({ value: c.name, label: c.name }))];
     return this.editorShell(
       isNew ? 'Thêm Chuyên Mục mới' : 'Chỉnh sửa: ' + r.name, '', back,
-      h('div', { style: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18, alignItems: 'start' } },
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-          this.field('Tên chuyên mục', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'Nhập tên chuyên mục' }), true),
-          this.field('Biệt danh (slug)', h(DS.Input, { defaultValue: r ? r.slug : '', placeholder: 'chuyen-muc-mau' }), true),
-          this.field('Mô tả ngắn', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả tóm tắt' })),
-          h(DS.Accordion, { items: [{ title: 'Cấu hình SEO', icon: 'stars-01-line', content: h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4 } }, h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } }, h('div', null, this.field('Meta tiêu đề', h(DS.Input, { placeholder: 'Hiển thị trên Google' }))), h('div', null, this.field('Meta từ khoá', h(DS.Input, { placeholder: 'từ khoá, phân cách dấu phẩy' })))), this.field('Meta mô tả', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả ngắn (≤160 ký tự)' }))) }] })
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
+          h(DS.Switch, { defaultChecked: !r || r.status === 'active' })
         ),
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-          this.field('Chuyên mục cha', h(DS.Select, { options: parentOpts, defaultValue: r ? (r.parent || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục cha…' })),
-          this.field('Kiểu giao diện', h(DS.Select, { options: [{ value: 'default', label: 'Mặc định' }, { value: 'grid', label: 'Grid 3 cột' }, { value: 'list', label: 'Danh sách' }], defaultValue: r ? (r.layout || 'default') : 'default' })),
-          this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || 'vi') : 'vi' })),
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 } },
-            h('div', null, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order || 0) : '0' }))),
-            h('div', null, this.field('Màu sắc', h(DS.Input, { placeholder: '#0072BC' })))
+        h('div', { style: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18, alignItems: 'start' } },
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+            this.field('Tên chuyên mục', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'Nhập tên chuyên mục' }), true),
+            this.field('Biệt danh (slug)', h(DS.Input, { defaultValue: r ? r.slug : '', placeholder: 'chuyen-muc-mau' }), true),
+            this.field('Mô tả ngắn', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả tóm tắt' })),
+            h(DS.Accordion, { items: [{ title: 'Cấu hình SEO', icon: 'stars-01-line', content: h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4 } }, h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } }, h('div', null, this.field('Meta tiêu đề', h(DS.Input, { placeholder: 'Hiển thị trên Google' }))), h('div', null, this.field('Meta từ khoá', h(DS.Input, { placeholder: 'từ khoá, phân cách dấu phẩy' })))), this.field('Meta mô tả', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả ngắn (≤160 ký tự)' }))) }] })
           ),
-          h(DS.Switch, { label: 'Trạng thái hoạt động', defaultChecked: !r || r.status === 'active' })
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+            this.field('Chuyên mục cha', h(DS.Select, { options: parentOpts, defaultValue: r ? (r.parent || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục cha…' })),
+            this.field('Kiểu giao diện', h(DS.Select, { options: [{ value: 'default', label: 'Mặc định' }, { value: 'grid', label: 'Grid 3 cột' }, { value: 'list', label: 'Danh sách' }], defaultValue: r ? (r.layout || 'default') : 'default' })),
+            this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || 'vi') : 'vi' })),
+            h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 } },
+              h('div', null, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order || 0) : '0' }))),
+              h('div', null, this.field('Màu sắc', h(DS.Input, { placeholder: '#0072BC' })))
+            )
+          )
         )
       ),
       () => { back(); this.toast('success', 'Đã lưu', 'Chuyên mục đã được lưu.'); },
@@ -9839,18 +9741,23 @@ class Component extends DCLogic {
     const isNew = !r; const back = () => this.setState({ authorEditor: undefined });
     return this.editorShell(
       isNew ? 'Thêm tác giả mới' : 'Chỉnh sửa: ' + r.name, 'Hồ sơ biên tập viên', back,
-      h('div', { style: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18, alignItems: 'start' } },
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-          this.field('Tên tác giả', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'Nhập tên tác giả' }), true),
-          this.field('Slug', h(DS.Input, { defaultValue: r ? r.slug : '', placeholder: 'tac-gia-mau' }), true),
-          this.field('Tiểu sử ngắn', h(DS.Textarea, { rows: 3, defaultValue: r ? r.bio : '', placeholder: 'Tiểu sử tóm tắt' }))
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
+          h(DS.Switch, { defaultChecked: !r || r.status === 'active' })
         ),
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-          h('div', { style: { display: 'flex', justifyContent: 'center', marginBottom: 4 } }, h(DS.Avatar, { name: r ? r.name : 'New', size: 'xl' })),
-          this.uploadBox('Tải ảnh đại diện', 'PNG / JPG · ≤1MB'),
-          this.field('Email', h(DS.Input, { defaultValue: r ? r.email : '', placeholder: 'example@fpt.com.vn' })),
-          this.field('Số điện thoại', h(DS.Input, { defaultValue: r ? r.phone : '' })),
-          h(DS.Switch, { label: 'Trạng thái hoạt động', defaultChecked: !r || r.status === 'active' })
+        h('div', { style: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18, alignItems: 'start' } },
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+            this.field('Tên tác giả', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'Nhập tên tác giả' }), true),
+            this.field('Slug', h(DS.Input, { defaultValue: r ? r.slug : '', placeholder: 'tac-gia-mau' }), true),
+            this.field('Tiểu sử ngắn', h(DS.Textarea, { rows: 3, defaultValue: r ? r.bio : '', placeholder: 'Tiểu sử tóm tắt' }))
+          ),
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+            h('div', { style: { display: 'flex', justifyContent: 'center', marginBottom: 4 } }, h(DS.Avatar, { name: r ? r.name : 'New', size: 'xl' })),
+            this.uploadBox('Tải ảnh đại diện', 'PNG / JPG · ≤1MB'),
+            this.field('Email', h(DS.Input, { defaultValue: r ? r.email : '', placeholder: 'example@fpt.com.vn' })),
+            this.field('Số điện thoại', h(DS.Input, { defaultValue: r ? r.phone : '' }))
+          )
         )
       ),
       () => { back(); this.toast('success', 'Đã lưu', 'Thông tin tác giả đã được lưu.'); },
