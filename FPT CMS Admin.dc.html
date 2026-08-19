@@ -3513,7 +3513,7 @@ class Component extends DCLogic {
           h('div', { style: { fontFamily: 'monospace', fontSize: 11, color: '#f43f5e', marginTop: 2, fontWeight: 500 } }, r.code)
         ) },
       { key: 'section', header: 'Tên section', render: (_, r) => h('span', { style: { fontSize: 13, color: r.section === '—' ? 'var(--color-text-subtle)' : 'inherit' } }, r.section) },
-      { key: 'loai', header: 'Loại', render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, r.layout + ' · ' + r.datasource) },
+      { key: 'loai', header: 'Loại', render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, r.layout) },
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)', textAlign: 'center', display: 'block' } }, r.order != null ? r.order : '—') },
       { key: 'createdAt', header: 'Ngày tạo', width: 145, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
       { key: 'active', header: 'Hoạt động', width: 90, align: 'center', render: (_, r) => {
