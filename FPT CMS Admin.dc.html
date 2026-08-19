@@ -3097,16 +3097,22 @@ class Component extends DCLogic {
       },
       { key: 'h1', header: 'Tiêu đề',
         render: (_, r) => h('span', { style: { fontSize: 13 } }, r.h1 || '—') },
-      { key: 'status', header: 'Trạng thái', width: 120, align: 'center',
-        render: (_, r) => this.statusBadge(r.status) },
       { key: 'createdAt', header: 'Ngày tạo', width: 148,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
       { key: 'updatedAt', header: 'Ngày chỉnh sửa', width: 148,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
-      { key: 'act', header: 'Thao tác', width: 80, align: 'right',
+      { key: 'active', header: 'Hoạt động', width: 90, align: 'center', render: (_, r) => {
+          const isOn = (this.state.pageActiveMap || {})[r.slug] !== undefined ? !!(this.state.pageActiveMap || {})[r.slug] : r.status !== 'hidden';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-page-act-' + r.slug + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              this.setState(s => ({ pageActiveMap: { ...s.pageActiveMap, [r.slug]: v } }));
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Trang "' + r.name + '".');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 60, align: 'right',
         render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ pageEditor: r }) },
-          { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa trang?', 'Trang "' + r.name + '" sẽ bị xóa vĩnh viễn.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa trang "' + r.name + '".'); }, true) },
         ]) },
     ];
     const statusLabel = { active: 'Hoạt động', hidden: 'Tạm ẩn' };
@@ -3219,7 +3225,7 @@ class Component extends DCLogic {
             options: this.FAQ_CATS().map(c => ({ value: c.name, label: c.name }))
           }))
         ),
-        section(3, 'image-line', 'Hình ảnh & tài nguyên',
+        section(3, 'image-line', 'Hình ảnh',
           this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤1MB', true)
         )
       ),
@@ -3268,16 +3274,22 @@ class Component extends DCLogic {
         } },
       { key: 'type', header: 'Loại', width: 110,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'monospace' } }, r.type) },
-      { key: 'status', header: 'Trạng thái', width: 130, align: 'center',
-        render: (_, r) => this.statusBadge(r.status) },
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center',
         render: (_, r) => h('span', { style: { color: 'var(--color-text-muted)' } }, r.order != null ? r.order : '—') },
       { key: 'createdAt', header: 'Ngày tạo', width: 148,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
-      { key: 'act', header: 'Thao tác', width: 80, align: 'right',
+      { key: 'active', header: 'Hoạt động', width: 90, align: 'center', render: (_, r) => {
+          const isOn = (this.state.secActiveMap || {})[r.id] !== undefined ? !!(this.state.secActiveMap || {})[r.id] : r.status !== 'inactive';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-sec-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              this.setState(s => ({ secActiveMap: { ...s.secActiveMap, [r.id]: v } }));
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Section "' + r.name + '".');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 60, align: 'right',
         render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ secEditor: r, secEditorBlocks: r ? (r.blocks || []) : [] }) },
-          { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Section?', 'Section "' + r.name + '" sẽ bị xóa khỏi trang "' + r.page + '".', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa Section.'); }, true) },
         ]) },
     ];
     const pageOptions = [{ value: 'all', label: '— Chọn trang —' }, ...pages.map(p => ({ value: p, label: p }))];
@@ -3504,9 +3516,17 @@ class Component extends DCLogic {
       { key: 'loai', header: 'Loại', render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, r.layout + ' · ' + r.datasource) },
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)', textAlign: 'center', display: 'block' } }, r.order != null ? r.order : '—') },
       { key: 'createdAt', header: 'Ngày tạo', width: 145, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
-      { key: 'act', header: 'Thao tác', width: 80, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'active', header: 'Hoạt động', width: 90, align: 'center', render: (_, r) => {
+          const isOn = (this.state.blkActiveMap || {})[r.id] !== undefined ? !!(this.state.blkActiveMap || {})[r.id] : true;
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-blk-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              this.setState(s => ({ blkActiveMap: { ...s.blkActiveMap, [r.id]: v } }));
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Block "' + r.name + '".');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 60, align: 'right', render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openBlockEdit(r) },
-          { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Block?', 'Block "' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa block.'); }, true) },
         ]) },
     ];
     return this.listCard(
@@ -6128,8 +6148,8 @@ class Component extends DCLogic {
               onDragOver:function(e){e.preventDefault();if(tabDragFrom!==ti)self.setState({tabDragOver:ti});},
               onDrop:function(e){e.preventDefault();if(tabDragFrom<0||tabDragFrom===ti)return;var nt=[...tabs];var mv=nt.splice(tabDragFrom,1)[0];nt.splice(ti,0,mv);self.setState({tabs:nt,tabDragFrom:-1,tabDragOver:-1});},
               onDragEnd:function(){self.setState({tabDragFrom:-1,tabDragOver:-1});},
-              style:{border:isDragOver?'2px dashed var(--color-accent)':expanded?'1.5px solid var(--color-accent)':'1px solid var(--color-border)',borderRadius:12,marginBottom:12,overflow:'hidden',transition:'border-color .15s',opacity:tabDragFrom===ti?0.45:1}},
-              h2('div',{onClick:function(){self.upd(tab.id,{expanded:!expanded});},style:{background:expanded?'var(--color-accent-bg)':'var(--color-surface-alt)',padding:'10px 14px',display:'flex',alignItems:'center',gap:8,cursor:'pointer',transition:'background .15s',userSelect:'none'}},
+              style:{border:isDragOver?'2px danshed var(--color-accent)':expanded?'1.5px solid var(--color-accent)':'1px solid var(--color-border)',borderRadius:12,marginBottom:12,overflow:'hidden',transition:'border-color .15s',opacity:tabDragFrom===ti?0.45:1}},
+              h2('div',{onClick:function(){self.upd(tab.id,{expaded:!expanded});},style:{background:expanded?'var(--color-accent-bg)':'var(--color-surface-alt)',padding:'10px 14px',display:'flex',alignItems:'center',gap:8,cursor:'pointer',transition:'background .15s',userSelect:'none'}},
                 h2(DS2.Icon,{name:'dots-grid-line',size:16,color:'var(--color-text-subtle)',style:{cursor:'grab',flexShrink:0,lineHeight:1}}),
                 h2(DS2.Icon,{name:expanded?'chevron-down-line':'chevron-right-line',size:16,color:expanded?'var(--color-accent)':'var(--color-text-subtle)'}),
                 h2('span',{style:{fontWeight:700,fontSize:13,color:expanded?'var(--color-accent)':'var(--color-text)',flex:1}},'Tab: '+tab.name),
