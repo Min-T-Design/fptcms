@@ -9343,7 +9343,7 @@ class Component extends DCLogic {
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           this.field('Tiêu đề bài viết', h(DS.Input, { defaultValue: r ? r.title : '', placeholder: 'Nhập tiêu đề tin tức…' }), true),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('URL Slug', h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', overflow: 'hidden', background: 'var(--color-surface)', height: 'var(--control-h-sm)', boxSizing: 'border-box' } },
+            h('div', null, this.field('URL Slug', h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', overflow: 'hidden', background: 'var(--color-surface)', height: 'var(--control-h-md)', boxSizing: 'border-box' } },
               h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 10px', fontSize: 13, color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)', background: 'var(--color-surface-alt)', whiteSpace: 'nowrap' } }, '/tin-tuc/'),
               h('input', { defaultValue: r ? r.slug : '', placeholder: 'url-bai-viet', style: { flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit' } })
             ), true)),
@@ -9372,7 +9372,7 @@ class Component extends DCLogic {
                   const now = new Date();
                   this.setState({showDatePicker:'news',dpViewMonth:d?d.getMonth():now.getMonth(),dpViewYear:d?d.getFullYear():now.getFullYear(),dpTempDate:d,dpHour:t.h,dpMinute:t.m});
                 },
-                style: { width:'100%',height:40,display:'flex',alignItems:'center',gap:8,padding:'0 12px',border:'1px solid var(--color-border)',borderRadius:'var(--radius-base)',background:'var(--color-surface)',cursor:'pointer',fontSize:13,fontFamily:'inherit',color:(this.state.form||{}).newsDate?'var(--color-text)':'var(--color-text-muted)',textAlign:'left' }
+                style: { width:'100%',height:'var(--control-h-md)',display:'flex',alignItems:'center',gap:8,padding:'0 12px',border:'1px solid var(--color-border)',borderRadius:'var(--radius-base)',background:'var(--color-surface)',cursor:'pointer',fontSize:13,fontFamily:'inherit',color:(this.state.form||{}).newsDate?'var(--color-text)':'var(--color-text-muted)',textAlign:'left',boxSizing:'border-box' }
               },
                 h(DS.Icon, { name:'calendar-line', size:15, color:'var(--color-accent)' }),
                 (this.state.form||{}).newsDate || 'DD/MM/YYYY HH:MM'
