@@ -5349,7 +5349,7 @@ class Component extends DCLogic {
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', minWidth: 0 } },
           h('div', { style: { flex: 1, minWidth: 160, maxWidth: 260 } },
-            h(DS.Input, { value: search, onChange: v => this.setState({ ldpListSearch: v, ldp_pg: 1 }), placeholder: 'Tìm tên trang / URL...', leadingIcon: 'search-medium-line' })
+            h(DS.Input, { value: search, onChange: e => this.setState({ ldpListSearch: e.target.value, ldp_pg: 1 }), placeholder: 'Tìm tên trang / URL...', leadingIcon: 'search-medium-line' })
           ),
           h('div', { style: { flex: '0 0 148px' } },
             h(DS.Select, { value: tplF, options: [
@@ -5501,7 +5501,7 @@ class Component extends DCLogic {
       h('p', { style: { margin: 0, fontSize: 14, color: 'var(--color-text-subtle)' } }, 'Chọn một mẫu template có sẵn bên dưới và tùy chỉnh từng section nội dung ở bước tiếp theo.'),
       h('div', { style: { display: 'flex', gap: 16, alignItems: 'center', padding: '12px 16px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, flexWrap: 'wrap' } },
         h('div', { style: { flex: '1', minWidth: 240 } },
-          h(DS.Input, { value: this.state.ldpTplSearch || '', onChange: v => this.setState({ ldpTplSearch: v }), placeholder: 'Tìm nhanh template theo tên hoặc nội dung...', leadingIcon: 'search-medium-line' })
+          h(DS.Input, { value: this.state.ldpTplSearch || '', onChange: e => this.setState({ ldpTplSearch: e.target.value }), placeholder: 'Tìm nhanh template theo tên hoặc nội dung...', leadingIcon: 'search-medium-line' })
         ),
 
       ),
@@ -5602,7 +5602,7 @@ class Component extends DCLogic {
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Tên chiến dịch', req),
-          h(DS.Input, { value: get('campaignName'), onChange: v => set('campaignName', v), placeholder: 'VD: Khuyến mãi Internet Tháng 5' })
+          h(DS.Input, { value: get('campaignName'), onChange: e => set('campaignName', e.target.value), placeholder: 'VD: Khuyến mãi Internet Tháng 5' })
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Mục tiêu trang', req),
@@ -5614,7 +5614,7 @@ class Component extends DCLogic {
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Redirect khi hết hạn'),
-          h(DS.Input, { value: get('redirect', '/'), onChange: v => set('redirect', v), placeholder: '/ (Trang chủ)' })
+          h(DS.Input, { value: get('redirect', '/'), onChange: e => set('redirect', e.target.value), placeholder: '/ (Trang chủ)' })
         ),
         h('div', { style: { gridColumn: '1 / -1' } },
           h('label', { style: lbSt }, 'Màu nền toàn trang'),
@@ -5622,7 +5622,7 @@ class Component extends DCLogic {
             h('label', { style: { position: 'relative', width: 40, height: 40, borderRadius: 8, border: '1.5px solid var(--color-border)', overflow: 'hidden', cursor: 'pointer', flexShrink: 0, background: bgColor } },
               h('input', { type: 'color', value: bgColor, onChange: e => set('bgColor', e.target.value), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
             ),
-            h(DS.Input, { value: bgColor, onChange: v => set('bgColor', v), placeholder: '#ffffff', style: { width: 140, flexShrink: 0, fontFamily: 'monospace' } }),
+            h(DS.Input, { value: bgColor, onChange: e => set('bgColor', e.target.value), placeholder: '#ffffff', style: { width: 140, flexShrink: 0, fontFamily: 'monospace' } }),
             bgColor !== defaultBgColor && h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'rotate-ccw-line', onClick: () => set('bgColor', defaultBgColor) }, 'Khôi phục mặc định')
           )
         )
@@ -5631,12 +5631,12 @@ class Component extends DCLogic {
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 4 } },
         h('div', null,
           h('label', { style: lbSt }, 'Meta Title'),
-          h(DS.Input, { value: get('metaTitle'), maxLength: 60, onChange: v => set('metaTitle', v), placeholder: 'Tiêu đề hiển thị trên Google (60 ký tự)' })
+          h(DS.Input, { value: get('metaTitle'), maxLength: 60, onChange: e => set('metaTitle', e.target.value), placeholder: 'Tiêu đề hiển thị trên Google (60 ký tự)' })
         ),
         h('div', null,
           h('label', { style: lbSt }, 'OG Image — ảnh share mạng xã hội'),
           h('div', { style: { display: 'flex', gap: 8 } },
-            h(DS.Input, { value: get('ogImage'), onChange: v => set('ogImage', v), placeholder: 'URL ảnh 1200×630px', style: { flex: 1 } }),
+            h(DS.Input, { value: get('ogImage'), onChange: e => set('ogImage', e.target.value), placeholder: 'URL ảnh 1200×630px', style: { flex: 1 } }),
             h(DS.Button, { level: 'secondary', size: 'sm' }, 'Upload')
           )
         ),
