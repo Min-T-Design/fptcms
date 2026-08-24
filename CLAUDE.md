@@ -261,3 +261,17 @@ Mandatory going forward:
 * Any **new** `uploadBox` call for a raster image defaults to this rule — `≤200KB` if it's a single upload, or the `Desktop ≤200KB` / `Mobile ≤150KB` pair if the editor needs distinct crops per breakpoint.
 * Don't invent other caps (`≤1MB`, `≤2MB`, `≤10MB`, or no cap at all) for new raster-image fields — those looser limits predate this rule and are legacy, not a pattern to copy.
 * This rule documents forward-looking behavior for new/edited fields; it does not itself mandate a repo-wide sweep of every pre-existing `uploadBox` call outside the one being touched — fix an outlier when you're already working in that editor, the same way §8/§9 outliers get fixed opportunistically rather than all at once.
+
+---
+
+## 13. Character-Limit Fields Must Hard-Cap Input and Show a Clear "At Limit" State
+
+Any text/textarea field whose hint/note advertises a character limit (e.g. "tối đa 255 ký tự", "tối đa 1000 ký tự") must physically stop the user from typing past that limit — never let the field silently accept unlimited input while merely warning about it after the fact.
+
+Mandatory behavior for every character-limited field, new or edited:
+
+* Pass `maxLength: MAX` to the `DS.Input`/`DS.Textarea` call — this is the native, browser-enforced hard stop and costs nothing even on an otherwise-uncontrolled (`defaultValue`-only) field.
+* For a field that's already controlled (`value` + `onChange`, needed elsewhere in that editor), also clamp defensively inside the `onChange` handler — `value: (v || '').slice(0, MAX)` — so the state itself can never exceed `MAX` regardless of paste/IME edge cases that `maxLength` alone doesn't always catch on a controlled input.
+* Still show a live, unmistakable "at limit" signal once the user reaches the cap — don't rely on the static hint/note alone, since silently refusing further keystrokes with no visual change reads as a broken keyboard, not a deliberate limit. The established pattern (see "Mô tả card gói" in the package content editor, `renderSkuEditorContent`): turn the note itself into a live counter — `Tối đa ${MAX} ký tự (${value.length}/${MAX})`, switching its color to `var(--color-danger-text)` once `value.length >= MAX` (and appending a short "— đã đạt giới hạn" suffix). This reuses the note slot that's already there per this section's own note-adding convention, rather than introducing a second counter element.
+* This applies whether the field is a `DS.Input`/`DS.Textarea` hint, a §12-style static note (e.g. a table `colHead` note like "Tối đa 255 ký tự"), or a placeholder-only field with the limit mentioned inline (e.g. "Mô tả SEO ngắn (150–160 ký tự)…") — every one of these gets the matching `maxLength`. A field only needs the live color-changing counter treatment when it's realistically long/prose-like (multi-line descriptions); a short single-line SEO/meta field with `maxLength` alone (no live counter) is acceptable since hitting the native cap while typing a short field is self-evident.
+* Does not apply to a *minimum*-length note (e.g. "Tối thiểu 6 ký tự" on a password field) — there's nothing to cap; a minimum is validated on submit, not by blocking keystrokes.

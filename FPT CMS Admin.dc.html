@@ -859,6 +859,7 @@ class Component extends DCLogic {
             while (base.length < 4) base.push({ icon: '', title: '', content: '' });
             return base;
           })(),
+      pkgDesc: r && r.pkgDesc ? r.pkgDesc : '',
       promoList: r && r.promoList ? [...r.promoList] : [],
       promoTitle: r && r.promoTitle ? r.promoTitle : '',
       gallery: r && r.gallery ? r.gallery.map(x => ({ ...x })) : [],
@@ -1293,6 +1294,10 @@ class Component extends DCLogic {
       this.setState(s => ({ pkgForm: { ...s.pkgForm, bundledProducts: next } }));
     };
     const gridCols = '20px 24px 48px 1.1fr 1.3fr 1.3fr 96px';
+    const colHead = (title, note) => h('div', null,
+      h('span', null, title),
+      note && h('div', { style: { fontSize: 9.5, fontWeight: 400, textTransform: 'none', letterSpacing: 'normal', color: 'var(--color-text-subtle)', marginTop: 2 } }, note)
+    );
     return h('div', null,
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 } },
         h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Sản phẩm nhận trong gói này')
@@ -1302,7 +1307,7 @@ class Component extends DCLogic {
           ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic' } }, 'Chưa có sản phẩm nào trong gói.')
           : h('div', null,
               h('div', { style: { display: 'grid', gridTemplateColumns: gridCols, gap: 10, alignItems: 'center', padding: '7px 14px', borderBottom: '1px solid var(--color-border)', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--color-text-muted)', background: 'var(--color-surface-alt)' } },
-                h('span', null, ''), h('span', null, '#'), h('span', null, 'Ảnh'), h('span', null, 'Tên mặc định (raw)'), h('span', null, 'Tên hiển thị web'), h('span', null, 'Tooltip hiển thị web'), h('span', { style: { textAlign: 'center' } }, 'Hiển thị')
+                h('span', null, ''), h('span', null, '#'), h('span', null, 'Ảnh'), h('span', null, 'Tên mặc định (raw)'), colHead('Tên hiển thị web', 'Tối đa 255 ký tự'), colHead('Tooltip hiển thị web', 'Tối đa 255 ký tự'), h('span', { style: { textAlign: 'center' } }, 'Hiển thị')
               ),
               bundled.map((it, i) => h('div', {
                 key: i, draggable: true,
@@ -1317,8 +1322,8 @@ class Component extends DCLogic {
                 h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', textAlign: 'center' } }, i + 1),
                 h('div', { onClick: () => this.toast('info', 'Chọn ảnh SKU', 'Chọn ảnh minh hoạ cho sản phẩm.'), style: { width: 38, height: 32, background: 'var(--color-surface-alt)', border: '1px dashed var(--color-border)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' } }, h(DS.Icon, { name: 'image-line', size: 14, color: 'var(--color-text-subtle)' })),
                 h(DS.Input, { value: it.rawName || '', disabled: true, title: 'Tên đồng bộ từ hệ thống — không thể chỉnh sửa' }),
-                h(DS.Input, { value: it.name, placeholder: 'Tên hiển thị web…', onChange: e => updBundled(i, 'name', e && e.target ? e.target.value : e) }),
-                h(DS.Input, { value: it.tooltip, placeholder: 'Tooltip hiển thị web…', onChange: e => updBundled(i, 'tooltip', e && e.target ? e.target.value : e) }),
+                h(DS.Input, { value: it.name, maxLength: 255, placeholder: 'Tên hiển thị web…', onChange: e => updBundled(i, 'name', e && e.target ? e.target.value : e) }),
+                h(DS.Input, { value: it.tooltip, maxLength: 255, placeholder: 'Tooltip hiển thị web…', onChange: e => updBundled(i, 'tooltip', e && e.target ? e.target.value : e) }),
                 h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(DS.Switch, { size: 'sm', checked: it.included, onChange: v => updBundled(i, 'included', v) }))
               ))
             )
@@ -1347,15 +1352,23 @@ class Component extends DCLogic {
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
       this.field('Tiêu đề chung đặc quyền', h(DS.Input, { defaultValue: r ? r.privTitle : '', placeholder: 'VD: Đặc quyền khi đăng ký Internet Giga' }), true),
       h('div', null,
-        h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 12 } }, 'Danh sách đặc quyền'),
+        h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Danh sách đặc quyền'),
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 1, fontSize: 11.5, color: 'var(--color-text-subtle)', lineHeight: 1.6, marginBottom: 12 } },
+          h('div', null, 'Tỉ lệ chuẩn 1:1 (Kích thước gợi ý: 64x64px)'),
+          h('div', null, '• Dung lượng: ≤ 100 KB'),
+          h('div', null, '• Định dạng: SVG, PNG (khuyên dùng nền trong suốt), JPG, WEBP')
+        ),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
           items.map((it, i) => h('div', { key: i, style: { display: 'flex', gap: 14, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-surface)' } },
-            h('div', { style: { position: 'relative', flexShrink: 0 } },
-              h('div', {
-                onClick: () => this.toast('info', 'Tải icon đặc quyền', 'Chọn hình ảnh minh hoạ cho đặc quyền ' + (i + 1) + '.'),
-                style: { width: 56, height: 56, borderRadius: 10, border: '1.5px dashed var(--color-border-strong)', background: 'var(--color-surface-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
-              }, h(DS.Icon, { name: 'upload-cloud-line', size: 18, color: 'var(--color-text-subtle)' })),
-              h('span', { style: { position: 'absolute', top: -6, left: -6, width: 18, height: 18, borderRadius: '50%', background: 'var(--color-accent)', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 2px var(--color-surface)' } }, i + 1)
+            h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, width: 84 } },
+              h('div', { style: { position: 'relative' } },
+                h('div', {
+                  onClick: () => this.toast('info', 'Tải icon đặc quyền', 'Chọn hình ảnh minh hoạ cho đặc quyền ' + (i + 1) + '.'),
+                  style: { width: 64, height: 64, borderRadius: 10, border: '1.5px dashed var(--color-border-strong)', background: 'var(--color-surface-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
+                }, h(DS.Icon, { name: 'upload-cloud-line', size: 18, color: 'var(--color-text-subtle)' })),
+                h('span', { style: { position: 'absolute', top: -6, left: -6, width: 18, height: 18, borderRadius: '50%', background: 'var(--color-accent)', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 2px var(--color-surface)' } }, i + 1)
+              ),
+              h('div', { style: { fontSize: 9.5, color: 'var(--color-text-subtle)', textAlign: 'center', lineHeight: 1.4 } }, '1:1 · ≤100KB')
             ),
             h('div', { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 } },
               h(DS.Input, { label: 'Tiêu đề', value: it.title, placeholder: 'VD: Tốc độ vượt trội', onChange: e => update(i, 'title', e && e.target ? e.target.value : e) }),
@@ -1365,7 +1378,7 @@ class Component extends DCLogic {
         )
       ),
       this.PKG_SHOW_BUNDLED(r) && h(DS.Divider, null),
-      this.PKG_SHOW_BUNDLED(r) && this.uploadBox('Hình ảnh đặc quyền (tối đa 1 ảnh)', 'JPG / PNG')
+      this.PKG_SHOW_BUNDLED(r) && this.uploadBox('Hình ảnh đặc quyền (tối đa 1 ảnh)', 'JPG / PNG / WebP')
     );
   }
 
@@ -1562,7 +1575,7 @@ class Component extends DCLogic {
             h('div', { style: { flex: 1 } }, h(DS.Input, { value: it.url, placeholder: 'URL video (YouTube/Vimeo) hoặc tải .mp4…', onChange: e => update(i, 'url', e && e.target ? e.target.value : e) })),
             h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => remove(i) })
           ),
-          this.uploadBox('Thumbnail video (tuỳ chọn)', 'JPG / PNG')
+          this.uploadBox('Thumbnail video (tuỳ chọn)', 'JPG / PNG / WebP')
         ))
       ),
       h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add, disabled: items.length >= 3 }, 'Thêm video')
@@ -1584,6 +1597,13 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isDevice = this.PKG_CONTENT_DEVICE_LAYOUT(r);
     const promoList = this.state.pkgForm.promoList || [];
+    const PKG_DESC_MAX = 1000;
+    const pkgDescVal = this.state.pkgForm.pkgDesc || '';
+    const pkgDescAtMax = pkgDescVal.length >= PKG_DESC_MAX;
+    const setPkgDesc = e => {
+      const v = e && e.target ? e.target.value : e;
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, pkgDesc: (v || '').slice(0, PKG_DESC_MAX) } }));
+    };
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       this.renderPkgWebSettings(r),
       isDevice && this.renderPkgCardImage(r),
@@ -1591,7 +1611,14 @@ class Component extends DCLogic {
       this.collapsibleCard('pkgSecDescOpen', 'Mô tả sản phẩm',
         isDevice
           ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-              this.field('Mô tả card gói', h(DS.Textarea, { defaultValue: r ? r.pkgDesc : '', rows: 4, placeholder: 'Mỗi ý 1 dòng — VD:\nFull HD sắc nét, góc rộng 130 độ\nCảnh báo chuyển động tức thời qua App HiFPT' })),
+              h('div', null,
+                h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả card gói'),
+                h('div', { style: { fontSize: 12, color: pkgDescAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginBottom: 4 } }, `Tối đa ${PKG_DESC_MAX} ký tự (${pkgDescVal.length}/${PKG_DESC_MAX})${pkgDescAtMax ? ' — đã đạt giới hạn' : ''}.`),
+                h(DS.Textarea, {
+                  value: pkgDescVal, rows: 4, maxLength: PKG_DESC_MAX, placeholder: 'Mỗi ý 1 dòng — VD:\nFull HD sắc nét, góc rộng 130 độ\nCảnh báo chuyển động tức thời qua App HiFPT',
+                  onChange: setPkgDesc
+                })
+              ),
               h('div', null,
                 h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả ngắn'),
                 h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Hiển thị dưới giá bán thiết bị.'),
@@ -1606,14 +1633,21 @@ class Component extends DCLogic {
               this.renderPkgPriv(r)
             )
           : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-              this.field('Mô tả card gói', h(DS.Textarea, { defaultValue: r ? r.pkgDesc : '', rows: 4, placeholder: 'Mỗi ý 1 dòng — VD:\n150Mbps ổn định cả giờ cao điểm\nModem Wi-Fi 6 miễn phí' })),
+              h('div', null,
+                h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả card gói'),
+                h('div', { style: { fontSize: 12, color: pkgDescAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginBottom: 4 } }, `Tối đa ${PKG_DESC_MAX} ký tự (${pkgDescVal.length}/${PKG_DESC_MAX})${pkgDescAtMax ? ' — đã đạt giới hạn' : ''}.`),
+                h(DS.Textarea, {
+                  value: pkgDescVal, rows: 4, maxLength: PKG_DESC_MAX, placeholder: 'Mỗi ý 1 dòng — VD:\n150Mbps ổn định cả giờ cao điểm\nModem Wi-Fi 6 miễn phí',
+                  onChange: setPkgDesc
+                })
+              ),
               h('div', null,
                 h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, flexWrap: 'wrap', gap: 6 } },
                   h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Thông tin chi tiết'),
                   h('span', { style: { fontSize: 11, color: 'var(--color-text-muted)' } }, 'Cú pháp: [Tiêu đề nổi bật]: [Nội dung chi tiết]')
                 ),
                 h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Mỗi dòng hiển thị 1 mục checklist (✓) trên trang chi tiết gói bán.'),
-                h(DS.Textarea, { defaultValue: r ? r.longDesc : '', rows: 8, placeholder: 'Trang bị sẵn Modem Wi-Fi 6 băng tần kép: Trang bị modem Wi-Fi 6 đời mới nhất giúp kết nối ổn định…' })
+                this.richTextBox(r ? r.longDesc : '', 8, 'Trang bị sẵn Modem Wi-Fi 6 băng tần kép: Trang bị modem Wi-Fi 6 đời mới nhất giúp kết nối ổn định…')
               ),
               h(DS.Divider, { label: 'ĐẶC QUYỀN' }),
               this.renderPkgPriv(r)
@@ -3216,7 +3250,7 @@ class Component extends DCLogic {
             h('div', null, this.field('Meta tiêu đề', h(DS.Input, { defaultValue: r ? (r.metaTitle || '') : '', placeholder: 'Tiêu đề hiển thị trên Google' }), true)),
             h('div', null, this.field('Meta từ khóa', h(DS.Input, { defaultValue: r ? (r.metaKeywords || '') : '', placeholder: 'internet fpt, wifi 6, …' }), true))
           ),
-          this.field('Meta mô tả', h(DS.Textarea, { defaultValue: r ? (r.metaDesc || '') : '', placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 }), true)
+          this.field('Meta mô tả', h(DS.Textarea, { defaultValue: r ? (r.metaDesc || '') : '', maxLength: 160, placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 }), true)
         ),
         section(3, 'image-line', 'Hình ảnh',
           this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤1MB', true)
@@ -4806,8 +4840,8 @@ class Component extends DCLogic {
         ),
         section(2, 'image-line', 'Hình ảnh',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            this.uploadBox('Popup Desktop (16:9)', 'JPG, PNG · tối đa 200KB'),
-            this.uploadBox('Popup Mobile (1:1)', 'JPG, PNG · tối đa 150KB')
+            this.uploadBox('Popup Desktop (16:9)', 'JPG, PNG, WEBP · tối đa 200KB'),
+            this.uploadBox('Popup Mobile (1:1)', 'JPG, PNG, WEBP · tối đa 150KB')
           )
         ),
         section(3, 'zap-line', 'Hành vi hiển thị',
@@ -5597,7 +5631,7 @@ class Component extends DCLogic {
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 4 } },
         h('div', null,
           h('label', { style: lbSt }, 'Meta Title'),
-          h(DS.Input, { value: get('metaTitle'), onChange: v => set('metaTitle', v), placeholder: 'Tiêu đề hiển thị trên Google (60 ký tự)' })
+          h(DS.Input, { value: get('metaTitle'), maxLength: 60, onChange: v => set('metaTitle', v), placeholder: 'Tiêu đề hiển thị trên Google (60 ký tự)' })
         ),
         h('div', null,
           h('label', { style: lbSt }, 'OG Image — ảnh share mạng xã hội'),
@@ -5608,7 +5642,7 @@ class Component extends DCLogic {
         ),
         h('div', { style: { gridColumn: '1 / -1' } },
           h('label', { style: lbSt }, 'Meta Description'),
-          h(DS.Textarea, { value: get('metaDesc'), onChange: e => set('metaDesc', e.target ? e.target.value : e), rows: 2, placeholder: 'Mô tả ngắn hiển thị trên kết quả tìm kiếm (150–160 ký tự)' })
+          h(DS.Textarea, { value: get('metaDesc'), maxLength: 160, onChange: e => set('metaDesc', e.target ? e.target.value : e), rows: 2, placeholder: 'Mô tả ngắn hiển thị trên kết quả tìm kiếm (150–160 ký tự)' })
         ),
         h('div', { style: { gridColumn: '1 / -1' } },
           h('label', { style: { ...lbSt, marginBottom: 8 } }, 'XEM TRƯỚC HIỂN THỊ TÌM KIẾM GOOGLE (SEO SNIPPET MOCKUP)'),
@@ -9387,7 +9421,7 @@ class Component extends DCLogic {
         ),
         // 3. Hình ảnh đại diện — luôn có card riêng
         section(3, 'image-line', 'Hình ảnh đại diện',
-          this.uploadBox('Tải ảnh (tỷ lệ 16:9)', 'PNG / JPG · ≤200KB', true),
+          this.uploadBox('Tải ảnh (tỷ lệ 16:9)', 'PNG / JPG / WebP · ≤200KB', true),
           this.field('URL ảnh', h(DS.Input, { placeholder: 'https://… hoặc dán link' })),
           this.field('Alt text', h(DS.Input, { placeholder: 'Mô tả ảnh…' }), true),
           this.field('Caption', h(DS.Input, { placeholder: 'Chú thích…' })),
@@ -9419,10 +9453,10 @@ class Component extends DCLogic {
               h('div', { style: { display: 'flex', flexDirection: 'column', gap: 13 } },
                 h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' } }, 'Thẻ Meta'),
                 h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
-                  this.field('Meta tiêu đề (SEO Title) ≤60 ký tự', h(DS.Input, { placeholder: 'Hiển thị trên Google' })),
+                  this.field('Meta tiêu đề (SEO Title) ≤60 ký tự', h(DS.Input, { maxLength: 60, placeholder: 'Hiển thị trên Google' })),
                   this.field('Meta từ khoá', h(DS.Input, { placeholder: 'từ khoá 1, từ khoá 2' }))
                 ),
-                this.field('Meta Description (≤160 ký tự)', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả ngắn cho công cụ tìm kiếm hiển thị trên Google…' })),
+                this.field('Meta Description (≤160 ký tự)', h(DS.Textarea, { rows: 2, maxLength: 160, placeholder: 'Mô tả ngắn cho công cụ tìm kiếm hiển thị trên Google…' })),
                 this.field('Meta Robot', h(DS.Select, { options: ['index, follow', 'noindex, follow', 'index, nofollow', 'noindex, nofollow'], defaultValue: 'index, follow' }))
               )
             )
@@ -9870,7 +9904,7 @@ class Component extends DCLogic {
               h('div', null, this.field('Meta tiêu đề', h(DS.Input, { placeholder: 'Hiển thị trên Google' }))),
               h('div', null, this.field('Meta từ khoá', h(DS.Input, { placeholder: 'từ khoá, phân cách dấu phẩy' })))
             ),
-            this.field('Meta mô tả', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả ngắn cho SEO (≤160 ký tự)' })),
+            this.field('Meta mô tả', h(DS.Textarea, { rows: 2, maxLength: 160, placeholder: 'Mô tả ngắn cho SEO (≤160 ký tự)' })),
             this.field('Từ khoá', h(DS.Input, { placeholder: 'Từ khoá liên quan, phân cách bằng dấu phẩy' }))
           )
         }] }),
@@ -9925,7 +9959,7 @@ class Component extends DCLogic {
           ),
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
             h('div', { style: { display: 'flex', justifyContent: 'center', marginBottom: 4 } }, h(DS.Avatar, { name: r ? r.name : 'New', size: 'xl' })),
-            this.uploadBox('Tải ảnh đại diện', 'PNG / JPG · ≤1MB'),
+            this.uploadBox('Tải ảnh đại diện', 'PNG / JPG / WebP · ≤1MB'),
             this.field('Email', h(DS.Input, { defaultValue: r ? r.email : '', placeholder: 'example@fpt.com.vn' })),
             this.field('Số điện thoại', h(DS.Input, { defaultValue: r ? r.phone : '' }))
           )
