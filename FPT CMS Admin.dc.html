@@ -1699,7 +1699,7 @@ class Component extends DCLogic {
         this.renderPkgImages(r),
         !isDevice && this.renderPkgMidBanner(r)
       )),
-      isDevice && this.collapsibleCard('pkgSecVideoOpen', 'Video sản phẩm', this.renderPkgVideo(r)),
+      this.collapsibleCard('pkgSecVideoOpen', 'Video sản phẩm', this.renderPkgVideo(r)),
       this.collapsibleCard('pkgSecPromoOpen', 'Ưu đãi sản phẩm', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
         h('div', null,
           h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 4 } }, 'Tiêu đề ưu đãi'),
