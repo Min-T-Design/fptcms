@@ -772,7 +772,8 @@ class Component extends DCLogic {
           'Cảnh báo chuyển động tức thời qua App HiFPT',
         ],
         pkgDesc: 'Full HD, góc rộng 130 độ\nCảnh báo chuyển động tức thời\nTặng thẻ nhớ 32GB',
-        shortDesc: 'Camera an ninh Full HD, góc rộng, cảnh báo chuyển động tức thời.', longDesc: '',
+        shortDesc: 'Camera an ninh Full HD, góc rộng, cảnh báo chuyển động tức thời.',
+        longDescTitle: 'Thông tin sản phẩm', longDesc: '',
         promoIcon: 'star-01-line', promoList: ['Tặng thẻ nhớ 32GB', 'Giảm 10% cho đơn hàng đầu tiên qua ZaloPay'],
         videos: [], faqCat: '', faqList: [], midBanners: [{ id: 1, active: true }],
         createdAt: '20/05/2026 09:30', createdBy: 'Trần Minh Khoa', updatedAt: '20/05/2026 09:30', updatedBy: 'Trần Minh Khoa' },
@@ -860,8 +861,11 @@ class Component extends DCLogic {
             return base;
           })(),
       pkgDesc: r && r.pkgDesc ? r.pkgDesc : '',
+      shortDesc: r && r.shortDesc ? r.shortDesc : '',
+      longDescTitle: r && r.longDescTitle ? r.longDescTitle : '',
       promoList: r && r.promoList ? [...r.promoList] : [],
       promoTitle: r && r.promoTitle ? r.promoTitle : '',
+      privTitle: r && r.privTitle ? r.privTitle : '',
       gallery: r && r.gallery ? r.gallery.map(x => ({ ...x })) : [],
       videos: r && r.videos ? r.videos.map(x => ({ ...x })) : [],
       faqCat: r && r.faqCat ? r.faqCat : '',
@@ -1335,15 +1339,23 @@ class Component extends DCLogic {
     // SKU (Thiết bị) và SA không dùng layout card icon+tiêu đề+nội dung của Internet — chỉ nhập text, mỗi dòng là 1 đặc quyền hiển thị trên trang chi tiết.
     if (this.PKG_CONTENT_DEVICE_LAYOUT(r)) {
       const lines = this.state.pkgForm.privileges || [];
+      const PRIV_TITLE_MAX = 100;
+      const privTitleVal = this.state.pkgForm.privTitle || '';
+      const privTitleAtMax = privTitleVal.length >= PRIV_TITLE_MAX;
+      const setPrivTitle = e => {
+        const v = e && e.target ? e.target.value : e;
+        this.setState(s => ({ pkgForm: { ...s.pkgForm, privTitle: (v || '').slice(0, PRIV_TITLE_MAX) } }));
+      };
       return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-        this.field('Tiêu đề chung đặc quyền', h(DS.Input, { defaultValue: r ? r.privTitle : '', placeholder: 'VD: Đặc quyền Camera IQ3' }), true),
+        h('div', null,
+          h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Tiêu đề chung đặc quyền', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+          h('div', { style: { fontSize: 12, color: privTitleAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginBottom: 4 } }, `Tối đa ${PRIV_TITLE_MAX} ký tự (${privTitleVal.length}/${PRIV_TITLE_MAX})${privTitleAtMax ? ' — đã đạt giới hạn' : ''}.`),
+          h(DS.Input, { value: privTitleVal, maxLength: PRIV_TITLE_MAX, placeholder: 'VD: Đặc quyền Camera IQ3', onChange: setPrivTitle })
+        ),
         h('div', null,
           h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Danh sách đặc quyền'),
           h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Mỗi dòng hiển thị 1 đặc quyền trên trang chi tiết.'),
-          h(DS.Textarea, {
-            defaultValue: lines.join('\n'), rows: 6, placeholder: 'Mỗi dòng 1 đặc quyền — VD:\nFull HD sắc nét, góc rộng 130 độ\nCảnh báo chuyển động tức thời qua App HiFPT',
-            onBlur: e => this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: (e.target ? e.target.value : e).split('\n').map(x => x.trim()).filter(Boolean) } }))
-          })
+          this.richTextBox(lines.join('\n'), 6, 'Mỗi dòng 1 đặc quyền — VD:\nFull HD sắc nét, góc rộng 130 độ\nCảnh báo chuyển động tức thời qua App HiFPT')
         )
       );
     }
@@ -1611,6 +1623,20 @@ class Component extends DCLogic {
       const v = e && e.target ? e.target.value : e;
       this.setState(s => ({ pkgForm: { ...s.pkgForm, pkgDesc: (v || '').slice(0, PKG_DESC_MAX) } }));
     };
+    const SHORT_DESC_MAX = 500;
+    const shortDescVal = this.state.pkgForm.shortDesc || '';
+    const shortDescAtMax = shortDescVal.length >= SHORT_DESC_MAX;
+    const setShortDesc = e => {
+      const v = e && e.target ? e.target.value : e;
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, shortDesc: (v || '').slice(0, SHORT_DESC_MAX) } }));
+    };
+    const LONG_DESC_TITLE_MAX = 150;
+    const longDescTitleVal = this.state.pkgForm.longDescTitle || '';
+    const longDescTitleAtMax = longDescTitleVal.length >= LONG_DESC_TITLE_MAX;
+    const setLongDescTitle = e => {
+      const v = e && e.target ? e.target.value : e;
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, longDescTitle: (v || '').slice(0, LONG_DESC_TITLE_MAX) } }));
+    };
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       this.renderPkgWebSettings(r),
       isDevice && this.renderPkgCardImage(r),
@@ -1628,12 +1654,21 @@ class Component extends DCLogic {
               ),
               h('div', null,
                 h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả ngắn'),
-                h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Hiển thị dưới giá bán thiết bị.'),
-                h(DS.Textarea, { defaultValue: r ? r.shortDesc : '', rows: 4, placeholder: 'Tóm tắt điểm nổi bật tổng quan sản phẩm thiết bị…' })
+                h('div', { style: { fontSize: 12, color: shortDescAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginBottom: 4 } }, `Hiển thị dưới giá bán thiết bị. Tối đa ${SHORT_DESC_MAX} ký tự (${shortDescVal.length}/${SHORT_DESC_MAX})${shortDescAtMax ? ' — đã đạt giới hạn' : ''}.`),
+                h(DS.Textarea, {
+                  value: shortDescVal, rows: 4, maxLength: SHORT_DESC_MAX, placeholder: 'Tóm tắt điểm nổi bật tổng quan sản phẩm thiết bị…',
+                  onChange: setShortDesc
+                })
               ),
               h('div', null,
                 h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Mô tả dài'),
-                h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Rich text — bài viết đánh giá / chi tiết kỹ thuật.'),
+                h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 } },
+                  h('div', { style: { fontSize: 12, color: longDescTitleAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)' } }, `Tiêu đề — Tối đa ${LONG_DESC_TITLE_MAX} ký tự (${longDescTitleVal.length}/${LONG_DESC_TITLE_MAX})${longDescTitleAtMax ? ' — đã đạt giới hạn' : ''}.`),
+                  h(DS.Input, {
+                    value: longDescTitleVal, maxLength: LONG_DESC_TITLE_MAX, placeholder: 'VD: Thông tin sản phẩm',
+                    onChange: setLongDescTitle
+                  })
+                ),
                 this.richTextBox(r ? r.longDesc : '', 12, 'Nhập nội dung mô tả chi tiết sản phẩm thiết bị, tính năng công nghệ, hướng dẫn lắp đặt…')
               ),
               h(DS.Divider, { label: 'ĐẶC QUYỀN' }),
