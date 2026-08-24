@@ -641,8 +641,20 @@ class Component extends DCLogic {
   PKG_CHANNELS() {
     return this.CHANNELS().filter(c => c.id !== 'global');
   }
-  PKG_TYPE_THEME(group) {
-    return { 'Internet': 'info', 'Camera': 'warning', 'Truyền hình': 'success', 'Cloud': 'brand' }[group] || 'neutral';
+  // Danh sách "Loại sản phẩm" cố định cho bộ lọc/cột Nội dung sản phẩm — chỉ 4 loại theo yêu cầu nghiệp vụ.
+  PKG_TYPE_CATEGORIES() {
+    return ['Gói Internet', 'Camera', 'Gói SA', 'Thiết bị khác'];
+  }
+  // Gom nhóm sku.group/kind gốc (Internet/Camera/Truyền hình/Cloud) thành 1 trong 4 loại hiển thị ở trên.
+  PKG_TYPE_CATEGORY(sku) {
+    if (!sku) return null;
+    if (sku.group === 'Internet' && sku.kind === 'Dịch vụ') return 'Gói Internet';
+    if (sku.group === 'Camera' || sku.group === 'Cloud') return 'Camera';
+    if (sku.group === 'Truyền hình' && sku.kind === 'Dịch vụ') return 'Gói SA';
+    return 'Thiết bị khác';
+  }
+  PKG_TYPE_THEME(category) {
+    return { 'Gói Internet': 'info', 'Camera': 'warning', 'Gói SA': 'success', 'Thiết bị khác': 'brand' }[category] || 'neutral';
   }
   // Loại gói bán điều khiển sự khác biệt của trang chỉnh sửa: Dịch vụ (Internet…) / Thiết bị (SKU vật lý) / SA (gói bổ sung độc lập)
   PKG_IS_DEVICE(r) {
@@ -980,7 +992,7 @@ class Component extends DCLogic {
     const data = all.filter(r => {
       const sku = skuByCode.get(r.skuCode);
       const matchQ = !q || (r.displayName + ' ' + r.skuCode + ' ' + (sku ? sku.name : '')).toLowerCase().includes(q);
-      const matchType = typeF === 'all' || (sku && sku.group === typeF);
+      const matchType = typeF === 'all' || (sku && this.PKG_TYPE_CATEGORY(sku) === typeF);
       const matchSource = sourceF === 'all' || (sku && (sku.source || 'ECP') === sourceF);
       return matchQ && matchType && matchSource;
     });
@@ -1000,7 +1012,7 @@ class Component extends DCLogic {
           );
         } },
       { key: 'type', header: 'Loại sản phẩm', width: 140,
-        render: (_, r) => { const sku = skuByCode.get(r.skuCode); return h(DS.Badge, { theme: this.PKG_TYPE_THEME(sku && sku.group) }, sku ? sku.group : '—'); } },
+        render: (_, r) => { const sku = skuByCode.get(r.skuCode); const cat = this.PKG_TYPE_CATEGORY(sku); return h(DS.Badge, { theme: this.PKG_TYPE_THEME(cat) }, cat || '—'); } },
       { key: 'source', header: 'Hệ thống', width: 100,
         render: (_, r) => { const sku = skuByCode.get(r.skuCode); const src = sku ? (sku.source || 'ECP') : null; return src ? h(DS.Badge, { theme: this.PKG_SOURCE_THEME(src) }, src) : h('span', null, '—'); } },
       { key: 'priceMin', header: 'Giá Min', width: 120, align: 'right',
@@ -1017,7 +1029,7 @@ class Component extends DCLogic {
         ]) },
     ];
 
-    const typeOptions = [{ value: 'all', label: 'Loại sản phẩm' }, ...Array.from(new Set(this.SKUS().map(s => s.group))).map(g => ({ value: g, label: g }))];
+    const typeOptions = [{ value: 'all', label: 'Loại sản phẩm' }, ...this.PKG_TYPE_CATEGORIES().map(g => ({ value: g, label: g }))];
     const sourceOptions = [{ value: 'all', label: 'Hệ thống' }, { value: 'ECP', label: 'ECP' }, { value: 'FCP', label: 'FCP' }];
 
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
