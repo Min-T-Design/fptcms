@@ -1464,9 +1464,22 @@ class Component extends DCLogic {
       );
     }
     const items = this.state.pkgForm.privileges || [];
+    const PRIV_ITEM_TITLE_MAX = 100;
+    const PRIV_ITEM_CONTENT_MAX = 255;
     const update = (i, key, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, privileges: s.pkgForm.privileges.map((it, j) => j === i ? { ...it, [key]: val } : it) } }));
+    const PRIV_TITLE_MAX = 255;
+    const privTitleVal = this.state.pkgForm.privTitle || '';
+    const privTitleAtMax = privTitleVal.length >= PRIV_TITLE_MAX;
+    const setPrivTitle = e => {
+      const v = e && e.target ? e.target.value : e;
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, privTitle: (v || '').slice(0, PRIV_TITLE_MAX) } }));
+    };
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-      this.field('Tiêu đề chung đặc quyền', h(DS.Input, { defaultValue: r ? r.privTitle : '', placeholder: 'VD: Đặc quyền khi đăng ký Internet Giga' }), true),
+      h('div', null,
+        h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Tiêu đề chung đặc quyền', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+        h('div', { style: { fontSize: 12, color: privTitleAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginBottom: 4 } }, `Tối đa ${PRIV_TITLE_MAX} ký tự (${privTitleVal.length}/${PRIV_TITLE_MAX})${privTitleAtMax ? ' — đã đạt giới hạn' : ''}.`),
+        h(DS.Input, { value: privTitleVal, maxLength: PRIV_TITLE_MAX, placeholder: 'VD: Đặc quyền khi đăng ký Internet Giga', onChange: setPrivTitle })
+      ),
       h('div', null,
         h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Danh sách đặc quyền'),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 1, fontSize: 11.5, color: 'var(--color-text-subtle)', lineHeight: 1.6, marginBottom: 12 } },
@@ -1487,8 +1500,24 @@ class Component extends DCLogic {
               h('div', { style: { fontSize: 9.5, color: 'var(--color-text-subtle)', textAlign: 'center', lineHeight: 1.4 } }, '1:1 · ≤100KB')
             ),
             h('div', { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 } },
-              h(DS.Input, { label: 'Tiêu đề', value: it.title, placeholder: 'VD: Tốc độ vượt trội', onChange: e => update(i, 'title', e && e.target ? e.target.value : e) }),
-              h(DS.Input, { label: 'Nội dung', value: it.content, placeholder: 'VD: Tốc độ 150Mbps ổn định, không bù giờ cao điểm', onChange: e => update(i, 'content', e && e.target ? e.target.value : e) })
+              (() => {
+                const titleVal = it.title || '';
+                const titleAtMax = titleVal.length >= PRIV_ITEM_TITLE_MAX;
+                return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } },
+                  h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Tiêu đề'),
+                  h('div', { style: { fontSize: 11, color: titleAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)' } }, `Tối đa ${PRIV_ITEM_TITLE_MAX} ký tự (${titleVal.length}/${PRIV_ITEM_TITLE_MAX})${titleAtMax ? ' — đã đạt giới hạn' : ''}.`),
+                  h(DS.Input, { value: titleVal, maxLength: PRIV_ITEM_TITLE_MAX, placeholder: 'VD: Tốc độ vượt trội', onChange: e => update(i, 'title', e && e.target ? e.target.value : e) })
+                );
+              })(),
+              (() => {
+                const contentVal = it.content || '';
+                const contentAtMax = contentVal.length >= PRIV_ITEM_CONTENT_MAX;
+                return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } },
+                  h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Nội dung'),
+                  h('div', { style: { fontSize: 11, color: contentAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)' } }, `Tối đa ${PRIV_ITEM_CONTENT_MAX} ký tự (${contentVal.length}/${PRIV_ITEM_CONTENT_MAX})${contentAtMax ? ' — đã đạt giới hạn' : ''}.`),
+                  h(DS.Input, { value: contentVal, maxLength: PRIV_ITEM_CONTENT_MAX, placeholder: 'VD: Tốc độ 150Mbps ổn định, không bù giờ cao điểm', onChange: e => update(i, 'content', e && e.target ? e.target.value : e) })
+                );
+              })()
             )
           ))
         )
@@ -3560,7 +3589,7 @@ class Component extends DCLogic {
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
             h('div', null, this.field('Thuộc trang', h(DS.Select, { options: PAGES, defaultValue: r ? r.page : PAGES[0], searchable: true, searchPlaceholder: 'Tìm trang…' }), true)),
-            h('div', null, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order != null ? r.order : '') : '' })))
+            h('div', null, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order != null ? r.order : '') : '' }), true))
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
             h('div', null, this.field('Tiêu đề section', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Hero Banner Trang chủ' }), true)),
@@ -3881,7 +3910,7 @@ class Component extends DCLogic {
             this.field('Tên rút gọn', h(DS.Input, { placeholder: 'VD: Card Chuẩn' }), true),
             this.field('Loại Block (Layout)', h(DS.Select, { options: [{ value: 'slider', label: 'Slider' }, { value: 'tabs', label: 'Tabs' }, { value: 'row', label: 'Row' }], value: layout, onChange: v => this.setState({ blkLayout: v }) }), true),
             this.field('Loại dữ liệu', h(DS.Select, { options: [{ value: 'goi-cuoc', label: 'Dịch vụ' }, { value: 'tin-tuc', label: 'Tin tức' }, { value: 'faq', label: 'Câu hỏi' }], value: ds, onChange: v => this.setState({ blkDataSource: v }) }), true),
-            this.field('Thứ tự hiển thị', h(DS.Input, { type: 'number', defaultValue: r && r.order != null ? String(r.order) : '1' }))
+            this.field('Thứ tự hiển thị', h(DS.Input, { type: 'number', defaultValue: r && r.order != null ? String(r.order) : '1' }), true)
           ),
           dynSection,
           h('div', { style: { borderBottom: '1px solid var(--color-border)', paddingBottom: 10, marginTop: 30, marginBottom: 14 } },
