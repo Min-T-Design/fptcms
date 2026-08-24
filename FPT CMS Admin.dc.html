@@ -1598,6 +1598,13 @@ class Component extends DCLogic {
     const isDevice = this.PKG_CONTENT_DEVICE_LAYOUT(r);
     const promoList = this.state.pkgForm.promoList || [];
     const PKG_DESC_MAX = 1000;
+    const PROMO_TITLE_MAX = 100;
+    const promoTitleVal = this.state.pkgForm.promoTitle || '';
+    const promoTitleAtMax = promoTitleVal.length >= PROMO_TITLE_MAX;
+    const setPromoTitle = e => {
+      const v = e && e.target ? e.target.value : e;
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, promoTitle: (v || '').slice(0, PROMO_TITLE_MAX) } }));
+    };
     const pkgDescVal = this.state.pkgForm.pkgDesc || '';
     const pkgDescAtMax = pkgDescVal.length >= PKG_DESC_MAX;
     const setPkgDesc = e => {
@@ -1659,17 +1666,18 @@ class Component extends DCLogic {
       )),
       isDevice && this.collapsibleCard('pkgSecVideoOpen', 'Video sản phẩm', this.renderPkgVideo(r)),
       this.collapsibleCard('pkgSecPromoOpen', 'Ưu đãi sản phẩm', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        this.field('Tiêu đề ưu đãi', h(DS.Input, {
-          defaultValue: this.state.pkgForm.promoTitle || '', placeholder: 'VD: Ưu đãi khi mua Camera IQ3',
-          onBlur: e => this.setState(s => ({ pkgForm: { ...s.pkgForm, promoTitle: e.target ? e.target.value : e } }))
-        })),
+        h('div', null,
+          h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 4 } }, 'Tiêu đề ưu đãi'),
+          h('div', { style: { fontSize: 12, color: promoTitleAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginBottom: 4 } }, `Tối đa ${PROMO_TITLE_MAX} ký tự (${promoTitleVal.length}/${PROMO_TITLE_MAX})${promoTitleAtMax ? ' — đã đạt giới hạn' : ''}.`),
+          h(DS.Input, {
+            value: promoTitleVal, placeholder: 'VD: Ưu đãi khi mua Camera IQ3', maxLength: PROMO_TITLE_MAX,
+            onChange: setPromoTitle
+          })
+        ),
         h('div', null,
           h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Danh sách Ưu đãi & Quà tặng'),
           h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Mỗi dòng hiển thị 1 mục checklist (✓) trên trang chi tiết gói bán.'),
-          h(DS.Textarea, {
-            defaultValue: promoList.join('\n'), rows: 5, placeholder: 'Mỗi dòng 1 ưu đãi — VD:\nTặng modem Wi-Fi 6 trị giá 1.200.000đ\nMiễn phí lắp đặt toàn quốc',
-            onBlur: e => this.setState(s => ({ pkgForm: { ...s.pkgForm, promoList: (e.target ? e.target.value : e).split('\n').map(x => x.trim()).filter(Boolean) } }))
-          })
+          this.richTextBox(promoList.join('\n'), 5, 'Mỗi dòng 1 ưu đãi — VD:\nTặng modem Wi-Fi 6 trị giá 1.200.000đ\nMiễn phí lắp đặt toàn quốc')
         )
       ))
     );
