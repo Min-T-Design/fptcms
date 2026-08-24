@@ -5085,7 +5085,19 @@ class Component extends DCLogic {
       h(DS.Card, { style: { padding: 24 } },
         secHdr('Thông tin cơ bản'),
         h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 4, alignItems: 'start' } },
-          this.field('Tên Badge/Tag', h(DS.Input, { value: name, placeholder: 'VD: HOT, NEW, BÁN CHẠY, SALE…', onChange: e => this.setState({ badgeFormName: e && e.target ? e.target.value : e }) }), true),
+          (() => {
+            const BADGE_NAME_MAX = 35;
+            const nameAtMax = name.length >= BADGE_NAME_MAX;
+            return h('div', null,
+              this.field('Tên Badge/Tag', h(DS.Input, {
+                value: name, maxLength: BADGE_NAME_MAX, placeholder: 'VD: HOT, NEW, BÁN CHẠY, SALE…',
+                onChange: e => this.setState({ badgeFormName: ((e && e.target ? e.target.value : e) || '').slice(0, BADGE_NAME_MAX) })
+              }), true),
+              h('div', { style: { fontSize: 12, color: nameAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginTop: 4 } },
+                `Tối đa ${BADGE_NAME_MAX} ký tự, kể cả khoảng cách (${name.length}/${BADGE_NAME_MAX})${nameAtMax ? ' — đã đạt giới hạn' : ''}.`
+              )
+            );
+          })(),
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
             h('div', null,
               h('div', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Kích hoạt'),
@@ -8955,10 +8967,20 @@ class Component extends DCLogic {
           h('div', { style: { position: 'sticky', top: 64 } },
             this.listCard(
               h('div', { style: { padding: 20, display: 'flex', flexDirection: 'column', gap: 18 } },
-                this.field('Tên cấu hình', h(DS.Input, {
-                  value: this.state.payCfgName || '', placeholder: 'Nhập tên cấu hình...',
-                  onChange: e => this.setState({ payCfgName: e.target ? e.target.value : e }),
-                }), true),
+                (() => {
+                  const PAY_CFG_NAME_MAX = 225;
+                  const payCfgNameVal = this.state.payCfgName || '';
+                  const payCfgNameAtMax = payCfgNameVal.length >= PAY_CFG_NAME_MAX;
+                  return h('div', null,
+                    this.field('Tên cấu hình', h(DS.Input, {
+                      value: payCfgNameVal, maxLength: PAY_CFG_NAME_MAX, placeholder: 'Nhập tên cấu hình...',
+                      onChange: e => this.setState({ payCfgName: ((e.target ? e.target.value : e) || '').slice(0, PAY_CFG_NAME_MAX) }),
+                    }), true),
+                    h('div', { style: { fontSize: 12, color: payCfgNameAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginTop: 4 } },
+                      `Tối đa ${PAY_CFG_NAME_MAX} ký tự (${payCfgNameVal.length}/${PAY_CFG_NAME_MAX})${payCfgNameAtMax ? ' — đã đạt giới hạn' : ''}.`
+                    )
+                  );
+                })(),
                 h('div', null,
                   h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 } },
                     h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Gói bán', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
@@ -9001,18 +9023,38 @@ class Component extends DCLogic {
                     containerStyle: { width: '100%' },
                     onChange: ({ start, end }) => this.setPayCfgPeriod(m.id, start, end),
                   })),
-                  h('div', null,
-                    h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Mô tả ưu đãi'),
-                    h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                      descArr.map((desc, idx) =>
-                        h('div', { key: idx, style: { display: 'flex', alignItems: 'center', gap: 6 } },
-                          h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Nhập mô tả ưu đãi...', value: desc, onChange: e => this.updatePayCfgDescLine(m.id, idx, e.target ? e.target.value : e) })),
-                          h(DS.IconButton, { icon: 'trash-line', label: 'Xóa dòng', level: 'tertiary', size: 'sm', onClick: () => this.removePayCfgDescLine(m.id, idx) })
-                        )
-                      ),
-                      h(DS.Button, { level: 'secondary', size: 'xs', leadingIcon: 'plus-line', style: { alignSelf: 'flex-start' }, onClick: () => this.addPayCfgDescLine(m.id) }, 'Thêm dòng')
-                    )
-                  )
+                  (() => {
+                    // Mỗi dòng mô tả ưu đãi tối đa 200 ký tự (hard-cap + counter đổi màu — CLAUDE.md §13),
+                    // toàn khối tối đa 10 dòng (nút "Thêm dòng" tự khóa khi đủ, cùng kiểu "Đã đủ 36 chu kỳ").
+                    const PAY_DESC_LINE_MAX = 200;
+                    const PAY_DESC_LINES_MAX = 10;
+                    return h('div', null,
+                      h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Mô tả ưu đãi'),
+                      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+                        descArr.map((desc, idx) => {
+                          const val = desc || '';
+                          const atMax = val.length >= PAY_DESC_LINE_MAX;
+                          return h('div', { key: idx },
+                            h('div', { style: { fontSize: 11, color: atMax ? 'var(--color-danger-text)' : 'var(--color-text-subtle)', marginBottom: 3 } },
+                              `Tối đa ${PAY_DESC_LINE_MAX} ký tự (${val.length}/${PAY_DESC_LINE_MAX})${atMax ? ' — đã đạt giới hạn' : ''}.`
+                            ),
+                            h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
+                              h('div', { style: { flex: 1 } }, h(DS.Input, {
+                                placeholder: 'Nhập mô tả ưu đãi...', value: val, maxLength: PAY_DESC_LINE_MAX,
+                                onChange: e => this.updatePayCfgDescLine(m.id, idx, ((e.target ? e.target.value : e) || '').slice(0, PAY_DESC_LINE_MAX))
+                              })),
+                              h(DS.IconButton, { icon: 'trash-line', label: 'Xóa dòng', level: 'tertiary', size: 'sm', onClick: () => this.removePayCfgDescLine(m.id, idx) })
+                            )
+                          );
+                        }),
+                        h(DS.Button, {
+                          level: 'secondary', size: 'xs', leadingIcon: 'plus-line', style: { alignSelf: 'flex-start' },
+                          disabled: descArr.length >= PAY_DESC_LINES_MAX,
+                          onClick: () => this.addPayCfgDescLine(m.id)
+                        }, descArr.length >= PAY_DESC_LINES_MAX ? `Đã đủ ${PAY_DESC_LINES_MAX} dòng` : 'Thêm dòng')
+                      )
+                    );
+                  })()
                 )
               );
             })
