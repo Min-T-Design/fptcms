@@ -2083,9 +2083,13 @@ class Component extends DCLogic {
       reader.onload = ev => this.updateSkuConfigItem(sku, field, i, 'icon', ev.target.result);
       reader.readAsDataURL(file);
     };
-    const renderBundledItemRow = (sku, field, item, i, items) => h('div', { key: i, style: { display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface-alt)', marginBottom: i < items.length - 1 ? 8 : 0 } },
+    const BUNDLED_DESC_MAX = 200;
+    const renderBundledItemRow = (sku, field, item, i, items) => {
+      const descVal = item.desc || '';
+      const descAtMax = descVal.length >= BUNDLED_DESC_MAX;
+      return h('div', { key: i, style: { display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface-alt)', marginBottom: i < items.length - 1 ? 8 : 0 } },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-        h('label', { title: 'Tải icon dịch vụ', style: { position: 'relative', flexShrink: 0, width: 30, height: 30, borderRadius: 7, overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', border: item.icon ? '1px solid var(--color-border)' : '1.5px dashed var(--color-border-strong)', background: item.icon ? 'transparent' : 'var(--color-surface)' } },
+        h('label', { title: 'Tải icon dịch vụ — Tỉ lệ 1:1, ≤50KB', style: { position: 'relative', flexShrink: 0, width: 30, height: 30, borderRadius: 7, overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', border: item.icon ? '1px solid var(--color-border)' : '1.5px dashed var(--color-border-strong)', background: item.icon ? 'transparent' : 'var(--color-surface)' } },
           item.icon
             ? h('img', { src: item.icon, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } })
             : h(DS.Icon, { name: 'image-line', size: 13, color: 'var(--color-text-subtle)' }),
@@ -2094,15 +2098,23 @@ class Component extends DCLogic {
         h(DS.Icon, { name: 'lock-01-line', size: 14, color: 'var(--color-text-subtle)', style: { flexShrink: 0 } }),
         h('span', { style: { flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, item.name)
       ),
-      h(DS.Input, { value: item.desc, placeholder: 'Mô tả ngắn…', onChange: e => this.updateSkuConfigItem(sku, field, i, 'desc', e && e.target ? e.target.value : e) })
+      h('div', { style: { fontSize: 11, color: descAtMax ? 'var(--color-danger-text)' : 'var(--color-text-subtle)' } },
+        `Tối đa ${BUNDLED_DESC_MAX} ký tự (${descVal.length}/${BUNDLED_DESC_MAX})${descAtMax ? ' — đã đạt giới hạn' : ''}.`
+      ),
+      h(DS.Input, {
+        value: descVal, maxLength: BUNDLED_DESC_MAX, placeholder: 'Mô tả ngắn…',
+        onChange: e => this.updateSkuConfigItem(sku, field, i, 'desc', ((e && e.target ? e.target.value : e) || '').slice(0, BUNDLED_DESC_MAX))
+      })
     );
+    };
     const renderBundledSection = (label, sku, field) => {
       const items = this.getSkuConfigItems(sku, field);
       return h('div', null,
-        h('div', { style: { display: 'flex', borderBottom: '2px solid var(--color-border)', marginBottom: 12 } },
+        h('div', { style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, borderBottom: '2px solid var(--color-border)', marginBottom: 12 } },
           h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 4px 8px 0', fontSize: 13.5, fontWeight: 700, color: 'var(--color-accent-text)', borderBottom: '2px solid var(--color-accent)', marginBottom: -2 } },
             label
-          )
+          ),
+          h('span', { style: { fontSize: 11, color: 'var(--color-text-subtle)', paddingBottom: 8, whiteSpace: 'nowrap' } }, 'Icon: tỉ lệ 1:1 · ≤50KB')
         ),
         items.length === 0
           ? h('div', { style: { padding: '16px 12px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13, fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10 } }, 'Chưa có mục nào.')
@@ -2138,7 +2150,7 @@ class Component extends DCLogic {
         h('div', { style: { paddingTop: 2 }, onClick: e => e.stopPropagation() },
           h(DS.Checkbox, { checked: isSel, onChange: () => toggleSkuSelect(s.code) })
         ),
-        h('label', { title: 'Tải icon gói', onClick: e => e.stopPropagation(), style: { position: 'relative', flexShrink: 0, width: 28, height: 28, marginTop: 1, borderRadius: 6, overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', border: icon ? '1px solid var(--color-border)' : '1.5px dashed var(--color-border-strong)', background: icon ? 'transparent' : 'var(--color-surface)' } },
+        h('label', { title: 'Tải icon gói — Tỉ lệ 1:1, ≤50KB', onClick: e => e.stopPropagation(), style: { position: 'relative', flexShrink: 0, width: 28, height: 28, marginTop: 1, borderRadius: 6, overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', border: icon ? '1px solid var(--color-border)' : '1.5px dashed var(--color-border-strong)', background: icon ? 'transparent' : 'var(--color-surface)' } },
           icon
             ? h('img', { src: icon, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } })
             : h(DS.Icon, { name: 'image-line', size: 12, color: 'var(--color-text-subtle)' }),
@@ -2166,12 +2178,32 @@ class Component extends DCLogic {
           onChange: val => onChange(val === NO_TAGLINE ? '' : val)
         })
       : h('div', { title: 'Chưa có Badge/Tag phân loại "Check out" — tạo tại Quản lý Badge/Tag.', style: { fontSize: 11, color: 'var(--color-text-subtle)', padding: '9px 0' } }, 'Chưa có Tag line');
-    const renderOfferLines = (offers, { onChange, onAdd, onRemove }) => h('div', { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 } },
-      offers.map((o, i) => h('div', { key: i, style: { display: 'flex', gap: 6, alignItems: 'center' } },
-        h(DS.Input, { containerStyle: { flex: 1, minWidth: 0 }, defaultValue: o, placeholder: 'Nội dung ưu đãi…', onChange: e => onChange(i, e && e.target ? e.target.value : e) }),
-        h(DS.IconButton, { icon: 'x-circle-line', label: 'Xóa nội dung', level: 'tertiary', size: 'sm', onClick: () => onRemove(i) })
-      )),
-      h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { alignSelf: 'flex-start' }, onClick: onAdd }, 'Thêm nội dung')
+    // Nội dung ưu đãi: mỗi dòng tối đa 20 ký tự (hard-cap, có counter đổi màu khi đạt giới hạn — CLAUDE.md §13),
+    // toàn khối tối đa 10 dòng (nút "Thêm nội dung" tự khóa khi đủ, cùng kiểu với "Đã đủ 36 chu kỳ").
+    const OFFER_LINE_CHAR_MAX = 200;
+    const OFFER_LINES_MAX = 10;
+    const renderOfferLines = (offers, { onChange, onAdd, onRemove }) => h('div', { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 } },
+      offers.map((o, i) => {
+        const val = o || '';
+        const atMax = val.length >= OFFER_LINE_CHAR_MAX;
+        return h('div', { key: i },
+          h('div', { style: { fontSize: 11, color: atMax ? 'var(--color-danger-text)' : 'var(--color-text-subtle)', marginBottom: 3 } },
+            `Tối đa ${OFFER_LINE_CHAR_MAX} ký tự (${val.length}/${OFFER_LINE_CHAR_MAX})${atMax ? ' — đã đạt giới hạn' : ''}.`
+          ),
+          h('div', { style: { display: 'flex', gap: 6, alignItems: 'center' } },
+            h(DS.Input, {
+              containerStyle: { flex: 1, minWidth: 0 }, value: val, maxLength: OFFER_LINE_CHAR_MAX, placeholder: 'Nội dung ưu đãi…',
+              onChange: e => onChange(i, ((e && e.target ? e.target.value : e) || '').slice(0, OFFER_LINE_CHAR_MAX))
+            }),
+            h(DS.IconButton, { icon: 'x-circle-line', label: 'Xóa nội dung', level: 'tertiary', size: 'sm', onClick: () => onRemove(i) })
+          )
+        );
+      }),
+      h(DS.Button, {
+        level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { alignSelf: 'flex-start' },
+        disabled: offers.length >= OFFER_LINES_MAX,
+        onClick: onAdd
+      }, offers.length >= OFFER_LINES_MAX ? `Đã đủ ${OFFER_LINES_MAX} dòng` : 'Thêm nội dung')
     );
     // Mỗi khối chu kỳ là 1 card độc lập, phân nhóm rõ 2 khu vực: "Cấu hình chu kỳ" (gói tính cước/chu kỳ)
     // và "Nội dung hiển thị" (tag line/ưu đãi) để dễ quét mắt hơn so với bảng cột phẳng trước đây.
@@ -2313,7 +2345,8 @@ class Component extends DCLogic {
           // (bọc ngoài không sticky, cao bằng hàng grid → cho phép khối bên trong "sticky" bám lại khi cột phải dài hơn)
           h('div', null,
             h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px', position: 'sticky', top: 8 } },
-              h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } }, 'DANH SÁCH SẢN PHẨM'),
+              h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 } }, 'DANH SÁCH SẢN PHẨM'),
+              h('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)', marginBottom: 8 } }, 'Icon gói: tỉ lệ 1:1 · ≤50KB'),
 
               // ── Tab nguồn hệ thống ECP / FCP — pill-tab, cùng layout với block "DANH SÁCH SẢN PHẨM" của module Phương thức thanh toán ──
               h('div', {
