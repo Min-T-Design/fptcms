@@ -6217,7 +6217,31 @@ class Component extends DCLogic {
       h(DS.Input, { placeholder: ph || 'URL ảnh / media...' }),
       h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
     ));
-    const divr = (txt) => h('div', { style: { marginTop: 20, marginBottom: 4 } }, h(DS.Divider, { label: txt }));
+    // divr() marks a visual group boundary. It renders nothing on its own — the
+    // editor shell below splits the field list on these markers and wraps each
+    // group in its own numbered DS.Card (CLAUDE.md §10). Keeps every section
+    // editor on the same field-hierarchy standard without touching each entry.
+    const divr = (txt) => h('div', { key: 'gsep-' + txt, 'data-ldp-gsep': txt });
+    const isGsep = (el) => !!(el && el.props && typeof el.props['data-ldp-gsep'] === 'string');
+    const GSEP_ACR = { cta: 'CTA', faq: 'FAQ', url: 'URL', html: 'HTML', seo: 'SEO', blv: 'BLV', ai: 'AI', sa: 'SA', km: 'KM' };
+    const gsepTitle = (s) => (s.charAt(0).toUpperCase() + s.slice(1).toLowerCase())
+      .replace(/\b(cta|faq|url|html|seo|blv|ai|sa|km)\b/g, (m) => GSEP_ACR[m] || m.toUpperCase())
+      .replace(/\(([a-zà-ỹ])/g, (m, c) => '(' + c.toUpperCase());
+    const gsepIcon = (label) => {
+      const s = (label || '').toLowerCase();
+      if (/(countdown|đếm ngược|hẹn giờ|thời gian)/.test(s)) return 'clock-line';
+      if (/(câu hỏi|faq)/.test(s)) return 'info-circle-line';
+      if (/(tiêu chí|so sánh)/.test(s)) return 'bar-chart-square-02-line';
+      if (/(bước|thủ tục|hướng dẫn)/.test(s)) return 'file-check-line';
+      if (/(cấu hình|popup|form|ghi chú)/.test(s)) return 'edit-01-line';
+      if (/(cta|nút|hành động|liên kết|button|đường dẫn|cửa hàng)/.test(s)) return 'share-01-line';
+      if (/(hình ảnh|hình nền|background|banner|logo|icon|thumbnail|media|marquee|ảnh)/.test(s)) return 'image-line';
+      if (/(gói|bảng giá|combo|sản phẩm|khuyến mãi|ưu đãi)/.test(s)) return 'folder-line';
+      if (/(video|đánh giá|khách hàng|blv|chuyên gia|giải đấu|giải thưởng)/.test(s)) return 'star-01-line';
+      if (/(tính năng|công nghệ|đặc điểm|lợi ích|đối tượng|thẻ|chỉ số)/.test(s)) return 'stars-01-line';
+      if (/(tab|danh mục)/.test(s)) return 'dots-grid-line';
+      return 'file-doc-line';
+    };
     const g2   = (...it) => h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' } }, ...it);
     const cb   = (k, ...ch) => h('div', { key: k, style: { border: '1px solid var(--color-border)', borderRadius: 8, padding: 12, background: 'var(--color-surface-alt)', marginBottom: 10 } }, ...ch);
     const stepBlk = (n, ...ch) => h('div', { key: 'step'+n, style: { display: 'grid', gridTemplateColumns: '32px 1fr', gap: 12, border: '1px solid var(--color-border)', borderRadius: 8, padding: 12, background: 'var(--color-surface-alt)', marginBottom: 10 } },
@@ -8766,14 +8790,55 @@ class Component extends DCLogic {
     };
     const displayName = nameRef.value || this.state.ldpSectionTitles[section.id] || section.name;
     const locKey = 'ldpSecLoc_' + (section.uid || section.id);
-    const formContent = h('div', { style: { display: 'flex', flexDirection: 'column' } },
-      // ── Tên section (đặt tên riêng cho section này) ──
-      h('div', { style: { marginBottom: 12 } },
-        h('label', { style: lbSt }, 'Tên section'),
-        h(DS.Input, { defaultValue: nameRef.value, placeholder: section.name, onChange: e => { nameRef.value = e && e.target ? e.target.value : e; } })
+    const visKey = 'ldpSecVis_' + (section.uid || section.id);
+
+    // ── Field hierarchy & visual grouping (CLAUDE.md §10) ────────────────────
+    const secCard = (num, icon, title, items) => h(DS.Card, { key: 'ldp-sec-card-' + num },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+        h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
       ),
-      // ── Vị trí (chỉ với section thuộc họ Danh sách gói Internet) ──
-      this.isLdpLocationSection(section) && h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 14px', border: '1px solid var(--color-border)', borderRadius: 8, background: 'var(--color-surface-alt)', marginBottom: 12 } },
+      h('div', { style: { display: 'flex', flexDirection: 'column' } }, ...items)
+    );
+    const nameField = h('div', { key: 'ldp-sec-name', style: { marginBottom: 4 } },
+      h('label', { style: lbSt }, 'Tên section'),
+      h(DS.Input, { defaultValue: nameRef.value, placeholder: section.name, onChange: e => { nameRef.value = e && e.target ? e.target.value : e; } }),
+      h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 4 } }, 'Tên nội bộ để nhận diện section trong danh sách — không hiển thị ra ngoài trang.')
+    );
+    // Split the type-specific field list on divr() markers → one numbered card per group.
+    const secGroups = [];
+    let curGroup = { title: 'Thông tin cơ bản', icon: 'file-doc-line', items: [nameField] };
+    (extraFinal || []).forEach((el) => {
+      if (isGsep(el)) {
+        secGroups.push(curGroup);
+        const lbl = el.props['data-ldp-gsep'];
+        curGroup = { title: gsepTitle(lbl), icon: gsepIcon(lbl), items: [] };
+      } else if (el) {
+        curGroup.items.push(el);
+      }
+    });
+    if (curGroup.items.length) secGroups.push(curGroup);
+    if (secGroups.length === 1 && secGroups[0].items.length > 1) secGroups[0].title = 'Nội dung section';
+
+    const formContent = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      // ── Identity banner (what am I editing) ──
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12 } },
+        h('div', { style: { width: 38, height: 38, background: section.ec, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } },
+          h(DS.Icon, { name: EIMAP[section.emoji] || 'info-circle-line', size: 20, color: section.tc })
+        ),
+        h('div', { style: { flex: 1, minWidth: 0 } },
+          h('div', { style: { fontWeight: 700, fontSize: 14.5 } }, displayName),
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, section.desc)
+        ),
+        h('span', { style: { background: section.ec, color: section.tc, padding: '2px 10px', borderRadius: 10, fontSize: 11, fontWeight: 600, flexShrink: 0 } }, section.type)
+      ),
+      // ── Standing status toggle (§10) — kept in sync with the sections list ──
+      section.type !== 'PopupForm' && h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+        h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Hiển thị section trên trang'),
+        h(DS.Switch, { key: 'ldp-sec-vis-' + (section.uid || section.id), checked: this.state[visKey] !== false, onChange: v => this.setState({ [visKey]: v }) })
+      ),
+      // ── Vị trí (secondary toggle — only for "Danh sách gói Internet" family) ──
+      this.isLdpLocationSection(section) && h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 14px', border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface-alt)' } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
           h(DS.Icon, { name: 'marker-pin-01-line', size: 16, color: 'var(--color-text-subtle)' }),
           h('div', null,
@@ -8783,19 +8848,8 @@ class Component extends DCLogic {
         ),
         h(DS.Switch, { size: 'sm', checked: this.state[locKey] === true, onChange: v => this.setState({ [locKey]: v }) })
       ),
-      // ── Section header chip ──
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', marginBottom: 16, borderBottom: '1px solid var(--color-border)' } },
-        h('div', { style: { width: 36, height: 36, background: section.ec, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } },
-          h(DS.Icon, { name: EIMAP[section.emoji] || 'info-circle-line', size: 20, color: section.tc })
-        ),
-        h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { fontWeight: 700, fontSize: 14 } }, displayName),
-          h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, section.desc)
-        ),
-        h('span', { style: { background: section.ec, color: section.tc, padding: '2px 10px', borderRadius: 10, fontSize: 11, fontWeight: 600, flexShrink: 0 } }, section.type)
-      ),
-      // ── Type-specific fields ──
-      ...extraFinal,
+      // ── Field groups → numbered cards ──
+      ...secGroups.map((g, i) => secCard(i + 1, g.icon, g.title, g.items))
     );
     return this.editorShell(
       'Sửa nội dung section',
