@@ -203,6 +203,9 @@ class Component extends DCLogic {
     ldpTplFilter: 'all', ldpTplSearch: '',
     ldpListSearch: '', ldpListTpl: 'all', ldpListStatus: 'all', ldpListGoal: 'all',
     ldpForm2: {}, ldpLibTab: 'all', ldpLibSearch: '', ldpCustomSecs: [], ldpLibDragId: null, ldpSecDragOverCanvas: false,
+    // ── Duyệt LDP module ──
+    ldpApprTab: 'pending', ldpApprSearch: '', ldpApprTpl: 'all', ldpAppr_pg: 1, ldpAppr_sz: 10,
+    ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '', ldpApprovals: null, ldpExtraApprovedLv1: [],
   };
 
   componentDidMount() {
@@ -343,6 +346,7 @@ class Component extends DCLogic {
         { id: 'sections', label: 'Quản lý Sections' },
         { id: 'blocks', label: 'Quản lý Blocks' },
         { id: 'landing', label: 'Landing Page (LDP)' },
+        { id: 'ldp-approval', label: 'Duyệt LDP' },
         { id: 'cms-menu', label: 'Quản lý Menu' },
       ]},
       { type: 'group', id: 'g-media', label: 'Media & Quảng bá', icon: 'image-line', children: [
@@ -364,7 +368,7 @@ class Component extends DCLogic {
     return {
       'dashboards': 'Dashboards', 'pdh-sku': 'Nội dung sản phẩm', 'badge-tag': 'Quản lý Badge/Tag', 'cms-display': 'Thông tin checkout',
       'cms-payment': 'Phương thức Thanh toán', 'pages': 'Quản lý Trang (Pages)', 'sections': 'Quản lý Sections',
-      'blocks': 'Quản lý Blocks', 'landing': 'Landing Page (LDP)', 'cms-menu': 'Quản lý Menu',
+      'blocks': 'Quản lý Blocks', 'landing': 'Landing Page (LDP)', 'ldp-approval': 'Duyệt LDP', 'cms-menu': 'Quản lý Menu',
       'banner': 'Quản lý Banner', 'cms-popup': 'Quản lý Popup', 'news': 'Quản lý Tin tức', 'faq': 'Quản lý FAQ',
       'sys-roles': 'Quản lý Vai trò', 'sys-users': 'Quản lý Người dùng', 'sys-permissions': 'Phân quyền tính năng',
       'profile': 'Thông tin tài khoản',
@@ -425,6 +429,7 @@ class Component extends DCLogic {
   navCounts() {
     return {
       pages: this.PAGES().length, sections: this.SECTIONS().length, blocks: this.BLOCKS().length,
+      'ldp-approval': this.LDP_APPROVALS().filter(a => a.status === 'pending').length,
     };
   }
   toggleGroup(id) { this.setState(s => ({ navOpen: { ...s.navOpen, [id]: !s.navOpen[id] } })); }
@@ -465,7 +470,8 @@ class Component extends DCLogic {
       },
         // left accent bar for the active row (replaces tree tick)
         h('span', { style: { position: 'absolute', left: -3, top: 0, bottom: 0, width: 3, background: 'var(--color-accent)', borderRadius: '0 2px 2px 0', opacity: on ? 1 : 0, transform: on ? 'scaleY(1)' : 'scaleY(0)', transition: 'opacity .18s cubic-bezier(.2,0,0,1), transform .18s cubic-bezier(.2,0,0,1)', transformOrigin: 'center' } }),
-        h('span', { style: { flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, c.label)
+        h('span', { style: { flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, c.label),
+        (c.id === 'ldp-approval' && count) ? h('span', { style: { flexShrink: 0, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: 'var(--color-accent)', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 } }, count) : null
       );
     };
     const nodes = [];
@@ -595,6 +601,7 @@ class Component extends DCLogic {
       case 'sections': return this.renderSections();
       case 'blocks': return this.renderBlocks();
       case 'landing': return this.renderLanding();
+      case 'ldp-approval': return this.renderLdpApproval();
       case 'cms-menu': return this.renderMenu();
       case 'banner': return this.renderBanner();
       case 'cms-popup': return this.renderPopup();
@@ -3306,10 +3313,43 @@ class Component extends DCLogic {
   }
   LDP_LIST() {
     return this.state.ldpListData || [
-      { id: 1, name: 'Khuyến mãi Internet Tháng 5', tplId: 'internet', tplLabel: 'LDP Internet',         goal: 'Lead Gen',           url: '/km-internet-t5', startDate: '01/05/26', endDate: '31/05/26', lastEdit: '18/05/26', lastEditBy: 'Hà Linh', status: 'publish' },
-      { id: 2, name: 'Sự kiện FPT Play 2026',       tplId: 'sa',       tplLabel: 'LDP SA',               goal: 'Sự kiện / Branding', url: '/fpt-play-2026',  startDate: '01/01/26', endDate: '31/01/26', lastEdit: '28/01/26', lastEditBy: 'Minh Tú', status: 'expired' },
-      { id: 3, name: 'Camera AI Tháng 6',           tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       url: '/camera-ai-t6',   startDate: '01/06/26', endDate: '30/06/26', lastEdit: '02/06/26', lastEditBy: 'Admin',   status: 'publish' },
-      { id: 4, name: 'Wi-Fi 7 Launch',              tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Lead Gen',           url: '/wifi7-launch',   startDate: '15/06/26', endDate: '15/07/26', lastEdit: '14/06/26', lastEditBy: 'Minh Tú', status: 'draft' },
+      { id: 1, name: 'Khuyến mãi Internet Tháng 5', tplId: 'internet', tplLabel: 'LDP Internet',         goal: 'Lead Gen',           lv1: 'khuyen-mai',           l2: 'internet-thang-5', url: '/khuyen-mai/internet-thang-5',           startDate: '01/05/26', endDate: '31/05/26', lastEdit: '18/05/26', lastEditBy: 'Hà Linh', status: 'publish' },
+      { id: 2, name: 'Sự kiện FPT Play 2026',       tplId: 'sa',       tplLabel: 'LDP SA',               goal: 'Sự kiện / Branding', lv1: 'truyen-hinh-fpt-play',  l2: 'su-kien-2026',     url: '/truyen-hinh-fpt-play/su-kien-2026',     startDate: '01/01/26', endDate: '31/01/26', lastEdit: '28/01/26', lastEditBy: 'Minh Tú', status: 'expired' },
+      { id: 3, name: 'Camera AI Tháng 6',           tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-thang-6', url: '/thiet-bi-thong-minh/camera-ai-thang-6', startDate: '01/06/26', endDate: '30/06/26', lastEdit: '02/06/26', lastEditBy: 'Admin',   status: 'publish' },
+      { id: 4, name: 'Wi-Fi 7 Launch',              tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Lead Gen',           lv1: 'internet',              l2: 'wifi-7-launch',    url: '/internet/wifi-7-launch',               startDate: '15/06/26', endDate: '15/07/26', lastEdit: '14/06/26', lastEditBy: 'Minh Tú', status: 'draft' },
+      { id: 5, name: 'Ưu đãi Sinh viên 2026',       tplId: 'thulead',  tplLabel: 'LDP Thu Lead',         goal: 'Lead Gen',           lv1: 'uu-dai-sinh-vien',      l2: 'dang-ky-2026',     url: '/uu-dai-sinh-vien/dang-ky-2026',         startDate: '01/09/26', endDate: '31/12/26', lastEdit: '02/09/26', lastEditBy: 'Hà Linh', status: 'pending', submittedBy: 'Hà Linh', submittedAt: '02/09/26 09:12' },
+      { id: 6, name: 'Landing Tết Nguyên Đán',      tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Branding',           lv1: 'tet-2026',              l2: 'wifi-7',           url: '/tet-2026/wifi-7',                      startDate: '15/01/26', endDate: '15/02/26', lastEdit: '29/08/26', lastEditBy: 'Minh Tú', status: 'rejected', submittedBy: 'Minh Tú', submittedAt: '28/08/26 14:03', reviewedBy: 'Super Admin', reviewedAt: '29/08/26 08:30', rejectReason: 'Slug Level 1 "tet-2026" quá chung và mang tính thời điểm, không phản ánh danh mục dịch vụ. Đề xuất đặt trang dưới nhánh "khuyen-mai" (vd: khuyen-mai/tet-2026) để không phát sinh nhánh URL cấp 1 mới.' },
+    ];
+  }
+  // ── Duyệt LDP: dữ liệu & tiện ích chung ──
+  ldpSlugify(s) {
+    return (s || '').toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/đ/g, 'd').replace(/Đ/g, 'd')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-').replace(/-+/g, '-')
+      .replace(/^-+/, '');
+  }
+  LDP_FIXED_LV1() {
+    return ['khuyen-mai', 'internet', 'truyen-hinh-fpt-play', 'thiet-bi-thong-minh', 'dich-vu-so', 'tin-tuc', 'lien-he'];
+  }
+  // Tập slug Level 1 đã hợp lệ = 7 nhánh cố định + các nhánh đã được Super Admin duyệt.
+  ldpApprovedLv1Set() {
+    const approved = this.LDP_APPROVALS().filter(a => a.status === 'approved').map(a => a.lv1);
+    return new Set([...this.LDP_FIXED_LV1(), ...approved, ...(this.state.ldpExtraApprovedLv1 || [])]);
+  }
+  // Slug bị khoá (không cho sửa, không cần gửi duyệt lại) khi LDP đã duyệt & đang sống / tạm ẩn / hết hạn.
+  ldpSlugLocked(status) {
+    return ['publish', 'hidden', 'expired'].includes(status);
+  }
+  LDP_APPROVALS() {
+    return this.state.ldpApprovals || [
+      { id: 'REQ-0026', ldpId: 5,    name: 'Ưu đãi Sinh viên 2026',        tplId: 'thulead',  tplLabel: 'LDP Thu Lead',         lv1: 'uu-dai-sinh-vien', l2: 'dang-ky-2026',  goal: 'Lead Gen',     channel: 'FPT Telecom', sections: 9,  submittedBy: 'Hà Linh',    submittedAt: '02/09/26 09:12', attempt: 1, status: 'pending', history: [] },
+      { id: 'REQ-0025', ldpId: null, name: 'Combo Gia đình Q4',            tplId: 'internet', tplLabel: 'LDP Internet',         lv1: 'combo-gia-dinh',   l2: 'q4-2026',       goal: 'Bán gói cước', channel: 'FPT Telecom', sections: 11, submittedBy: 'Admin User', submittedAt: '01/09/26 16:40', attempt: 2, status: 'pending', history: [ { action: 'rejected', by: 'Super Admin', at: '31/08/26 10:15', reason: 'Nhánh "combo-gia-dinh" trùng ý nghĩa với gói combo đang nằm ở Level 2 của nhánh internet. Cân nhắc dùng internet/combo-gia-dinh thay vì tạo nhánh Level 1 mới.' } ] },
+      { id: 'REQ-0024', ldpId: 6,    name: 'Landing Tết Nguyên Đán',       tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', lv1: 'tet-2026',         l2: 'wifi-7',        goal: 'Branding',     channel: 'FPT Telecom', sections: 8,  submittedBy: 'Minh Tú',    submittedAt: '28/08/26 14:03', attempt: 1, status: 'rejected', reviewedBy: 'Super Admin', reviewedAt: '29/08/26 08:30', reason: 'Slug Level 1 "tet-2026" quá chung và mang tính thời điểm, không phản ánh danh mục dịch vụ. Đề xuất đặt trang dưới nhánh "khuyen-mai" (vd: khuyen-mai/tet-2026) để không phát sinh nhánh URL cấp 1 mới.', history: [] },
+      { id: 'REQ-0023', ldpId: null, name: 'Khuyến mãi Hè Rực Rỡ',         tplId: 'internet', tplLabel: 'LDP Internet',         lv1: 'he-ruc-ro',        l2: 'internet-uu-dai', goal: 'Lead Gen',   channel: 'FPT Telecom', sections: 10, submittedBy: 'Hà Linh',    submittedAt: '20/08/26 11:00', attempt: 1, status: 'approved', reviewedBy: 'Super Admin', reviewedAt: '20/08/26 15:22', history: [] },
+      { id: 'REQ-0022', ldpId: null, name: 'FPT Play Đỉnh Cao Bóng Đá',    tplId: 'sa',       tplLabel: 'LDP SA',               lv1: 'xem-bong-da',      l2: 'goi-the-thao',  goal: 'Bán gói cước', channel: 'FPT Play',    sections: 9,  submittedBy: 'Minh Tú',    submittedAt: '12/08/26 09:30', attempt: 1, status: 'approved', reviewedBy: 'Super Admin', reviewedAt: '12/08/26 10:05', history: [] },
+      { id: 'REQ-0021', ldpId: null, name: 'Camera Gia Đình An Tâm',       tplId: 'camera',   tplLabel: 'LDP Camera AI',        lv1: 'camera-gia-dinh',  l2: 'lap-dat',       goal: 'Lead Gen',     channel: 'FPT Camera',  sections: 8,  submittedBy: 'Admin User', submittedAt: '05/08/26 14:20', attempt: 1, status: 'rejected', reviewedBy: 'Super Admin', reviewedAt: '06/08/26 09:00', reason: 'Đã có nhánh "thiet-bi-thong-minh" bao phủ nhóm camera. Vui lòng đặt trang dưới thiet-bi-thong-minh/camera-gia-dinh.', history: [] },
     ];
   }
 
@@ -5503,6 +5543,217 @@ class Component extends DCLogic {
     if (v === 'form') return this.renderLdpForm();
     return this.renderLdpListView();
   }
+
+  // ===== Duyệt LDP =====
+  renderLdpApproval() {
+    if (this.state.ldpReviewId != null) return this.renderLdpApprovalReview();
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const all = this.LDP_APPROVALS();
+    const tab = this.state.ldpApprTab || 'pending';
+    const q = (this.state.ldpApprSearch || '').toLowerCase();
+    const tplF = this.state.ldpApprTpl || 'all';
+    const counts = {
+      pending: all.filter(a => a.status === 'pending').length,
+      approved: all.filter(a => a.status === 'approved').length,
+      rejected: all.filter(a => a.status === 'rejected').length,
+    };
+    const rows = all.filter(a => {
+      if (tab !== 'all' && a.status !== tab) return false;
+      if (tplF !== 'all' && a.tplId !== tplF) return false;
+      if (q && !(a.name + ' ' + a.lv1 + '/' + (a.l2 || '') + ' ' + a.submittedBy + ' ' + a.id).toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const stMap = { pending: ['Chờ duyệt', 'info'], approved: ['Đã duyệt', 'success'], rejected: ['Từ chối', 'danger'] };
+    const stBadge = s => { const m = stMap[s] || ['—', 'neutral']; return h(DS.Badge, { theme: m[1], dot: true }, m[0]); };
+    const tplColors = { internet: '#ff8c42', sa: '#a78bfa', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981', customhtml: '#f59e0b' };
+    const tplBg = { internet: 'rgba(255,140,66,0.15)', sa: 'rgba(109,40,217,0.15)', camera: 'rgba(255,107,0,0.15)', campaign: 'rgba(59,130,246,0.15)', thulead: 'rgba(16,185,129,0.15)', customhtml: 'rgba(245,158,11,0.15)' };
+    const columns = [
+      { key: 'req', header: 'Mã YC', width: 92, render: (_, a) => h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-subtle)' } }, a.id) },
+      { key: 'name', header: 'Landing Page', width: 210, render: (_, a) => h('div', null,
+          h('div', { style: { fontWeight: 700, fontSize: 13.5, marginBottom: 3 } }, a.name),
+          h('span', { style: { background: tplBg[a.tplId] || 'var(--color-surface-alt)', color: tplColors[a.tplId] || 'var(--color-text-muted)', padding: '1px 8px', borderRadius: 8, fontSize: 11, fontWeight: 600 } }, a.tplLabel)
+        ) },
+      { key: 'url', header: 'Slug đề xuất', width: 220, render: (_, a) => h('span', { style: { fontFamily: 'monospace', fontSize: 12, whiteSpace: 'nowrap' } },
+          h('span', { style: { color: 'var(--color-text-subtle)' } }, 'fpt.vn/'),
+          h('span', { style: { color: 'var(--color-accent)', fontWeight: 700, background: 'var(--color-accent-bg)', padding: '1px 4px', borderRadius: 4 } }, a.lv1),
+          a.l2 ? h('span', { style: { color: 'var(--color-text-muted)' } }, '/' + a.l2) : null
+        ) },
+      { key: 'submitter', header: 'Người gửi', width: 148, render: (_, a) => h('div', { style: { fontSize: 12 } },
+          h('div', { style: { fontWeight: 600 } }, a.submittedBy),
+          h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, a.submittedAt)
+        ) },
+      { key: 'attempt', header: 'Lần gửi', width: 84, align: 'center', render: (_, a) => a.attempt > 1
+          ? h(DS.Badge, { theme: 'warning' }, 'Lần ' + a.attempt)
+          : h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Lần 1') },
+      { key: 'status', header: 'Trạng thái', width: 108, render: (_, a) => stBadge(a.status) },
+      { key: 'reviewed', header: 'Người duyệt', width: 148, render: (_, a) => a.status === 'pending'
+          ? h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '—')
+          : h('div', { style: { fontSize: 12 } }, h('div', { style: { fontWeight: 600 } }, a.reviewedBy || '—'), h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, a.reviewedAt || '')) },
+      { key: 'act', header: 'Thao tác', width: 128, align: 'right', render: (_, a) => a.status === 'pending'
+          ? h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'file-check-line', onClick: e => { e && e.stopPropagation && e.stopPropagation(); this.setState({ ldpReviewId: a.id, ldpReviewDecision: null, ldpReviewReason: '' }); } }, 'Duyệt')
+          : this.rowActions([{ icon: 'eye-line', label: 'Xem', onClick: () => this.setState({ ldpReviewId: a.id }) }]) },
+    ];
+    const stat = (label, value, icon) => h(DS.Card, { style: { padding: 16 } }, h(DS.Stat, { label, value: String(value), icon }));
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 } },
+        stat('Chờ duyệt', counts.pending, 'clock-line'),
+        stat('Đã duyệt', counts.approved, 'check-circle-line'),
+        stat('Từ chối', counts.rejected, 'x-circle-line'),
+        stat('Tổng yêu cầu', all.length, 'file-check-line')
+      ),
+      h('p', { style: { margin: 0, fontSize: 13, color: 'var(--color-text-subtle)' } },
+        'Super Admin duyệt các Landing Page tạo nhánh URL cấp 1 (Level 1) mới trên fpt.vn. Duyệt xong LDP tự xuất bản; từ chối cần ghi rõ lý do để người tạo chỉnh sửa và gửi lại.'
+      ),
+      h(DS.Tabs, { value: tab, onChange: v => this.setState({ ldpApprTab: v, ldpAppr_pg: 1 }), items: [
+        { value: 'pending', label: 'Chờ duyệt (' + counts.pending + ')', icon: 'clock-line' },
+        { value: 'approved', label: 'Đã duyệt (' + counts.approved + ')', icon: 'check-circle-line' },
+        { value: 'rejected', label: 'Từ chối (' + counts.rejected + ')', icon: 'x-circle-line' },
+        { value: 'all', label: 'Tất cả', icon: 'dots-grid-line' },
+      ] }),
+      this.listCard(
+        this.toolbar(
+          h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', minWidth: 0 } },
+            h('div', { style: { flex: 1, minWidth: 160, maxWidth: 300 } },
+              h(DS.Input, { value: this.state.ldpApprSearch || '', onChange: e => this.setState({ ldpApprSearch: e.target ? e.target.value : e, ldpAppr_pg: 1 }), placeholder: 'Tìm tên, slug, người gửi, mã YC...', leadingIcon: 'search-medium-line' })
+            ),
+            h('div', { style: { flex: '0 0 172px' } },
+              h(DS.Select, { value: tplF, options: [
+                { value: 'all', label: 'Tất cả template' },
+                { value: 'internet', label: 'LDP Internet' },
+                { value: 'sa', label: 'LDP SA' },
+                { value: 'camera', label: 'LDP Camera AI' },
+                { value: 'campaign', label: 'LDP Campaign Wi-Fi 7' },
+                { value: 'thulead', label: 'LDP Thu Lead' },
+              ], searchable: true, searchPlaceholder: 'Tìm template…', onChange: v => this.setState({ ldpApprTpl: v, ldpAppr_pg: 1 }) })
+            )
+          ),
+          null
+        ),
+        this.filterChipsBar([
+          q && this.filterChip('Tìm: ' + this.state.ldpApprSearch, 'neutral', () => this.setState({ ldpApprSearch: '', ldpAppr_pg: 1 })),
+          tplF !== 'all' && this.filterChip('Template: ' + tplF, 'brand', () => this.setState({ ldpApprTpl: 'all', ldpAppr_pg: 1 })),
+        ]),
+        rows.length ? this.tbl(columns, this.sliceData(rows, 'ldpAppr'), 'id', a => this.setState({ ldpReviewId: a.id, ldpReviewDecision: null, ldpReviewReason: '' }))
+          : this.empty(tab === 'pending' ? 'Không có yêu cầu nào đang chờ duyệt.' : 'Không có yêu cầu nào khớp bộ lọc.'),
+        rows.length ? this.renderPagBar(rows.length, 'ldpAppr', 'yêu cầu') : null
+      )
+    );
+  }
+  renderLdpApprovalReview() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const rec = this.LDP_APPROVALS().find(a => a.id === this.state.ldpReviewId);
+    const back = () => this.setState({ ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '' });
+    if (!rec) return h('div', { style: { padding: 24 } }, h(DS.Button, { level: 'tertiary', leadingIcon: 'arrow-left-line', onClick: back }, 'Quay lại danh sách'));
+    const decided = rec.status !== 'pending';
+    const decision = this.state.ldpReviewDecision;
+    const reason = this.state.ldpReviewReason || '';
+    const RMAX = 500;
+    const isNewLv1 = !new Set(this.LDP_FIXED_LV1()).has(rec.lv1);
+    const showNewFlag = isNewLv1 && !decided;
+    const slugColor = decided ? (rec.status === 'approved' ? 'var(--color-success-text)' : 'var(--color-danger-text)') : (isNewLv1 ? 'var(--color-warning-text)' : 'var(--color-success-text)');
+    const secList = this.LDP_SECTION_DATA()[rec.tplId] || [];
+    const secCount = secList.length || rec.sections || 0;
+    const stMap = { pending: ['Chờ duyệt', 'info'], approved: ['Đã duyệt', 'success'], rejected: ['Từ chối', 'danger'] };
+    const card = (title, icon, body, extra) => h(DS.Card, { style: { padding: 20 } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 } },
+        h(DS.Icon, { name: icon, size: 17, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14, color: 'var(--color-accent-text)' } }, title),
+        extra ? h('div', { style: { marginLeft: 'auto' } }, extra) : null
+      ), body);
+    const metaItem = (k, v) => h('div', { style: { minWidth: 0 } },
+      h('div', { style: { fontSize: 10.5, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em', fontWeight: 700, marginBottom: 3 } }, k),
+      h('div', { style: { fontSize: 13.5, fontWeight: 600 } }, v)
+    );
+    const infoRow = (k, v) => h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 12, padding: '7px 0', borderBottom: '1px solid var(--color-border-pale)', fontSize: 12.5 } },
+      h('span', { style: { color: 'var(--color-text-subtle)' } }, k),
+      h('span', { style: { fontWeight: 600, textAlign: 'right' } }, v)
+    );
+    const doApprove = () => this.confirm('Duyệt & xuất bản LDP?', 'Nhánh "' + rec.lv1 + '" sẽ được thêm vào danh sách nhánh hợp lệ và LDP "' + rec.name + '" sẽ xuất bản ngay (theo lịch hiệu lực nếu có).', () => { this.closeModal(); this.approveLdp(rec); });
+    const canReject = reason.trim().length > 0;
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: decided ? 8 : (decision === 'reject' ? 268 : 136) } },
+      h('div', { style: { position: 'sticky', top: -24, zIndex: 10, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
+        h(DS.Button, { level: 'tertiary', leadingIcon: 'arrow-left-line', size: 'sm', onClick: back }, 'Quay lại danh sách'),
+        h('div', { style: { width: 1, height: 18, background: 'var(--color-border)' } }),
+        h('div', { style: { flex: 1, minWidth: 0 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
+            h('span', { style: { fontWeight: 700, fontSize: 15 } }, 'Duyệt LDP: ' + rec.name),
+            h(DS.Badge, { theme: stMap[rec.status][1], dot: true }, stMap[rec.status][0])
+          ),
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 1 } }, rec.id + ' · ' + rec.tplLabel + ' · gửi bởi ' + rec.submittedBy + ' · ' + rec.submittedAt)
+        )
+      ),
+      h('div', { style: { width: '100%', maxWidth: 940, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 } },
+        card('Trang Landing Page đề xuất', 'globe-01-line', h('div', null,
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', padding: '18px 20px', background: 'var(--color-surface-sunken)', borderRadius: 12, fontFamily: 'monospace', fontSize: 16 } },
+            h('span', { style: { color: 'var(--color-text-subtle)' } }, 'fpt.vn/'),
+            h('strong', { style: { color: 'var(--color-accent)', background: 'var(--color-accent-bg)', padding: '3px 8px', borderRadius: 6, fontSize: 18 } }, rec.lv1),
+            rec.l2 ? h('span', { style: { color: 'var(--color-text-muted)' } }, '/' + rec.l2) : null
+          ),
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 16, marginTop: 16 } },
+            metaItem('Template', rec.tplLabel),
+            metaItem('Mục tiêu', rec.goal),
+            metaItem('Số sections', String(secCount)),
+            metaItem('Người gửi', rec.submittedBy),
+            metaItem('Lần gửi', 'Lần ' + (rec.attempt || 1))
+          )
+        ), showNewFlag && h(DS.Tag, { size: 'sm', color: 'var(--color-danger)' }, 'Nhánh URL cấp 1 MỚI')),
+        card('Slug Level 1 cần duyệt', 'marker-pin-01-line',
+          h('div', { style: { textAlign: 'center', fontFamily: 'monospace', fontSize: 24, fontWeight: 700, color: slugColor, padding: '24px 16px', background: 'var(--color-surface-sunken)', borderRadius: 12, wordBreak: 'break-all' } }, rec.lv1)
+        ),
+        card('Nội dung sections', 'dots-grid-line', secList.length
+          ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+              secList.map((s, i) => h('div', { key: s.id, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 8 } },
+                h('span', { style: { width: 22, height: 22, borderRadius: 6, background: 'var(--color-surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', flexShrink: 0 } }, String(i + 1).padStart(2, '0')),
+                h('span', { style: { flex: 1, fontSize: 12.5, fontWeight: 600 } }, s.name),
+                h('span', { style: { background: s.ec, color: s.tc, padding: '1px 8px', borderRadius: 8, fontSize: 10.5, fontWeight: 600, flexShrink: 0 } }, s.type)
+              ))
+            )
+          : h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Trang tùy chỉnh — không có danh sách section mẫu.')
+        ),
+        decided
+          ? card('Kết quả duyệt', rec.status === 'approved' ? 'check-circle-line' : 'x-circle-line', h('div', null,
+              infoRow('Trạng thái', stMap[rec.status][0]),
+              infoRow('Người duyệt', rec.reviewedBy || '—'),
+              infoRow('Thời gian', rec.reviewedAt || '—'),
+              rec.status === 'rejected' ? h('div', { style: { marginTop: 10, fontSize: 12.5 } },
+                h('div', { style: { fontWeight: 600, marginBottom: 3 } }, 'Lý do từ chối:'),
+                h('div', { style: { color: 'var(--color-text-muted)', lineHeight: 1.5 } }, rec.reason || '—')
+              ) : null
+            ))
+          : null,
+        (rec.history && rec.history.length) ? card('Lịch sử gửi duyệt', 'clock-line', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+          rec.history.map((hh, i) => h('div', { key: i, style: { fontSize: 11.5, paddingLeft: 12, borderLeft: '2px solid var(--color-border)' } },
+            h('div', { style: { fontWeight: 700, color: 'var(--color-danger-text)' } }, 'Bị từ chối · ' + (hh.at || '')),
+            h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, 'Bởi ' + (hh.by || '—')),
+            h('div', { style: { marginTop: 3, color: 'var(--color-text-muted)', lineHeight: 1.5 } }, hh.reason || '')
+          ))
+        )) : null
+      ),
+      !decided && h('div', { style: { position: 'fixed', left: '50%', bottom: 40, transform: 'translateX(-50%)', zIndex: 1000, width: decision === 'reject' ? 'min(560px, calc(100vw - 32px))' : 'auto', maxWidth: 'calc(100vw - 32px)', animation: 'fptScaleIn .18s cubic-bezier(.2,0,0,1)' } },
+        decision === 'reject'
+          ? h('div', { style: { background: 'var(--color-surface)', border: '1px solid var(--color-border-strong)', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08)', padding: 16 } },
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 } },
+                h(DS.Icon, { name: 'x-circle-line', size: 16, color: 'var(--color-danger-text)' }),
+                h('span', { style: { fontWeight: 700, fontSize: 13.5, color: 'var(--color-danger-text)' } }, 'Lý do từ chối'),
+                h('span', { style: { color: 'var(--color-danger)', fontWeight: 700 } }, '*')
+              ),
+              h(DS.Textarea, { value: reason, rows: 3, maxLength: RMAX, placeholder: 'Giải thích vì sao slug Level 1 chưa hợp lệ và gợi ý cách sửa...', onChange: e => this.setState({ ldpReviewReason: ((e && e.target ? e.target.value : e) || '').slice(0, RMAX) }) }),
+              h('div', { style: { fontSize: 11, marginTop: 4, color: reason.length >= RMAX ? 'var(--color-danger-text)' : 'var(--color-text-subtle)' } }, 'Tối đa ' + RMAX + ' ký tự (' + reason.length + '/' + RMAX + ')' + (reason.length >= RMAX ? ' — đã đạt giới hạn' : '')),
+              h('div', { style: { display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' } },
+                h(DS.Button, { level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpReviewDecision: null, ldpReviewReason: '' }) }, 'Hủy'),
+                h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'x-circle-line', disabled: !canReject, onClick: () => this.rejectLdp(rec, reason.trim()) }, 'Xác nhận từ chối')
+              )
+            )
+          : h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px 10px 18px', background: 'var(--color-surface)', border: '1px solid var(--color-border-strong)', borderRadius: 100, boxShadow: '0 8px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08)', whiteSpace: 'nowrap' } },
+              h(DS.Icon, { name: 'file-check-line', size: 16, color: 'var(--color-accent)' }),
+              h('span', { style: { fontWeight: 700, fontSize: 13 } }, 'Quyết định của bạn'),
+              h('div', { style: { width: 1, height: 20, background: 'var(--color-border)', margin: '0 2px' } }),
+              h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'x-circle-line', onClick: () => this.setState({ ldpReviewDecision: 'reject' }) }, 'Từ chối'),
+              h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', onClick: doApprove }, 'Duyệt & xuất bản')
+            )
+      )
+    );
+  }
   renderLdpListView() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     // Inject custom copy icon (not in DS 77-icon subset)
@@ -5526,12 +5777,12 @@ class Component extends DCLogic {
     });
     const ldpSt = id => this.state.ldpStatuses && this.state.ldpStatuses[id] !== undefined ? this.state.ldpStatuses[id] : null;
     const stBadge = s => {
-      const map = { publish: ['Đang chạy', 'success'], expired: ['Hết hạn', 'danger'], draft: ['Nháp', 'neutral'], hidden: ['Tạm ẩn', 'warning'] };
+      const map = { publish: ['Đang chạy', 'success'], expired: ['Hết hạn', 'danger'], draft: ['Nháp', 'neutral'], hidden: ['Tạm ẩn', 'warning'], pending: ['Chờ duyệt', 'info'], rejected: ['Từ chối', 'danger'] };
       const [lbl, theme] = map[s] || ['—', 'neutral'];
       return h(DS.Badge, { theme, dot: true }, lbl);
     };
     const pageData = this.sliceData(data, 'ldp');
-    const statLabel = { publish: 'Đang chạy', expired: 'Hết hạn', draft: 'Nháp', hidden: 'Tạm ẩn' };
+    const statLabel = { publish: 'Đang chạy', expired: 'Hết hạn', draft: 'Nháp', hidden: 'Tạm ẩn', pending: 'Chờ duyệt', rejected: 'Từ chối' };
     const columns = [
       { key: 'name', header: 'Tên Trang (Campaign)', width: 220, render: (_, r) => h('div', null,
           h('div', { style: { fontWeight: 700, fontSize: 14 } }, r.name),
@@ -5552,7 +5803,7 @@ class Component extends DCLogic {
       { key: 'visible', header: 'Hiển thị', width: 80, align: 'center', render: (_, r) => {
           const curSt = ldpSt(r.id) || r.status;
           const isOn = curSt === 'publish';
-          const isDraft = curSt === 'draft' || curSt === 'expired';
+          const isDraft = ['draft', 'expired', 'pending', 'rejected'].includes(curSt);
           if (isDraft) return h('span', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, '—');
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { checked: isOn, size: 'sm', onChange: v => {
@@ -5608,6 +5859,10 @@ class Component extends DCLogic {
   }
   openLdpEditor(r) {
     const effStatus = (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
+    if (effStatus === 'pending') {
+      this.toast('info', 'Đang chờ duyệt', 'LDP "' + r.name + '" đang chờ Super Admin duyệt nên chưa thể chỉnh sửa.');
+      return;
+    }
     const lockTpl = effStatus !== 'draft';
     this.setState({ ldpView: 'form', ldpStep: lockTpl ? 2 : 1, ldpEditRow: r, ldpTpl: r.tplId, ldpForm2: {}, ldpLockTemplate: lockTpl });
   }
@@ -5615,25 +5870,125 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const tplColors = { internet: '#ff8c42', sa: '#a78bfa', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981', customhtml: '#f59e0b' };
     const tplBg    = { internet: 'rgba(255,140,66,0.15)', sa: 'rgba(109,40,217,0.15)', camera: 'rgba(255,107,0,0.15)', campaign: 'rgba(59,130,246,0.15)', thulead: 'rgba(16,185,129,0.15)', customhtml: 'rgba(245,158,11,0.15)' };
-    const stBadge = s => { const map = { publish: ['Đang chạy','success'], expired: ['Hết hạn','danger'], draft: ['Nháp','neutral'] }; const [lbl,theme] = map[s]||['—','neutral']; return h(DS.Badge, { theme, dot: true }, lbl); };
+    const stBadge = s => { const map = { publish: ['Đang chạy','success'], expired: ['Hết hạn','danger'], draft: ['Nháp','neutral'], hidden: ['Tạm ẩn','warning'], pending: ['Chờ duyệt','info'], rejected: ['Từ chối','danger'] }; const [lbl,theme] = map[s]||['—','neutral']; return h(DS.Badge, { theme, dot: true }, lbl); };
+    const effStatus = (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
+    const req = this.LDP_APPROVALS().find(a => a.ldpId === r.id);
     this.openDrawer({
       title: r.name, subtitle: r.tplLabel + ' · ' + r.goal, width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0 16px', borderBottom: '1px solid var(--color-border)', marginBottom: 4 } },
           h('span', { style: { background: tplBg[r.tplId]||'var(--color-surface-alt)', color: tplColors[r.tplId]||'var(--color-text-muted)', padding: '3px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700 } }, r.tplLabel),
-          stBadge(r.status)
+          stBadge(effStatus)
         ),
+        (effStatus === 'rejected' && r.rejectReason) ? h(DS.Alert, { theme: 'danger', title: 'Bị Super Admin từ chối', style: { borderRadius: 10, margin: '4px 0 8px' } },
+          h('div', { style: { fontSize: 12 } }, r.rejectReason, h('div', { style: { marginTop: 4, color: 'var(--color-text-subtle)' } }, (r.reviewedBy || '') + (r.reviewedAt ? ' · ' + r.reviewedAt : '')))
+        ) : null,
         this.detailRow('Tên chiến dịch', h('strong', null, r.name)),
         this.detailRow('URL', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url)),
+        this.detailRow('Nhánh Level 1', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5 } }, r.lv1 || '—')),
         this.detailRow('Mục tiêu', r.goal),
         this.detailRow('Thời gian hiệu lực', r.startDate + ' – ' + r.endDate),
         this.detailRow('Lần sửa cuối', h('div', null, h('div', null, r.lastEdit), h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, '— ' + r.lastEditBy))),
-        this.detailRow('Trạng thái', stBadge(r.status))
+        this.detailRow('Trạng thái', stBadge(effStatus))
       ),
-      footer: () => h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
-        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openLdpEditor(r); } }, 'Chỉnh sửa')
+      footer: () => h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 8 } },
+        effStatus === 'pending'
+          ? h(DS.Button, { level: 'primary', leadingIcon: 'file-check-line', onClick: () => { this.closeDrawer(); this.setState({ active: 'ldp-approval', ldpApprTab: 'pending', ldpReviewId: req ? req.id : null }); } }, 'Xem trong Duyệt LDP')
+          : h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openLdpEditor(r); } }, effStatus === 'rejected' ? 'Chỉnh sửa & gửi lại' : 'Chỉnh sửa')
       )
     });
+  }
+  // ── Duyệt LDP: hành động ──
+  ldpNow() {
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(2);
+  }
+  ldpNowTime() {
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    return this.ldpNow() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  ldpFormSectionCount() {
+    const tplId = this.state.ldpTpl || 'internet';
+    if (tplId === 'custom') return (this.state.ldpCustomSecs || []).length;
+    return (this.state['ldpSecs_' + tplId] || this.LDP_SECTION_DATA()[tplId] || []).length;
+  }
+  publishLdpDirect() {
+    const editRow = this.state.ldpEditRow;
+    const f2 = this.state.ldpForm2 || {};
+    const name = f2.campaignName || (editRow && editRow.name) || 'Landing Page';
+    if (editRow) {
+      const list = this.LDP_LIST().map(r => r.id === editRow.id
+        ? { ...r, status: 'publish', lastEdit: this.ldpNow(), lastEditBy: 'Admin User' }
+        : r);
+      this.setState({ ldpListData: list, ldpStatuses: { ...(this.state.ldpStatuses || {}), [editRow.id]: 'publish' } });
+    }
+    this.setState({ ldpView: 'list', ldpStep: 1, ldpLockTemplate: false, ldpEditRow: null, ldpForm2: {} });
+    this.toast('success', 'Đã xuất bản', 'Landing Page "' + name + '" đã được xuất bản.');
+  }
+  submitLdpForApproval() {
+    this.closeModal();
+    const editRow = this.state.ldpEditRow;
+    const f2 = this.state.ldpForm2 || {};
+    const tplId = this.state.ldpTpl || (editRow && editRow.tplId) || 'internet';
+    const tpl = this.LDP_TPL_DATA().find(t => t.id === tplId);
+    const tplLabel = (editRow && editRow.tplLabel) || (tpl && tpl.label) || 'Custom LDP';
+    const lv1 = f2.urlSlug1 || (editRow && editRow.lv1) || '';
+    const l2 = f2.urlSlug2 !== undefined ? f2.urlSlug2 : ((editRow && editRow.l2) || '');
+    const name = f2.campaignName || (editRow && editRow.name) || 'Landing Page mới';
+    const goal = f2.goal || (editRow && editRow.goal) || '—';
+    const url = '/' + [lv1, l2].filter(Boolean).join('/');
+    const now = this.ldpNowTime();
+    const approvals = this.LDP_APPROVALS();
+    const prior = editRow ? approvals.find(a => a.ldpId === editRow.id && a.status === 'rejected') : null;
+    const maxNum = approvals.reduce((m, a) => { const n = parseInt((String(a.id).match(/(\d+)$/) || [])[1], 10); return isNaN(n) ? m : Math.max(m, n); }, 0);
+    const reqId = 'REQ-' + String(maxNum + 1).padStart(4, '0');
+    const ldpId = editRow ? editRow.id : (this.LDP_LIST().reduce((m, r) => Math.max(m, r.id), 0) + 1);
+    const newReq = {
+      id: reqId, ldpId, name, tplId, tplLabel, lv1, l2, goal, channel: 'FPT Telecom',
+      sections: this.ldpFormSectionCount() || (tpl && tpl.sections) || 0,
+      submittedBy: 'Admin User', submittedAt: now,
+      attempt: prior ? ((prior.attempt || 1) + 1) : 1, status: 'pending',
+      history: prior ? [...(prior.history || []), { action: 'rejected', by: prior.reviewedBy, at: prior.reviewedAt, reason: prior.reason }] : [],
+    };
+    const nextApprovals = [newReq, ...approvals.filter(a => !(prior && a.id === prior.id))];
+    let list = this.LDP_LIST();
+    if (editRow) {
+      list = list.map(r => r.id === editRow.id ? { ...r, status: 'pending', lv1, l2, url, goal, lastEdit: this.ldpNow(), lastEditBy: 'Admin User', submittedBy: 'Admin User', submittedAt: now } : r);
+    } else {
+      list = [{ id: ldpId, name, tplId, tplLabel, goal, lv1, l2, url, startDate: '—', endDate: '—', lastEdit: this.ldpNow(), lastEditBy: 'Admin User', status: 'pending', submittedBy: 'Admin User', submittedAt: now }, ...list];
+    }
+    const nextStatuses = { ...(this.state.ldpStatuses || {}) };
+    if (editRow) nextStatuses[editRow.id] = 'pending';
+    this.setState({ ldpApprovals: nextApprovals, ldpListData: list, ldpStatuses: nextStatuses, ldpView: 'list', ldpStep: 1, ldpLockTemplate: false, ldpEditRow: null, ldpForm2: {} });
+    this.toast('success', 'Đã gửi duyệt', 'LDP "' + name + '" đã gửi Super Admin. Theo dõi kết quả ở mục Duyệt LDP.');
+  }
+  approveLdp(record) {
+    const now = this.ldpNowTime();
+    const nextApprovals = this.LDP_APPROVALS().map(a => a.id === record.id ? { ...a, status: 'approved', reviewedBy: 'Super Admin', reviewedAt: now } : a);
+    let list = this.LDP_LIST();
+    const nextStatuses = { ...(this.state.ldpStatuses || {}) };
+    if (record.ldpId != null) {
+      list = list.map(r => r.id === record.ldpId ? { ...r, status: 'publish', reviewedBy: 'Super Admin', reviewedAt: now, rejectReason: undefined } : r);
+      nextStatuses[record.ldpId] = 'publish';
+    }
+    this.setState({
+      ldpApprovals: nextApprovals, ldpListData: list, ldpStatuses: nextStatuses,
+      ldpExtraApprovedLv1: [...(this.state.ldpExtraApprovedLv1 || []), record.lv1],
+      ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '',
+    });
+    this.toast('success', 'Đã duyệt & xuất bản', 'Nhánh "' + record.lv1 + '" đã được phê duyệt. LDP "' + record.name + '" đang chạy.');
+  }
+  rejectLdp(record, reason) {
+    const now = this.ldpNowTime();
+    const nextApprovals = this.LDP_APPROVALS().map(a => a.id === record.id ? { ...a, status: 'rejected', reason: reason, reviewedBy: 'Super Admin', reviewedAt: now } : a);
+    let list = this.LDP_LIST();
+    const nextStatuses = { ...(this.state.ldpStatuses || {}) };
+    if (record.ldpId != null) {
+      list = list.map(r => r.id === record.ldpId ? { ...r, status: 'rejected', rejectReason: reason, reviewedBy: 'Super Admin', reviewedAt: now } : r);
+      nextStatuses[record.ldpId] = 'rejected';
+    }
+    this.setState({ ldpApprovals: nextApprovals, ldpListData: list, ldpStatuses: nextStatuses, ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '' });
+    this.toast('info', 'Đã từ chối', 'Đã gửi phản hồi từ chối cho người tạo LDP "' + record.name + '".');
   }
   renderLdpForm() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -5641,6 +5996,13 @@ class Component extends DCLogic {
     const lockTpl = !!this.state.ldpLockTemplate;
     const minStep = lockTpl ? 2 : 1;
     const stepInfo = [{ n: 1, label: 'Chọn Template' }, { n: 2, label: 'Thông tin trang' }, { n: 3, label: 'Nội dung sections' }].filter(s => s.n >= minStep);
+    const editRow = this.state.ldpEditRow;
+    const effStatus = editRow ? ((this.state.ldpStatuses && this.state.ldpStatuses[editRow.id] !== undefined) ? this.state.ldpStatuses[editRow.id] : editRow.status) : null;
+    const f2 = this.state.ldpForm2 || {};
+    const curLv1 = f2.urlSlug1 !== undefined ? f2.urlSlug1 : (editRow ? (editRow.lv1 || '') : '');
+    const slugLocked = !!(editRow && this.ldpSlugLocked(effStatus));
+    const needsApproval = !slugLocked && !!curLv1 && !this.ldpApprovedLv1Set().has(curLv1);
+    const isResubmit = !!(editRow && effStatus === 'rejected');
     const topActions = h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
       step > minStep && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'arrow-left-line', onClick: () => this.setState({ ldpStep: step - 1 }) }, step === 2 ? 'Quay lại Template' : 'Quay lại Thông tin'),
       h(DS.Button, { level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpView: 'list', ldpStep: 1, ldpLockTemplate: false }) }, 'Hủy'),
@@ -5650,9 +6012,17 @@ class Component extends DCLogic {
       step === 3 && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'check-line',
         onClick: () => { this.setState({ ldpView: 'list', ldpStep: 1, ldpLockTemplate: false }); this.toast('success', 'Đã lưu nháp', 'Landing Page đã được lưu nháp.'); }
       }, 'Lưu nháp'),
-      step === 3 && h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line',
-        onClick: () => { this.setState({ ldpView: 'list', ldpStep: 1, ldpLockTemplate: false }); this.toast('success', 'Đã xuất bản', 'Landing Page đã được xuất bản thành công!'); }
-      }, 'Hoàn thành')
+      step === 3 && (needsApproval
+        ? h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'send-01-line',
+            onClick: () => this.confirm(
+              isResubmit ? 'Gửi duyệt lại LDP?' : 'Gửi LDP đi duyệt?',
+              'Nhánh URL cấp 1 "' + curLv1 + '" là nhánh mới trên fpt.vn và cần Super Admin phê duyệt. Hãy kiểm tra kỹ chính tả và ý nghĩa của slug Level 1 trước khi gửi. Sau khi gửi, LDP sẽ ở trạng thái "Chờ duyệt" và chưa hiển thị cho người dùng cho tới khi được duyệt.',
+              () => this.submitLdpForApproval()
+            )
+          }, isResubmit ? 'Gửi duyệt lại' : 'Gửi duyệt')
+        : h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line',
+            onClick: () => this.publishLdpDirect()
+          }, 'Hoàn thành'))
     );
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 16, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', position: 'sticky', top: -24, zIndex: 10, margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
@@ -5765,8 +6135,11 @@ class Component extends DCLogic {
     const lbSt = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 5, display: 'block' };
     const req  = h('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*');
     const secHdr = lbl => h('div', { style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--color-text-subtle)', margin: '20px 0 14px', borderBottom: '1px solid var(--color-border)', paddingBottom: 8 } }, lbl);
-    const slug1 = get('urlSlug1', '');
-    const slug2 = get('urlSlug2', '');
+    const editRow = this.state.ldpEditRow;
+    const effStatus = editRow ? ((this.state.ldpStatuses && this.state.ldpStatuses[editRow.id] !== undefined) ? this.state.ldpStatuses[editRow.id] : editRow.status) : null;
+    const slugLocked = !!(editRow && this.ldpSlugLocked(effStatus));
+    const slug1 = get('urlSlug1', editRow ? (editRow.lv1 || '') : '');
+    const slug2 = get('urlSlug2', editRow ? (editRow.l2 || '') : '');
     const FPT_CATS = [
       { value: 'khuyen-mai',           label: 'Khuyến mãi',              children: [] },
       { value: 'internet',             label: 'Internet – Wifi',          children: [
@@ -5792,8 +6165,8 @@ class Component extends DCLogic {
       { value: 'tin-tuc',             label: 'Tin tức',                  children: [] },
       { value: 'lien-he',             label: 'Liên hệ',                  children: [] },
     ];
-    const selCat = FPT_CATS.find(c => c.value === slug1);
-    const catChildren = selCat ? selCat.children : [];
+    const approvedLv1 = this.ldpApprovedLv1Set();
+    const lv1Exists = !!slug1 && approvedLv1.has(slug1);
     const slug  = [slug1, slug2].filter(s => s).join('/') || 'khuyen-mai/km-t5';
     const tplDefaultColors = { internet: '#ffffff', sa: '#0a1628', landingpage: '#f4f6fa', customhtml: '#ffffff' };
     const defaultBgColor = tplDefaultColors[this.state.ldpTpl] || '#ffffff';
@@ -5804,22 +6177,55 @@ class Component extends DCLogic {
     const inSt  = { width: '100%', padding: '8px 12px', border: '1.5px solid var(--color-border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: 'var(--color-surface)', color: 'var(--color-text)', outline: 'none', boxSizing: 'border-box' };
     const taSt  = { ...inSt, resize: 'vertical' };
     return h(DS.Card, { style: { padding: 24 } },
+      (editRow && effStatus === 'rejected') ? h(DS.Alert, { theme: 'danger', title: 'LDP đã bị Super Admin từ chối', style: { borderRadius: 10, marginBottom: 18 } },
+        h('div', { style: { fontSize: 12.5, lineHeight: 1.55 } },
+          h('div', null, h('strong', null, 'Lý do: '), editRow.rejectReason || '—'),
+          h('div', { style: { marginTop: 4, color: 'var(--color-text-subtle)' } }, 'Người duyệt: ' + (editRow.reviewedBy || '—') + (editRow.reviewedAt ? ' · ' + editRow.reviewedAt : '')),
+          h('div', { style: { marginTop: 6 } }, 'Chỉnh sửa nhánh Level 1 cho hợp lệ, sau đó bấm ', h('strong', null, 'Gửi duyệt lại'), ' ở bước Nội dung.')
+        )
+      ) : null,
       secHdr('Thông tin cơ bản'),
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 4 } },
         h('div', { style: { gridColumn: '1 / -1' } },
           h('label', { style: lbSt }, 'URL Slug', req),
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
-            h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 12px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0 } }, 'fpt.vn/'),
-            h('div', { style: { flex: '1 1 180px', minWidth: 180 } }, h(DS.Select, {
-              options: [{ value: '', label: '— Level 1 —', disabled: true }, ...FPT_CATS.map(c => ({ value: c.value, label: c.label }))],
-              value: slug1, searchable: true, searchPlaceholder: 'Tìm danh mục…', onChange: v => { set('urlSlug1', v); set('urlSlug2', ''); }
-            })),
-            h('span', { style: { display: 'flex', alignItems: 'center', color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
-            h('div', { style: { flex: '1 1 180px', minWidth: 180 } }, h(DS.Input, { value: slug2, onChange: e => set('urlSlug2', e.target.value), placeholder: slug1 ? 'ten-ldp' : 'Level 2', disabled: !slug1 }))
-          ),
-          h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } },
-            'Xem trước: fpt.vn/', h('strong', null, slug1 || 'category'), slug2 ? h('span', null, '/', h('strong', null, slug2)) : null
-          )
+          slugLocked
+            ? h('div', null,
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13.5, fontFamily: 'monospace', color: 'var(--color-text-muted)' } },
+                  h(DS.Icon, { name: 'lock-01-line', size: 15, color: 'var(--color-text-subtle)' }),
+                  h('span', null, 'fpt.vn/'),
+                  h('strong', { style: { color: 'var(--color-text)' } }, slug1 || '—'),
+                  slug2 ? h('span', null, '/', h('strong', { style: { color: 'var(--color-text)' } }, slug2)) : null
+                ),
+                h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } }, 'Slug đã được duyệt — không thể chỉnh sửa. Cập nhật nội dung trang không cần gửi duyệt lại.')
+              )
+            : h('div', null,
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
+                  h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 12px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0 } }, 'fpt.vn/'),
+                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } }, h(DS.Input, { value: slug1, onChange: e => set('urlSlug1', this.ldpSlugify(e && e.target ? e.target.value : e)), placeholder: 'nhap-nhanh-level-1' })),
+                  h('span', { style: { display: 'flex', alignItems: 'center', color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
+                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } }, h(DS.Input, { value: slug2, onChange: e => set('urlSlug2', this.ldpSlugify(e && e.target ? e.target.value : e)), placeholder: slug1 ? 'ten-ldp' : 'Level 2', disabled: !slug1 }))
+                ),
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 9 } },
+                  h('span', { style: { fontSize: 11, fontWeight: 600, color: 'var(--color-text-subtle)', marginRight: 2 } }, 'Nhánh Level 1 có sẵn:'),
+                  FPT_CATS.map(c => {
+                    const active = slug1 === c.value;
+                    return h('span', { key: c.value, onClick: () => set('urlSlug1', c.value), title: c.label, style: { display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 9px', borderRadius: 13, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', border: '1px solid ' + (active ? 'var(--color-accent)' : 'var(--color-border)'), background: active ? 'var(--color-accent-bg)' : 'var(--color-surface)', color: active ? 'var(--color-accent-text)' : 'var(--color-text-muted)', whiteSpace: 'nowrap', transition: 'all .12s' } },
+                      active ? h(DS.Icon, { name: 'check-line', size: 12, color: 'var(--color-accent)' }) : null,
+                      c.value
+                    );
+                  })
+                ),
+                h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: !slug1 ? 'var(--color-text-subtle)' : (lv1Exists ? 'var(--color-success-text)' : 'var(--color-warning-text)') } },
+                  !slug1
+                    ? h('span', null, 'Chọn một nhánh có sẵn hoặc gõ tên nhánh Level 1 mới.')
+                    : (lv1Exists
+                        ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'check-circle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" đã tồn tại — xuất bản trực tiếp, không cần duyệt.'))
+                        : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" là nhánh URL cấp 1 mới — cần Super Admin duyệt trước khi xuất bản.')))
+                ),
+                h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } },
+                  'Xem trước: fpt.vn/', h('strong', null, slug1 || 'level-1'), slug2 ? h('span', null, '/', h('strong', null, slug2)) : null
+                )
+              )
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Tên chiến dịch', req),
