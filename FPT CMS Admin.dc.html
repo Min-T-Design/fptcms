@@ -6248,7 +6248,6 @@ class Component extends DCLogic {
       h('div', { style: { width: 32, height: 32, background: 'var(--color-accent)', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 } }, String(n)),
       h('div', { style: { display: 'flex', flexDirection: 'column' } }, ...ch)
     );
-    const EIMAP = { '🖼':'image-line','📊':'bar-chart-square-02-line','📦':'folder-line','📺':'star-01-line','🎬':'eye-line','⭐':'star-01-line','📋':'file-check-line','🎁':'zap-line','❓':'info-circle-line','📝':'edit-01-line','⏱':'clock-line','⏰':'clock-line','⚽':'star-01-solid','✨':'stars-01-line','🎭':'image-line','💰':'bar-chart-square-02-line','🎙':'phone-line','📌':'marker-pin-01-line','🚀':'upload-cloud-line','📷':'image-line','🔍':'search-medium-line','📱':'phone-line','🏆':'star-01-solid','📣':'send-01-line','👣':'arrow-right-line','🎪':'image-line','🎯':'check-circle-line','💻':'edit-01-line','⚡':'zap-line','📶':'globe-01-line' };
 
     // ── LdpDateTimeTrigger — opens shared renderDatePickerModal() ────────────
     const LdpDateTimeTrigger = () => {
@@ -8167,6 +8166,7 @@ class Component extends DCLogic {
           constructor(p) {
             super(p);
             this.state = {
+              heads: { crit: 'TIÊU CHÍ', v7: 'Wi-Fi 7', v6e: 'Wi-Fi 6E', v6: 'Wi-Fi 6', v5: 'Wi-Fi 5' },
               rows: [
                 { id:1, label:'Chuẩn WiFi',            v7:'802.11be',     v6e:'802.11ax (6E)', v6:'802.11ax',           v5:'802.11ac' },
                 { id:2, label:'Tốc độ tối đa',          v7:'46 Gbps',      v6e:'9.6 Gbps',      v6:'9.6 Gbps',           v5:'3.5 Gbps' },
@@ -8181,10 +8181,10 @@ class Component extends DCLogic {
               editingRow: null,
             };
           }
+          updHead(key, val) { this.setState(s => ({ heads: { ...s.heads, [key]: val } })); }
           render() {
-            const { rows, confirmIdx, editingRow } = this.state;
+            const { heads, rows, confirmIdx, editingRow } = this.state;
             const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-            const colHdr = { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0 };
             const grid = { display: 'grid', gridTemplateColumns: '140px 1fr 1fr 1fr 1fr 32px', gap: 6, alignItems: 'center' };
             const gridRow = { display: 'grid', gridTemplateColumns: '140px 1fr 1fr 1fr 1fr 32px', gap: 6, alignItems: 'start' };
             const cell = { minWidth: 0, '--radius-base': '12px' };
@@ -8200,11 +8200,11 @@ class Component extends DCLogic {
             };
             return h('div', null,
               h('div', { style: { ...grid, marginBottom: 8 } },
-                h('span', { style: { ...colHdr, justifyContent: 'flex-start' } }, 'TIÊU CHÍ'),
-                h('span', { style: colHdr }, 'Wi-Fi 7'),
-                h('span', { style: colHdr }, 'Wi-Fi 6E'),
-                h('span', { style: colHdr }, 'Wi-Fi 6'),
-                h('span', { style: colHdr }, 'Wi-Fi 5'),
+                h('div', { style: cell }, h(DS.Input, { defaultValue: heads.crit, placeholder: 'Tên cột...', style: { fontWeight: 700 }, onBlur: e => this.updHead('crit', e.target.value) })),
+                h('div', { style: cell }, h(DS.Input, { defaultValue: heads.v7, placeholder: 'Tên cột...', style: { fontWeight: 700, textAlign: 'center' }, onBlur: e => this.updHead('v7', e.target.value) })),
+                h('div', { style: cell }, h(DS.Input, { defaultValue: heads.v6e, placeholder: 'Tên cột...', style: { fontWeight: 700, textAlign: 'center' }, onBlur: e => this.updHead('v6e', e.target.value) })),
+                h('div', { style: cell }, h(DS.Input, { defaultValue: heads.v6, placeholder: 'Tên cột...', style: { fontWeight: 700, textAlign: 'center' }, onBlur: e => this.updHead('v6', e.target.value) })),
+                h('div', { style: cell }, h(DS.Input, { defaultValue: heads.v5, placeholder: 'Tên cột...', style: { fontWeight: 700, textAlign: 'center' }, onBlur: e => this.updHead('v5', e.target.value) })),
                 h('span', null)
               ),
               rows.map((row, i) =>
@@ -8820,18 +8820,14 @@ class Component extends DCLogic {
     if (curGroup.items.length) secGroups.push(curGroup);
     if (secGroups.length === 1 && secGroups[0].items.length > 1) secGroups[0].title = 'Nội dung section';
 
+    // ── Sticky-header subtitle: block identity moved here (replaces the old in-form identity banner) ──
+    const headerSubtitle = h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, verticalAlign: 'middle' } },
+      h('span', { style: { fontWeight: 600, color: 'var(--color-text)' } }, displayName),
+      h('span', { style: { opacity: 0.45 } }, '·'),
+      h('span', null, (tpl.label || '') + ' · ' + section.type)
+    );
+
     const formContent = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-      // ── Identity banner (what am I editing) ──
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12 } },
-        h('div', { style: { width: 38, height: 38, background: section.ec, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } },
-          h(DS.Icon, { name: EIMAP[section.emoji] || 'info-circle-line', size: 20, color: section.tc })
-        ),
-        h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { fontWeight: 700, fontSize: 14.5 } }, displayName),
-          h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, section.desc)
-        ),
-        h('span', { style: { background: section.ec, color: section.tc, padding: '2px 10px', borderRadius: 10, fontSize: 11, fontWeight: 600, flexShrink: 0 } }, section.type)
-      ),
       // ── Standing status toggle (§10) — kept in sync with the sections list ──
       section.type !== 'PopupForm' && h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
         h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Hiển thị section trên trang'),
@@ -8853,7 +8849,7 @@ class Component extends DCLogic {
     );
     return this.editorShell(
       'Sửa nội dung section',
-      (tpl.label || '') + ' · ' + section.type,
+      headerSubtitle,
       back,
       formContent,
       onSave,
