@@ -2730,9 +2730,8 @@ class Component extends DCLogic {
   }
   renderRuleEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ ruleEditor: undefined, ruleSkuSelected: undefined, ruleSkuGroup: undefined, ruleSkuSource: undefined, ruleSkuQ: undefined, ruleSkuCheckAll: undefined, ruleSectionsOpen: undefined, ruleActive: undefined, rulePayModalFreq: undefined });
+    const isNew = !r; const back = () => this.setState({ ruleEditor: undefined, ruleSkuSelected: undefined, ruleSkuGroup: undefined, ruleSkuSource: undefined, ruleSkuQ: undefined, ruleSkuCheckAll: undefined, ruleSectionsOpen: undefined, ruleActive: undefined });
     const ruleActive = this.state.ruleActive !== undefined ? this.state.ruleActive : (r ? r.status === 'active' : true);
-    const rulePayModalFreq = this.state.rulePayModalFreq !== undefined ? this.state.rulePayModalFreq : (r && r.payModalFreq === 'Mỗi lần vào' ? 'Mỗi lần vào' : '1 lần/phiên');
     const openSections = this.state.ruleSectionsOpen || { info: true, reg: false, pay: false, done: false };
     const toggleSection = k => this.setState({ ruleSectionsOpen: { ...openSections, [k]: !openSections[k] } });
     const skus = this.SKUS().filter(s => this.state.skuActive[s.code] !== false && s.status === 'active');
@@ -2850,11 +2849,7 @@ class Component extends DCLogic {
         { key: 'pay', title: 'Trang thanh toán & nhập mã KM', icon: 'send-01-line', content:
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
             popupBlock('Pop-up đồ họa (Modal Popup)', r ? r.payModalPopup : null,
-              'Ví dụ: Popup khuyến mãi hiển thị ngay khi vào trang thanh toán',
-              h('div', { style: { display: 'flex', gap: 16 } },
-                h(DS.Radio, { name: 'payModalFreq', label: '1 lần/phiên', checked: rulePayModalFreq === '1 lần/phiên', onChange: () => this.setState({ rulePayModalFreq: '1 lần/phiên' }) }),
-                h(DS.Radio, { name: 'payModalFreq', label: 'Mỗi lần vào', checked: rulePayModalFreq === 'Mỗi lần vào', onChange: () => this.setState({ rulePayModalFreq: 'Mỗi lần vào' }) })
-              )
+              'Ví dụ: Popup khuyến mãi hiển thị ngay khi vào trang thanh toán'
             ),
             popupBlock('Pop-up khi áp Voucher (nhập mã KM)', r ? r.payVoucherPopup : null, 'Ví dụ: Popup xác nhận ưu đãi khi áp mã giảm giá'),
             h('div', { style: { display: 'flex', gap: 12 } },
@@ -5089,8 +5084,8 @@ class Component extends DCLogic {
         ),
         section(2, 'image-line', 'Hình ảnh',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            this.uploadBox('Popup Desktop (16:9)', 'JPG, PNG, WEBP · tối đa 200KB'),
-            this.uploadBox('Popup Mobile (1:1)', 'JPG, PNG, WEBP · tối đa 150KB')
+            this.uploadBox('Popup Desktop', 'JPG, PNG, WEBP · tối đa 200KB'),
+            this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · tối đa 150KB')
           )
         ),
         section(3, 'zap-line', 'Hành vi hiển thị',
