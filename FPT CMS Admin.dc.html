@@ -5624,7 +5624,7 @@ class Component extends DCLogic {
       this.listCard(
         this.toolbar(
           h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', minWidth: 0, flexWrap: 'nowrap' } },
-            h('div', { style: { flex: '1 1 auto', minWidth: 140 } },
+            h('div', { style: { flex: '0 0 320px', minWidth: 320 } },
               h(DS.Input, { value: this.state.ldpApprSearch || '', onChange: e => this.setState({ ldpApprSearch: e.target ? e.target.value : e, ldpAppr_pg: 1 }), placeholder: 'Tìm tên, slug, người gửi, mã YC...', leadingIcon: 'search-medium-line' })
             ),
             h('div', { style: { flex: '0 0 150px' } },
