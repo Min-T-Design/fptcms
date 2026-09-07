@@ -204,7 +204,7 @@ class Component extends DCLogic {
     ldpListSearch: '', ldpListTpl: 'all', ldpListStatus: 'all', ldpListGoal: 'all',
     ldpForm2: {}, ldpLibTab: 'all', ldpLibSearch: '', ldpCustomSecs: [], ldpLibDragId: null, ldpSecDragOverCanvas: false,
     // ── Duyệt LDP module ──
-    ldpApprTab: 'pending', ldpApprSearch: '', ldpApprTpl: 'all', ldpAppr_pg: 1, ldpAppr_sz: 10,
+    ldpApprTab: 'pending', ldpApprSearch: '', ldpApprStatusF: 'all', ldpApprSubmitter: 'all', ldpApprReviewer: 'all', ldpAppr_pg: 1, ldpAppr_sz: 10,
     ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '', ldpApprovals: null, ldpExtraApprovedLv1: [],
   };
 
@@ -5551,18 +5551,34 @@ class Component extends DCLogic {
     const all = this.LDP_APPROVALS();
     const tab = this.state.ldpApprTab || 'pending';
     const q = (this.state.ldpApprSearch || '').toLowerCase();
-    const tplF = this.state.ldpApprTpl || 'all';
+    const submF = this.state.ldpApprSubmitter || 'all';
+    const revF = this.state.ldpApprReviewer || 'all';
+    const statusF = this.state.ldpApprStatusF || 'all';
+    const showReviewerFilter = tab !== 'pending';
+    const showStatusFilter = tab === 'all';
+    const stFilterOpts = [
+      { value: 'all', label: 'Tất cả trạng thái' },
+      { value: 'pending', label: 'Chờ duyệt' },
+      { value: 'approved', label: 'Đã duyệt' },
+      { value: 'rejected', label: 'Từ chối' },
+    ];
     const counts = {
       pending: all.filter(a => a.status === 'pending').length,
       approved: all.filter(a => a.status === 'approved').length,
       rejected: all.filter(a => a.status === 'rejected').length,
     };
+    const submitterOpts = [{ value: 'all', label: 'Tất cả người gửi' }].concat(
+      Array.from(new Set(all.map(a => a.submittedBy).filter(Boolean))).sort().map(n => ({ value: n, label: n })));
+    const reviewerOpts = [{ value: 'all', label: 'Tất cả người duyệt' }].concat(
+      Array.from(new Set(all.map(a => a.reviewedBy).filter(Boolean))).sort().map(n => ({ value: n, label: n })));
     const rows = all.filter(a => {
       if (tab !== 'all' && a.status !== tab) return false;
-      if (tplF !== 'all' && a.tplId !== tplF) return false;
+      if (showStatusFilter && statusF !== 'all' && a.status !== statusF) return false;
+      if (submF !== 'all' && a.submittedBy !== submF) return false;
+      if (showReviewerFilter && revF !== 'all' && a.reviewedBy !== revF) return false;
       if (q && !(a.name + ' ' + a.lv1 + '/' + (a.l2 || '') + ' ' + a.submittedBy + ' ' + a.id).toLowerCase().includes(q)) return false;
       return true;
-    });
+    }).sort((x, y) => this.ldpParseDT(y.submittedAt) - this.ldpParseDT(x.submittedAt));
     const stMap = { pending: ['Chờ duyệt', 'info'], approved: ['Đã duyệt', 'success'], rejected: ['Từ chối', 'danger'] };
     const stBadge = s => { const m = stMap[s] || ['—', 'neutral']; return h(DS.Badge, { theme: m[1], dot: true }, m[0]); };
     const tplColors = { internet: '#ff8c42', sa: '#a78bfa', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981', customhtml: '#f59e0b' };
@@ -5591,7 +5607,7 @@ class Component extends DCLogic {
           : h('div', { style: { fontSize: 12 } }, h('div', { style: { fontWeight: 600 } }, a.reviewedBy || '—'), h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, a.reviewedAt || '')) },
       { key: 'act', header: 'Thao tác', width: 128, align: 'right', render: (_, a) => a.status === 'pending'
           ? h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'file-check-line', onClick: e => { e && e.stopPropagation && e.stopPropagation(); this.setState({ ldpReviewId: a.id, ldpReviewDecision: null, ldpReviewReason: '' }); } }, 'Duyệt')
-          : this.rowActions([{ icon: 'eye-line', label: 'Xem', onClick: () => this.setState({ ldpReviewId: a.id }) }]) },
+          : this.rowActions([{ icon: 'eye-line', label: 'Xem', onClick: () => this.openLdpApprovalDrawer(a) }]) },
     ];
     const stat = (label, value, icon) => h(DS.Card, { style: { padding: 16 } }, h(DS.Stat, { label, value: String(value), icon }));
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -5612,28 +5628,31 @@ class Component extends DCLogic {
       ] }),
       this.listCard(
         this.toolbar(
-          h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', minWidth: 0 } },
-            h('div', { style: { flex: 1, minWidth: 160, maxWidth: 300 } },
+          h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', minWidth: 0, flexWrap: 'nowrap' } },
+            h('div', { style: { flex: '1 1 auto', minWidth: 140 } },
               h(DS.Input, { value: this.state.ldpApprSearch || '', onChange: e => this.setState({ ldpApprSearch: e.target ? e.target.value : e, ldpAppr_pg: 1 }), placeholder: 'Tìm tên, slug, người gửi, mã YC...', leadingIcon: 'search-medium-line' })
             ),
-            h('div', { style: { flex: '0 0 172px' } },
-              h(DS.Select, { value: tplF, options: [
-                { value: 'all', label: 'Tất cả template' },
-                { value: 'internet', label: 'LDP Internet' },
-                { value: 'sa', label: 'LDP SA' },
-                { value: 'camera', label: 'LDP Camera AI' },
-                { value: 'campaign', label: 'LDP Campaign Wi-Fi 7' },
-                { value: 'thulead', label: 'LDP Thu Lead' },
-              ], searchable: true, searchPlaceholder: 'Tìm template…', onChange: v => this.setState({ ldpApprTpl: v, ldpAppr_pg: 1 }) })
-            )
+            h('div', { style: { flex: '0 0 150px' } },
+              h(DS.Select, { value: submF, options: submitterOpts, searchable: true, searchPlaceholder: 'Tìm người gửi…', onChange: v => this.setState({ ldpApprSubmitter: v, ldpAppr_pg: 1 }) })
+            ),
+            showReviewerFilter ? h('div', { style: { flex: '0 0 150px' } },
+              h(DS.Select, { value: revF, options: reviewerOpts, searchable: true, searchPlaceholder: 'Tìm người duyệt…', onChange: v => this.setState({ ldpApprReviewer: v, ldpAppr_pg: 1 }) })
+            ) : null,
+            showStatusFilter ? h('div', { style: { flex: '0 0 160px' } },
+              h(DS.Select, { value: statusF, options: stFilterOpts, onChange: v => this.setState({ ldpApprStatusF: v, ldpAppr_pg: 1 }) })
+            ) : null
           ),
           null
         ),
         this.filterChipsBar([
           q && this.filterChip('Tìm: ' + this.state.ldpApprSearch, 'neutral', () => this.setState({ ldpApprSearch: '', ldpAppr_pg: 1 })),
-          tplF !== 'all' && this.filterChip('Template: ' + tplF, 'brand', () => this.setState({ ldpApprTpl: 'all', ldpAppr_pg: 1 })),
+          submF !== 'all' && this.filterChip('Người gửi: ' + submF, 'info', () => this.setState({ ldpApprSubmitter: 'all', ldpAppr_pg: 1 })),
+          showReviewerFilter && revF !== 'all' && this.filterChip('Người duyệt: ' + revF, 'info', () => this.setState({ ldpApprReviewer: 'all', ldpAppr_pg: 1 })),
+          showStatusFilter && statusF !== 'all' && this.filterChip('Trạng thái: ' + ((stFilterOpts.find(o => o.value === statusF) || {}).label || statusF), 'brand', () => this.setState({ ldpApprStatusF: 'all', ldpAppr_pg: 1 })),
         ]),
-        rows.length ? this.tbl(columns, this.sliceData(rows, 'ldpAppr'), 'id', a => this.setState({ ldpReviewId: a.id, ldpReviewDecision: null, ldpReviewReason: '' }))
+        rows.length ? this.tbl(columns, this.sliceData(rows, 'ldpAppr'), 'id', a => a.status === 'pending'
+            ? this.setState({ ldpReviewId: a.id, ldpReviewDecision: null, ldpReviewReason: '' })
+            : this.openLdpApprovalDrawer(a))
           : this.empty(tab === 'pending' ? 'Không có yêu cầu nào đang chờ duyệt.' : 'Không có yêu cầu nào khớp bộ lọc.'),
         rows.length ? this.renderPagBar(rows.length, 'ldpAppr', 'yêu cầu') : null
       )
@@ -5700,16 +5719,6 @@ class Component extends DCLogic {
         card('Slug Level 1 cần duyệt', 'marker-pin-01-line',
           h('div', { style: { textAlign: 'center', fontFamily: 'monospace', fontSize: 24, fontWeight: 700, color: slugColor, padding: '24px 16px', background: 'var(--color-surface-sunken)', borderRadius: 12, wordBreak: 'break-all' } }, rec.lv1)
         ),
-        card('Nội dung sections', 'dots-grid-line', secList.length
-          ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-              secList.map((s, i) => h('div', { key: s.id, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 8 } },
-                h('span', { style: { width: 22, height: 22, borderRadius: 6, background: 'var(--color-surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', flexShrink: 0 } }, String(i + 1).padStart(2, '0')),
-                h('span', { style: { flex: 1, fontSize: 12.5, fontWeight: 600 } }, s.name),
-                h('span', { style: { background: s.ec, color: s.tc, padding: '1px 8px', borderRadius: 8, fontSize: 10.5, fontWeight: 600, flexShrink: 0 } }, s.type)
-              ))
-            )
-          : h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Trang tùy chỉnh — không có danh sách section mẫu.')
-        ),
         decided
           ? card('Kết quả duyệt', rec.status === 'approved' ? 'check-circle-line' : 'x-circle-line', h('div', null,
               infoRow('Trạng thái', stMap[rec.status][0]),
@@ -5753,6 +5762,56 @@ class Component extends DCLogic {
             )
       )
     );
+  }
+  // dd/mm/yy HH:MM (giờ tùy chọn) → mốc thời gian so sánh được; dùng cho sắp xếp "mới/cũ nhất".
+  ldpParseDT(s) {
+    if (!s) return 0;
+    const m = String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\D+(\d{1,2}):(\d{2}))?/);
+    if (!m) return 0;
+    const yr = m[3].length === 2 ? 2000 + (+m[3]) : (+m[3]);
+    return new Date(yr, (+m[2]) - 1, (+m[1]), (+(m[4] || 0)), (+(m[5] || 0))).getTime();
+  }
+  // Xem nhanh (chỉ đọc) yêu cầu đã duyệt / từ chối — theo §2, dùng Right Drawer, không mở trang review.
+  openLdpApprovalDrawer(a) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const tplColors = { internet: '#ff8c42', sa: '#a78bfa', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981', customhtml: '#f59e0b' };
+    const tplBg    = { internet: 'rgba(255,140,66,0.15)', sa: 'rgba(109,40,217,0.15)', camera: 'rgba(255,107,0,0.15)', campaign: 'rgba(59,130,246,0.15)', thulead: 'rgba(16,185,129,0.15)', customhtml: 'rgba(245,158,11,0.15)' };
+    const stMap = { pending: ['Chờ duyệt', 'info'], approved: ['Đã duyệt', 'success'], rejected: ['Từ chối', 'danger'] };
+    const st = stMap[a.status] || ['—', 'neutral'];
+    const secCount = (this.LDP_SECTION_DATA()[a.tplId] || []).length || a.sections || 0;
+    this.openDrawer({
+      title: a.name, subtitle: a.id + ' · ' + a.tplLabel, width: 460,
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0 16px', borderBottom: '1px solid var(--color-border)', marginBottom: 4 } },
+          h('span', { style: { background: tplBg[a.tplId] || 'var(--color-surface-alt)', color: tplColors[a.tplId] || 'var(--color-text-muted)', padding: '3px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700 } }, a.tplLabel),
+          h(DS.Badge, { theme: st[1], dot: true }, st[0])
+        ),
+        a.status === 'rejected' && a.reason ? h(DS.Alert, { theme: 'danger', title: 'Bị Super Admin từ chối', style: { borderRadius: 10, margin: '4px 0 8px' } },
+          h('div', { style: { fontSize: 12 } }, a.reason, h('div', { style: { marginTop: 4, color: 'var(--color-text-subtle)' } }, (a.reviewedBy || '') + (a.reviewedAt ? ' · ' + a.reviewedAt : '')))
+        ) : null,
+        this.detailRow('Slug đề xuất', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5 } },
+          h('span', { style: { color: 'var(--color-text-subtle)' } }, 'fpt.vn/'),
+          h('span', { style: { color: 'var(--color-accent)', fontWeight: 700 } }, a.lv1),
+          a.l2 ? h('span', { style: { color: 'var(--color-text-muted)' } }, '/' + a.l2) : null
+        )),
+        this.detailRow('Template', a.tplLabel),
+        this.detailRow('Mục tiêu', a.goal || '—'),
+        this.detailRow('Kênh', a.channel || '—'),
+        this.detailRow('Số sections', String(secCount)),
+        this.detailRow('Người gửi', h('div', null, h('div', null, a.submittedBy), h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, a.submittedAt))),
+        this.detailRow('Lần gửi', 'Lần ' + (a.attempt || 1)),
+        this.detailRow('Người duyệt', h('div', null, h('div', null, a.reviewedBy || '—'), a.reviewedAt ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, a.reviewedAt) : null)),
+        this.detailRow('Trạng thái', h(DS.Badge, { theme: st[1], dot: true }, st[0])),
+        (a.history && a.history.length) ? h('div', { style: { marginTop: 12 } },
+          h('div', { style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--color-text-subtle)', marginBottom: 8 } }, 'Lịch sử gửi duyệt'),
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } }, a.history.map((hh, i) => h('div', { key: i, style: { fontSize: 11.5, paddingLeft: 12, borderLeft: '2px solid var(--color-border)' } },
+            h('div', { style: { fontWeight: 700, color: 'var(--color-danger-text)' } }, 'Bị từ chối · ' + (hh.at || '')),
+            h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, 'Bởi ' + (hh.by || '—')),
+            h('div', { style: { marginTop: 3, color: 'var(--color-text-muted)', lineHeight: 1.5 } }, hh.reason || '')
+          )))
+        ) : null
+      )
+    });
   }
   renderLdpListView() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
