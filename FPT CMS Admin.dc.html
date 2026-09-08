@@ -9869,12 +9869,6 @@ class Component extends DCLogic {
     { id: 9, name: 'Camera FPT', slug: 'camera-fpt', count: 2, status: 'active', parent: 'Sản phẩm dịch vụ', layout: 'default', lang: 'vi', order: 3 },
     { id: 10, name: 'Dịch vụ kỹ thuật', slug: 'dich-vu-ky-thuat', count: 0, status: 'inactive', parent: 'Sản phẩm dịch vụ', layout: 'default', lang: 'vi', order: 4 },
   ]; }
-  NEWS_AUTHORS() { return [
-    { id: 1, name: 'Admin', penName: 'Admin', slug: 'admin', email: 'admin@fpt.vn', phone: '0901234567', bio: 'Quản trị viên hệ thống CMS', articles: 4, status: 'active' },
-    { id: 2, name: 'Phương Nam', penName: 'Nam Phương', slug: 'phuong-nam', email: 'nam.phuong@fpt.vn', phone: '0987654321', bio: 'Biên tập viên công nghệ & camera', articles: 2, status: 'active' },
-    { id: 3, name: 'Đức Nguyễn', penName: 'Đức Nguyễn', slug: 'duc-nguyen', email: 'duc.nguyen@fpt.vn', phone: '0912345678', bio: 'Biên tập thể thao & giải trí', articles: 1, status: 'active' },
-    { id: 4, name: 'Trần Minh Khoa', penName: 'Khoa Trần', slug: 'tran-minh-khoa', email: 'khoa.tran@fpt.vn', phone: '0938765432', bio: 'Chuyên gia công nghệ mạng', articles: 1, status: 'active' },
-  ]; }
   NEWS_TAGS() { return [
     { id: 1, name: 'internet', slug: 'internet', count: 2, status: 'active' },
     { id: 2, name: 'camera', slug: 'camera', count: 2, status: 'active' },
@@ -9892,7 +9886,6 @@ class Component extends DCLogic {
   }
   renderNews() {
     if (this.state.newsCatEditor !== undefined) return this.renderNewsCatEditor(this.state.newsCatEditor);
-    if (this.state.authorEditor !== undefined) return this.renderAuthorEditor(this.state.authorEditor);
     if (this.state.tagEditor !== undefined) return this.renderTagEditor(this.state.tagEditor);
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const tab = this.state.newsTab || 'articles';
@@ -9900,7 +9893,6 @@ class Component extends DCLogic {
     const body = {
       articles: () => this.renderNewsArticles(),
       cats: () => this.renderNewsCats(),
-      authors: () => this.renderNewsAuthors(),
       tags: () => this.renderNewsTags(),
       mapping: () => this.renderTagMapping(),
     }[tab]();
@@ -9908,7 +9900,6 @@ class Component extends DCLogic {
       h(DS.Tabs, { value: tab, onChange: v => this.setState({ newsTab: v }), items: [
         { value: 'articles', label: 'Danh sách Bài viết', icon: 'file-doc-line' },
         { value: 'cats', label: 'Chuyên mục', icon: 'folder-line' },
-        { value: 'authors', label: 'Quản lý Tác giả', icon: 'user-circle-line' },
         { value: 'tags', label: 'Quản lý Tags', icon: 'star-01-line' },
         { value: 'mapping', label: 'Cấu hình Thông tin hay', icon: 'stars-01-line' },
       ] }),
@@ -9997,7 +9988,6 @@ class Component extends DCLogic {
         render: (_, r) => h(DS.Badge, { theme: CH_THEME[r.channel] || 'neutral' }, CH_LABEL[r.channel] || r.channel) },
       { key: 'cat', header: 'Chuyên mục', width: 110,
         render: (_, r) => h(DS.Badge, { theme: 'neutral' }, r.cat) },
-      { key: 'author', header: 'Tác giả', width: 100 },
       { key: 'date',   header: 'Ngày đăng', width: 90 },
       { key: 'views',  header: 'Lượt xem', width: 78, align: 'right',
         render: (_, r) => h('span', { style: { fontWeight: 600, fontVariantNumeric: 'tabular-nums' } }, r.views.toLocaleString()) },
@@ -10116,7 +10106,6 @@ class Component extends DCLogic {
   renderArticleEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const catOpts   = this.NEWS_CATS().map(c => ({ value: c.name, label: c.name }));
-    const authorOpts = this.NEWS_AUTHORS().map(a => ({ value: a.name, label: a.name }));
     const subCatOpts = [{ value: '', label: '— Chuyên mục phụ —' }, ...catOpts];
     const isNew = !r || !r.id;
     const closeEditor = () => this.setState({ newsArticleEdit: null });
@@ -10157,13 +10146,7 @@ class Component extends DCLogic {
             this.field('Chuyên mục chính', h(DS.Select, { options: catOpts, defaultValue: r ? r.cat : catOpts[0] && catOpts[0].value, searchable: true, searchPlaceholder: 'Tìm chuyên mục…' }), true)
           ),
           this.field('Chuyên mục phụ', h(DS.Select, { options: subCatOpts, defaultValue: r ? (r.subCat || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục…' })),
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || 'vi') : 'vi' })),
-            this.field('Tác giả', h(DS.Select, { options: authorOpts, defaultValue: r ? r.author : authorOpts[0] && authorOpts[0].value, searchable: true, searchPlaceholder: 'Tìm tác giả…' }))
-          ),
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            this.field('Trạng thái', h(DS.Select, { options: [{ value: 'published', label: 'Đã đăng' }, { value: 'draft', label: 'Nháp' }, { value: 'expired', label: 'Hết hạn' }, { value: 'hidden', label: 'Tạm ẩn' }], defaultValue: r ? r.status : 'draft' }), true),
-            this.field('Ngày đăng', h('button', {
+          this.field('Ngày đăng', h('button', {
                 onClick: () => {
                   const v = (this.state.form || {}).newsDate || '';
                   const parseD = s => { if(!s) return null; const [dt]=s.split(' '); const [dd,mm,yyyy]=dt.split('/'); return new Date(+yyyy,+mm-1,+dd); };
@@ -10177,7 +10160,6 @@ class Component extends DCLogic {
                 h(DS.Icon, { name:'calendar-line', size:15, color:'var(--color-accent)' }),
                 (this.state.form||{}).newsDate || 'DD/MM/YYYY HH:MM'
               ))
-          )
         ),
         // 2. Nội dung bài viết — sa-po & nội dung chi tiết
         section(2, 'menu-01-line', 'Nội dung bài viết',
@@ -10313,33 +10295,6 @@ class Component extends DCLogic {
       ]),
       data.length ? this.tbl(columns, this.sliceData(data, 'newsCat'), 'id', r => this.openNewsCatDetail(r)) : this.empty('Không tìm thấy chuyên mục nào.'),
       data.length ? this.renderPagBar(data.length, 'newsCat', 'chuyên mục') : null
-    );
-  }
-  renderNewsAuthors() {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const q = (this.state.newsAuthorSearch || '').toLowerCase();
-    const data = this.NEWS_AUTHORS().filter(a => !q || (a.name + a.penName + a.email).toLowerCase().includes(q));
-    const columns = [
-      { key: 'avatar', header: 'Avatar', width: 56, render: (_, r) => h(DS.Avatar, { name: r.name, size: 'sm' }) },
-      { key: 'name',   header: 'Tên tác giả / Bút danh',
-        render: (_, r) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
-          h('span', { style: { fontWeight: 600 } }, r.name),
-          r.penName !== r.name && h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Bút danh: ' + r.penName)
-        ) },
-      { key: 'slug',  header: 'Slug', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
-      { key: 'email', header: 'Email', render: (_, r) => h('span', { style: { fontSize: 13 } }, r.email) },
-      { key: 'phone', header: 'Số điện thoại', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5 } }, r.phone) },
-      { key: 'articles', header: 'Số bài viết', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.articles) },
-      { key: 'status',   header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
-        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ authorEditor: r }) },
-        { icon: 'trash-line',  label: 'Xóa', onClick: () => this.confirm('Xóa tác giả?', '"' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa tác giả.'); }, true) },
-      ]) },
-    ];
-    return this.listCard(
-      this.toolbar(this.search('Tìm tác giả…', 'newsAuthorSearch'), h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ authorEditor: null }) }, 'Thêm Tác Giả')),
-      data.length ? this.tbl(columns, this.sliceData(data, 'newsAuthor'), 'id', r => this.openAuthorDetail(r)) : this.empty('Chưa có tác giả nào.'),
-      data.length ? this.renderPagBar(data.length, 'newsAuthor', 'tác giả') : null
     );
   }
   renderNewsTags() {
@@ -10503,7 +10458,7 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         h('div', { style: { width: '100%', height: 72, borderRadius: 8, background: 'linear-gradient(135deg,var(--fpt-4),var(--fpt-8))', marginBottom: 8 } }),
         this.detailRow('Tiêu đề', r.title), this.detailRow('Slug', '/tin-tuc/' + r.slug),
-        this.detailRow('Chuyên mục', r.cat), this.detailRow('Tác giả', r.author),
+        this.detailRow('Chuyên mục', r.cat),
         this.detailRow('Kênh', r.channel), this.detailRow('Ngày đăng', r.date),
         this.detailRow('Lượt xem', r.views ? r.views.toLocaleString() : '0'),
         this.detailRow('Trạng thái', this.statusBadge(r.status))
@@ -10700,49 +10655,6 @@ class Component extends DCLogic {
       ),
       () => { back(); this.toast('success', 'Đã lưu', 'Chuyên mục đã được lưu.'); },
       isNew ? 'Thêm chuyên mục' : 'Lưu chuyên mục'
-    );
-  }
-  openAuthorDetail(r) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    this.openDrawer({ title: r.name, subtitle: 'Tác giả bài viết', width: 460,
-      render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
-        h('div', { style: { display: 'flex', justifyContent: 'center', padding: '12px 0' } }, h(DS.Avatar, { name: r.name, size: 'xl' })),
-        this.detailRow('Tên / Bút danh', r.name + (r.penName !== r.name ? ' (' + r.penName + ')' : '')),
-        this.detailRow('Email', r.email), this.detailRow('Điện thoại', r.phone),
-        this.detailRow('Số bài viết', String(r.articles)), this.detailRow('Trạng thái', this.statusBadge(r.status))
-      ),
-      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.setState({ authorEditor: r }); } }, 'Chỉnh sửa')
-      )
-    });
-  }
-  renderAuthorEditor(r) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ authorEditor: undefined });
-    return this.editorShell(
-      isNew ? 'Thêm tác giả mới' : 'Chỉnh sửa: ' + r.name, 'Hồ sơ biên tập viên', back,
-      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
-          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
-          h(DS.Switch, { defaultChecked: !r || r.status === 'active' })
-        ),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18, alignItems: 'start' } },
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-            this.field('Tên tác giả', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'Nhập tên tác giả' }), true),
-            this.field('Slug', h(DS.Input, { defaultValue: r ? r.slug : '', placeholder: 'tac-gia-mau' }), true),
-            this.field('Tiểu sử ngắn', h(DS.Textarea, { rows: 3, defaultValue: r ? r.bio : '', placeholder: 'Tiểu sử tóm tắt' }))
-          ),
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-            h('div', { style: { display: 'flex', justifyContent: 'center', marginBottom: 4 } }, h(DS.Avatar, { name: r ? r.name : 'New', size: 'xl' })),
-            this.uploadBox('Tải ảnh đại diện', 'PNG / JPG / WebP · ≤1MB'),
-            this.field('Email', h(DS.Input, { defaultValue: r ? r.email : '', placeholder: 'example@fpt.com.vn' })),
-            this.field('Số điện thoại', h(DS.Input, { defaultValue: r ? r.phone : '' }))
-          )
-        )
-      ),
-      () => { back(); this.toast('success', 'Đã lưu', 'Thông tin tác giả đã được lưu.'); },
-      isNew ? 'Thêm tác giả' : 'Lưu tác giả'
     );
   }
   openTagDetail(r) {
