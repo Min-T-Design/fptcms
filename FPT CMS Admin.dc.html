@@ -3338,6 +3338,58 @@ class Component extends DCLogic {
   ldpSlugLocked(status) {
     return ['publish', 'hidden', 'expired'].includes(status);
   }
+  // Trang danh mục / dịch vụ tĩnh & bài viết sẵn có trên portal fpt.vn — LDP không được tạo đè lên.
+  LDP_PORTAL_URLS() {
+    return {
+      'internet': 'Trang danh mục Internet – Wifi',
+      'truyen-hinh-fpt-play': 'Trang Truyền hình & FPT Play',
+      'thiet-bi-thong-minh': 'Trang Thiết bị thông minh',
+      'dich-vu-so': 'Trang Dịch vụ số',
+      'khuyen-mai': 'Trang Khuyến mãi',
+      'tin-tuc': 'Trang Tin tức',
+      'lien-he': 'Trang Liên hệ',
+      'internet/bang-gia': 'Bảng giá Internet (trang tĩnh portal)',
+      'tin-tuc/uu-dai-thang-9': 'Bài viết tin tức sẵn có trên portal',
+    };
+  }
+  // Kiểm tra ràng buộc slug LDP:
+  //  Lớp 1 — nhánh Level 1 có sẵn thì BẮT BUỘC nhập Level 2 (chống ghi đè trang danh mục gốc).
+  //  Lớp 2 — chống trùng URL toàn cục (LDP khác đang chạy / tạm ẩn / chờ duyệt, hoặc trang portal tĩnh).
+  //  Ngoại lệ — bỏ qua chính bản ghi đang sửa (currentId); LDP cũ hết hạn/đã xoá thì cho tái dùng kèm cảnh báo vàng.
+  ldpSlugValidate(slug1, slug2, currentId) {
+    slug1 = (slug1 || '').trim(); slug2 = (slug2 || '').trim();
+    if (!slug1) return { ok: false, block: true, kind: 'empty1' };
+    const lv1Exists = this.ldpApprovedLv1Set().has(slug1);
+    if (lv1Exists && !slug2) {
+      return { ok: false, block: true, kind: 'needL2', bad1: false, bad2: true,
+        msg: 'Vui lòng nhập Level 2 (tên trang con) để tránh ghi đè trang danh mục chính của website.' };
+    }
+    const path = [slug1, slug2].filter(Boolean).join('/');
+    const portal = this.LDP_PORTAL_URLS()[path];
+    if (portal) {
+      return { ok: false, block: true, kind: 'portal', bad1: true, bad2: !!slug2,
+        msg: 'URL "fpt.vn/' + path + '" trùng với trang sẵn có trên portal (' + portal + '). Vui lòng đổi slug Level 2 hoặc Level 1.' };
+    }
+    const statusOf = r => (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
+    const clash = this.LDP_LIST().find(r => {
+      if (currentId != null && r.id === currentId) return false;
+      const ru = (r.lv1 || '') + (r.l2 ? '/' + r.l2 : '');
+      return ru === path;
+    });
+    if (clash) {
+      const st = statusOf(clash);
+      if (['publish', 'hidden', 'pending'].includes(st)) {
+        const stLabel = st === 'pending' ? 'đang chờ duyệt' : (st === 'hidden' ? 'đang tạm ẩn' : 'đang chạy');
+        return { ok: false, block: true, kind: 'clash', bad1: true, bad2: true,
+          msg: 'URL "fpt.vn/' + path + '" đã tồn tại (' + stLabel + ' trong chiến dịch: ' + clash.name + '). Vui lòng đổi slug Level 2 hoặc kết thúc chiến dịch cũ trước khi tạo mới.' };
+      }
+      if (['expired', 'deleted'].includes(st)) {
+        return { ok: true, warn: true, kind: 'reuse',
+          msg: 'URL này từng được dùng cho chiến dịch cũ "' + clash.name + '" (đã ' + (st === 'deleted' ? 'xoá' : 'hết hạn') + '). Bạn có chắc chắn muốn phát hành đè lên URL này không?' };
+      }
+    }
+    return { ok: true };
+  }
   LDP_APPROVALS() {
     return this.state.ldpApprovals || [
       { id: 'REQ-0026', ldpId: 5,    name: 'Ưu đãi Sinh viên 2026',        tplId: 'thulead',  tplLabel: 'LDP Thu Lead',         lv1: 'uu-dai-sinh-vien', l2: 'dang-ky-2026',  goal: 'Lead Gen',     channel: 'FPT Telecom', sections: 9,  submittedBy: 'Hà Linh',    submittedAt: '02/09/26 09:12', attempt: 1, status: 'pending', history: [] },
@@ -6055,28 +6107,42 @@ class Component extends DCLogic {
     const effStatus = editRow ? ((this.state.ldpStatuses && this.state.ldpStatuses[editRow.id] !== undefined) ? this.state.ldpStatuses[editRow.id] : editRow.status) : null;
     const f2 = this.state.ldpForm2 || {};
     const curLv1 = f2.urlSlug1 !== undefined ? f2.urlSlug1 : (editRow ? (editRow.lv1 || '') : '');
+    const curL2  = f2.urlSlug2 !== undefined ? f2.urlSlug2 : (editRow ? (editRow.l2 || '') : '');
     const slugLocked = !!(editRow && this.ldpSlugLocked(effStatus));
+    const slugCheck = slugLocked ? { ok: true } : this.ldpSlugValidate(curLv1, curL2, editRow ? editRow.id : null);
+    const slugBlocked = !!slugCheck.block;
     const needsApproval = !slugLocked && !!curLv1 && !this.ldpApprovedLv1Set().has(curLv1);
     const isResubmit = !!(editRow && effStatus === 'rejected');
     const topActions = h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
       step > minStep && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'arrow-left-line', onClick: () => this.setState({ ldpStep: step - 1 }) }, step === 2 ? 'Quay lại Template' : 'Quay lại Thông tin'),
       h(DS.Button, { level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpView: 'list', ldpStep: 1, ldpLockTemplate: false }) }, 'Hủy'),
-      step === 2 && h(DS.Button, { level: 'primary', size: 'sm', trailingIcon: 'arrow-right-line',
-        onClick: () => { if (!this.state.ldpTpl) { this.toast('warning', 'Chưa chọn template', 'Vui lòng quay lại Bước 1 và chọn template.'); return; } this.setState({ ldpStep: 3 }); }
+      step === 2 && h(DS.Button, { level: 'primary', size: 'sm', trailingIcon: 'arrow-right-line', disabled: slugBlocked,
+        onClick: () => {
+          if (slugBlocked) { this.toast('danger', 'URL chưa hợp lệ', slugCheck.msg || 'Vui lòng kiểm tra lại URL Slug.'); return; }
+          if (!this.state.ldpTpl) { this.toast('warning', 'Chưa chọn template', 'Vui lòng quay lại Bước 1 và chọn template.'); return; }
+          this.setState({ ldpStep: 3 });
+        }
       }, 'Tiếp theo: Nội dung'),
       step === 3 && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'check-line',
         onClick: () => { this.setState({ ldpView: 'list', ldpStep: 1, ldpLockTemplate: false }); this.toast('success', 'Đã lưu nháp', 'Landing Page đã được lưu nháp.'); }
       }, 'Lưu nháp'),
       step === 3 && (needsApproval
-        ? h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'send-01-line',
-            onClick: () => this.confirm(
-              isResubmit ? 'Gửi duyệt lại LDP?' : 'Gửi LDP đi duyệt?',
-              'Nhánh URL cấp 1 "' + curLv1 + '" là nhánh mới trên fpt.vn và cần Super Admin phê duyệt. Hãy kiểm tra kỹ chính tả và ý nghĩa của slug Level 1 trước khi gửi. Sau khi gửi, LDP sẽ ở trạng thái "Chờ duyệt" và chưa hiển thị cho người dùng cho tới khi được duyệt.',
-              () => this.submitLdpForApproval()
-            )
+        ? h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'send-01-line', disabled: slugBlocked,
+            onClick: () => {
+              if (slugBlocked) { this.setState({ ldpStep: 2 }); this.toast('danger', 'URL chưa hợp lệ', slugCheck.msg || 'Vui lòng kiểm tra lại URL Slug ở bước Thông tin trang.'); return; }
+              this.confirm(
+                isResubmit ? 'Gửi duyệt lại LDP?' : 'Gửi LDP đi duyệt?',
+                'Nhánh URL cấp 1 "' + curLv1 + '" là nhánh mới trên fpt.vn và cần Super Admin phê duyệt. Hãy kiểm tra kỹ chính tả và ý nghĩa của slug Level 1 trước khi gửi. Sau khi gửi, LDP sẽ ở trạng thái "Chờ duyệt" và chưa hiển thị cho người dùng cho tới khi được duyệt.',
+                () => this.submitLdpForApproval()
+              );
+            }
           }, isResubmit ? 'Gửi duyệt lại' : 'Gửi duyệt')
-        : h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line',
-            onClick: () => this.publishLdpDirect()
+        : h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', disabled: slugBlocked,
+            onClick: () => {
+              if (slugBlocked) { this.setState({ ldpStep: 2 }); this.toast('danger', 'URL chưa hợp lệ', slugCheck.msg || 'Vui lòng kiểm tra lại URL Slug ở bước Thông tin trang.'); return; }
+              if (slugCheck.warn) { this.confirm('Phát hành đè lên URL cũ?', slugCheck.msg, () => this.publishLdpDirect()); return; }
+              this.publishLdpDirect();
+            }
           }, 'Hoàn thành'))
     );
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
@@ -6222,6 +6288,10 @@ class Component extends DCLogic {
     ];
     const approvedLv1 = this.ldpApprovedLv1Set();
     const lv1Exists = !!slug1 && approvedLv1.has(slug1);
+    const slugCheck = slugLocked ? { ok: true } : this.ldpSlugValidate(slug1, slug2, editRow ? editRow.id : null);
+    const l2Required = lv1Exists;
+    const slug1Err = !!(slugCheck.block && slugCheck.bad1);
+    const slug2Err = !!(slugCheck.block && slugCheck.bad2);
     // Danh sách nhánh Level 1 có sẵn — chỉ 7 nhánh cố định, hiển thị dạng dropdown khi focus ô Level 1.
     const lv1AllOpts = FPT_CATS.map(c => c.value);
     const lv1Query = this.ldpSlugify(slug1);
@@ -6246,7 +6316,9 @@ class Component extends DCLogic {
       secHdr('Thông tin cơ bản'),
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 4 } },
         h('div', { style: { gridColumn: '1 / -1' } },
-          h('label', { style: lbSt }, 'URL Slug', req),
+          h('label', { style: lbSt }, 'URL Slug', req,
+            (!slugLocked && l2Required) ? h('span', { style: { color: 'var(--color-danger-text)', fontWeight: 600, marginLeft: 8, fontSize: 11 } }, '• Nhánh có sẵn — bắt buộc nhập Level 2') : null
+          ),
           slugLocked
             ? h('div', null,
                 h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13.5, fontFamily: 'monospace', color: 'var(--color-text-muted)' } },
@@ -6268,6 +6340,7 @@ class Component extends DCLogic {
                       onBlur: () => setTimeout(() => this.setState({ ldpLv1Menu: false }), 120),
                       onKeyDown: e => { if (e.key === 'Escape') this.setState({ ldpLv1Menu: false }); },
                       placeholder: 'Chọn hoặc nhập nhánh Level 1',
+                      error: slug1Err,
                     }),
                     this.state.ldpLv1Menu ? h('div', { style: Object.assign({ position: 'absolute', left: 0, right: 0, zIndex: 50, maxHeight: 264, overflowY: 'auto', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, boxShadow: 'var(--shadow-overlay)', padding: 6 }, this.state.ldpLv1MenuUp ? { bottom: 'calc(100% + 4px)' } : { top: 'calc(100% + 4px)' }) },
                       h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.04em', padding: '6px 10px 5px' } }, 'Nhánh Level 1 có sẵn'),
@@ -6282,15 +6355,22 @@ class Component extends DCLogic {
                     ) : null
                   ),
                   h('span', { style: { display: 'flex', alignItems: 'center', color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
-                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } }, h(DS.Input, { value: slug2, onChange: e => set('urlSlug2', this.ldpSlugify(e && e.target ? e.target.value : e)), placeholder: 'Nhập nhánh Level 2', disabled: !slug1 }))
+                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } }, h(DS.Input, { value: slug2, error: slug2Err, required: l2Required, onChange: e => set('urlSlug2', this.ldpSlugify(e && e.target ? e.target.value : e)), placeholder: l2Required ? 'Nhập nhánh Level 2 (bắt buộc)' : 'Nhập nhánh Level 2', disabled: !slug1 }))
                 ),
-                h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: !slug1 ? 'var(--color-text-subtle)' : (lv1Exists ? 'var(--color-success-text)' : 'var(--color-warning-text)') } },
-                  !slug1
-                    ? h('span', null, 'Bấm vào ô Level 1 để chọn nhánh có sẵn, hoặc gõ tên nhánh Level 1 mới.')
-                    : (lv1Exists
-                        ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'check-circle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" đã tồn tại — xuất bản trực tiếp, không cần duyệt.'))
-                        : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" là nhánh URL cấp 1 mới — cần Super Admin duyệt trước khi xuất bản.')))
-                ),
+                (() => {
+                  const tone = slugCheck.block ? 'var(--color-danger-text)' : slugCheck.warn ? 'var(--color-warning-text)' : (!slug1 ? 'var(--color-text-subtle)' : (lv1Exists ? 'var(--color-success-text)' : 'var(--color-warning-text)'));
+                  return h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: tone, fontWeight: (slugCheck.block || slugCheck.warn) ? 600 : 400 } },
+                    !slug1
+                      ? h('span', null, 'Bấm vào ô Level 1 để chọn nhánh có sẵn, hoặc gõ tên nhánh Level 1 mới.')
+                      : slugCheck.block
+                        ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'x-circle-line', size: 14 }), h('span', null, slugCheck.msg))
+                        : slugCheck.warn
+                          ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, slugCheck.msg))
+                          : (lv1Exists
+                              ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'check-circle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" đã tồn tại — URL hợp lệ, xuất bản trực tiếp, không cần duyệt.'))
+                              : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" là nhánh URL cấp 1 mới — cần Super Admin duyệt trước khi xuất bản.')))
+                  );
+                })(),
                 h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } },
                   'Xem trước: fpt.vn/', h('strong', null, slug1 || 'level-1'), slug2 ? h('span', null, '/', h('strong', null, slug2)) : null
                 )
