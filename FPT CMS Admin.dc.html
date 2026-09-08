@@ -5593,9 +5593,6 @@ class Component extends DCLogic {
           h('div', { style: { fontWeight: 600 } }, a.submittedBy),
           h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, a.submittedAt)
         ) },
-      { key: 'attempt', header: 'Lần gửi', width: 84, align: 'center', render: (_, a) => a.attempt > 1
-          ? h(DS.Badge, { theme: 'warning' }, 'Lần ' + a.attempt)
-          : h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Lần 1') },
       { key: 'status', header: 'Trạng thái', width: 108, render: (_, a) => stBadge(a.status) },
       { key: 'reviewed', header: 'Người duyệt', width: 148, render: (_, a) => a.status === 'pending'
           ? h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '—')
@@ -5791,7 +5788,6 @@ class Component extends DCLogic {
         )),
         this.detailRow('Template', a.tplLabel),
         this.detailRow('Mục tiêu', a.goal || '—'),
-        this.detailRow('Kênh', a.channel || '—'),
         this.detailRow('Số sections', String(secCount)),
         this.detailRow('Người gửi', h('div', null, h('div', null, a.submittedBy), h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, a.submittedAt))),
         this.detailRow('Lần gửi', 'Lần ' + (a.attempt || 1)),
