@@ -5579,7 +5579,6 @@ class Component extends DCLogic {
     const tplColors = { internet: '#ff8c42', sa: '#a78bfa', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981', customhtml: '#f59e0b' };
     const tplBg = { internet: 'rgba(255,140,66,0.15)', sa: 'rgba(109,40,217,0.15)', camera: 'rgba(255,107,0,0.15)', campaign: 'rgba(59,130,246,0.15)', thulead: 'rgba(16,185,129,0.15)', customhtml: 'rgba(245,158,11,0.15)' };
     const columns = [
-      { key: 'req', header: 'Mã YC', width: 92, render: (_, a) => h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-subtle)' } }, a.id) },
       { key: 'name', header: 'Landing Page', width: 210, render: (_, a) => h('div', null,
           h('div', { style: { fontWeight: 700, fontSize: 13.5, marginBottom: 3 } }, a.name),
           h('span', { style: { background: tplBg[a.tplId] || 'var(--color-surface-alt)', color: tplColors[a.tplId] || 'var(--color-text-muted)', padding: '1px 8px', borderRadius: 8, fontSize: 11, fontWeight: 600 } }, a.tplLabel)
@@ -5601,13 +5600,25 @@ class Component extends DCLogic {
           ? h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'file-check-line', onClick: e => { e && e.stopPropagation && e.stopPropagation(); this.setState({ ldpReviewId: a.id, ldpReviewDecision: null, ldpReviewReason: '' }); } }, 'Duyệt')
           : this.rowActions([{ icon: 'eye-line', label: 'Xem', onClick: () => this.openLdpApprovalDrawer(a) }]) },
     ];
-    const stat = (label, value, icon) => h(DS.Card, { style: { padding: 16 } }, h(DS.Stat, { label, value: String(value), icon }));
+    const statTones = {
+      pending:  { icon: 'clock-line',        fg: 'var(--color-warning-text)', bg: 'var(--color-warning-bg)' },
+      approved: { icon: 'check-circle-line',  fg: 'var(--color-success-text)', bg: 'var(--color-success-bg)' },
+      rejected: { icon: 'x-circle-line',      fg: 'var(--color-danger-text)',  bg: 'var(--color-danger-bg)' },
+      total:    { icon: 'file-check-line',    fg: 'var(--color-info-text)',    bg: 'var(--color-info-bg)' },
+    };
+    const stat = (label, value, tone) => { const t = statTones[tone]; return h(DS.Card, { style: { padding: 16, display: 'flex', alignItems: 'center', gap: 14, borderLeft: '3px solid ' + t.fg } },
+      h('div', { style: { width: 40, height: 40, borderRadius: 10, background: t.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } },
+        h(DS.Icon, { name: t.icon, size: 20, color: t.fg })),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 } },
+        h('span', { style: { fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500, color: 'var(--color-text-subtle)', letterSpacing: '0.01em' } }, label),
+        h('span', { style: { fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em', color: t.fg, lineHeight: 1 } }, String(value)))
+    ); };
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 } },
-        stat('Chờ duyệt', counts.pending, 'clock-line'),
-        stat('Đã duyệt', counts.approved, 'check-circle-line'),
-        stat('Từ chối', counts.rejected, 'x-circle-line'),
-        stat('Tổng yêu cầu', all.length, 'file-check-line')
+        stat('Chờ duyệt', counts.pending, 'pending'),
+        stat('Đã duyệt', counts.approved, 'approved'),
+        stat('Từ chối', counts.rejected, 'rejected'),
+        stat('Tổng yêu cầu', all.length, 'total')
       ),
       h('p', { style: { margin: 0, fontSize: 13, color: 'var(--color-text-subtle)' } },
         'Super Admin duyệt các Landing Page tạo nhánh URL cấp 1 (Level 1) mới trên fpt.vn. Duyệt xong LDP tự xuất bản; từ chối cần ghi rõ lý do để người tạo chỉnh sửa và gửi lại.'
