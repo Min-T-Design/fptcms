@@ -6225,11 +6225,10 @@ class Component extends DCLogic {
     ];
     const approvedLv1 = this.ldpApprovedLv1Set();
     const lv1Exists = !!slug1 && approvedLv1.has(slug1);
-    // Danh sách nhánh Level 1 có sẵn (7 nhánh cố định + nhánh đã được duyệt) — hiển thị dạng dropdown khi focus ô Level 1.
-    const lv1AllOpts = FPT_CATS.map(c => ({ value: c.value, label: c.label }));
-    [...approvedLv1].forEach(v => { if (!lv1AllOpts.some(o => o.value === v)) lv1AllOpts.push({ value: v, label: v }); });
+    // Danh sách nhánh Level 1 có sẵn — chỉ 7 nhánh cố định, hiển thị dạng dropdown khi focus ô Level 1.
+    const lv1AllOpts = FPT_CATS.map(c => c.value);
     const lv1Query = this.ldpSlugify(slug1);
-    const lv1MenuOpts = lv1Query ? lv1AllOpts.filter(o => o.value.includes(lv1Query) || this.ldpSlugify(o.label).includes(lv1Query)) : lv1AllOpts;
+    const lv1MenuOpts = lv1Query ? lv1AllOpts.filter(v => v.includes(lv1Query)) : lv1AllOpts;
     const slug  = [slug1, slug2].filter(s => s).join('/') || 'khuyen-mai/km-t5';
     const tplDefaultColors = { internet: '#ffffff', sa: '#0a1628', landingpage: '#f4f6fa', customhtml: '#ffffff' };
     const defaultBgColor = tplDefaultColors[this.state.ldpTpl] || '#ffffff';
@@ -6275,12 +6274,11 @@ class Component extends DCLogic {
                     }),
                     this.state.ldpLv1Menu ? h('div', { style: Object.assign({ position: 'absolute', left: 0, right: 0, zIndex: 50, maxHeight: 264, overflowY: 'auto', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, boxShadow: 'var(--shadow-overlay)', padding: 6 }, this.state.ldpLv1MenuUp ? { bottom: 'calc(100% + 4px)' } : { top: 'calc(100% + 4px)' }) },
                       h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.04em', padding: '6px 10px 5px' } }, 'Nhánh Level 1 có sẵn'),
-                      lv1MenuOpts.length ? lv1MenuOpts.map(o => {
-                        const active = slug1 === o.value;
-                        return h('div', { key: o.value, onMouseDown: ev => { ev.preventDefault(); set('urlSlug1', o.value); this.setState({ ldpLv1Menu: false }); }, className: 'fpt-navitem', style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 7, fontSize: 12.5, cursor: 'pointer', background: active ? 'var(--color-accent-bg)' : 'transparent' } },
+                      lv1MenuOpts.length ? lv1MenuOpts.map(v => {
+                        const active = slug1 === v;
+                        return h('div', { key: v, onMouseDown: ev => { ev.preventDefault(); set('urlSlug1', v); this.setState({ ldpLv1Menu: false }); }, className: 'fpt-navitem', style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 7, fontSize: 12.5, cursor: 'pointer', background: active ? 'var(--color-accent-bg)' : 'transparent' } },
                           h(DS.Icon, { name: active ? 'check-line' : 'git-branch-line', size: 14, color: active ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
-                          h('span', { style: { fontFamily: 'monospace', fontWeight: 600, color: active ? 'var(--color-accent-text)' : 'var(--color-text)' } }, o.value),
-                          o.label !== o.value ? h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 11, marginLeft: 'auto', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 } }, o.label) : null
+                          h('span', { style: { fontFamily: 'monospace', fontWeight: 600, color: active ? 'var(--color-accent-text)' : 'var(--color-text)' } }, v)
                         );
                       }) : h('div', { style: { padding: '10px', fontSize: 12, color: 'var(--color-text-subtle)' } },
                         'Không có nhánh khớp — "', h('strong', { style: { fontFamily: 'monospace' } }, slug1), '" sẽ là nhánh Level 1 mới (cần duyệt).')
