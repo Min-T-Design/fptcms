@@ -345,9 +345,9 @@ class Component extends DCLogic {
         { id: 'pages', label: 'Quản lý Trang (Pages)' },
         { id: 'sections', label: 'Quản lý Sections' },
         { id: 'blocks', label: 'Quản lý Blocks' },
+        { id: 'cms-menu', label: 'Quản lý Menu' },
         { id: 'landing', label: 'Landing Page (LDP)' },
         { id: 'ldp-approval', label: 'Duyệt LDP' },
-        { id: 'cms-menu', label: 'Quản lý Menu' },
       ]},
       { type: 'group', id: 'g-media', label: 'Media & Quảng bá', icon: 'image-line', children: [
         { id: 'banner', label: 'Quản lý Banner' },
@@ -5541,7 +5541,6 @@ class Component extends DCLogic {
 
   // ===== Duyệt LDP =====
   renderLdpApproval() {
-    if (this.state.ldpReviewId != null) return this.renderLdpApprovalReview();
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const all = this.LDP_APPROVALS();
     const tab = this.state.ldpApprTab || 'pending';
@@ -5658,14 +5657,16 @@ class Component extends DCLogic {
             : this.openLdpApprovalDrawer(a))
           : this.empty(tab === 'pending' ? 'Không có yêu cầu nào đang chờ duyệt.' : 'Không có yêu cầu nào khớp bộ lọc.'),
         rows.length ? this.renderPagBar(rows.length, 'ldpAppr', 'yêu cầu') : null
-      )
+      ),
+      this.state.ldpReviewId != null ? this.renderLdpApprovalReview() : null
     );
   }
+  // Duyệt / từ chối LDP — hiển thị dưới dạng pop-up (DS.Modal), không thay cả trang.
   renderLdpApprovalReview() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const rec = this.LDP_APPROVALS().find(a => a.id === this.state.ldpReviewId);
     const back = () => this.setState({ ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '' });
-    if (!rec) return h('div', { style: { padding: 24 } }, h(DS.Button, { level: 'tertiary', leadingIcon: 'arrow-left-line', onClick: back }, 'Quay lại danh sách'));
+    if (!rec) { back(); return null; }
     const decided = rec.status !== 'pending';
     const decision = this.state.ldpReviewDecision;
     const reason = this.state.ldpReviewReason || '';
@@ -5676,7 +5677,7 @@ class Component extends DCLogic {
     const secList = this.LDP_SECTION_DATA()[rec.tplId] || [];
     const secCount = secList.length || rec.sections || 0;
     const stMap = { pending: ['Chờ duyệt', 'info'], approved: ['Đã duyệt', 'success'], rejected: ['Từ chối', 'danger'] };
-    const card = (title, icon, body, extra) => h(DS.Card, { style: { padding: 20 } },
+    const card = (title, icon, body, extra) => h(DS.Card, { style: { padding: 18 } },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 } },
         h(DS.Icon, { name: icon, size: 17, color: 'var(--color-accent)' }),
         h('span', { style: { fontWeight: 700, fontSize: 14, color: 'var(--color-accent-text)' } }, title),
@@ -5690,28 +5691,34 @@ class Component extends DCLogic {
       h('span', { style: { color: 'var(--color-text-subtle)' } }, k),
       h('span', { style: { fontWeight: 600, textAlign: 'right' } }, v)
     );
-    const doApprove = () => this.confirm('Duyệt & xuất bản LDP?', 'Nhánh "' + rec.lv1 + '" sẽ được thêm vào danh sách nhánh hợp lệ và LDP "' + rec.name + '" sẽ xuất bản ngay (theo lịch hiệu lực nếu có).', () => { this.closeModal(); this.approveLdp(rec); });
+    const doApprove = () => this.approveLdp(rec);
     const canReject = reason.trim().length > 0;
-    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: decided ? 8 : (decision === 'reject' ? 268 : 136) } },
-      h('div', { style: { position: 'sticky', top: -24, zIndex: 10, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
-        h(DS.Button, { level: 'tertiary', leadingIcon: 'arrow-left-line', size: 'sm', onClick: back }, 'Quay lại danh sách'),
-        h('div', { style: { width: 1, height: 18, background: 'var(--color-border)' } }),
-        h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
-            h('span', { style: { fontWeight: 700, fontSize: 15 } }, 'Duyệt LDP: ' + rec.name),
-            h(DS.Badge, { theme: stMap[rec.status][1], dot: true }, stMap[rec.status][0])
-          ),
-          h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 1 } }, rec.id + ' · ' + rec.tplLabel + ' · gửi bởi ' + rec.submittedBy + ' · ' + rec.submittedAt)
-        )
-      ),
-      h('div', { style: { width: '100%', maxWidth: 940, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 } },
+    const footer = decided
+      ? h(DS.Button, { level: 'secondary', size: 'sm', onClick: back }, 'Đóng')
+      : decision === 'reject'
+        ? [
+            h(DS.Button, { key: 'c', level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpReviewDecision: null, ldpReviewReason: '' }) }, 'Hủy'),
+            h(DS.Button, { key: 'r', level: 'primary', size: 'sm', leadingIcon: 'x-circle-line', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, disabled: !canReject, onClick: () => this.rejectLdp(rec, reason.trim()) }, 'Xác nhận từ chối')
+          ]
+        : [
+            h(DS.Button, { key: 'r', level: 'secondary', size: 'sm', leadingIcon: 'x-circle-line', onClick: () => this.setState({ ldpReviewDecision: 'reject' }) }, 'Từ chối'),
+            h(DS.Button, { key: 'a', level: 'primary', size: 'sm', leadingIcon: 'check-line', onClick: doApprove }, 'Duyệt & xuất bản')
+          ];
+    return h(DS.Modal, {
+      open: true, onClose: back, size: 'lg', style: { maxWidth: 720 },
+      title: 'Duyệt LDP: ' + rec.name,
+      description: rec.id + ' · ' + rec.tplLabel + ' · gửi bởi ' + rec.submittedBy + ' · ' + rec.submittedAt,
+      footer: footer,
+    },
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+        h(DS.Badge, { theme: stMap[rec.status][1], dot: true, style: { alignSelf: 'flex-start' } }, stMap[rec.status][0]),
         card('Trang Landing Page đề xuất', 'globe-01-line', h('div', null,
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', padding: '18px 20px', background: 'var(--color-surface-sunken)', borderRadius: 12, fontFamily: 'monospace', fontSize: 16 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', padding: '16px 18px', background: 'var(--color-surface-sunken)', borderRadius: 12, fontFamily: 'monospace', fontSize: 15 } },
             h('span', { style: { color: 'var(--color-text-subtle)' } }, 'fpt.vn/'),
-            h('strong', { style: { color: 'var(--color-accent)', background: 'var(--color-accent-bg)', padding: '3px 8px', borderRadius: 6, fontSize: 18 } }, rec.lv1),
+            h('strong', { style: { color: 'var(--color-accent)', background: 'var(--color-accent-bg)', padding: '3px 8px', borderRadius: 6, fontSize: 17 } }, rec.lv1),
             rec.l2 ? h('span', { style: { color: 'var(--color-text-muted)' } }, '/' + rec.l2) : null
           ),
-          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 16, marginTop: 16 } },
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 16, marginTop: 16 } },
             metaItem('Template', rec.tplLabel),
             metaItem('Mục tiêu', rec.goal),
             metaItem('Số sections', String(secCount)),
@@ -5720,8 +5727,11 @@ class Component extends DCLogic {
           )
         ), showNewFlag && h(DS.Tag, { size: 'sm', color: 'var(--color-danger)' }, 'Nhánh URL cấp 1 MỚI')),
         card('Slug Level 1 cần duyệt', 'marker-pin-01-line',
-          h('div', { style: { textAlign: 'center', fontFamily: 'monospace', fontSize: 24, fontWeight: 700, color: slugColor, padding: '24px 16px', background: 'var(--color-surface-sunken)', borderRadius: 12, wordBreak: 'break-all' } }, rec.lv1)
+          h('div', { style: { textAlign: 'center', fontFamily: 'monospace', fontSize: 22, fontWeight: 700, color: slugColor, padding: '20px 16px', background: 'var(--color-surface-sunken)', borderRadius: 12, wordBreak: 'break-all' } }, rec.lv1)
         ),
+        !decided && showNewFlag ? h(DS.Alert, { theme: 'warning', title: 'Nhánh URL cấp 1 mới' },
+          h('div', { style: { fontSize: 12.5 } }, 'Duyệt sẽ thêm nhánh "' + rec.lv1 + '" vào danh sách nhánh hợp lệ và xuất bản LDP "' + rec.name + '" ngay (theo lịch hiệu lực nếu có).')
+        ) : null,
         decided
           ? card('Kết quả duyệt', rec.status === 'approved' ? 'check-circle-line' : 'x-circle-line', h('div', null,
               infoRow('Trạng thái', stMap[rec.status][0]),
@@ -5733,6 +5743,15 @@ class Component extends DCLogic {
               ) : null
             ))
           : null,
+        decision === 'reject' ? h('div', { style: { border: '1px solid var(--color-danger)', borderRadius: 12, padding: 14, background: 'var(--color-danger-bg)' } },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 } },
+            h(DS.Icon, { name: 'x-circle-line', size: 16, color: 'var(--color-danger-text)' }),
+            h('span', { style: { fontWeight: 700, fontSize: 13.5, color: 'var(--color-danger-text)' } }, 'Lý do từ chối'),
+            h('span', { style: { color: 'var(--color-danger)', fontWeight: 700 } }, '*')
+          ),
+          h(DS.Textarea, { value: reason, rows: 3, maxLength: RMAX, placeholder: 'Giải thích vì sao slug Level 1 chưa hợp lệ và gợi ý cách sửa...', onChange: e => this.setState({ ldpReviewReason: ((e && e.target ? e.target.value : e) || '').slice(0, RMAX) }) }),
+          h('div', { style: { fontSize: 11, marginTop: 4, color: reason.length >= RMAX ? 'var(--color-danger-text)' : 'var(--color-text-subtle)' } }, 'Tối đa ' + RMAX + ' ký tự (' + reason.length + '/' + RMAX + ')' + (reason.length >= RMAX ? ' — đã đạt giới hạn' : ''))
+        ) : null,
         (rec.history && rec.history.length) ? card('Lịch sử gửi duyệt', 'clock-line', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
           rec.history.map((hh, i) => h('div', { key: i, style: { fontSize: 11.5, paddingLeft: 12, borderLeft: '2px solid var(--color-border)' } },
             h('div', { style: { fontWeight: 700, color: 'var(--color-danger-text)' } }, 'Bị từ chối · ' + (hh.at || '')),
@@ -5740,29 +5759,6 @@ class Component extends DCLogic {
             h('div', { style: { marginTop: 3, color: 'var(--color-text-muted)', lineHeight: 1.5 } }, hh.reason || '')
           ))
         )) : null
-      ),
-      !decided && h('div', { style: { position: 'fixed', left: '50%', bottom: 40, transform: 'translateX(-50%)', zIndex: 1000, width: decision === 'reject' ? 'min(560px, calc(100vw - 32px))' : 'auto', maxWidth: 'calc(100vw - 32px)', animation: 'fptScaleIn .18s cubic-bezier(.2,0,0,1)' } },
-        decision === 'reject'
-          ? h('div', { style: { background: 'var(--color-surface)', border: '1px solid var(--color-border-strong)', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08)', padding: 16 } },
-              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 } },
-                h(DS.Icon, { name: 'x-circle-line', size: 16, color: 'var(--color-danger-text)' }),
-                h('span', { style: { fontWeight: 700, fontSize: 13.5, color: 'var(--color-danger-text)' } }, 'Lý do từ chối'),
-                h('span', { style: { color: 'var(--color-danger)', fontWeight: 700 } }, '*')
-              ),
-              h(DS.Textarea, { value: reason, rows: 3, maxLength: RMAX, placeholder: 'Giải thích vì sao slug Level 1 chưa hợp lệ và gợi ý cách sửa...', onChange: e => this.setState({ ldpReviewReason: ((e && e.target ? e.target.value : e) || '').slice(0, RMAX) }) }),
-              h('div', { style: { fontSize: 11, marginTop: 4, color: reason.length >= RMAX ? 'var(--color-danger-text)' : 'var(--color-text-subtle)' } }, 'Tối đa ' + RMAX + ' ký tự (' + reason.length + '/' + RMAX + ')' + (reason.length >= RMAX ? ' — đã đạt giới hạn' : '')),
-              h('div', { style: { display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' } },
-                h(DS.Button, { level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpReviewDecision: null, ldpReviewReason: '' }) }, 'Hủy'),
-                h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'x-circle-line', disabled: !canReject, onClick: () => this.rejectLdp(rec, reason.trim()) }, 'Xác nhận từ chối')
-              )
-            )
-          : h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px 10px 18px', background: 'var(--color-surface)', border: '1px solid var(--color-border-strong)', borderRadius: 100, boxShadow: '0 8px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08)', whiteSpace: 'nowrap' } },
-              h(DS.Icon, { name: 'file-check-line', size: 16, color: 'var(--color-accent)' }),
-              h('span', { style: { fontWeight: 700, fontSize: 13 } }, 'Quyết định của bạn'),
-              h('div', { style: { width: 1, height: 20, background: 'var(--color-border)', margin: '0 2px' } }),
-              h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'x-circle-line', onClick: () => this.setState({ ldpReviewDecision: 'reject' }) }, 'Từ chối'),
-              h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', onClick: doApprove }, 'Duyệt & xuất bản')
-            )
       )
     );
   }
@@ -10842,7 +10838,7 @@ class Component extends DCLogic {
   // ===== RBAC matrix =====
   RBAC() { return [
     { group: 'NỘI DUNG SẢN PHẨM', modules: ['Nội dung sản phẩm', 'Thông tin checkout'] },
-    { group: 'CẤU TRÚC TRANG', modules: ['Quản lý Trang (Pages)', 'Quản lý Sections', 'Quản lý Blocks', 'Landing Page (LDP)', 'Quản lý Menu'] },
+    { group: 'CẤU TRÚC TRANG', modules: ['Quản lý Trang (Pages)', 'Quản lý Sections', 'Quản lý Blocks', 'Quản lý Menu', 'Landing Page (LDP)'] },
     { group: 'MEDIA & QUẢNG BÁ', modules: ['Quản lý Banner', 'Quản lý Popup'] },
     { group: 'BÀI VIẾT & NỘI DUNG', modules: ['Quản lý Tin tức', 'Quản lý FAQ', 'Cấu hình Thông tin hay'] },
     { group: 'CÀI ĐẶT & HỆ THỐNG', modules: ['Quản lý Vai trò', 'Quản lý Người dùng', 'Phân quyền tính năng'] },
