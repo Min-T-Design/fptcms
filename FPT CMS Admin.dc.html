@@ -5930,7 +5930,6 @@ class Component extends DCLogic {
     const tplBg    = { internet: 'rgba(255,140,66,0.15)', sa: 'rgba(109,40,217,0.15)', camera: 'rgba(255,107,0,0.15)', campaign: 'rgba(59,130,246,0.15)', thulead: 'rgba(16,185,129,0.15)', customhtml: 'rgba(245,158,11,0.15)' };
     const stBadge = s => { const map = { publish: ['Đang chạy','success'], expired: ['Hết hạn','danger'], draft: ['Nháp','neutral'], hidden: ['Tạm ẩn','warning'], pending: ['Chờ duyệt','info'], rejected: ['Từ chối','danger'] }; const [lbl,theme] = map[s]||['—','neutral']; return h(DS.Badge, { theme, dot: true }, lbl); };
     const effStatus = (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
-    const req = this.LDP_APPROVALS().find(a => a.ldpId === r.id);
     this.openDrawer({
       title: r.name, subtitle: r.tplLabel + ' · ' + r.goal, width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
@@ -5949,10 +5948,8 @@ class Component extends DCLogic {
         this.detailRow('Lần sửa cuối', h('div', null, h('div', null, r.lastEdit), h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, '— ' + r.lastEditBy))),
         this.detailRow('Trạng thái', stBadge(effStatus))
       ),
-      footer: () => h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 8 } },
-        effStatus === 'pending'
-          ? h(DS.Button, { level: 'primary', leadingIcon: 'file-check-line', onClick: () => { this.closeDrawer(); this.setState({ active: 'ldp-approval', ldpApprTab: 'pending', ldpReviewId: req ? req.id : null }); } }, 'Xem trong Duyệt LDP')
-          : h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openLdpEditor(r); } }, effStatus === 'rejected' ? 'Chỉnh sửa & gửi lại' : 'Chỉnh sửa')
+      footer: effStatus === 'pending' ? null : () => h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 8 } },
+        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openLdpEditor(r); } }, 'Chỉnh sửa')
       )
     });
   }
@@ -6285,7 +6282,7 @@ class Component extends DCLogic {
                     ) : null
                   ),
                   h('span', { style: { display: 'flex', alignItems: 'center', color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
-                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } }, h(DS.Input, { value: slug2, onChange: e => set('urlSlug2', this.ldpSlugify(e && e.target ? e.target.value : e)), placeholder: slug1 ? 'ten-ldp' : 'Level 2', disabled: !slug1 }))
+                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } }, h(DS.Input, { value: slug2, onChange: e => set('urlSlug2', this.ldpSlugify(e && e.target ? e.target.value : e)), placeholder: 'Nhập nhánh Level 2', disabled: !slug1 }))
                 ),
                 h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: !slug1 ? 'var(--color-text-subtle)' : (lv1Exists ? 'var(--color-success-text)' : 'var(--color-warning-text)') } },
                   !slug1
