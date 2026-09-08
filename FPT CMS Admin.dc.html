@@ -203,6 +203,7 @@ class Component extends DCLogic {
     ldpTplFilter: 'all', ldpTplSearch: '',
     ldpListSearch: '', ldpListTpl: 'all', ldpListStatus: 'all', ldpListGoal: 'all',
     ldpForm2: {}, ldpLibTab: 'all', ldpLibSearch: '', ldpCustomSecs: [], ldpLibDragId: null, ldpSecDragOverCanvas: false,
+    ldpLv1Menu: false, ldpLv1MenuUp: false,
     // ── Duyệt LDP module ──
     ldpApprTab: 'pending', ldpApprSearch: '', ldpApprStatusF: 'all', ldpApprSubmitter: 'all', ldpApprReviewer: 'all', ldpAppr_pg: 1, ldpAppr_sz: 10,
     ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '', ldpApprovals: null, ldpExtraApprovedLv1: [],
@@ -6224,6 +6225,11 @@ class Component extends DCLogic {
     ];
     const approvedLv1 = this.ldpApprovedLv1Set();
     const lv1Exists = !!slug1 && approvedLv1.has(slug1);
+    // Danh sách nhánh Level 1 có sẵn (7 nhánh cố định + nhánh đã được duyệt) — hiển thị dạng dropdown khi focus ô Level 1.
+    const lv1AllOpts = FPT_CATS.map(c => ({ value: c.value, label: c.label }));
+    [...approvedLv1].forEach(v => { if (!lv1AllOpts.some(o => o.value === v)) lv1AllOpts.push({ value: v, label: v }); });
+    const lv1Query = this.ldpSlugify(slug1);
+    const lv1MenuOpts = lv1Query ? lv1AllOpts.filter(o => o.value.includes(lv1Query) || this.ldpSlugify(o.label).includes(lv1Query)) : lv1AllOpts;
     const slug  = [slug1, slug2].filter(s => s).join('/') || 'khuyen-mai/km-t5';
     const tplDefaultColors = { internet: '#ffffff', sa: '#0a1628', landingpage: '#f4f6fa', customhtml: '#ffffff' };
     const defaultBgColor = tplDefaultColors[this.state.ldpTpl] || '#ffffff';
@@ -6258,23 +6264,34 @@ class Component extends DCLogic {
             : h('div', null,
                 h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
                   h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 12px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0 } }, 'fpt.vn/'),
-                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } }, h(DS.Input, { value: slug1, onChange: e => set('urlSlug1', this.ldpSlugify(e && e.target ? e.target.value : e)), placeholder: 'nhap-nhanh-level-1' })),
+                  h('div', { style: { flex: '1 1 170px', minWidth: 150, position: 'relative' } },
+                    h(DS.Input, {
+                      value: slug1,
+                      onChange: e => set('urlSlug1', this.ldpSlugify(e && e.target ? e.target.value : e)),
+                      onFocus: e => { const r = e.target.getBoundingClientRect(); this.setState({ ldpLv1Menu: true, ldpLv1MenuUp: (window.innerHeight - r.bottom) < 280 }); },
+                      onBlur: () => setTimeout(() => this.setState({ ldpLv1Menu: false }), 120),
+                      onKeyDown: e => { if (e.key === 'Escape') this.setState({ ldpLv1Menu: false }); },
+                      placeholder: 'Chọn hoặc nhập nhánh Level 1',
+                    }),
+                    this.state.ldpLv1Menu ? h('div', { style: Object.assign({ position: 'absolute', left: 0, right: 0, zIndex: 50, maxHeight: 264, overflowY: 'auto', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, boxShadow: 'var(--shadow-overlay)', padding: 6 }, this.state.ldpLv1MenuUp ? { bottom: 'calc(100% + 4px)' } : { top: 'calc(100% + 4px)' }) },
+                      h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.04em', padding: '6px 10px 5px' } }, 'Nhánh Level 1 có sẵn'),
+                      lv1MenuOpts.length ? lv1MenuOpts.map(o => {
+                        const active = slug1 === o.value;
+                        return h('div', { key: o.value, onMouseDown: ev => { ev.preventDefault(); set('urlSlug1', o.value); this.setState({ ldpLv1Menu: false }); }, className: 'fpt-navitem', style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 7, fontSize: 12.5, cursor: 'pointer', background: active ? 'var(--color-accent-bg)' : 'transparent' } },
+                          h(DS.Icon, { name: active ? 'check-line' : 'git-branch-line', size: 14, color: active ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
+                          h('span', { style: { fontFamily: 'monospace', fontWeight: 600, color: active ? 'var(--color-accent-text)' : 'var(--color-text)' } }, o.value),
+                          o.label !== o.value ? h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 11, marginLeft: 'auto', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 } }, o.label) : null
+                        );
+                      }) : h('div', { style: { padding: '10px', fontSize: 12, color: 'var(--color-text-subtle)' } },
+                        'Không có nhánh khớp — "', h('strong', { style: { fontFamily: 'monospace' } }, slug1), '" sẽ là nhánh Level 1 mới (cần duyệt).')
+                    ) : null
+                  ),
                   h('span', { style: { display: 'flex', alignItems: 'center', color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
                   h('div', { style: { flex: '1 1 170px', minWidth: 150 } }, h(DS.Input, { value: slug2, onChange: e => set('urlSlug2', this.ldpSlugify(e && e.target ? e.target.value : e)), placeholder: slug1 ? 'ten-ldp' : 'Level 2', disabled: !slug1 }))
                 ),
-                h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 9 } },
-                  h('span', { style: { fontSize: 11, fontWeight: 600, color: 'var(--color-text-subtle)', marginRight: 2 } }, 'Nhánh Level 1 có sẵn:'),
-                  FPT_CATS.map(c => {
-                    const active = slug1 === c.value;
-                    return h('span', { key: c.value, onClick: () => set('urlSlug1', c.value), title: c.label, style: { display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 9px', borderRadius: 13, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', border: '1px solid ' + (active ? 'var(--color-accent)' : 'var(--color-border)'), background: active ? 'var(--color-accent-bg)' : 'var(--color-surface)', color: active ? 'var(--color-accent-text)' : 'var(--color-text-muted)', whiteSpace: 'nowrap', transition: 'all .12s' } },
-                      active ? h(DS.Icon, { name: 'check-line', size: 12, color: 'var(--color-accent)' }) : null,
-                      c.value
-                    );
-                  })
-                ),
                 h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: !slug1 ? 'var(--color-text-subtle)' : (lv1Exists ? 'var(--color-success-text)' : 'var(--color-warning-text)') } },
                   !slug1
-                    ? h('span', null, 'Chọn một nhánh có sẵn hoặc gõ tên nhánh Level 1 mới.')
+                    ? h('span', null, 'Bấm vào ô Level 1 để chọn nhánh có sẵn, hoặc gõ tên nhánh Level 1 mới.')
                     : (lv1Exists
                         ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'check-circle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" đã tồn tại — xuất bản trực tiếp, không cần duyệt.'))
                         : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" là nhánh URL cấp 1 mới — cần Super Admin duyệt trước khi xuất bản.')))
