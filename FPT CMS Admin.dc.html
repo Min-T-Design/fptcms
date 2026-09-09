@@ -5068,7 +5068,7 @@ class Component extends DCLogic {
                 this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ bannerEditorPages: v }), { stateKey: 'bannerPagesDD', placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
               )
             : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Banner Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.'),
-          this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))
+          this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }), true)
         )
       ),
       () => { back(); this.toast('success', 'Đã lưu Banner', isNew ? 'Banner mới đã được tạo.' : 'Banner "' + r.name + '" đã được cập nhật.'); },
