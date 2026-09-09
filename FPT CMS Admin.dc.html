@@ -3338,31 +3338,33 @@ class Component extends DCLogic {
   ldpSlugLocked(status) {
     return ['publish', 'hidden', 'expired'].includes(status);
   }
-  // Trang danh mục / dịch vụ tĩnh & bài viết sẵn có trên portal fpt.vn — LDP không được tạo đè lên.
+  // Trang tĩnh / bài viết sẵn có trên portal fpt.vn — LDP không được tạo đè lên (chỉ chặn các đường dẫn con cụ thể).
   LDP_PORTAL_URLS() {
     return {
-      'internet': 'Trang danh mục Internet – Wifi',
-      'truyen-hinh-fpt-play': 'Trang Truyền hình & FPT Play',
-      'thiet-bi-thong-minh': 'Trang Thiết bị thông minh',
-      'dich-vu-so': 'Trang Dịch vụ số',
-      'khuyen-mai': 'Trang Khuyến mãi',
-      'tin-tuc': 'Trang Tin tức',
-      'lien-he': 'Trang Liên hệ',
       'internet/bang-gia': 'Bảng giá Internet (trang tĩnh portal)',
       'tin-tuc/uu-dai-thang-9': 'Bài viết tin tức sẵn có trên portal',
     };
   }
+  // Tìm LDP đang CHẠY (publish) ngay trên nhánh Level 1 đã chọn — bỏ qua bản ghi đang sửa.
+  // Trả về bản ghi đầu tiên tìm thấy, hoặc null nếu nhánh không có LDP nào đang chạy.
+  ldpLv1LiveLdp(slug1, currentId) {
+    slug1 = (slug1 || '').trim();
+    if (!slug1) return null;
+    const statusOf = r => (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
+    return this.LDP_LIST().find(r => r.lv1 === slug1 && (currentId == null || r.id !== currentId) && statusOf(r) === 'publish') || null;
+  }
   // Kiểm tra ràng buộc slug LDP:
-  //  Lớp 1 — nhánh Level 1 có sẵn thì BẮT BUỘC nhập Level 2 (chống ghi đè trang danh mục gốc).
+  //  Lớp 1 — nếu nhánh Level 1 đã có LDP đang CHẠY thì BẮT BUỘC nhập Level 2 (chống ghi đè trang đang chạy).
+  //           Nhánh không có LDP đang chạy (trống hoặc chỉ còn LDP hết hạn) → Level 2 tuỳ chọn.
   //  Lớp 2 — chống trùng URL toàn cục (LDP khác đang chạy / tạm ẩn / chờ duyệt, hoặc trang portal tĩnh).
   //  Ngoại lệ — bỏ qua chính bản ghi đang sửa (currentId); LDP cũ hết hạn/đã xoá thì cho tái dùng kèm cảnh báo vàng.
   ldpSlugValidate(slug1, slug2, currentId) {
     slug1 = (slug1 || '').trim(); slug2 = (slug2 || '').trim();
     if (!slug1) return { ok: false, block: true, kind: 'empty1' };
-    const lv1Exists = this.ldpApprovedLv1Set().has(slug1);
-    if (lv1Exists && !slug2) {
+    const liveAtLv1 = this.ldpLv1LiveLdp(slug1, currentId);
+    if (liveAtLv1 && !slug2) {
       return { ok: false, block: true, kind: 'needL2', bad1: false, bad2: true,
-        msg: 'Vui lòng nhập Level 2 (tên trang con) để tránh ghi đè trang danh mục chính của website.' };
+        msg: 'Nhánh "' + slug1 + '" đang có trang LDP chạy ("' + liveAtLv1.name + '"). Vui lòng nhập Level 2 (tên trang con) để không ghi đè trang đang chạy.' };
     }
     const path = [slug1, slug2].filter(Boolean).join('/');
     const portal = this.LDP_PORTAL_URLS()[path];
@@ -6289,9 +6291,11 @@ class Component extends DCLogic {
     const approvedLv1 = this.ldpApprovedLv1Set();
     const lv1Exists = !!slug1 && approvedLv1.has(slug1);
     const slugCheck = slugLocked ? { ok: true } : this.ldpSlugValidate(slug1, slug2, editRow ? editRow.id : null);
-    const l2Required = lv1Exists;
     const slug1Err = !!(slugCheck.block && slugCheck.bad1);
     const slug2Err = !!(slugCheck.block && slugCheck.bad2);
+    const editId = editRow ? editRow.id : null;
+    const lv1Live = this.ldpLv1LiveLdp(slug1, editId);              // LDP đang chạy trên nhánh đang chọn (nếu có)
+    const lv1L2Required = !!lv1Live;                                 // Lớp 1: chỉ bắt buộc Level 2 khi nhánh có LDP đang chạy
     // Danh sách nhánh Level 1 có sẵn — chỉ 7 nhánh cố định, hiển thị dạng dropdown khi focus ô Level 1.
     const lv1AllOpts = FPT_CATS.map(c => c.value);
     const lv1Query = this.ldpSlugify(slug1);
@@ -6316,9 +6320,7 @@ class Component extends DCLogic {
       secHdr('Thông tin cơ bản'),
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 4 } },
         h('div', { style: { gridColumn: '1 / -1' } },
-          h('label', { style: lbSt }, 'URL Slug', req,
-            (!slugLocked && l2Required) ? h('span', { style: { color: 'var(--color-danger-text)', fontWeight: 600, marginLeft: 8, fontSize: 11 } }, '• Nhánh có sẵn — bắt buộc nhập Level 2') : null
-          ),
+          h('label', { style: lbSt }, 'URL Slug', req),
           slugLocked
             ? h('div', null,
                 h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13.5, fontFamily: 'monospace', color: 'var(--color-text-muted)' } },
@@ -6355,7 +6357,7 @@ class Component extends DCLogic {
                     ) : null
                   ),
                   h('span', { style: { display: 'flex', alignItems: 'center', color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
-                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } }, h(DS.Input, { value: slug2, error: slug2Err, required: l2Required, onChange: e => set('urlSlug2', this.ldpSlugify(e && e.target ? e.target.value : e)), placeholder: l2Required ? 'Nhập nhánh Level 2 (bắt buộc)' : 'Nhập nhánh Level 2', disabled: !slug1 }))
+                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } }, h(DS.Input, { value: slug2, error: slug2Err, onChange: e => set('urlSlug2', this.ldpSlugify(e && e.target ? e.target.value : e)), placeholder: 'Nhập nhánh Level 2', disabled: !slug1 }))
                 ),
                 (() => {
                   const tone = slugCheck.block ? 'var(--color-danger-text)' : slugCheck.warn ? 'var(--color-warning-text)' : (!slug1 ? 'var(--color-text-subtle)' : (lv1Exists ? 'var(--color-success-text)' : 'var(--color-warning-text)'));
@@ -6367,7 +6369,12 @@ class Component extends DCLogic {
                         : slugCheck.warn
                           ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, slugCheck.msg))
                           : (lv1Exists
-                              ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'check-circle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" đã tồn tại — URL hợp lệ, xuất bản trực tiếp, không cần duyệt.'))
+                              ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'check-circle-line', size: 14 }), h('span', null,
+                                  'Nhánh "', h('strong', null, slug1), '" đã tồn tại — URL hợp lệ, không cần duyệt. ',
+                                  lv1L2Required
+                                    ? h('span', null, 'Nhánh đang có LDP chạy (', h('strong', null, lv1Live.name), ') nên ', h('strong', null, 'bắt buộc nhập Level 2'), '.')
+                                    : h('span', null, 'Nhánh chưa có LDP nào đang chạy nên ', h('strong', null, 'Level 2 không bắt buộc'), ' (có thể để trống).')
+                                ))
                               : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" là nhánh URL cấp 1 mới — cần Super Admin duyệt trước khi xuất bản.')))
                   );
                 })(),
