@@ -9311,27 +9311,13 @@ class Component extends DCLogic {
                       fld2('Ảnh Desktop', h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgDt'+tab.id+selIdx,defaultValue:sel.imgDesktop||'',placeholder:'URL ảnh desktop...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgDesktop:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload'))),
                       fld2('Ảnh Mobile',  h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgMt'+tab.id+selIdx,defaultValue:sel.imgMobile||'',placeholder:'URL ảnh mobile...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgMobile:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload')))
                     ),
-                    g2(
-                      fld2('Tên gói',  h('div',{style:{padding:'0 12px',height:48,background:'var(--color-surface-sunken)',borderRadius:12,fontSize:13,color:'var(--color-text-muted)',border:'1px solid var(--color-border)',display:'flex',alignItems:'center'}},sel.name)),
-                      fld2('Giá cước', h(DS.Input,{key:'price'+tab.id+selIdx,defaultValue:sel.price||'',placeholder:'VD: 165.000đ/tháng',onBlur:e=>this.updPkg(tab.id,selIdx,{price:e.target.value})}))
-                    ),
-                    g2(
-                      fld2('CTA chính — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})})),
-                      fld2('CTA chính — URL',  h(DS.Input,{key:'cu'+tab.id+selIdx,defaultValue:sel.ctaUrl,placeholder:'/dang-ky?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaUrl:e.target.value})}))
-                    ),
+                    fld2('Giá cước', h('div',{style:{padding:'0 12px',height:48,background:'var(--color-surface-sunken)',borderRadius:12,fontSize:13,color:'var(--color-text-muted)',border:'1px solid var(--color-border)',display:'flex',alignItems:'center'}},sel.price||'—')),
+                    fld2('CTA chính — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})})),
                     g2(
                       fld2('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt||'',placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
                       fld2('CTA phụ — URL',  h(DS.Input,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
                     ),
-                    fld2('Tính năng nổi bật (mỗi dòng 1 mục)', h('div',null, h(DS.Textarea,{key:'ft'+tab.id+selIdx,rows:3,defaultValue:sel.features,placeholder:'HBO, K+\nHỗ trợ 24/7\nXem trực tiếp thể thao',onBlur:e=>this.updPkg(tab.id,selIdx,{features:e.target.value})}), h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4,display:'flex',alignItems:'center',gap:4}}, h(DS.Icon,{name:'info-circle-line',size:12,color:'var(--color-text-subtle)'}), 'Mỗi dòng là 1 tính năng — xuống dòng bằng Enter, không phải word-wrap'))),
-                    h('div',{style:{marginTop:4,padding:'10px 12px',background:'var(--color-surface-sunken)',borderRadius:10,border:'1px solid var(--color-border)'}},
-                      h('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:sel.tooltipOn?10:0}},
-                        h(DS.Switch,{size:'sm',checked:sel.tooltipOn,onChange:v=>this.updPkg(tab.id,selIdx,{tooltipOn:v})}),
-                        h('span',{style:{fontSize:13,fontWeight:600}},'Tooltip thông tin thêm'),
-                        h('span',{style:{fontSize:11,color:'var(--color-text-subtle)'}},'· icon (?) hiển thị trên tên gói')
-                      ),
-                      sel.tooltipOn && fld2('Nội dung tooltip', h(DS.Textarea,{key:'tt'+tab.id+selIdx,rows:3,defaultValue:sel.tooltipContent,placeholder:'VD: Gói dành riêng cho...',onBlur:e=>this.updPkg(tab.id,selIdx,{tooltipContent:e.target.value})}))
-                    )
+                    fld2('Tính năng nổi bật (mỗi dòng 1 mục)', h('div',null, h(DS.Textarea,{key:'ft'+tab.id+selIdx,rows:3,defaultValue:sel.features,placeholder:'HBO, K+\nHỗ trợ 24/7\nXem trực tiếp thể thao',onBlur:e=>this.updPkg(tab.id,selIdx,{features:e.target.value})}), h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4,display:'flex',alignItems:'center',gap:4}}, h(DS.Icon,{name:'info-circle-line',size:12,color:'var(--color-text-subtle)'}), 'Mỗi dòng là 1 tính năng — xuống dòng bằng Enter, không phải word-wrap')))
                   ) :
                   h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:240,gap:10,color:'var(--color-text-subtle)'}},
                     h(DS.Icon,{name:'star-01-line',size:32,color:'var(--color-text-subtle)'}),
