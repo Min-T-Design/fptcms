@@ -3309,12 +3309,12 @@ class Component extends DCLogic {
   }
   LDP_LIST() {
     return this.state.ldpListData || [
-      { id: 1, name: 'Khuyến mãi Internet Tháng 5', tplId: 'internet', tplLabel: 'LDP Internet',         goal: 'Lead Gen',           lv1: 'khuyen-mai',           l2: 'internet-thang-5', url: '/khuyen-mai/internet-thang-5',           startDate: '01/05/26', endDate: '31/05/26', lastEdit: '18/05/26', lastEditBy: 'Hà Linh', status: 'publish' },
-      { id: 2, name: 'Sự kiện FPT Play 2026',       tplId: 'sa',       tplLabel: 'LDP SA',               goal: 'Sự kiện / Branding', lv1: 'truyen-hinh-fpt-play',  l2: 'su-kien-2026',     url: '/truyen-hinh-fpt-play/su-kien-2026',     startDate: '01/01/26', endDate: '31/01/26', lastEdit: '28/01/26', lastEditBy: 'Minh Tú', status: 'expired' },
-      { id: 3, name: 'Camera AI Tháng 6',           tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-thang-6', url: '/thiet-bi-thong-minh/camera-ai-thang-6', startDate: '01/06/26', endDate: '30/06/26', lastEdit: '02/06/26', lastEditBy: 'Admin',   status: 'publish' },
-      { id: 4, name: 'Wi-Fi 7 Launch',              tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Lead Gen',           lv1: 'internet',              l2: 'wifi-7-launch',    url: '/internet/wifi-7-launch',               startDate: '15/06/26', endDate: '15/07/26', lastEdit: '14/06/26', lastEditBy: 'Minh Tú', status: 'draft' },
-      { id: 5, name: 'Ưu đãi Sinh viên 2026',       tplId: 'thulead',  tplLabel: 'LDP Thu Lead',         goal: 'Lead Gen',           lv1: 'uu-dai-sinh-vien',      l2: 'dang-ky-2026',     url: '/uu-dai-sinh-vien/dang-ky-2026',         startDate: '01/09/26', endDate: '31/12/26', lastEdit: '02/09/26', lastEditBy: 'Hà Linh', status: 'pending', submittedBy: 'Hà Linh', submittedAt: '02/09/26 09:12' },
-      { id: 6, name: 'Landing Tết Nguyên Đán',      tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Branding',           lv1: 'tet-2026',              l2: 'wifi-7',           url: '/tet-2026/wifi-7',                      startDate: '15/01/26', endDate: '15/02/26', lastEdit: '29/08/26', lastEditBy: 'Minh Tú', status: 'rejected', submittedBy: 'Minh Tú', submittedAt: '28/08/26 14:03', reviewedBy: 'Super Admin', reviewedAt: '29/08/26 08:30', rejectReason: 'Slug Level 1 "tet-2026" quá chung và mang tính thời điểm, không phản ánh danh mục dịch vụ. Đề xuất đặt trang dưới nhánh "khuyen-mai" (vd: khuyen-mai/tet-2026) để không phát sinh nhánh URL cấp 1 mới.' },
+      { id: 1, name: 'Khuyến mãi Internet Tháng 5', tplId: 'internet', tplLabel: 'LDP Internet',         goal: 'Lead Gen',           lv1: 'khuyen-mai',           l2: 'internet-thang-5', url: '/khuyen-mai/internet-thang-5',           startDate: '01/05/26', endDate: '31/05/26', createdBy: 'Hà Linh', createdAt: '28/04/26', lastEdit: '18/05/26', lastEditBy: 'Hà Linh', status: 'publish' },
+      { id: 2, name: 'Sự kiện FPT Play 2026',       tplId: 'sa',       tplLabel: 'LDP SA',               goal: 'Sự kiện / Branding', lv1: 'truyen-hinh-fpt-play',  l2: 'su-kien-2026',     url: '/truyen-hinh-fpt-play/su-kien-2026',     startDate: '01/01/26', endDate: '31/01/26', createdBy: 'Minh Tú', createdAt: '18/12/25', lastEdit: '28/01/26', lastEditBy: 'Minh Tú', status: 'expired' },
+      { id: 3, name: 'Camera AI Tháng 6',           tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-thang-6', url: '/thiet-bi-thong-minh/camera-ai-thang-6', startDate: '01/06/26', endDate: '30/06/26', createdBy: 'Admin User', createdAt: '19/05/26', lastEdit: '02/06/26', lastEditBy: 'Admin',   status: 'publish' },
+      { id: 4, name: 'Wi-Fi 7 Launch',              tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Lead Gen',           lv1: 'internet',              l2: 'wifi-7-launch',    url: '/internet/wifi-7-launch',               startDate: '15/06/26', endDate: '15/07/26', createdBy: 'Minh Tú', createdAt: '30/05/26', lastEdit: '14/06/26', lastEditBy: 'Minh Tú', status: 'draft' },
+      { id: 5, name: 'Ưu đãi Sinh viên 2026',       tplId: 'thulead',  tplLabel: 'LDP Thu Lead',         goal: 'Lead Gen',           lv1: 'uu-dai-sinh-vien',      l2: 'dang-ky-2026',     url: '/uu-dai-sinh-vien/dang-ky-2026',         startDate: '01/09/26', endDate: '31/12/26', createdBy: 'Hà Linh', createdAt: '25/08/26', lastEdit: '02/09/26', lastEditBy: 'Hà Linh', status: 'pending', submittedBy: 'Hà Linh', submittedAt: '02/09/26 09:12' },
+      { id: 6, name: 'Landing Tết Nguyên Đán',      tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Branding',           lv1: 'tet-2026',              l2: 'wifi-7',           url: '/tet-2026/wifi-7',                      startDate: '15/01/26', endDate: '15/02/26', createdBy: 'Minh Tú', createdAt: '20/08/26', lastEdit: '29/08/26', lastEditBy: 'Minh Tú', status: 'rejected', submittedBy: 'Minh Tú', submittedAt: '28/08/26 14:03', reviewedBy: 'Super Admin', reviewedAt: '29/08/26 08:30', rejectReason: 'Slug Level 1 "tet-2026" quá chung và mang tính thời điểm, không phản ánh danh mục dịch vụ. Đề xuất đặt trang dưới nhánh "khuyen-mai" (vd: khuyen-mai/tet-2026) để không phát sinh nhánh URL cấp 1 mới.' },
     ];
   }
   // ── Duyệt LDP: dữ liệu & tiện ích chung ──
@@ -5630,12 +5630,10 @@ class Component extends DCLogic {
     }).sort((x, y) => this.ldpParseDT(y.submittedAt) - this.ldpParseDT(x.submittedAt));
     const stMap = { pending: ['Chờ duyệt', 'info'], approved: ['Đã duyệt', 'success'], rejected: ['Từ chối', 'danger'] };
     const stBadge = s => { const m = stMap[s] || ['—', 'neutral']; return h(DS.Badge, { theme: m[1], dot: true }, m[0]); };
-    const tplColors = { internet: '#ff8c42', sa: '#a78bfa', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981', customhtml: '#f59e0b' };
-    const tplBg = { internet: 'rgba(255,140,66,0.15)', sa: 'rgba(109,40,217,0.15)', camera: 'rgba(255,107,0,0.15)', campaign: 'rgba(59,130,246,0.15)', thulead: 'rgba(16,185,129,0.15)', customhtml: 'rgba(245,158,11,0.15)' };
     const columns = [
       { key: 'name', header: 'Landing Page', width: 210, render: (_, a) => h('div', null,
           h('div', { style: { fontWeight: 700, fontSize: 13.5, marginBottom: 3 } }, a.name),
-          h('span', { style: { background: tplBg[a.tplId] || 'var(--color-surface-alt)', color: tplColors[a.tplId] || 'var(--color-text-muted)', padding: '1px 8px', borderRadius: 8, fontSize: 11, fontWeight: 600 } }, a.tplLabel)
+          h('span', { style: { background: 'var(--color-accent-bg)', color: 'var(--color-accent-text)', border: '1px solid var(--color-accent)', padding: '1px 8px', borderRadius: 8, fontSize: 11, fontWeight: 600 } }, a.tplLabel)
         ) },
       { key: 'url', header: 'Slug đề xuất', width: 220, render: (_, a) => h('span', { style: { fontFamily: 'monospace', fontSize: 12, whiteSpace: 'nowrap' } },
           h('span', { style: { color: 'var(--color-text-subtle)' } }, 'fpt.vn/'),
@@ -5762,7 +5760,7 @@ class Component extends DCLogic {
     return h(DS.Modal, {
       open: true, onClose: back, size: 'lg', style: { maxWidth: 720 },
       title: 'Duyệt LDP: ' + rec.name,
-      description: rec.id + ' · ' + rec.tplLabel + ' · gửi bởi ' + rec.submittedBy + ' · ' + rec.submittedAt,
+      description: rec.tplLabel + ' · gửi bởi ' + rec.submittedBy + ' · ' + rec.submittedAt,
       footer: footer,
     },
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
@@ -5777,16 +5775,12 @@ class Component extends DCLogic {
             metaItem('Template', rec.tplLabel),
             metaItem('Mục tiêu', rec.goal),
             metaItem('Số sections', String(secCount)),
-            metaItem('Người gửi', rec.submittedBy),
-            metaItem('Lần gửi', 'Lần ' + (rec.attempt || 1))
+            metaItem('Người gửi', rec.submittedBy)
           )
         ), showNewFlag && h(DS.Tag, { size: 'sm', color: 'var(--color-danger)' }, 'Nhánh URL cấp 1 MỚI')),
         card('Slug Level 1 cần duyệt', 'marker-pin-01-line',
           h('div', { style: { textAlign: 'center', fontFamily: 'monospace', fontSize: 22, fontWeight: 700, color: slugColor, padding: '20px 16px', background: 'var(--color-surface-sunken)', borderRadius: 12, wordBreak: 'break-all' } }, rec.lv1)
         ),
-        !decided && showNewFlag ? h(DS.Alert, { theme: 'warning', title: 'Nhánh URL cấp 1 mới' },
-          h('div', { style: { fontSize: 12.5 } }, 'Duyệt sẽ thêm nhánh "' + rec.lv1 + '" vào danh sách nhánh hợp lệ và xuất bản LDP "' + rec.name + '" ngay (theo lịch hiệu lực nếu có).')
-        ) : null,
         decided
           ? card('Kết quả duyệt', rec.status === 'approved' ? 'check-circle-line' : 'x-circle-line', h('div', null,
               infoRow('Trạng thái', stMap[rec.status][0]),
@@ -5828,8 +5822,6 @@ class Component extends DCLogic {
   // Xem nhanh (chỉ đọc) yêu cầu đã duyệt / từ chối — theo §2, dùng Right Drawer, không mở trang review.
   openLdpApprovalDrawer(a) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const tplColors = { internet: '#ff8c42', sa: '#a78bfa', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981', customhtml: '#f59e0b' };
-    const tplBg    = { internet: 'rgba(255,140,66,0.15)', sa: 'rgba(109,40,217,0.15)', camera: 'rgba(255,107,0,0.15)', campaign: 'rgba(59,130,246,0.15)', thulead: 'rgba(16,185,129,0.15)', customhtml: 'rgba(245,158,11,0.15)' };
     const stMap = { pending: ['Chờ duyệt', 'info'], approved: ['Đã duyệt', 'success'], rejected: ['Từ chối', 'danger'] };
     const st = stMap[a.status] || ['—', 'neutral'];
     const secCount = (this.LDP_SECTION_DATA()[a.tplId] || []).length || a.sections || 0;
@@ -5837,7 +5829,7 @@ class Component extends DCLogic {
       title: a.name, subtitle: a.id + ' · ' + a.tplLabel, width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0 16px', borderBottom: '1px solid var(--color-border)', marginBottom: 4 } },
-          h('span', { style: { background: tplBg[a.tplId] || 'var(--color-surface-alt)', color: tplColors[a.tplId] || 'var(--color-text-muted)', padding: '3px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700 } }, a.tplLabel),
+          h('span', { style: { background: 'var(--color-accent-bg)', color: 'var(--color-accent-text)', border: '1px solid var(--color-accent)', padding: '3px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700 } }, a.tplLabel),
           h(DS.Badge, { theme: st[1], dot: true }, st[0])
         ),
         a.status === 'rejected' && a.reason ? h(DS.Alert, { theme: 'danger', title: 'Bị Super Admin từ chối', style: { borderRadius: 10, margin: '4px 0 8px' } },
@@ -5852,7 +5844,6 @@ class Component extends DCLogic {
         this.detailRow('Mục tiêu', a.goal || '—'),
         this.detailRow('Số sections', String(secCount)),
         this.detailRow('Người gửi', h('div', null, h('div', null, a.submittedBy), h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, a.submittedAt))),
-        this.detailRow('Lần gửi', 'Lần ' + (a.attempt || 1)),
         this.detailRow('Người duyệt', h('div', null, h('div', null, a.reviewedBy || '—'), a.reviewedAt ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, a.reviewedAt) : null)),
         this.detailRow('Trạng thái', h(DS.Badge, { theme: st[1], dot: true }, st[0])),
         (a.history && a.history.length) ? h('div', { style: { marginTop: 12 } },
@@ -5906,10 +5897,15 @@ class Component extends DCLogic {
           h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url) },
       { key: 'period', header: 'Thời gian hiệu lực', width: 150, render: (_, r) =>
           h('span', { style: { whiteSpace: 'nowrap', color: 'var(--color-text-muted)' } }, r.startDate + ' – ' + r.endDate) },
+      { key: 'createdBy', header: 'Người tạo', width: 130, render: (_, r) =>
+          h('div', { style: { fontSize: 12, whiteSpace: 'nowrap' } },
+            h('div', { style: { fontWeight: 600 } }, r.createdBy || '—'),
+            r.createdAt ? h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, r.createdAt) : null
+          ) },
       { key: 'lastEdit', header: 'Lần sửa cuối', width: 130, render: (_, r) =>
-          h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } },
-            h('div', null, r.lastEdit),
-            h('div', null, '— ' + r.lastEditBy)
+          h('div', { style: { fontSize: 12, whiteSpace: 'nowrap' } },
+            h('div', { style: { fontWeight: 600 } }, r.lastEditBy || '—'),
+            r.lastEdit ? h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, r.lastEdit) : null
           ) },
       { key: 'status', header: 'Trạng thái', width: 110, render: (_, r) => { const curSt = ldpSt(r.id) || r.status; return stBadge(curSt); } },
       { key: 'visible', header: 'Hiển thị', width: 80, align: 'center', render: (_, r) => {
@@ -5999,7 +5995,8 @@ class Component extends DCLogic {
         this.detailRow('Nhánh Level 1', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5 } }, r.lv1 || '—')),
         this.detailRow('Mục tiêu', r.goal),
         this.detailRow('Thời gian hiệu lực', r.startDate + ' – ' + r.endDate),
-        this.detailRow('Lần sửa cuối', h('div', null, h('div', null, r.lastEdit), h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, '— ' + r.lastEditBy))),
+        this.detailRow('Người tạo', h('div', null, h('div', null, r.createdBy || '—'), r.createdAt ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, r.createdAt) : null)),
+        this.detailRow('Lần sửa cuối', h('div', null, h('div', null, r.lastEditBy || '—'), r.lastEdit ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, r.lastEdit) : null)),
         this.detailRow('Trạng thái', stBadge(effStatus))
       ),
       footer: effStatus === 'pending' ? null : () => h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 8 } },
@@ -6064,7 +6061,7 @@ class Component extends DCLogic {
     if (editRow) {
       list = list.map(r => r.id === editRow.id ? { ...r, status: 'pending', lv1, l2, url, goal, lastEdit: this.ldpNow(), lastEditBy: 'Admin User', submittedBy: 'Admin User', submittedAt: now } : r);
     } else {
-      list = [{ id: ldpId, name, tplId, tplLabel, goal, lv1, l2, url, startDate: '—', endDate: '—', lastEdit: this.ldpNow(), lastEditBy: 'Admin User', status: 'pending', submittedBy: 'Admin User', submittedAt: now }, ...list];
+      list = [{ id: ldpId, name, tplId, tplLabel, goal, lv1, l2, url, startDate: '—', endDate: '—', createdBy: 'Admin User', createdAt: this.ldpNow(), lastEdit: this.ldpNow(), lastEditBy: 'Admin User', status: 'pending', submittedBy: 'Admin User', submittedAt: now }, ...list];
     }
     const nextStatuses = { ...(this.state.ldpStatuses || {}) };
     if (editRow) nextStatuses[editRow.id] = 'pending';
@@ -7405,7 +7402,7 @@ class Component extends DCLogic {
                 const leftPanel = h('div',{style:{width:220,flexShrink:0,borderRight:'1px solid var(--color-border)',paddingRight:14,display:'flex',flexDirection:'column',gap:8}},
                   h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}},
                     h('div',{style:{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.7px',color:'var(--color-text-subtle)'}},'Combo hiển thị'),
-                    h(DS.Button,{level:'primary',size:'sm',leadingIcon:'plus-line',onClick:()=>this.updTab(tab.id,{addOpen:true,addSel:new Set()})},'Thêm')
+                    h(DS.Button,{level:'primary',size:'sm',leadingIcon:'plus-line',onClick:()=>this.updTab(tab.id,{addOpen:true,addSel:new Set(combos.map(c=>c.code))})},'Thêm / bớt')
                   ),
                   h(DS.Input,{placeholder:'Lọc combo...',value:q,onChange:e=>this.updTab(tab.id,{q:e.target.value}),leadingIcon:'search-medium-line',size:'sm'}),
                   h('div',{style:{flex:1,overflowY:'auto',maxHeight:260}},
@@ -7499,13 +7496,13 @@ class Component extends DCLogic {
                 const addModal = h(DS.Modal,{
                   open: addOpen,
                   onClose: ()=>this.updTab(tab.id,{addOpen:false}),
-                  title: 'Thêm combo vào tab "'+tab.name+'"',
-                  description: 'Chọn sản phẩm Camera để thêm vào tab này'
+                  title: 'Combo trong tab "'+tab.name+'"',
+                  description: 'Tích để thêm, bỏ tích để gỡ combo khỏi tab này'
                 },
                   h('div',{style:{display:'flex',flexDirection:'column',gap:12}},
                     h(DS.Input,{placeholder:'Tìm theo tên hoặc mã...',value:addQ,onChange:e=>this.updTab(tab.id,{addQ:e.target.value}),leadingIcon:'search-medium-line',size:'sm'}),
                     (() => {
-                      const selectable = filtModal.filter(s => !existingCodes.has(s.code));
+                      const selectable = filtModal;
                       const allSel = selectable.length>0 && selectable.every(s=>addSel.has(s.code));
                       return h('div',{style:{display:'flex',alignItems:'center',paddingLeft:2}},
                         h(DS.Checkbox,{label:'Chọn tất cả',checked:allSel,onChange:v=>{
@@ -7519,19 +7516,19 @@ class Component extends DCLogic {
                         : filtModal.map(sku => {
                           const chk=addSel.has(sku.code), already=existingCodes.has(sku.code);
                           return h('div',{key:sku.code,onClick:()=>{
-                            if(already)return;
                             const ns=new Set(addSel); chk?ns.delete(sku.code):ns.add(sku.code); this.updTab(tab.id,{addSel:ns});
-                          },style:{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderBottom:'1px solid var(--color-border-pale)',cursor:already?'not-allowed':'pointer',
+                          },style:{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderBottom:'1px solid var(--color-border-pale)',cursor:'pointer',
                             background:chk?'var(--color-accent-bg)':already?'var(--color-surface-sunken)':'transparent',
-                            opacity:already?0.55:1,transition:'background .1s'}
+                            transition:'background .1s'}
                           },
-                            h('div',{style:{width:18,height:18,borderRadius:4,flexShrink:0,border:'1.5px solid',borderColor:chk?'var(--color-accent)':already?'var(--color-border)':'var(--color-border-strong)',background:chk?'var(--color-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .1s'}},
+                            h('div',{style:{width:18,height:18,borderRadius:4,flexShrink:0,border:'1.5px solid',borderColor:chk?'var(--color-accent)':'var(--color-border-strong)',background:chk?'var(--color-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .1s'}},
                               chk&&h(DS.Icon,{name:'check-line',size:11,color:'#fff'})
                             ),
                             h('div',{style:{flex:1,minWidth:0}},
                               h('div',{style:{display:'flex',alignItems:'center',gap:6}},
                                 h('div',{style:{fontWeight:700,fontSize:13}},sku.name),
-                                already&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-surface-alt)',borderRadius:4,color:'var(--color-text-subtle)',fontWeight:600}},'Đã thêm')
+                                already&&!chk&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-danger-bg)',borderRadius:4,color:'var(--color-danger-text)',fontWeight:600}},'Sẽ gỡ'),
+                                already&&chk&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-surface-alt)',borderRadius:4,color:'var(--color-text-subtle)',fontWeight:600}},'Đã thêm')
                               ),
                               h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},sku.code)
                             )
@@ -7539,10 +7536,11 @@ class Component extends DCLogic {
                         })
                     ),
                     h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',paddingTop:4}},
-                      h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},addSel.size+' SKU đã chọn'),
+                      h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},addSel.size+' combo được chọn'),
                       h('div',{style:{display:'flex',gap:8}},
                         h(DS.Button,{level:'secondary',onClick:()=>this.updTab(tab.id,{addOpen:false})},'Hủy'),
-                        h(DS.Button,{level:'primary',disabled:addSel.size===0,onClick:()=>{
+                        h(DS.Button,{level:'primary',onClick:()=>{
+                          const kept=combos.filter(c=>addSel.has(c.code));
                           const toAdd=CAM_SKUS.filter(s=>addSel.has(s.code)&&!existingCodes.has(s.code));
                           const newCombos=toAdd.map((s,i)=>({
                             id:'c'+Date.now()+i,code:s.code,name:s.name,
@@ -7550,8 +7548,9 @@ class Component extends DCLogic {
                             priceSale:'',priceOrig:'',pricePct:'',priceToggle:false,badgeAlt:'',
                             ctaText:'Mua ngay',ctaUrl:'#',desc:''
                           }));
-                          this.updTab(tab.id,{combos:[...combos,...newCombos],addOpen:false,addSel:new Set()});
-                        }},addSel.size?'Thêm combo ('+addSel.size+' SKU)':'Thêm combo')
+                          const nc=[...kept,...newCombos];
+                          this.updTab(tab.id,{combos:nc,selIdx:nc.length?Math.min(selIdx<0?0:selIdx,nc.length-1):-1,addOpen:false,addSel:new Set()});
+                        }},'Lưu ('+addSel.size+' combo)')
                       )
                     )
                   )
@@ -7694,7 +7693,7 @@ class Component extends DCLogic {
                 const leftPanel = h('div',{style:{width:220,flexShrink:0,borderRight:'1px solid var(--color-border)',paddingRight:14,display:'flex',flexDirection:'column',gap:8}},
                   h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}},
                     h('div',{style:{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.7px',color:'var(--color-text-subtle)'}},'Gói hiển thị'),
-                    h(DS.Button,{level:'primary',size:'sm',leadingIcon:'plus-line',onClick:()=>this.updTab(tab.id,{addOpen:true,addSel:new Set()})},'Thêm')
+                    h(DS.Button,{level:'primary',size:'sm',leadingIcon:'plus-line',onClick:()=>this.updTab(tab.id,{addOpen:true,addSel:new Set(pkgs.map(p=>p.code))})},'Thêm / bớt')
                   ),
                   h(DS.Input,{placeholder:'Lọc gói...',value:q,onChange:e=>this.updTab(tab.id,{q:e.target.value}),leadingIcon:'search-medium-line',size:'sm'}),
                   h('div',{style:{flex:1,overflowY:'auto',maxHeight:260}},
@@ -7796,13 +7795,13 @@ class Component extends DCLogic {
                 const addModal = h(DS.Modal,{
                   open: addOpen,
                   onClose: ()=>this.updTab(tab.id,{addOpen:false}),
-                  title: 'Thêm gói vào tab "'+tab.name+'"',
-                  description: 'Chọn gói internet để hiển thị trong tab này'
+                  title: 'Gói trong tab "'+tab.name+'"',
+                  description: 'Tích để thêm, bỏ tích để gỡ gói khỏi tab này'
                 },
                   h('div',{style:{display:'flex',flexDirection:'column',gap:12}},
                     h(DS.Input,{placeholder:'Tìm gói theo tên hoặc mã...',value:addQ,onChange:e=>this.updTab(tab.id,{addQ:e.target.value}),leadingIcon:'search-medium-line',size:'sm'}),
                     (() => {
-                      const selectable = filtModal.filter(p => !existingCodes.has(p.code));
+                      const selectable = filtModal;
                       const allSel = selectable.length>0 && selectable.every(p=>addSel.has(p.code));
                       return h('div',{style:{display:'flex',alignItems:'center',paddingLeft:2}},
                         h(DS.Checkbox,{label:'Chọn tất cả',checked:allSel,onChange:v=>{
@@ -7816,19 +7815,19 @@ class Component extends DCLogic {
                         : filtModal.map(pkg => {
                           const chk=addSel.has(pkg.code), already=existingCodes.has(pkg.code);
                           return h('div',{key:pkg.code,onClick:()=>{
-                            if(already)return;
                             const ns=new Set(addSel); chk?ns.delete(pkg.code):ns.add(pkg.code); this.updTab(tab.id,{addSel:ns});
-                          },style:{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderBottom:'1px solid var(--color-border-pale)',cursor:already?'not-allowed':'pointer',
+                          },style:{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderBottom:'1px solid var(--color-border-pale)',cursor:'pointer',
                             background:chk?'var(--color-accent-bg)':already?'var(--color-surface-sunken)':'transparent',
-                            opacity:already?0.55:1,transition:'background .1s'}
+                            transition:'background .1s'}
                           },
-                            h('div',{style:{width:18,height:18,borderRadius:4,flexShrink:0,border:'1.5px solid',borderColor:chk?'var(--color-accent)':already?'var(--color-border)':'var(--color-border-strong)',background:chk?'var(--color-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .1s'}},
+                            h('div',{style:{width:18,height:18,borderRadius:4,flexShrink:0,border:'1.5px solid',borderColor:chk?'var(--color-accent)':'var(--color-border-strong)',background:chk?'var(--color-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .1s'}},
                               chk&&h(DS.Icon,{name:'check-line',size:11,color:'#fff'})
                             ),
                             h('div',{style:{flex:1,minWidth:0}},
                               h('div',{style:{display:'flex',alignItems:'center',gap:6}},
                                 h('div',{style:{fontWeight:700,fontSize:13}},pkg.name),
-                                already&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-surface-alt)',borderRadius:4,color:'var(--color-text-subtle)',fontWeight:600}},'Đã thêm')
+                                already&&!chk&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-danger-bg)',borderRadius:4,color:'var(--color-danger-text)',fontWeight:600}},'Sẽ gỡ'),
+                                already&&chk&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-surface-alt)',borderRadius:4,color:'var(--color-text-subtle)',fontWeight:600}},'Đã thêm')
                               ),
                               h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},pkg.code+' · '+pkg.speed+' · '+pkg.price)
                             )
@@ -7836,10 +7835,11 @@ class Component extends DCLogic {
                         })
                     ),
                     h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',paddingTop:4}},
-                      h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},addSel.size+' gói đã chọn'),
+                      h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},addSel.size+' gói được chọn'),
                       h('div',{style:{display:'flex',gap:8}},
                         h(DS.Button,{level:'secondary',onClick:()=>this.updTab(tab.id,{addOpen:false})},'Hủy'),
-                        h(DS.Button,{level:'primary',disabled:addSel.size===0,onClick:()=>{
+                        h(DS.Button,{level:'primary',onClick:()=>{
+                          const kept=pkgs.filter(p=>addSel.has(p.code));
                           const toAdd=INET_PKGS.filter(p=>addSel.has(p.code)&&!existingCodes.has(p.code));
                           const newPkgs=toAdd.map((p,i)=>({
                             id:'p'+Date.now()+i,code:p.code,name:p.name,price:p.price,
@@ -7847,8 +7847,9 @@ class Component extends DCLogic {
                             ctaText:'Đăng ký ngay',ctaUrl:'#',ctaAlt:'Xem chi tiết',ctaAltUrl:'',
                             features:'',tooltipOn:false,tooltipContent:''
                           }));
-                          this.updTab(tab.id,{pkgs:[...pkgs,...newPkgs],addOpen:false,addSel:new Set()});
-                        }},addSel.size?'Thêm ('+addSel.size+' gói)':'Thêm gói')
+                          const nc=[...kept,...newPkgs];
+                          this.updTab(tab.id,{pkgs:nc,selIdx:nc.length?Math.min(selIdx<0?0:selIdx,nc.length-1):-1,addOpen:false,addSel:new Set()});
+                        }},'Lưu ('+addSel.size+' gói)')
                       )
                     )
                   )
@@ -7976,7 +7977,7 @@ class Component extends DCLogic {
                 const leftPanel = h('div',{style:{width:220,flexShrink:0,borderRight:'1px solid var(--color-border)',paddingRight:14,display:'flex',flexDirection:'column',gap:8}},
                   h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}},
                     h('div',{style:{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.7px',color:'var(--color-text-subtle)'}},'Gói hiển thị'),
-                    h(DS.Button,{level:'primary',size:'sm',leadingIcon:'plus-line',onClick:()=>this.updTab(tab.id,{addOpen:true,addSel:new Set()})},'Thêm')
+                    h(DS.Button,{level:'primary',size:'sm',leadingIcon:'plus-line',onClick:()=>this.updTab(tab.id,{addOpen:true,addSel:new Set(pkgs.map(p=>p.code))})},'Thêm / bớt')
                   ),
                   h(DS.Input,{placeholder:'Lọc gói...',value:q,onChange:e=>this.updTab(tab.id,{q:e.target.value}),leadingIcon:'search-medium-line',size:'sm'}),
                   h('div',{style:{flex:1,overflowY:'auto',maxHeight:260}},
@@ -8077,13 +8078,13 @@ class Component extends DCLogic {
                 const addModal = h(DS.Modal,{
                   open: addOpen,
                   onClose: ()=>this.updTab(tab.id,{addOpen:false}),
-                  title: 'Thêm gói vào tab "'+tab.name+'"',
-                  description: 'Chọn gói internet để hiển thị trong tab này'
+                  title: 'Gói trong tab "'+tab.name+'"',
+                  description: 'Tích để thêm, bỏ tích để gỡ gói khỏi tab này'
                 },
                   h('div',{style:{display:'flex',flexDirection:'column',gap:12}},
                     h(DS.Input,{placeholder:'Tìm gói theo tên hoặc mã...',value:addQ,onChange:e=>this.updTab(tab.id,{addQ:e.target.value}),leadingIcon:'search-medium-line',size:'sm'}),
                     (() => {
-                      const selectable = filtModal.filter(p => !existingCodes.has(p.code));
+                      const selectable = filtModal;
                       const allSel = selectable.length>0 && selectable.every(p=>addSel.has(p.code));
                       return h('div',{style:{display:'flex',alignItems:'center',paddingLeft:2}},
                         h(DS.Checkbox,{label:'Chọn tất cả',checked:allSel,onChange:v=>{
@@ -8097,19 +8098,19 @@ class Component extends DCLogic {
                         : filtModal.map(pkg => {
                           const chk=addSel.has(pkg.code), already=existingCodes.has(pkg.code);
                           return h('div',{key:pkg.code,onClick:()=>{
-                            if(already)return;
                             const ns=new Set(addSel); chk?ns.delete(pkg.code):ns.add(pkg.code); this.updTab(tab.id,{addSel:ns});
-                          },style:{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderBottom:'1px solid var(--color-border-pale)',cursor:already?'not-allowed':'pointer',
+                          },style:{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderBottom:'1px solid var(--color-border-pale)',cursor:'pointer',
                             background:chk?'var(--color-accent-bg)':already?'var(--color-surface-sunken)':'transparent',
-                            opacity:already?0.55:1,transition:'background .1s'}
+                            transition:'background .1s'}
                           },
-                            h('div',{style:{width:18,height:18,borderRadius:4,flexShrink:0,border:'1.5px solid',borderColor:chk?'var(--color-accent)':already?'var(--color-border)':'var(--color-border-strong)',background:chk?'var(--color-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .1s'}},
+                            h('div',{style:{width:18,height:18,borderRadius:4,flexShrink:0,border:'1.5px solid',borderColor:chk?'var(--color-accent)':'var(--color-border-strong)',background:chk?'var(--color-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .1s'}},
                               chk&&h(DS.Icon,{name:'check-line',size:11,color:'#fff'})
                             ),
                             h('div',{style:{flex:1,minWidth:0}},
                               h('div',{style:{display:'flex',alignItems:'center',gap:6}},
                                 h('div',{style:{fontWeight:700,fontSize:13}},pkg.name),
-                                already&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-surface-alt)',borderRadius:4,color:'var(--color-text-subtle)',fontWeight:600}},'Đã thêm')
+                                already&&!chk&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-danger-bg)',borderRadius:4,color:'var(--color-danger-text)',fontWeight:600}},'Sẽ gỡ'),
+                                already&&chk&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-surface-alt)',borderRadius:4,color:'var(--color-text-subtle)',fontWeight:600}},'Đã thêm')
                               ),
                               h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},pkg.code+' · '+pkg.speed+' · '+pkg.price)
                             )
@@ -8117,10 +8118,11 @@ class Component extends DCLogic {
                         })
                     ),
                     h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',paddingTop:4}},
-                      h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},addSel.size+' gói đã chọn'),
+                      h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},addSel.size+' gói được chọn'),
                       h('div',{style:{display:'flex',gap:8}},
                         h(DS.Button,{level:'secondary',onClick:()=>this.updTab(tab.id,{addOpen:false})},'Hủy'),
-                        h(DS.Button,{level:'primary',disabled:addSel.size===0,onClick:()=>{
+                        h(DS.Button,{level:'primary',onClick:()=>{
+                          const kept=pkgs.filter(p=>addSel.has(p.code));
                           const toAdd=WIFI7_PKGS.filter(p=>addSel.has(p.code)&&!existingCodes.has(p.code));
                           const newPkgs=toAdd.map((p,i)=>({
                             id:'p'+Date.now()+i,code:p.code,name:p.name,price:p.price,
@@ -8128,8 +8130,9 @@ class Component extends DCLogic {
                             ctaText:'Đăng ký ngay',ctaUrl:'#',ctaAlt:'Xem chi tiết',ctaAltUrl:'',
                             features:'',tooltipOn:false,tooltipContent:''
                           }));
-                          this.updTab(tab.id,{pkgs:[...pkgs,...newPkgs],addOpen:false,addSel:new Set()});
-                        }},addSel.size?'Thêm ('+addSel.size+' gói)':'Thêm gói')
+                          const nc=[...kept,...newPkgs];
+                          this.updTab(tab.id,{pkgs:nc,selIdx:nc.length?Math.min(selIdx<0?0:selIdx,nc.length-1):-1,addOpen:false,addSel:new Set()});
+                        }},'Lưu ('+addSel.size+' gói)')
                       )
                     )
                   )
@@ -9194,7 +9197,7 @@ class Component extends DCLogic {
                 const leftPanel = h('div',{style:{width:220,flexShrink:0,borderRight:'1px solid var(--color-border)',paddingRight:14,display:'flex',flexDirection:'column',gap:8}},
                   h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}},
                     h('div',{style:{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.7px',color:'var(--color-text-subtle)'}},'Gói hiển thị'),
-                    h(DS.Button,{level:'primary',size:'sm',leadingIcon:'plus-line',onClick:()=>this.updTab(tab.id,{addOpen:true,addSel:new Set()})},'Thêm')
+                    h(DS.Button,{level:'primary',size:'sm',leadingIcon:'plus-line',onClick:()=>this.updTab(tab.id,{addOpen:true,addSel:new Set(pkgs.map(p=>p.code))})},'Thêm / bớt')
                   ),
                   h(DS.Input,{placeholder:'Lọc gói...',value:q,onChange:e=>this.updTab(tab.id,{q:e.target.value}),leadingIcon:'search-medium-line',size:'sm'}),
                   h('div',{style:{flex:1,overflowY:'auto',maxHeight:260}},
@@ -9270,11 +9273,11 @@ class Component extends DCLogic {
                   )
                 );
 
-                const addModal = h(DS.Modal,{open:addOpen,onClose:()=>this.updTab(tab.id,{addOpen:false}),title:'Thêm gói vào tab "'+tab.name+'"',description:'Chọn gói SA để hiển thị trong tab này'},
+                const addModal = h(DS.Modal,{open:addOpen,onClose:()=>this.updTab(tab.id,{addOpen:false}),title:'Gói trong tab "'+tab.name+'"',description:'Tích để thêm, bỏ tích để gỡ gói khỏi tab này'},
                   h('div',{style:{display:'flex',flexDirection:'column',gap:12}},
                     h(DS.Input,{placeholder:'Tìm gói theo tên hoặc mã...',value:addQ,onChange:e=>this.updTab(tab.id,{addQ:e.target.value}),leadingIcon:'search-medium-line',size:'sm'}),
                     (() => {
-                      const selectable = filtModal.filter(s => !existingCodes.has(s.code));
+                      const selectable = filtModal;
                       const allSel = selectable.length>0 && selectable.every(s=>addSel.has(s.code));
                       return h('div',{style:{display:'flex',alignItems:'center',paddingLeft:2}},
                         h(DS.Checkbox,{label:'Chọn tất cả',checked:allSel,onChange:v=>{const ns=new Set(addSel);selectable.forEach(s=>v?ns.add(s.code):ns.delete(s.code));this.updTab(tab.id,{addSel:ns});}}));
@@ -9284,25 +9287,27 @@ class Component extends DCLogic {
                         ? h('div',{style:{padding:'24px',textAlign:'center',fontSize:12,color:'var(--color-text-subtle)'}},'Không tìm thấy gói phù hợp')
                         : filtModal.map(pkg => {
                           const chk=addSel.has(pkg.code), already=existingCodes.has(pkg.code);
-                          return h('div',{key:pkg.code,onClick:()=>{if(already)return;const ns=new Set(addSel);chk?ns.delete(pkg.code):ns.add(pkg.code);this.updTab(tab.id,{addSel:ns});},
-                            style:{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderBottom:'1px solid var(--color-border-pale)',cursor:already?'not-allowed':'pointer',background:chk?'var(--color-accent-bg)':already?'var(--color-surface-sunken)':'transparent',opacity:already?0.55:1,transition:'background .1s'}},
-                            h('div',{style:{width:18,height:18,borderRadius:4,flexShrink:0,border:'1.5px solid',borderColor:chk?'var(--color-accent)':already?'var(--color-border)':'var(--color-border-strong)',background:chk?'var(--color-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center'}},chk&&h(DS.Icon,{name:'check-line',size:11,color:'#fff'})),
+                          return h('div',{key:pkg.code,onClick:()=>{const ns=new Set(addSel);chk?ns.delete(pkg.code):ns.add(pkg.code);this.updTab(tab.id,{addSel:ns});},
+                            style:{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderBottom:'1px solid var(--color-border-pale)',cursor:'pointer',background:chk?'var(--color-accent-bg)':already?'var(--color-surface-sunken)':'transparent',transition:'background .1s'}},
+                            h('div',{style:{width:18,height:18,borderRadius:4,flexShrink:0,border:'1.5px solid',borderColor:chk?'var(--color-accent)':'var(--color-border-strong)',background:chk?'var(--color-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center'}},chk&&h(DS.Icon,{name:'check-line',size:11,color:'#fff'})),
                             h('div',{style:{flex:1,minWidth:0}},
-                              h('div',{style:{display:'flex',alignItems:'center',gap:6}},h('div',{style:{fontWeight:700,fontSize:13}},pkg.name),already&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-surface-alt)',borderRadius:4,color:'var(--color-text-subtle)',fontWeight:600}},'Đã thêm')),
+                              h('div',{style:{display:'flex',alignItems:'center',gap:6}},h('div',{style:{fontWeight:700,fontSize:13}},pkg.name),already&&!chk&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-danger-bg)',borderRadius:4,color:'var(--color-danger-text)',fontWeight:600}},'Sẽ gỡ'),already&&chk&&h('span',{style:{fontSize:10,padding:'1px 6px',background:'var(--color-surface-alt)',borderRadius:4,color:'var(--color-text-subtle)',fontWeight:600}},'Đã thêm')),
                               h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},pkg.code+' · '+pkg.price)
                             )
                           );
                         })
                     ),
                     h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',paddingTop:4}},
-                      h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},addSel.size+' gói đã chọn'),
+                      h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},addSel.size+' gói được chọn'),
                       h('div',{style:{display:'flex',gap:8}},
                         h(DS.Button,{level:'secondary',onClick:()=>this.updTab(tab.id,{addOpen:false})},'Hủy'),
-                        h(DS.Button,{level:'primary',disabled:addSel.size===0,onClick:()=>{
+                        h(DS.Button,{level:'primary',onClick:()=>{
+                          const kept=pkgs.filter(p=>addSel.has(p.code));
                           const toAdd=SA_PKGS.filter(p=>addSel.has(p.code)&&!existingCodes.has(p.code));
                           const newPkgs=toAdd.map((p,i)=>({id:'p'+Date.now()+i,code:p.code,name:p.name,price:p.price,visible:true,badge:'',ctaText:'Đăng ký ngay',ctaUrl:'#',ctaAlt:'',ctaAltUrl:'',features:'',tooltipOn:false,tooltipContent:''}));
-                          this.updTab(tab.id,{pkgs:[...pkgs,...newPkgs],addOpen:false,addSel:new Set()});
-                        }},addSel.size?'Thêm ('+addSel.size+' gói)':'Thêm gói')
+                          const nc=[...kept,...newPkgs];
+                          this.updTab(tab.id,{pkgs:nc,selIdx:nc.length?Math.min(selIdx<0?0:selIdx,nc.length-1):-1,addOpen:false,addSel:new Set()});
+                        }},'Lưu ('+addSel.size+' gói)')
                       )
                     )
                   )
