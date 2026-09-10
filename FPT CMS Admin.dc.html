@@ -7715,10 +7715,6 @@ class Component extends DCLogic {
                       fld('Ảnh Desktop', h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgDt'+tab.id+selIdx,defaultValue:sel.imgDesktop||'',placeholder:'URL ảnh desktop...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgDesktop:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload'))),
                       fld('Ảnh Mobile',  h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgMt'+tab.id+selIdx,defaultValue:sel.imgMobile||'',placeholder:'URL ảnh mobile...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgMobile:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload')))
                     ),
-                    h('div',{style:{display:'flex',gap:6,alignItems:'center',padding:'7px 10px',background:'var(--color-surface-sunken)',borderRadius:8,marginBottom:12,fontSize:11,color:'var(--color-text-subtle)'}},
-                      h(DS.Icon,{name:'lock-01-line',size:12,color:'var(--color-text-subtle)'}),
-                      h('span',null,'Tên gói & giá cước đồng bộ tự động từ Product Hub · Chỉ đọc')
-                    ),
                     fld('Giá cước', h('div',{style:{padding:'0 12px',height:48,background:'var(--color-surface-sunken)',borderRadius:12,fontSize:13,color:'var(--color-text-muted)',border:'1px solid var(--color-border)',display:'flex',alignItems:'center'}},sel.price)),
 
                     fld('CTA chính — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})})),
@@ -7979,10 +7975,6 @@ class Component extends DCLogic {
                     g2(
                       fld('Ảnh Desktop', h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgDt'+tab.id+selIdx,defaultValue:sel.imgDesktop||'',placeholder:'URL ảnh desktop...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgDesktop:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload'))),
                       fld('Ảnh Mobile',  h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgMt'+tab.id+selIdx,defaultValue:sel.imgMobile||'',placeholder:'URL ảnh mobile...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgMobile:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload')))
-                    ),
-                    h('div',{style:{display:'flex',gap:6,alignItems:'center',padding:'7px 10px',background:'var(--color-surface-sunken)',borderRadius:8,marginBottom:12,fontSize:11,color:'var(--color-text-subtle)'}},
-                      h(DS.Icon,{name:'lock-01-line',size:12,color:'var(--color-text-subtle)'}),
-                      h('span',null,'Tên gói & giá cước đồng bộ tự động từ Product Hub · Chỉ đọc')
                     ),
                     fld('Giá cước', h('div',{style:{padding:'0 12px',height:48,background:'var(--color-surface-sunken)',borderRadius:12,fontSize:13,color:'var(--color-text-muted)',border:'1px solid var(--color-border)',display:'flex',alignItems:'center'}},sel.price||'')),
                     fld('CTA chính — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})})),
@@ -9163,10 +9155,6 @@ class Component extends DCLogic {
                     g2(
                       fld2('Ảnh Desktop', h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgDt'+tab.id+selIdx,defaultValue:sel.imgDesktop||'',placeholder:'URL ảnh desktop...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgDesktop:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload'))),
                       fld2('Ảnh Mobile',  h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgMt'+tab.id+selIdx,defaultValue:sel.imgMobile||'',placeholder:'URL ảnh mobile...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgMobile:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload')))
-                    ),
-                    h('div',{style:{display:'flex',gap:6,alignItems:'center',padding:'7px 10px',background:'var(--color-surface-sunken)',borderRadius:8,marginBottom:12,fontSize:11,color:'var(--color-text-subtle)'}},
-                      h(DS.Icon,{name:'lock-01-line',size:12,color:'var(--color-text-subtle)'}),
-                      h('span',null,'Tên gói đồng bộ tự động từ Product Hub · Chỉ đọc')
                     ),
                     g2(
                       fld2('Tên gói',  h('div',{style:{padding:'0 12px',height:48,background:'var(--color-surface-sunken)',borderRadius:12,fontSize:13,color:'var(--color-text-muted)',border:'1px solid var(--color-border)',display:'flex',alignItems:'center'}},sel.name)),
