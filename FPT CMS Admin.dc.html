@@ -6662,7 +6662,7 @@ class Component extends DCLogic {
         h('div', null,
           h('label', { style: lbSt }, 'OG Image — ảnh share mạng xã hội'),
           h('div', { style: { display: 'flex', gap: 8 } },
-            h(DS.Input, { value: get('ogImage'), onChange: e => set('ogImage', e.target.value), placeholder: 'URL ảnh 1200×630px', style: { flex: 1 } }),
+            h(DS.Input, { value: get('ogImage'), onChange: e => set('ogImage', e.target.value), placeholder: 'URL ảnh', style: { flex: 1 } }),
             h(DS.Button, { level: 'secondary', size: 'sm' }, 'Upload')
           )
         ),
@@ -7518,7 +7518,7 @@ class Component extends DCLogic {
                 )
               : h2('div', null,
                   h2('div', { style:{ display:'flex', gap:8 } },
-                    h2(DS2.Input, { placeholder:'URL ảnh nền (1920px)...', value:image, onChange:function(e){ const v=e.target?e.target.value:e; self.save({image:v}); } }),
+                    h2(DS2.Input, { placeholder:'URL ảnh nền...', value:image, onChange:function(e){ const v=e.target?e.target.value:e; self.save({image:v}); } }),
                     h2(DS2.Button, { level:'secondary', size:'sm', leadingIcon:'image-line', onClick:()=>openMediaPicker() }, 'Upload')
                   ),
                   image && h2('div', { style:{ marginTop:8, position:'relative', borderRadius:8, overflow:'hidden', height:80 } },
@@ -7535,7 +7535,7 @@ class Component extends DCLogic {
       // ── TOP HEADER PROMO STRIP ──
       'lead-top-header': [
         divr('ICON KHUYẾN MÃI'),
-        mFld('Icon khuyến mãi (ảnh, 24×24px)', 'URL ảnh icon...'),
+        mFld('Icon khuyến mãi', 'URL ảnh icon...'),
         fld('Nội dung khuyến mãi', h(DS.Textarea, { rows: 2, defaultValue: 'Tặng ngay Modem Wi-Fi 6 trị giá 2.000.000đ + Miễn phí lắp đặt' })),
         divr('NÚT HÀNH ĐỘNG (CTA)'),
         g2(fld('CTA — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
@@ -7543,7 +7543,7 @@ class Component extends DCLogic {
       // ── HERO ──
       Hero: [
         divr('BACKGROUND & HÌNH ẢNH'),
-        g2(mFld('Ảnh Desktop (1920×774px)', 'URL ảnh desktop hero...'), mFld('Ảnh Mobile (375×732px)', 'URL ảnh mobile hero...')),
+        g2(mFld('Ảnh Desktop', 'URL ảnh desktop hero...'), mFld('Ảnh Mobile', 'URL ảnh mobile hero...')),
         h(CTABlock, {key:'cta-hero'},
           g2(fld('CTA chính — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA chính — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
           g2(
@@ -7557,8 +7557,8 @@ class Component extends DCLogic {
           h('span', { style: { fontSize: 13 } }, 'Bật dải Countdown dính liền Hero')
         ),
         g2(
-          mFld('Hình background Desktop (tỉ lệ 360:432, <200KB)', 'URL ảnh background desktop...'),
-          mFld('Hình background Mobile (tỉ lệ 5:7, <150KB)', 'URL ảnh background mobile...')
+          mFld('Hình background Desktop', 'URL ảnh background desktop...'),
+          mFld('Hình background Mobile', 'URL ảnh background mobile...')
         ),
         fld('Tiêu đề countdown', h(DS.Input, { placeholder: 'Nhận ưu đãi...' })),
         fld('Nội dung / Body text', h(DS.Textarea, { rows: 2, placeholder: 'VD: Ưu đãi có hạn — Lắp đặt miễn phí, tặng router Wi-Fi 6...' })),
@@ -7571,7 +7571,7 @@ class Component extends DCLogic {
       // ── LEAD HERO (no countdown) ──
       'lead-hero': [
         divr('BACKGROUND & HÌNH ẢNH'),
-        g2(mFld('Ảnh Desktop (1920×774px)', 'URL ảnh desktop hero...'), mFld('Ảnh Mobile (375×732px)', 'URL ảnh mobile hero...')),
+        g2(mFld('Ảnh Desktop', 'URL ảnh desktop hero...'), mFld('Ảnh Mobile', 'URL ảnh mobile hero...')),
         h(CTABlock, {key:'cta-lead-hero'},
           g2(fld('CTA chính — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA chính — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
           g2(
@@ -7583,7 +7583,7 @@ class Component extends DCLogic {
       // ── CAMERA AI HERO (specific override with countdown) ──
       'cam-hero': [
         divr('BACKGROUND & HÌNH ẢNH'),
-        g2(mFld('Ảnh Desktop (1920×774px)', 'URL ảnh desktop hero...'), mFld('Ảnh Mobile (375×732px)', 'URL ảnh mobile hero...')),
+        g2(mFld('Ảnh Desktop', 'URL ảnh desktop hero...'), mFld('Ảnh Mobile', 'URL ảnh mobile hero...')),
         h(CTABlock, {key:'cta-cam-hero'},
           g2(fld('CTA chính — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA chính — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
           g2(
@@ -8693,10 +8693,10 @@ class Component extends DCLogic {
       ],
       // ── STICKY BAR ──
       Sticky: [
-        divr('BANNER DESKTOP (1920×120px)'),
-        mFld('Ảnh Desktop (1920×120px)', 'URL ảnh banner desktop 1920×120px...'),
-        divr('BANNER MOBILE (375×262px)'),
-        mFld('Ảnh Mobile (375×262px)', 'URL ảnh banner mobile 375×262px...'),
+        divr('BANNER DESKTOP'),
+        mFld('Ảnh Desktop', 'URL ảnh banner desktop...'),
+        divr('BANNER MOBILE'),
+        mFld('Ảnh Mobile', 'URL ảnh banner mobile...'),
         divr('LIÊN KẾT'),
         fld('Link URL banner', h(DS.Input, { placeholder: 'VD: /dang-ky-internet' }), true),
       ],
@@ -9306,8 +9306,8 @@ class Component extends DCLogic {
 
         divr('BACKGROUND & HÌNH ẢNH'),
         g2(
-          mFld('Hình background Desktop (tỉ lệ 360:432, <200KB)', 'URL ảnh background desktop...'),
-          mFld('Hình background Mobile (tỉ lệ 5:7, <150KB)', 'URL ảnh background mobile...')
+          mFld('Hình background Desktop', 'URL ảnh background desktop...'),
+          mFld('Hình background Mobile', 'URL ảnh background mobile...')
         ),
         fld('Tiêu đề dải Countdown / Nhãn ưu đãi', h(DS.Input, { placeholder: 'VD: Đăng ký lắp đặt Internet nhận ngay ưu đãi sốc' }), true),
         fld('Nội dung / Body text', h(DS.Textarea, { rows: 2, placeholder: 'VD: Ưu đãi có hạn — Lắp đặt miễn phí, tặng router Wi-Fi 6...' })),
