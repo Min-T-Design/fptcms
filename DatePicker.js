@@ -22,7 +22,21 @@
       .replace("MM", String(d.getMonth() + 1).padStart(2, "0"))
       .replace("yyyy", String(d.getFullYear()));
   }
-  function inBound(d, mn, mx) { return !(mn && d < mn) && !(mx && d > mx); }
+  function startOfDay(d) {
+    if (!d) return null;
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  // Dates are selected at day precision. Normalising prevents the current day
+  // from being accidentally disabled after midnight because `new Date()` has a time.
+  function effectiveMinDate(minDate) {
+    var today = startOfDay(new Date());
+    var requestedMin = startOfDay(minDate);
+    return requestedMin && requestedMin > today ? requestedMin : today;
+  }
+  function inBound(d, mn, mx) {
+    var day = startOfDay(d), min = startOfDay(mn), max = startOfDay(mx);
+    return !(min && day < min) && !(max && day > max);
+  }
 
   var DOW = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
   var MOS = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
@@ -197,7 +211,7 @@
   function Calendar(props) {
     var value = props.value, onChange = props.onChange;
     var rangeStart = props.rangeStart, rangeEnd = props.rangeEnd, onDayClick = props.onDayClick;
-    var mode = props.mode || "single", minDate = props.minDate, maxDate = props.maxDate, style = props.style;
+    var mode = props.mode || "single", minDate = effectiveMinDate(props.minDate), maxDate = props.maxDate, style = props.style;
     var today = new Date();
     var seed = value || rangeStart || today;
     var vs = React.useState({ year: seed.getFullYear(), month: seed.getMonth() });
@@ -211,6 +225,7 @@
     function prev() { setView(function (v) { var d = new Date(v.year, v.month - 1); return { year: d.getFullYear(), month: d.getMonth() }; }); }
     function next() { setView(function (v) { var d = new Date(v.year, v.month + 1); return { year: d.getFullYear(), month: d.getMonth() }; }); }
     function handleDay(date) {
+      if (!inBound(date, minDate, maxDate)) return;
       if (mode === "single") { if (onChange) onChange(date); }
       else { if (onDayClick) onDayClick(date); }
     }
@@ -252,6 +267,7 @@
     var disabled = props.disabled || false;
     var format = props.format || "dd/MM/yyyy";
     var minDate = props.minDate, maxDate = props.maxDate, containerStyle = props.containerStyle;
+    var selectableMinDate = effectiveMinDate(minDate);
 
     var os = React.useState(false); var open = os[0], setOpen = os[1];
     var is = React.useState(defaultValue || null); var inner = is[0], setInner = is[1];
@@ -268,7 +284,10 @@
       return function () { document.removeEventListener("mousedown", fn); };
     }, [open]);
 
-    function pick(d) { if (!controlled) setInner(d); if (onChange) onChange(d); setOpen(false); }
+    function pick(d) {
+      if (d && !inBound(d, selectableMinDate, maxDate)) return;
+      if (!controlled) setInner(d); if (onChange) onChange(d); setOpen(false);
+    }
     function clear(e) { e.stopPropagation(); pick(null); }
 
     var bc = invalid ? "var(--color-danger)" : (open || focus) ? "var(--color-accent)" : "var(--color-border)";
@@ -321,6 +340,7 @@
     var disabled = props.disabled || false;
     var format = props.format || "dd/MM/yyyy";
     var minDate = props.minDate, maxDate = props.maxDate;
+    var selectableMinDate = effectiveMinDate(minDate);
     var showTime = props.showTime !== false;
     var containerStyle = props.containerStyle;
 
@@ -361,6 +381,7 @@
     }, [open]);
 
     function dayClick(d) {
+      if (!inBound(d, selectableMinDate, maxDate)) return;
       if (picking === "start" || !rs) {
         if (!ctrl) { setIS(d); setIE(null); }
         setPicking("end");
@@ -445,9 +466,9 @@
         h(NavBtn, { icon: "chevron-right-01-line", label: "Next", onClick: nextMonth })
       ),
       h("div", { style: { display: "flex", gap: 8 } },
-        h("div", { style: { flex: 1 } }, h(CalendarGrid, { view: leftView, mode: "range", rangeStart: rs, rangeEnd: re, onDayClick: dayClick, minDate: minDate, maxDate: maxDate })),
+        h("div", { style: { flex: 1 } }, h(CalendarGrid, { view: leftView, mode: "range", rangeStart: rs, rangeEnd: re, onDayClick: dayClick, minDate: selectableMinDate, maxDate: maxDate })),
         h("div", { style: { width: 1, background: "var(--color-border-pale)", alignSelf: "stretch" } }),
-        h("div", { style: { flex: 1 } }, h(CalendarGrid, { view: rightView, mode: "range", rangeStart: rs, rangeEnd: re, onDayClick: dayClick, minDate: minDate, maxDate: maxDate }))
+        h("div", { style: { flex: 1 } }, h(CalendarGrid, { view: rightView, mode: "range", rangeStart: rs, rangeEnd: re, onDayClick: dayClick, minDate: selectableMinDate, maxDate: maxDate }))
       ),
       showTime && h("div", { style: { marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border-pale)" } },
         h("div", { style: { display: "flex", gap: 16 } },
