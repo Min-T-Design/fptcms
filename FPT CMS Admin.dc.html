@@ -83,11 +83,49 @@
     .fpt-gallery-tile:hover .fpt-gallery-overlay{opacity:1!important}
     .fpt-table-sticky-col::before{content:'';position:absolute;top:0;bottom:0;left:-10px;width:10px;pointer-events:none;opacity:0;transition:opacity .15s cubic-bezier(.2,0,0,1);background:linear-gradient(to right, rgba(16,24,40,0), rgba(16,24,40,.22))}
     .fpt-table-scrolled .fpt-table-sticky-col::before{opacity:1}
+    /* CLAUDE.md §14 — required-field enforcement (this.field()/this.editorShell() centralized validation).
+       DS.Input/DS.Textarea own their error visuals; do not paint the nested native input here. */
+    .fpt-req-err-msg{margin-top:4px;font-size:12px;line-height:1.4;color:var(--color-danger-text);font-family:var(--font-sans, inherit)}
+    .fpt-req-box-err{border:1px solid var(--color-danger)!important;border-radius:8px;background:var(--color-danger-bg)}
   </style>
 </helmet>
 <div id="fpt-cms">{{ app }}</div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;}}">
+// Required fields use the same native DS error state as the Landing Page module.
+// Keeping this as a small stateful wrapper lets the centralized DOM-at-submit
+// validator work with both controlled and uncontrolled fields without styling
+// the inner <input> (DS.Input's visible border lives on its outer control shell).
+function FptRequiredField({ control }) {
+  const h = React.createElement;
+  const DS = window.ZENKaizenDesignSystem_4069b4;
+  const [invalid, setInvalid] = React.useState(false);
+  const errorText = 'Trường bắt buộc — vui lòng nhập.';
+
+  const withError = node => {
+    if (!React.isValidElement(node)) return node;
+    if (node.type === DS.Input || node.type === DS.Textarea) {
+      return React.cloneElement(node, { error: invalid ? errorText : node.props.error });
+    }
+    if (!node.props || node.props.children == null) return node;
+    return React.cloneElement(node, undefined, React.Children.map(node.props.children, withError));
+  };
+
+  const clearWhenFixed = e => {
+    const target = e && e.target;
+    if (invalid && target && /^(INPUT|TEXTAREA)$/.test(target.tagName) && String(target.value || '').trim()) {
+      setInvalid(false);
+    }
+  };
+
+  return h('div', {
+    className: 'fpt-req-field',
+    ref: node => { if (node) node._fptSetRequiredError = setInvalid; },
+    onChangeCapture: clearWhenFixed,
+    onBlurCapture: clearWhenFixed
+  }, withError(control));
+}
+
 class Component extends DCLogic {
   state = {
     darkMode: false,
@@ -203,11 +241,11 @@ class Component extends DCLogic {
     ldpView: 'list', ldpStep: 1, ldpEditRow: null, ldpTpl: null, ldpLockTemplate: false, ldpSectionTitles: {}, ldpSectionNames: {},
     ldpTplFilter: 'all', ldpTplSearch: '',
     ldpListSearch: '', ldpListTpl: 'all', ldpListStatus: 'all', ldpListGoal: 'all',
-    ldpForm2: {}, ldpLibTab: 'all', ldpLibSearch: '', ldpCustomSecs: [], ldpLibDragId: null, ldpSecDragOverCanvas: false,
+    ldpForm2: {}, ldpStep2Err: {}, ldpLibTab: 'all', ldpLibSearch: '', ldpCustomSecs: [], ldpLibDragId: null, ldpSecDragOverCanvas: false,
     ldpLv1Menu: false, ldpLv1MenuUp: false,
     // ── Duyệt LDP module ──
     ldpApprTab: 'pending', ldpApprSearch: '', ldpApprStatusF: 'all', ldpApprSubmitter: 'all', ldpApprReviewer: 'all', ldpAppr_pg: 1, ldpAppr_sz: 10,
-    ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '', ldpApprovals: null, ldpExtraApprovedLv1: [],
+    ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false, ldpApprovals: null, ldpExtraApprovedLv1: [],
   };
 
   componentDidMount() {
@@ -2835,7 +2873,7 @@ class Component extends DCLogic {
                     )
                   : h('div', { style: { padding: '10px 12px', fontSize: 12.5, color: 'var(--color-text-subtle)', fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10 } }, 'Chưa chọn gói bán nào.')
               ),
-              h(DS.Input, { label: 'Tên chương trình hiển thị', required: true, defaultValue: r ? r.name : '', placeholder: 'VD: Ưu đãi Combo Thể thao Hè 2026' })
+              this.reqFieldWrap(h(DS.Input, { label: 'Tên chương trình hiển thị', required: true, defaultValue: r ? r.name : '', placeholder: 'VD: Ưu đãi Combo Thể thao Hè 2026' }))
             )
           )
         },
@@ -3028,7 +3066,30 @@ class Component extends DCLogic {
   }
   field(label, control, required) {
     const h = React.createElement;
-    return h('div', null, h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, label, required && h('span', { style: { color: 'var(--color-danger)' } }, ' *')), control);
+    return h('div', null, h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, label, required && h('span', { style: { color: 'var(--color-danger)' } }, ' *')), required ? this.reqFieldWrap(control) : control);
+  }
+  // CLAUDE.md §14 — wraps a required field's control so this.editorShell()'s Save button can find it
+  // (DOM-read at submit time, like renderLdpSectionEditor's fld()) and toggle an error state on it,
+  // without needing every this.field(...) caller to wire its own controlled value/onChange.
+  reqFieldWrap(control) {
+    const h = React.createElement;
+    if (!control || !control.type) return control;
+    return h(FptRequiredField, { control });
+  }
+  // Reads every .fpt-req-field inside root, toggles its error state from the live DOM value
+  // (fields here are mostly uncontrolled defaultValue-only inputs — no need to convert to controlled
+  // state just to validate them), and returns how many are still empty + the first one to scroll to.
+  validateReqFields(root) {
+    if (!root) return { count: 0, firstInvalid: null };
+    let count = 0, firstInvalid = null;
+    root.querySelectorAll('.fpt-req-field').forEach(f => {
+      const ctrl = f.querySelector('input, textarea');
+      if (!ctrl) return; // composite control (checkbox group, picker...) — validated separately by its own editor
+      const empty = String(ctrl.value || '').trim() === '';
+      if (typeof f._fptSetRequiredError === 'function') f._fptSetRequiredError(empty);
+      if (empty) { count++; if (!firstInvalid) firstInvalid = f; }
+    });
+    return { count, firstInvalid };
   }
   detailRow(label, value) {
     const h = React.createElement;
@@ -3087,7 +3148,18 @@ class Component extends DCLogic {
   }
   editorShell(title, subtitle, onBack, content, onSave, saveLabel, headerExtra, shellKey) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    return h('div', { key: shellKey, style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+    // CLAUDE.md §14 — block Save until every this.field(..., true)-marked field (wrapped via
+    // this.reqFieldWrap above) is filled; show the error on the field itself, not just a toast.
+    const wrappedSave = onSave ? () => {
+      const { count, firstInvalid } = this.validateReqFields(this._editorShellRoot);
+      if (count) {
+        this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng điền đầy đủ ' + count + ' trường bắt buộc trước khi lưu.');
+        if (firstInvalid && firstInvalid.scrollIntoView) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      onSave();
+    } : undefined;
+    return h('div', { key: shellKey, ref: node => { this._editorShellRoot = node; }, style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       h('div', { style: { position: 'sticky', top: -24, zIndex: 10, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 28px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', margin: '-24px -28px 0', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' } },
         h(DS.Button, { level: 'tertiary', leadingIcon: 'arrow-left-line', size: 'sm', onClick: onBack }, 'Quay lại'),
         h('div', { style: { width: 1, height: 18, background: 'var(--color-border)', margin: '0 2px' } }),
@@ -3098,7 +3170,7 @@ class Component extends DCLogic {
         h('div', { style: { flex: 1 } }),
         headerExtra,
         h(DS.Button, { level: 'tertiary', size: 'sm', onClick: onBack }, 'Hủy'),
-        onSave && h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', onClick: onSave }, saveLabel || 'Lưu')
+        onSave && h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', onClick: wrappedSave }, saveLabel || 'Lưu')
       ),
       content
     );
@@ -5400,7 +5472,11 @@ class Component extends DCLogic {
     const textColor = this.state.badgeFormText !== undefined ? this.state.badgeFormText : (r ? r.textColor : '#ffffff');
     const status = this.state.badgeFormStatus !== undefined ? this.state.badgeFormStatus : (r ? r.status : 'active');
     const categories = this.state.badgeFormCategories !== undefined ? this.state.badgeFormCategories : (r ? (r.categories || []) : []);
-    const toggleCategory = c => this.setState({ badgeFormCategories: categories.includes(c) ? categories.filter(x => x !== c) : [...categories, c] });
+    const toggleCategory = c => {
+      const next = categories.includes(c) ? categories.filter(x => x !== c) : [...categories, c];
+      this.setState({ badgeFormCategories: next, badgeCatErr: next.length ? false : this.state.badgeCatErr });
+    };
+    const catErr = !!this.state.badgeCatErr;
     const icon = this.state.badgeFormIcon !== undefined ? this.state.badgeFormIcon : (r ? (r.icon || null) : null);
     const iconPos = this.state.badgeFormIconPos !== undefined ? this.state.badgeFormIconPos : (r ? (r.iconPosition || 'left') : 'left');
     const onIconFile = e => {
@@ -5419,7 +5495,8 @@ class Component extends DCLogic {
 
     const onSave = () => {
       if (!name.trim()) { this.toast('danger', 'Thiếu thông tin', 'Vui lòng nhập tên Badge/Tag.'); return; }
-      if (!categories.length) { this.toast('danger', 'Thiếu thông tin', 'Vui lòng chọn ít nhất 1 Phân loại.'); return; }
+      if (!categories.length) { this.setState({ badgeCatErr: true }); this.toast('danger', 'Thiếu thông tin', 'Vui lòng chọn ít nhất 1 Phân loại.'); return; }
+      if (this.state.badgeCatErr) this.setState({ badgeCatErr: false });
       const now = new Date();
       const pad = n => String(n).padStart(2, '0');
       const timeStr = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
@@ -5464,9 +5541,10 @@ class Component extends DCLogic {
           h('div', null,
             secHdr('Phân loại'),
             h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Chọn một hoặc nhiều nơi Badge/Tag này được phép sử dụng.'),
-            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, padding: 14, border: '1px solid var(--color-border)', borderRadius: 10 } },
+            h('div', { className: catErr ? 'fpt-req-box-err' : undefined, style: { display: 'flex', flexDirection: 'column', gap: 10, padding: 14, border: catErr ? undefined : '1px solid var(--color-border)', borderRadius: 10 } },
               catDefs.map(c => h(DS.Checkbox, { key: c.value, label: c.label, checked: categories.includes(c.value), onChange: () => toggleCategory(c.value) }))
-            )
+            ),
+            catErr && h('div', { className: 'fpt-req-err-msg' }, 'Trường bắt buộc — vui lòng chọn ít nhất 1 phân loại.')
           ),
           h('div', null,
             secHdr('Màu sắc & Xem trước'),
@@ -5780,7 +5858,7 @@ class Component extends DCLogic {
           ? h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '—')
           : h('div', { style: { fontSize: 12 } }, h('div', { style: { fontWeight: 600 } }, a.reviewedBy || '—'), h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, a.reviewedAt || '')) },
       { key: 'act', header: 'Thao tác', width: 128, align: 'right', render: (_, a) => a.status === 'pending'
-          ? h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'file-check-line', onClick: e => { e && e.stopPropagation && e.stopPropagation(); this.setState({ ldpReviewId: a.id, ldpReviewDecision: null, ldpReviewReason: '' }); } }, 'Duyệt')
+          ? h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'file-check-line', onClick: e => { e && e.stopPropagation && e.stopPropagation(); this.setState({ ldpReviewId: a.id, ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false }); } }, 'Duyệt')
           : this.rowActions([{ icon: 'eye-line', label: 'Xem', onClick: () => this.openLdpApprovalDrawer(a) }]) },
     ];
     const statTones = {
@@ -5837,7 +5915,7 @@ class Component extends DCLogic {
           showStatusFilter && statusF !== 'all' && this.filterChip('Trạng thái: ' + ((stFilterOpts.find(o => o.value === statusF) || {}).label || statusF), 'brand', () => this.setState({ ldpApprStatusF: 'all', ldpAppr_pg: 1 })),
         ]),
         rows.length ? this.tbl(columns, this.sliceData(rows, 'ldpAppr'), 'id', a => a.status === 'pending'
-            ? this.setState({ ldpReviewId: a.id, ldpReviewDecision: null, ldpReviewReason: '' })
+            ? this.setState({ ldpReviewId: a.id, ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false })
             : this.openLdpApprovalDrawer(a))
           : this.empty(tab === 'pending' ? 'Không có yêu cầu nào đang chờ duyệt.' : 'Không có yêu cầu nào khớp bộ lọc.'),
         rows.length ? this.renderPagBar(rows.length, 'ldpAppr', 'yêu cầu') : null
@@ -5849,7 +5927,7 @@ class Component extends DCLogic {
   renderLdpApprovalReview() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const rec = this.LDP_APPROVALS().find(a => a.id === this.state.ldpReviewId);
-    const back = () => this.setState({ ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '' });
+    const back = () => this.setState({ ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false });
     if (!rec) { back(); return null; }
     const decided = rec.status !== 'pending';
     const decision = this.state.ldpReviewDecision;
@@ -5877,12 +5955,17 @@ class Component extends DCLogic {
     );
     const doApprove = () => this.approveLdp(rec);
     const canReject = reason.trim().length > 0;
+    // CLAUDE.md §14 — clickable, not disabled: clicking while empty shows the error on the field itself.
+    const confirmReject = () => {
+      if (!canReject) { this.setState({ ldpReviewReasonErr: true }); this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng nhập lý do từ chối.'); return; }
+      this.rejectLdp(rec, reason.trim());
+    };
     const footer = decided
       ? h(DS.Button, { level: 'secondary', size: 'sm', onClick: back }, 'Đóng')
       : decision === 'reject'
         ? [
-            h(DS.Button, { key: 'c', level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpReviewDecision: null, ldpReviewReason: '' }) }, 'Hủy'),
-            h(DS.Button, { key: 'r', level: 'primary', size: 'sm', leadingIcon: 'x-circle-line', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, disabled: !canReject, onClick: () => this.rejectLdp(rec, reason.trim()) }, 'Xác nhận từ chối')
+            h(DS.Button, { key: 'c', level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false }) }, 'Hủy'),
+            h(DS.Button, { key: 'r', level: 'primary', size: 'sm', leadingIcon: 'x-circle-line', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: confirmReject }, 'Xác nhận từ chối')
           ]
         : [
             h(DS.Button, { key: 'r', level: 'secondary', size: 'sm', leadingIcon: 'x-circle-line', onClick: () => this.setState({ ldpReviewDecision: 'reject' }) }, 'Từ chối'),
@@ -5929,7 +6012,14 @@ class Component extends DCLogic {
             h('span', { style: { fontWeight: 700, fontSize: 13.5, color: 'var(--color-danger-text)' } }, 'Lý do từ chối'),
             h('span', { style: { color: 'var(--color-danger)', fontWeight: 700 } }, '*')
           ),
-          h(DS.Textarea, { value: reason, rows: 3, maxLength: RMAX, placeholder: 'Giải thích vì sao slug Level 1 chưa hợp lệ và gợi ý cách sửa...', onChange: e => this.setState({ ldpReviewReason: ((e && e.target ? e.target.value : e) || '').slice(0, RMAX) }) }),
+          h(DS.Textarea, {
+            value: reason, rows: 3, maxLength: RMAX, placeholder: 'Giải thích vì sao slug Level 1 chưa hợp lệ và gợi ý cách sửa...',
+            error: this.state.ldpReviewReasonErr ? 'Trường bắt buộc — vui lòng nhập.' : undefined,
+            onChange: e => {
+              const v = ((e && e.target ? e.target.value : e) || '').slice(0, RMAX);
+              this.setState(s => ({ ldpReviewReason: v, ldpReviewReasonErr: v.trim() ? false : s.ldpReviewReasonErr }));
+            }
+          }),
           h('div', { style: { fontSize: 11, marginTop: 4, color: reason.length >= RMAX ? 'var(--color-danger-text)' : 'var(--color-text-subtle)' } }, 'Tối đa ' + RMAX + ' ký tự (' + reason.length + '/' + RMAX + ')' + (reason.length >= RMAX ? ' — đã đạt giới hạn' : ''))
         ) : null,
         (rec.history && rec.history.length) ? card('Lịch sử gửi duyệt', 'clock-line', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
@@ -6084,7 +6174,7 @@ class Component extends DCLogic {
           ),
 
         ),
-        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ldpView: 'form', ldpStep: 1, ldpEditRow: null, ldpTpl: null, ldpLockTemplate: false, ldpTplFilter: 'all', ldpTplSearch: '', ldpForm2: {} }) }, 'Tạo LDP mới')
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ ldpView: 'form', ldpStep: 1, ldpEditRow: null, ldpTpl: null, ldpLockTemplate: false, ldpTplFilter: 'all', ldpTplSearch: '', ldpForm2: {}, ldpStep2Err: {} }) }, 'Tạo LDP mới')
       ),
       this.filterChipsBar([
         search && this.filterChip('Tìm: ' + search, 'neutral', () => this.setState({ ldpListSearch: '', ldp_pg: 1 })),
@@ -6103,7 +6193,7 @@ class Component extends DCLogic {
       return;
     }
     const lockTpl = effStatus !== 'draft';
-    this.setState({ ldpView: 'form', ldpStep: lockTpl ? 2 : 1, ldpEditRow: r, ldpTpl: r.tplId, ldpForm2: {}, ldpLockTemplate: lockTpl });
+    this.setState({ ldpView: 'form', ldpStep: lockTpl ? 2 : 1, ldpEditRow: r, ldpTpl: r.tplId, ldpForm2: {}, ldpStep2Err: {}, ldpLockTemplate: lockTpl });
   }
   openLdpDetailDrawer(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -6159,7 +6249,7 @@ class Component extends DCLogic {
         : r);
       this.setState({ ldpListData: list, ldpStatuses: { ...(this.state.ldpStatuses || {}), [editRow.id]: 'publish' } });
     }
-    this.setState({ ldpView: 'list', ldpStep: 1, ldpLockTemplate: false, ldpEditRow: null, ldpForm2: {} });
+    this.setState({ ldpView: 'list', ldpStep: 1, ldpLockTemplate: false, ldpEditRow: null, ldpForm2: {}, ldpStep2Err: {} });
     this.toast('success', 'Đã xuất bản', 'Landing Page "' + name + '" đã được xuất bản.');
   }
   submitLdpForApproval() {
@@ -6196,7 +6286,7 @@ class Component extends DCLogic {
     }
     const nextStatuses = { ...(this.state.ldpStatuses || {}) };
     if (editRow) nextStatuses[editRow.id] = 'pending';
-    this.setState({ ldpApprovals: nextApprovals, ldpListData: list, ldpStatuses: nextStatuses, ldpView: 'list', ldpStep: 1, ldpLockTemplate: false, ldpEditRow: null, ldpForm2: {} });
+    this.setState({ ldpApprovals: nextApprovals, ldpListData: list, ldpStatuses: nextStatuses, ldpView: 'list', ldpStep: 1, ldpLockTemplate: false, ldpEditRow: null, ldpForm2: {}, ldpStep2Err: {} });
     this.toast('success', 'Đã gửi duyệt', 'LDP "' + name + '" đã gửi Super Admin. Theo dõi kết quả ở mục Duyệt LDP.');
   }
   approveLdp(record) {
@@ -6211,7 +6301,7 @@ class Component extends DCLogic {
     this.setState({
       ldpApprovals: nextApprovals, ldpListData: list, ldpStatuses: nextStatuses,
       ldpExtraApprovedLv1: [...(this.state.ldpExtraApprovedLv1 || []), record.lv1],
-      ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '',
+      ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false,
     });
     this.toast('success', 'Đã duyệt & xuất bản', 'Nhánh "' + record.lv1 + '" đã được phê duyệt. LDP "' + record.name + '" đang chạy.');
   }
@@ -6224,7 +6314,7 @@ class Component extends DCLogic {
       list = list.map(r => r.id === record.ldpId ? { ...r, status: 'rejected', rejectReason: reason, reviewedBy: 'Super Admin', reviewedAt: now } : r);
       nextStatuses[record.ldpId] = 'rejected';
     }
-    this.setState({ ldpApprovals: nextApprovals, ldpListData: list, ldpStatuses: nextStatuses, ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '' });
+    this.setState({ ldpApprovals: nextApprovals, ldpListData: list, ldpStatuses: nextStatuses, ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false });
     this.toast('info', 'Đã từ chối', 'Đã gửi phản hồi từ chối cho người tạo LDP "' + record.name + '".');
   }
   renderLdpForm() {
@@ -6250,7 +6340,19 @@ class Component extends DCLogic {
         onClick: () => {
           if (slugBlocked) { this.toast('danger', 'URL chưa hợp lệ', slugCheck.msg || 'Vui lòng kiểm tra lại URL Slug.'); return; }
           if (!this.state.ldpTpl) { this.toast('warning', 'Chưa chọn template', 'Vui lòng quay lại Bước 1 và chọn template.'); return; }
-          this.setState({ ldpStep: 3 });
+          const effR = f2.effRange || {};
+          const errs = {
+            campaignName: !f2.campaignName,
+            goal: !f2.goal,
+            effRange: !(effR.start && effR.end),
+          };
+          const errCount = Object.values(errs).filter(Boolean).length;
+          if (errCount) {
+            this.setState({ ldpStep2Err: errs });
+            this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng điền đầy đủ ' + errCount + ' trường bắt buộc ở phần Thông tin cơ bản trước khi tiếp tục.');
+            return;
+          }
+          this.setState({ ldpStep2Err: {}, ldpStep: 3 });
         }
       }, 'Tiếp theo: Nội dung'),
       step === 3 && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'check-line',
@@ -6338,7 +6440,7 @@ class Component extends DCLogic {
             }, [])
           )
         ),
-        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', style: { flexShrink: 0, alignSelf: 'center' }, onClick: () => this.setState({ ldpTpl: 'custom', ldpStep: 2, ldpLockTemplate: false, ldpCustomSecs: [], ldpForm2: {} }) }, 'Bắt đầu')
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', style: { flexShrink: 0, alignSelf: 'center' }, onClick: () => this.setState({ ldpTpl: 'custom', ldpStep: 2, ldpLockTemplate: false, ldpCustomSecs: [], ldpForm2: {}, ldpStep2Err: {} }) }, 'Bắt đầu')
       ),
       h('p', { style: { margin: 0, fontSize: 14, color: 'var(--color-text-subtle)' } }, 'Chọn một mẫu template có sẵn bên dưới và tùy chỉnh từng section nội dung ở bước tiếp theo.'),
       h('div', { style: { display: 'flex', gap: 16, alignItems: 'center', padding: '12px 16px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, flexWrap: 'wrap' } },
@@ -6383,6 +6485,8 @@ class Component extends DCLogic {
     const form = this.state.ldpForm2 || {};
     const set = (k, v) => this.setState(s => ({ ldpForm2: { ...(s.ldpForm2 || {}), [k]: v } }));
     const get = (k, def) => { const v = form[k]; return v !== undefined ? v : (def !== undefined ? def : ''); };
+    const step2Err = this.state.ldpStep2Err || {};
+    const effRange = get('effRange', null) || {};
     const lbSt = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 5, display: 'block' };
     const req  = h('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*');
     const secHdr = lbl => h('div', { style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--color-text-subtle)', margin: '20px 0 14px', borderBottom: '1px solid var(--color-border)', paddingBottom: 8 } }, lbl);
@@ -6513,15 +6617,20 @@ class Component extends DCLogic {
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Tên chiến dịch', req),
-          h(DS.Input, { value: get('campaignName'), onChange: e => set('campaignName', e.target.value), placeholder: 'VD: Khuyến mãi Internet Tháng 5' })
+          h(DS.Input, { value: get('campaignName'), onChange: e => set('campaignName', e.target.value), placeholder: 'VD: Khuyến mãi Internet Tháng 5', error: step2Err.campaignName ? 'Vui lòng nhập tên chiến dịch.' : undefined })
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Mục tiêu trang', req),
-          h(DS.Input, { value: get('goal', ''), placeholder: 'VD: Lead Gen, Bán gói cước...', onChange: e => set('goal', e.target.value) })
+          h(DS.Input, { value: get('goal', ''), placeholder: 'VD: Lead Gen, Bán gói cước...', onChange: e => set('goal', e.target.value), error: step2Err.goal ? 'Vui lòng nhập mục tiêu trang.' : undefined })
         ),
         h('div', null,
-          h('label', { style: lbSt }, 'Thời gian hiệu lực'),
-          h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', size: 'md', containerStyle: { width: '100%' } })
+          h('label', { style: lbSt }, 'Thời gian hiệu lực', req),
+          h(DS.DateRangePicker, {
+            placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', size: 'md', containerStyle: { width: '100%' },
+            startDate: effRange.start || null, endDate: effRange.end || null,
+            onChange: r => set('effRange', r),
+            error: step2Err.effRange ? 'Vui lòng chọn thời gian hiệu lực.' : undefined
+          })
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Redirect khi hết hạn'),
@@ -6798,7 +6907,7 @@ class Component extends DCLogic {
     );
   }
   openLdpSectionDrawer(section, tpl) {
-    this.setState({ ldpSectionInlineEditor: { section, tpl } });
+    this.setState({ ldpSectionInlineEditor: { section, tpl }, ldpSecFieldErr: {} });
   }
   renderLdpSectionEditor() {
     const { section, tpl } = this.state.ldpSectionInlineEditor || {};
@@ -6810,13 +6919,30 @@ class Component extends DCLogic {
     const TITLE_LABELS = ['Tiêu đề section', 'Headline lớn', 'Tiêu đề Section chọn camera', 'Tiêu đề dải Countdown / Nhãn ưu đãi'];
     const titleRef = { value: this.state.ldpSectionTitles[section.id] || '' };
     const nameRef = { value: (this.state.ldpSectionNames && this.state.ldpSectionNames[section.id]) || '' };
+    // Mọi trường trong editor này đều bắt buộc trừ khi gọi fld(..., false) tường minh
+    // (CLAUDE.md — Landing: tất cả trường ở phần chỉnh sửa section đều bắt buộc).
+    let fldIdx = 0;
+    const fieldErrMap = this.state.ldpSecFieldErr || {};
     const fld  = (lbl, ctrl, rq) => {
       const isTitle = TITLE_LABELS.some(l => typeof lbl === 'string' && lbl.startsWith(l));
       const finalCtrl = (isTitle && ctrl && ctrl.type) ? React.cloneElement(ctrl, {
         defaultValue: ctrl.props.defaultValue || titleRef.value || ctrl.props.defaultValue,
         onChange: e => { titleRef.value = e.target.value; (ctrl.props.onChange || (() => {}))(e); }
       }) : ctrl;
-      return h('div', { style: { marginBottom: 12 } }, h('label', { style: lbSt }, lbl, rq && req), finalCtrl);
+      const required = rq !== false;
+      const fieldKey = (section.uid || section.id) + '-f' + (fldIdx++);
+      const isErr = required && !!fieldErrMap[fieldKey];
+      const isSimpleCtrl = finalCtrl && (finalCtrl.type === DS.Input || finalCtrl.type === DS.Textarea);
+      const shownCtrl = isSimpleCtrl
+        ? React.cloneElement(finalCtrl, { error: isErr ? 'Trường bắt buộc — vui lòng nhập.' : finalCtrl.props.error })
+        : finalCtrl;
+      return h('div', { key: 'fld-' + fieldKey, 'data-ldp-field': required ? fieldKey : undefined, style: { marginBottom: 12 } },
+        h('label', { style: lbSt }, lbl, required && req),
+        shownCtrl,
+        (!isSimpleCtrl && isErr) ? h('div', { style: { marginTop: 4, padding: '6px 10px', border: '1px solid var(--color-danger)', borderRadius: 8, background: 'var(--color-danger-bg)', fontSize: 12, color: 'var(--color-danger-text)', display: 'flex', alignItems: 'center', gap: 6 } },
+          h(DS.Icon, { name: 'alert-circle-line', size: 13 }), 'Trường bắt buộc — vui lòng nhập.'
+        ) : null
+      );
     };
     const openMediaPicker = () => {
       class MediaPicker extends React.Component {
@@ -9401,7 +9527,41 @@ class Component extends DCLogic {
       ? [h(SectionBgPanel, { key:'bgpanel', sid:section.id, def:CAM_BG_DEFAULTS[section.id], mainThis:this }), ...extra]
       : extra;
     const back = () => this.setState({ ldpSectionInlineEditor: null });
+    const formId = 'ldp-sec-form-' + (section.uid || section.id);
+    // Đọc trực tiếp DOM tại thời điểm Lưu (field trong editor này phần lớn uncontrolled)
+    // để chặn Lưu khi còn trường bắt buộc bỏ trống, và hiển thị lỗi ngay tại field đó.
+    const validateLdpSecFields = () => {
+      const root = document.getElementById(formId);
+      const errMap = {}; let firstInvalidEl = null;
+      if (root) {
+        root.querySelectorAll('[data-ldp-field]').forEach(el => {
+          const ctrlEl = el.querySelector('input, textarea');
+          if (!ctrlEl) return; // trường composite không có input/textarea đơn — bỏ qua kiểm tra tự động
+          if (String(ctrlEl.value || '').trim() === '') {
+            errMap[el.getAttribute('data-ldp-field')] = true;
+            if (!firstInvalidEl) firstInvalidEl = el;
+          }
+        });
+      }
+      return { errMap, firstInvalidEl };
+    };
+    const onSectionFieldBlur = e => {
+      const el = e.target && e.target.closest ? e.target.closest('[data-ldp-field]') : null;
+      if (!el) return;
+      const key = el.getAttribute('data-ldp-field');
+      if (!(this.state.ldpSecFieldErr && this.state.ldpSecFieldErr[key])) return;
+      if (String(e.target.value || '').trim() === '') return;
+      this.setState(s => { const m = { ...(s.ldpSecFieldErr || {}) }; delete m[key]; return { ldpSecFieldErr: m }; });
+    };
     const onSave = () => {
+      const { errMap, firstInvalidEl } = validateLdpSecFields();
+      if (Object.keys(errMap).length) {
+        this.setState({ ldpSecFieldErr: errMap });
+        this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng điền đầy đủ ' + Object.keys(errMap).length + ' trường bắt buộc trước khi lưu.');
+        if (firstInvalidEl && firstInvalidEl.scrollIntoView) firstInvalidEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      this.setState({ ldpSecFieldErr: {} });
       if (titleRef.value) { this.setState(s => ({ ldpSectionTitles: { ...s.ldpSectionTitles, [section.id]: titleRef.value } })); }
       this.setState(s => ({ ldpSectionNames: { ...(s.ldpSectionNames || {}), [section.id]: nameRef.value } }));
       const savedName = nameRef.value || titleRef.value || section.name;
@@ -9447,7 +9607,7 @@ class Component extends DCLogic {
       h('span', null, (tpl.label || '') + ' · ' + section.type)
     );
 
-    const formContent = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+    const formContent = h('div', { id: formId, onBlur: onSectionFieldBlur, style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       // ── Standing status toggle (§10) — kept in sync with the sections list ──
       section.type !== 'PopupForm' && h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
         h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Hiển thị section trên trang'),
@@ -9601,10 +9761,11 @@ class Component extends DCLogic {
       payEdSkuSource: 'ecp',
       payEdSkuFilter: 'internet',
       payEdSkuSearch: '',
+      paySkuAttempted: false,
     });
   }
   closePayEditor() {
-    this.setState({ payEditor: undefined, payCfgName: undefined, payCfgApplyAll: undefined, payCfgSkus: undefined, payCfgMethods: undefined, payEdSkuSource: undefined, payEdSkuFilter: undefined, payEdSkuSearch: undefined });
+    this.setState({ payEditor: undefined, payCfgName: undefined, payCfgApplyAll: undefined, payCfgSkus: undefined, payCfgMethods: undefined, payEdSkuSource: undefined, payEdSkuFilter: undefined, payEdSkuSearch: undefined, paySkuAttempted: false });
   }
   setPayCfgPeriod(methodId, start, end) {
     const m = { ...(this.state.payCfgMethods || {}) };
@@ -9633,7 +9794,7 @@ class Component extends DCLogic {
     if (!name) { this.toast('warning', 'Thiếu tên cấu hình', 'Vui lòng nhập tên cấu hình.'); return; }
     const applyAll = !!this.state.payCfgApplyAll;
     const skus = applyAll ? [] : (this.state.payCfgSkus || []);
-    if (!applyAll && !skus.length) { this.toast('warning', 'Chưa chọn gói bán', 'Hãy chọn ít nhất 1 gói bán hoặc bật "Áp dụng cho tất cả các gói".'); return; }
+    if (!applyAll && !skus.length) { this.setState({ paySkuAttempted: true }); this.toast('warning', 'Chưa chọn gói bán', 'Hãy chọn ít nhất 1 gói bán hoặc bật "Áp dụng cho tất cả các gói".'); return; }
     const fmt = d => d ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') : '';
     const methods = {};
     const draftMethods = this.state.payCfgMethods || {};
@@ -9784,15 +9945,19 @@ class Component extends DCLogic {
                     )
                   );
                 })(),
-                h('div', null,
-                  h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 } },
-                    h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Gói bán', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
-                    h(DS.Checkbox, { label: 'Áp dụng cho tất cả các gói', checked: applyAll, onChange: v => this.setState({ payCfgApplyAll: v }) })
-                  ),
-                  applyAll
-                    ? h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', fontStyle: 'italic', padding: '10px 2px' } }, 'Cấu hình sẽ áp dụng cho tất cả các gói bán hiện có.')
-                    : this.renderPaySkuPicker()
-                )
+                (() => {
+                  const skuErr = !!this.state.paySkuAttempted && !applyAll && !(this.state.payCfgSkus || []).length;
+                  return h('div', null,
+                    h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 } },
+                      h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Gói bán', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+                      h(DS.Checkbox, { label: 'Áp dụng cho tất cả các gói', checked: applyAll, onChange: v => this.setState({ payCfgApplyAll: v }) })
+                    ),
+                    applyAll
+                      ? h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', fontStyle: 'italic', padding: '10px 2px' } }, 'Cấu hình sẽ áp dụng cho tất cả các gói bán hiện có.')
+                      : h('div', { className: skuErr ? 'fpt-req-box-err' : undefined, style: skuErr ? { padding: 6 } : undefined }, this.renderPaySkuPicker()),
+                    skuErr && h('div', { className: 'fpt-req-err-msg' }, 'Trường bắt buộc — vui lòng chọn ít nhất 1 gói bán, hoặc bật "Áp dụng cho tất cả các gói".')
+                  );
+                })()
               )
             )
           )
