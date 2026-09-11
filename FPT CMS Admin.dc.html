@@ -1570,7 +1570,7 @@ class Component extends DCLogic {
         )
       ),
       this.PKG_SHOW_BUNDLED(r) && h(DS.Divider, null),
-      this.PKG_SHOW_BUNDLED(r) && this.uploadBox('Hình ảnh đặc quyền (tối đa 1 ảnh)', 'JPG / PNG / WebP')
+      this.PKG_SHOW_BUNDLED(r) && this.uploadBox('Hình ảnh đặc quyền (tối đa 1 ảnh)', 'JPG / PNG / WebP · ≤200KB')
     );
   }
 
@@ -1767,7 +1767,7 @@ class Component extends DCLogic {
             h('div', { style: { flex: 1 } }, h(DS.Input, { value: it.url, placeholder: 'URL video (YouTube/Vimeo) hoặc tải .mp4…', onChange: e => update(i, 'url', e && e.target ? e.target.value : e) })),
             h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => remove(i) })
           ),
-          this.uploadBox('Thumbnail video (tuỳ chọn)', 'JPG / PNG / WebP')
+          this.uploadBox('Thumbnail video (tuỳ chọn)', 'JPG / PNG / WebP · ≤200KB')
         ))
       ),
       h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add, disabled: items.length >= 3 }, 'Thêm video')
@@ -3601,7 +3601,7 @@ class Component extends DCLogic {
           this.field('Meta mô tả', h(DS.Textarea, { defaultValue: r ? (r.metaDesc || '') : '', maxLength: 160, placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 }), true)
         ),
         section(3, 'image-line', 'Hình ảnh',
-          this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤1MB', true)
+          this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤200KB', true)
         )
       ),
       () => { back(); this.toast('success', 'Đã lưu', isNew ? 'Trang mới đã được tạo.' : 'Đã cập nhật trang "' + r.name + '".'); },
@@ -3748,9 +3748,9 @@ class Component extends DCLogic {
         ),
         section(3, 'image-line', 'Hình ảnh & Icon',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            this.uploadBox('URL Hình ảnh (Desktop)', 'JPG, PNG, WebP, SVG · ≤150KB'),
+            this.uploadBox('URL Hình ảnh (Desktop)', 'JPG, PNG, WebP, SVG · ≤200KB'),
             this.uploadBox('URL Hình ảnh (Mobile)', 'JPG, PNG, WebP, SVG · ≤150KB'),
-            this.uploadBox('Hình nền (Background)', 'JPG, PNG, WebP, SVG · ≤150KB'),
+            this.uploadBox('Hình nền (Background)', 'JPG, PNG, WebP, SVG · ≤200KB'),
             this.uploadBox('Icon', 'PNG, SVG · ≤150KB'),
             this.uploadBox('Icon Active', 'PNG, SVG · ≤150KB')
           )
@@ -4919,7 +4919,7 @@ class Component extends DCLogic {
           }), true))
         ),
         section(4, 'image-line', 'Icon',
-          this.uploadBox('Icon menu', 'JPG, PNG, GIF, WEBP, SVG · tối đa 10MB')
+          this.uploadBox('Icon menu', 'JPG, PNG, GIF, WEBP, SVG · ≤200KB')
         )
       ),
       () => {
@@ -6950,7 +6950,8 @@ class Component extends DCLogic {
         ) : null
       );
     };
-    const openMediaPicker = () => {
+    const openMediaPicker = (maxLabel) => {
+      const sizeCap = maxLabel || '≤200KB';
       class MediaPicker extends React.Component {
         constructor(p) {
           super(p);
@@ -7016,7 +7017,7 @@ class Component extends DCLogic {
                 h('div', { style: { border: '2px dashed var(--color-border)', borderRadius: 12, padding: '32px 20px', textAlign: 'center', background: 'var(--color-surface-sunken)' } },
                   h(DS.Icon, { name: 'upload-cloud-line', size: 40, color: 'var(--color-text-subtle)' }),
                   h('div', { style: { marginTop: 10, fontSize: 14, fontWeight: 600 } }, 'Chọn ảnh từ máy tính'),
-                  h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 4 } }, 'PNG, JPG, WebP - Tối đa 10MB'),
+                  h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 4 } }, 'PNG, JPG, WebP · Tối đa ' + sizeCap),
                   h('label', { style: { display: 'inline-block', marginTop: 12, cursor: 'pointer' } },
                     h(DS.Button, { level: 'secondary', size: 'sm', as: 'span' }, 'Chọn tệp'),
                     h('input', { type: 'file', accept: 'image/*', style: { display: 'none' }, onChange: self.handleFile })
@@ -7035,10 +7036,16 @@ class Component extends DCLogic {
       const mainThis = this;
       mainThis.openModal({ title: 'Thu vien Media', description: 'Chon hoac tai len anh cho section nay', render: function() { return h(MediaPicker, { key: 'media-picker', onClose: function() { mainThis.closeModal(); } }); } });
     };
-    const mFld = (lbl, ph) => fld(lbl, h('div', { style: { display: 'flex', gap: 8 } },
-      h(DS.Input, { placeholder: ph || 'URL ảnh / media...' }),
-      h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
-    ));
+    const mFld = (lbl, ph) => {
+      const capLabel = /mobile/i.test(lbl) ? '≤150KB' : '≤200KB';
+      return fld(lbl, h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } },
+        h('div', { style: { display: 'flex', gap: 8 } },
+          h(DS.Input, { placeholder: ph || 'URL ảnh / media...' }),
+          h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: () => openMediaPicker(capLabel) }, 'Upload')
+        ),
+        h('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)' } }, 'Dung lượng tối đa: ' + capLabel)
+      ));
+    };
     // divr() marks a visual group boundary. It renders nothing on its own — the
     // editor shell below splits the field list on these markers and wraps each
     // group in its own numbered DS.Card (CLAUDE.md §10). Keeps every section
@@ -7557,8 +7564,8 @@ class Component extends DCLogic {
           h('span', { style: { fontSize: 13 } }, 'Bật dải Countdown dính liền Hero')
         ),
         g2(
-          mFld('Hình background Desktop (<200KB)', 'URL ảnh background desktop...'),
-          mFld('Hình background Mobile (<150KB)', 'URL ảnh background mobile...')
+          mFld('Hình background Desktop', 'URL ảnh background desktop...'),
+          mFld('Hình background Mobile', 'URL ảnh background mobile...')
         ),
         fld('Tiêu đề countdown', h(DS.Input, { placeholder: 'Nhận ưu đãi...' })),
         fld('Nội dung / Body text', h(DS.Textarea, { rows: 2, placeholder: 'VD: Ưu đãi có hạn — Lắp đặt miễn phí, tặng router Wi-Fi 6...' })),
@@ -9306,8 +9313,8 @@ class Component extends DCLogic {
 
         divr('BACKGROUND & HÌNH ẢNH'),
         g2(
-          mFld('Hình background Desktop (<200KB)', 'URL ảnh background desktop...'),
-          mFld('Hình background Mobile (<150KB)', 'URL ảnh background mobile...')
+          mFld('Hình background Desktop', 'URL ảnh background desktop...'),
+          mFld('Hình background Mobile', 'URL ảnh background mobile...')
         ),
         fld('Tiêu đề dải Countdown / Nhãn ưu đãi', h(DS.Input, { placeholder: 'VD: Đăng ký lắp đặt Internet nhận ngay ưu đãi sốc' }), true),
         fld('Nội dung / Body text', h(DS.Textarea, { rows: 2, placeholder: 'VD: Ưu đãi có hạn — Lắp đặt miễn phí, tặng router Wi-Fi 6...' })),
