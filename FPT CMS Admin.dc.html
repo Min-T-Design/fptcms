@@ -3205,19 +3205,19 @@ class Component extends DCLogic {
     { id:14, name:'Best Sellers',           title:'Sản phẩm bán chạy',         code:'best-sellers',            page:'Camera An Ninh FPT',        type:'product_list', status:'active',   order:2,    blocks:['Camera Only','Ultrafast'],                    createdAt:'18/02/2026 10:20' },
   ]; }
   BLOCKS() { return [
-    { id:1, name:'Internet cá nhân trang danh mục', code:'internet-ca-nhan-trang-danh-muc', section:'Các gói nổi bật',                    layout:'Slider',    datasource:'Gói cước',   datasourceKey:'goi-cuoc', order:null, createdAt:'23/04/2026 14:31' },
-    { id:2, name:'Camera Only',                      code:'camera-only',                       section:'best but 2',                         layout:'Slider',    datasource:'Sản phẩm',   datasourceKey:'goi-cuoc', order:null, createdAt:'15/04/2026 09:46' },
-    { id:3, name:'Internet Fam Test',                code:'internet-fam-test',                 section:'Internet gia đình',                  layout:'Slider',    datasource:'Gói cước',   datasourceKey:'goi-cuoc', order:1,    createdAt:'15/04/2026 09:07' },
-    { id:4, name:'Câu hỏi thường gặp - FPT Play',   code:'cau-hoi-thuong-gap-fpt-play',       section:'Câu hỏi thường gặp',                 layout:'Accordion', datasource:'FAQ',        datasourceKey:'faq',      order:null, createdAt:'14/04/2026 15:26' },
-    { id:5, name:'FPL',                              code:'fpl',                               section:'FPTPlay, Best sellers',              layout:'Grid',      datasource:'Gói cước',   datasourceKey:'goi-cuoc', order:null, createdAt:'05/04/2026 23:08' },
-    { id:6, name:'Ultrafast',                        code:'ultrafast',                         section:'Ultra Fast, best-dvi, Best sellers', layout:'Grid',      datasource:'Dịch vụ số', datasourceKey:'tin-tuc',  order:null, createdAt:'26/03/2026 11:37' },
-    { id:7, name:'Hyperfast',                        code:'hyperfast',                         section:'—',                                  layout:'Slider',    datasource:'Dịch vụ số', datasourceKey:'tin-tuc',  order:null, createdAt:'26/03/2026 11:34' },
-    { id:8, name:'Block Gói cước Internet Giga',     code:'block-goi-internet-giga',           section:'Danh sách gói Internet (LDP)',        layout:'Slider',    datasource:'Gói cước',   datasourceKey:'goi-cuoc', order:1,    createdAt:'12/04/2026 15:45' },
-    { id:9, name:'Combo Internet Truyền hình',       code:'combo-internet-truyen-hinh',        section:'Combo tiết kiệm',                    layout:'Grid',      datasource:'Gói cước',   datasourceKey:'goi-cuoc', order:2,    createdAt:'02/04/2026 10:12' },
-    { id:10, name:'FPT Camera An Ninh',              code:'fpt-camera-an-ninh',                section:'Thiết bị thông minh',                layout:'Slider',    datasource:'Sản phẩm',   datasourceKey:'goi-cuoc', order:null, createdAt:'28/03/2026 08:20' },
-    { id:11, name:'Smart Home Voice Control',        code:'smart-home-voice-control',          section:'Thiết bị thông minh',                layout:'Grid',      datasource:'Sản phẩm',   datasourceKey:'goi-cuoc', order:null, createdAt:'20/03/2026 09:15' },
+    { id:1, name:'Internet cá nhân trang danh mục', code:'internet-ca-nhan-trang-danh-muc', section:'Các gói nổi bật',                    layout:'Slider',    datasource:'Internet',     datasourceKey:'internet', order:null, createdAt:'23/04/2026 14:31' },
+    { id:2, name:'Camera Only',                      code:'camera-only',                       section:'Camera bán chạy',                    layout:'Slider',    datasource:'Sản phẩm SKU', datasourceKey:'goi-cuoc', order:null, createdAt:'15/04/2026 09:46' },
+    { id:3, name:'Internet Fam Test',                code:'internet-fam-test',                 section:'Internet gia đình',                  layout:'Slider',    datasource:'Internet',     datasourceKey:'internet', order:1,    createdAt:'15/04/2026 09:07' },
+    { id:4, name:'Câu hỏi thường gặp - FPT Play',   code:'cau-hoi-thuong-gap-fpt-play',       section:'Câu hỏi thường gặp',                 layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'14/04/2026 15:26' },
+    { id:5, name:'FPL',                              code:'fpl',                               section:'FPT Play bán chạy',                  layout:'Grid',      datasource:'Gói SA',       datasourceKey:'goi-sa',   order:null, createdAt:'05/04/2026 23:08' },
+    { id:6, name:'Ultrafast',                        code:'ultrafast',                         section:'Gói SA Ultra Fast',                  layout:'Grid',      datasource:'Gói SA',       datasourceKey:'goi-sa',   order:null, createdAt:'26/03/2026 11:37' },
+    { id:7, name:'Hyperfast',                        code:'hyperfast',                         section:'Gói SA Hyperfast',                   layout:'Slider',    datasource:'Gói SA',       datasourceKey:'goi-sa',   order:null, createdAt:'26/03/2026 11:34' },
+    { id:8, name:'Block Gói cước Internet Giga',     code:'block-goi-internet-giga',           section:'Danh sách gói Internet (LDP)',        layout:'Slider',    datasource:'Internet',     datasourceKey:'internet', order:1,    createdAt:'12/04/2026 15:45' },
+    { id:9, name:'Combo Internet Truyền hình',       code:'combo-internet-truyen-hinh',        section:'Combo tiết kiệm',                    layout:'Grid',      datasource:'Internet',     datasourceKey:'internet', order:2,    createdAt:'02/04/2026 10:12' },
+    { id:10, name:'FPT Camera An Ninh',              code:'fpt-camera-an-ninh',                section:'Camera an ninh',                     layout:'Slider',    datasource:'Sản phẩm SKU', datasourceKey:'goi-cuoc', order:null, createdAt:'28/03/2026 08:20' },
+    { id:11, name:'Smart Home Voice Control',        code:'smart-home-voice-control',          section:'Thiết bị thông minh',                layout:'Grid',      datasource:'Sản phẩm SKU', datasourceKey:'goi-cuoc', order:null, createdAt:'20/03/2026 09:15' },
     { id:12, name:'Tin tức công nghệ nổi bật',       code:'tin-tuc-cong-nghe-noi-bat',         section:'Tin tức',                            layout:'Grid',      datasource:'Bài viết',   datasourceKey:'tin-tuc',  order:null, createdAt:'15/03/2026 14:02' },
-    { id:13, name:'Đánh giá khách hàng',             code:'danh-gia-khach-hang',               section:'—',                                  layout:'Slider',    datasource:'Testimonial',datasourceKey:'tin-tuc',  order:null, createdAt:'10/03/2026 11:40' },
+    { id:13, name:'Tin tức khách hàng',              code:'tin-tuc-khach-hang',                section:'Tin tức khách hàng',                 layout:'Slider',    datasource:'Tin tức',     datasourceKey:'tin-tuc',  order:null, createdAt:'10/03/2026 11:40' },
   ]; }
   MENU() { return [
     { id: 1,  pid: 0,  level: 0, name: 'Sản phẩm dịch vụ',                   type: 'category', pos: 'Header', url: '/san-pham',                               target: '_self',  order: 0, date: '29/01/2026 09:40', status: 'active' },
@@ -3826,6 +3826,29 @@ class Component extends DCLogic {
   }
 
   openBlockEdit(r) {
+    // Dữ liệu demo nguồn SKU phải cùng nhóm với ngữ cảnh Block và luôn lấy từ Product Hub.
+    const skuDemoCodesByBlock = {
+      2: ['CAM-IQ3', 'CAM-IQ4S', 'CAM-IQ5'],
+      10: ['CAM-IQ3', 'CAM-IQ4S', 'CAM-OUTDOOR'],
+      11: ['DEV-WIFI7', 'DEV-MESH', 'AP-WIFI6'],
+    };
+    const packageDemoCodesByBlock = {
+      1: ['INT-GIGA', 'INT-SKY', 'INT-META'],
+      3: ['INT-LUX500', 'INT-LUX1000', 'INT-COMBO200'],
+      5: ['SA-SMAX', 'SA-KPLUS', 'SA-HBOMAX'],
+      6: ['SA-SMAX', 'SA-KPLUS'],
+      7: ['SA-SMAX', 'SA-HBOMAX'],
+      8: ['INT-GIGA', 'INT-LUX500', 'INT-LUX800'],
+      9: ['INT-COMBO200', 'INT-SKY'],
+    };
+    const selectedSkuCodes = r ? (skuDemoCodesByBlock[r.id] || []) : [];
+    const selectedPackageCodes = r ? (packageDemoCodesByBlock[r.id] || []) : [];
+    const selectedSkuDemo = this.SKUS().filter(sku => selectedSkuCodes.includes(sku.code)).map(sku => ({
+      id: sku.code, pdh: sku.code, name: sku.name
+    }));
+    const selectedPackageDemo = this.SKUS().filter(sku => selectedPackageCodes.includes(sku.code)).map(sku => ({
+      code: sku.code, name: sku.name
+    }));
     this.setState({
       blkView: 'form', blkEditRow: r,
       blkName: r ? r.name : '',
@@ -3834,16 +3857,9 @@ class Component extends DCLogic {
       blkShortName: r ? (r.shortName || '') : '',
       blkOrder: r && r.order != null ? String(r.order) : '0',
       blkLayout: r ? r.layout.toLowerCase() : 'slider',
-      blkDataSource: r ? (r.datasourceKey === 'goi-cuoc' ? 'internet' : r.datasourceKey) : 'internet',
-      blkPkgs: r && r.datasourceKey === 'goi-cuoc'
-        ? [{ code: 'INT-GIGA', name: 'Internet Giga (150Mbps)' }, { code: 'INT-SKY', name: 'Internet Sky (1Gbps/150Mbps)' }, { code: 'INT-META', name: 'Internet Meta (1Gbps)' }]
-        : [],
-      blkCards: [
-        { id: 1, name: 'Internet Giga',    badge: 'Phù hợp cá nhân, gia đình nhỏ',  price: '195.000đ/tháng', speed: '300 Mbps', device: 'Modem Wi-Fi 6' },
-        { id: 2, name: 'Internet Sky',     badge: 'Phù hợp gia đình nhỏ',           price: '195.000đ/tháng', speed: '1 Gbps',   device: 'Modem Wi-Fi 6' },
-        { id: 3, name: 'Internet Giga F1', badge: 'Phù hợp cá nhân, hộ gia đình',   price: '205.000đ/tháng', speed: '300 Mbps', device: 'Modem Wi-Fi 6 & 01 AP' },
-        { id: 4, name: 'Internet Sky F1',  badge: 'Phù hợp cá nhân, gia đình nhỏ',  price: '210.000đ/tháng', speed: '1 Gbps',   device: 'Modem Wi-Fi 6 & 01 AP' },
-      ],
+      blkDataSource: r ? r.datasourceKey : 'internet',
+      blkPkgs: r && (r.datasourceKey === 'internet' || r.datasourceKey === 'goi-sa') ? selectedPackageDemo : [],
+      blkCards: r && r.datasourceKey === 'goi-cuoc' ? selectedSkuDemo : [],
       blkArticles: [
         { id: 1, title: 'FPT Telecom ra mắt gói cước Internet Ultra Fast cho game thủ', cat: 'Tin công nghệ', date: '20/05/2026' },
         { id: 2, title: 'Hướng dẫn thanh toán cước Internet FPT qua ví Foxpay cực đơn giản', cat: 'Hướng dẫn', date: '18/05/2026' },
@@ -3931,32 +3947,28 @@ class Component extends DCLogic {
       );
     } else if (ds === 'goi-cuoc') {
       dynSection = h('div', null,
-        secTitle('🏷️', 'Danh sách các Card Gói Cước trong Block', 'Thêm Card Gói Mới', () => this.setState({ blkPickerModal: 'card-sku', blkPickerSearch: '', blkPickerCat: '', blkPickerSelected: {}, blkSkuSource: 'ecp' })),
+        secTitle('🏷️', 'Danh sách SKU đã chọn trong Block', 'Thêm SKU', () => this.setState({
+          blkPickerModal: 'card-sku', blkPickerSearch: '', blkPickerCat: '', blkSkuSource: 'ecp',
+          blkPickerSelected: {}
+        })),
         h('div', { style: { overflowX: 'auto', borderRadius: 8, border: '1px solid var(--color-border)', marginBottom: 0 } },
           h('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: 13 } },
             h('thead', null, h('tr', { style: { background: 'var(--color-surface-alt)' } },
-              h('th', { style: { width: 48, textAlign: 'center', padding: '10px 12px', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' } }, 'Sắp xếp'),
-              h('th', { style: { padding: '10px 12px', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'left' } }, 'Tên Gói hiển thị'),
-              h('th', { style: { padding: '10px 12px', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'left' } }, 'Nhãn Badge'),
-              h('th', { style: { padding: '10px 12px', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'left' } }, 'Giá bán'),
-              h('th', { style: { padding: '10px 12px', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'left' } }, 'Tốc độ'),
-              h('th', { style: { padding: '10px 12px', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'left' } }, 'Thiết bị kèm'),
-              h('th', { style: { width: 80, textAlign: 'center', padding: '10px 12px', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' } }, 'Thao tác')
+              h('th', { style: { width: 80, textAlign: 'center', padding: '10px 12px', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' } }, 'Sắp xếp'),
+              h('th', { style: { padding: '10px 12px', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'left' } }, 'Tên gói'),
+              h('th', { style: { width: 100, textAlign: 'center', padding: '10px 12px', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' } }, 'Thao tác')
             )),
-            h('tbody', null, s.blkCards.map((c, i) => h('tr', Object.assign({ key: c.id }, mkDrag('blkCards', s.blkCards, i), { style: dragRowStyle('blkCards', i) }),
-              dragCell,
-              h('td', { style: { padding: '10px 12px', fontWeight: 600, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, c.name),
-              h('td', { style: { padding: '10px 12px', maxWidth: 180 } }, h('span', { style: { background: 'var(--color-accent-subtle)', color: 'var(--color-accent-text)', padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 500, display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'bottom' } }, c.badge)),
-              h('td', { style: { padding: '10px 12px', color: 'var(--color-success-text, #10b981)', fontWeight: 600, whiteSpace: 'nowrap' } }, c.price),
-              h('td', { style: { padding: '10px 12px', whiteSpace: 'nowrap' } }, c.speed),
-              h('td', { style: { padding: '10px 12px', fontSize: 12, color: 'var(--color-text-subtle)', maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, c.device),
-              h('td', { style: { textAlign: 'center', padding: '8px' } },
-                h('div', { style: { display: 'flex', gap: 4, justifyContent: 'center' } },
-                  h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: () => this.setState({ blkPickerModal: 'card-edit', blkCardEditId: c.id, blkCardForm: Object.assign({}, c) }) }),
-                  h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => this.setState(sv => ({ blkCards: sv.blkCards.filter(x => x.id !== c.id) })) })
-                )
-              )
-            )))
+            h('tbody', null, s.blkCards.length
+              ? s.blkCards.map((c, i) => h('tr', Object.assign({ key: c.id }, mkDrag('blkCards', s.blkCards, i), { style: dragRowStyle('blkCards', i) }),
+                  dragCell,
+                  h('td', { style: { padding: '10px 12px', fontWeight: 600 } }, c.name,
+                    h('span', { style: { fontFamily: 'monospace', fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 500, marginLeft: 8 } }, c.pdh)),
+                  h('td', { style: { textAlign: 'center', padding: '8px' } },
+                    h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => this.setState(sv => ({ blkCards: sv.blkCards.filter(x => x.id !== c.id) })) }, 'Xóa')
+                  )
+                ))
+              : h('tr', null, h('td', { colSpan: 3, style: { padding: 20, textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13 } }, 'Chưa có SKU nào. Nhấn "Thêm SKU" để chọn.'))
+            )
           )
         )
       );
@@ -4102,9 +4114,13 @@ class Component extends DCLogic {
       r ? ('Mã: ' + r.code) : 'Thông tin Block', close,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         section(1, 'file-doc-line', 'Thông tin cơ bản',
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 14 } },
             limField('Tên block', 'blkName', 255, true, 'VD: Block Gói Internet Cáp Quang Gia Đình', { after: onNameChange }),
-            limField('Mã block', 'blkCode', 100, true, 'VD: block-home-1', { hint: 'a-z, 0-9, gạch nối (-), gạch dưới (_)', after: markCodeDirty })
+            limField('Mã block', 'blkCode', 100, true, 'VD: block-home-1', { hint: 'a-z, 0-9, gạch nối (-), gạch dưới (_)', after: markCodeDirty }),
+            this.field('Thứ tự', h(DS.Input, {
+              type: 'number', min: 0, value: s.blkOrder != null ? s.blkOrder : '0',
+              onChange: e => { let v = (e && e.target ? e.target.value : e) || ''; if (v !== '' && Number(v) < 0) v = '0'; this.setState({ blkOrder: v }); }
+            }), true)
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
             limField('Tên rút gọn', 'blkShortName', 100, false, 'VD: Internet cá nhân'),
@@ -4112,27 +4128,21 @@ class Component extends DCLogic {
               options: [{ value: 'slider', label: 'Slider (Trượt ngang)' }, { value: 'grid', label: 'Grid (Lưới 3-4 cột)' }, { value: 'accordion', label: 'Accordion (Đóng/mở)' }, { value: 'row', label: 'Row (Dòng ngang)' }, { value: 'list', label: 'List (Danh sách dọc)' }],
               value: layout, searchable: true, searchPlaceholder: 'Tìm loại block…', onChange: v => this.setState({ blkLayout: v })
             }), true)
-          ),
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 120px', gap: 14 } },
-            this.field('Loại dữ liệu', h(DS.Select, {
-              options: [{ value: 'internet', label: 'Internet' }, { value: 'goi-sa', label: 'Gói SA' }, { value: 'tin-tuc', label: 'Tin tức' }, { value: 'faq', label: 'Câu hỏi' }],
-              value: ds, onChange: v => this.setState({ blkDataSource: v, blkPkgs: [], blkCards: [], blkArticles: [], blkFaqs: [], blkPickerModal: null, blkPickerSelected: {}, blkPickerSearch: '', blkPickerCat: '' })
-            }), true),
-            this.field('Thứ tự', h(DS.Input, {
-              type: 'number', min: 0, value: s.blkOrder != null ? s.blkOrder : '0',
-              onChange: e => { let v = (e && e.target ? e.target.value : e) || ''; if (v !== '' && Number(v) < 0) v = '0'; this.setState({ blkOrder: v }); }
-            }), true)
           )
         ),
         section(2, 'apps-2-line', 'Danh sách đã chọn',
+          this.field('Loại dữ liệu', h(DS.Select, {
+            options: [{ value: 'internet', label: 'Internet' }, { value: 'goi-sa', label: 'Gói SA' }, { value: 'goi-cuoc', label: 'Sản phẩm SKU' }, { value: 'tin-tuc', label: 'Tin tức' }, { value: 'faq', label: 'Câu hỏi' }],
+            value: ds, onChange: v => this.setState({ blkDataSource: v, blkPkgs: [], blkCards: [], blkArticles: [], blkFaqs: [], blkPickerModal: null, blkPickerSelected: {}, blkPickerSearch: '', blkPickerCat: '' })
+          }), true),
           dynSection || h('div', { style: { fontSize: 13, color: 'var(--color-text-subtle)' } }, 'Chọn loại dữ liệu để thêm nội dung vào Block.'),
           h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 8 } },
             'Kéo–thả để sắp xếp thứ tự hiển thị ngoài website. Cần tối thiểu 1 item để Block được hiển thị; khuyến nghị tối đa 20 item/block (Slider) hoặc 12 item/block (Grid).')
         ),
         section(3, 'share-01-line', 'Nút xem thêm (Call-to-action)',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
-            limField('Text xem thêm', 'blkCtaText', 100, false, 'VD: Xem thêm gói cước'),
-            limField('Link xem thêm', 'blkCtaUrl', 500, false, 'VD: https://fpt.vn/... hoặc /danh-sach-sa')
+            limField('Tiêu đề nút', 'blkCtaText', 100, false, 'VD: Xem thêm gói cước'),
+            limField('Link điều hướng', 'blkCtaUrl', 500, false, 'VD: https://fpt.vn/... hoặc /danh-sach-sa')
           )
         ),
         this.renderBlockPickerModal()
@@ -4458,15 +4468,11 @@ class Component extends DCLogic {
              const cleanName = sku.name.replace(/\s*\([^)]*\)\s*$/, '');
              return { id: Date.now() + i, pdh: sku.code, badge: '', name: cleanName, price: sku.price, download: speedMatch ? speedMatch[1] : '', upload: '', speed: speedMatch ? speedMatch[1] : '', gauge: '50', devices: sku.devices || '', device: sku.devices || '', note: '', btn1Text: 'Đăng ký ngay', btn1Url: '', btn2Url: '' };
            };
-           if (chosen.length === 1) {
-             this.setState({ blkPickerModal: 'card-add', blkPickerSelected: {}, blkPickerSearch: '', blkPickerCat: '', blkCardForm: mk(chosen[0], 0) });
-           } else {
-             const newCards = chosen.map(mk);
-             this.setState(sv => ({ blkCards: sv.blkCards.concat(newCards), blkPickerModal: null, blkPickerSearch: '', blkPickerCat: '', blkPickerSelected: {} }));
-             this.toast('success', 'Đã thêm', newCards.length + ' gói cước đã được thêm vào Block.');
-           }
-         } }, selCount > 1 ? 'Thêm (' + selCount + ' gói)' : 'Tiếp tục')],
-        'Chọn một hoặc nhiều gói cước từ danh mục sản phẩm — chọn 1 gói sẽ mở màn tuỳ chỉnh hiển thị Card, chọn nhiều gói sẽ thêm nhanh vào danh sách.'
+           const newCards = chosen.map(mk);
+           this.setState(sv => ({ blkCards: sv.blkCards.concat(newCards), blkPickerModal: null, blkPickerSearch: '', blkPickerCat: '', blkPickerSelected: {} }));
+           this.toast('success', 'Đã thêm', newCards.length + ' SKU đã được thêm vào Block.');
+         } }, 'Thêm SKU' + (selCount ? ' (' + selCount + ')' : ''))],
+        'Chỉ có thể chọn SKU đang hoạt động từ Product Hub. Thông tin SKU được dùng trực tiếp trong Block; có thể kéo–thả để thay đổi thứ tự hoặc xóa SKU khỏi danh sách.'
       );
     }
 
