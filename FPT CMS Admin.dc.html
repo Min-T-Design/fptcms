@@ -7887,11 +7887,11 @@ class Component extends DCLogic {
         });
         const DEF_TABS = [
           mkTab('t1', 'Cá nhân', [
-            { id:'p1', code:'INT-GIGA', name:'Internet Giga', price:'165.000đ/tháng', visible:true,  badge:'',        dlSpeed:'150 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
-            { id:'p2', code:'INT-SKY',  name:'Internet Sky',  price:'249.000đ/tháng', visible:true,  badge:'Phổ biến', dlSpeed:'500 Mbps', ulSpeed:'200 Mbps', speedIcon:'80%', ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+            { id:'p1', code:'INT-GIGA', name:'Internet Giga', price:'165.000đ/tháng', visible:true,  badge:'',        dlSpeed:'150 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+            { id:'p2', code:'INT-SKY',  name:'Internet Sky',  price:'249.000đ/tháng', visible:true,  badge:'Phổ biến', dlSpeed:'500 Mbps', ulSpeed:'200 Mbps', speedIcon:'80%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
           ]),
           mkTab('t2', 'Gia đình', [
-            { id:'p3', code:'INT-HOME', name:'Internet Home', price:'135.000đ/tháng', visible:true,  badge:'',        dlSpeed:'100 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+            { id:'p3', code:'INT-HOME', name:'Internet Home', price:'135.000đ/tháng', visible:true,  badge:'',        dlSpeed:'100 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
           ]),
           mkTab('t3', 'Combo Internet + Play Box', []),
         ];
@@ -7913,6 +7913,13 @@ class Component extends DCLogic {
             const lb = { fontSize:12, fontWeight:600, color:'var(--color-text-subtle)', marginBottom:4, display:'block' };
             const fld = (l,c,r) => h('div',{style:{marginBottom:12}}, h('label',{style:lb},l,r&&h('span',{style:{color:'var(--color-danger-text)',marginLeft:2}},'*')), c);
             const g2  = (...it) => h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}, ...it);
+            const ctaBox = (title, enabled, onChange, content) => h('div',{style:{marginBottom:12,padding:'10px 12px',border:'1px solid var(--color-border)',borderRadius:10,background:'var(--color-surface-alt)'}},
+              h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:enabled?10:0}},
+                h('div',{style:{fontSize:12.5,fontWeight:700,color:'var(--color-text)'}},title),
+                h(DS.Switch,{size:'sm',label:enabled?'Bật':'Tắt',checked:enabled,onChange})
+              ),
+              enabled ? content : null
+            );
             const tabOptions = tabs.map(t => ({ value: t.id, label: t.name }));
             return h('div',{style:{display:'flex',flexDirection:'column',gap:0}},
               h('div',{style:{marginBottom:16}},
@@ -7998,10 +8005,14 @@ class Component extends DCLogic {
                     ),
                     fld('Giá cước', h('div',{style:{padding:'0 12px',height:48,background:'var(--color-surface-sunken)',borderRadius:12,fontSize:13,color:'var(--color-text-muted)',border:'1px solid var(--color-border)',display:'flex',alignItems:'center'}},sel.price)),
 
-                    fld('CTA chính — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})})),
-                    g2(
-                      fld('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt,placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
-                      fld('CTA phụ — URL',  h(DS.Input,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
+                    ctaBox('CTA luồng toàn trình', sel.ctaPrimaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaPrimaryOn:v}),
+                      fld('CTA luồng toàn trình — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})}))
+                    ),
+                    ctaBox('CTA phụ', sel.ctaSecondaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaSecondaryOn:v}),
+                      g2(
+                        fld('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt,placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
+                        fld('CTA phụ — URL',  h(DS.Input,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
+                      )
                     ),
                     fld('Tính năng nổi bật (mỗi dòng 1 mục)', h('div',null, h(DS.Textarea,{key:'ft'+tab.id+selIdx,rows:3,defaultValue:sel.features,placeholder:'Router Wi-Fi miễn phí\nHỗ trợ 24/7\nLắp đặt trong ngày',onBlur:e=>this.updPkg(tab.id,selIdx,{features:e.target.value})}), h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4,display:'flex',alignItems:'center',gap:4}}, h(DS.Icon,{name:'info-circle-line',size:12,color:'var(--color-text-subtle)'}), 'Mỗi dòng là 1 tính năng — xuống dòng bằng Enter, không phải word-wrap')))
                   ) :
@@ -8064,7 +8075,7 @@ class Component extends DCLogic {
                           const newPkgs=toAdd.map((p,i)=>({
                             id:'p'+Date.now()+i,code:p.code,name:p.name,price:p.price,
                             visible:true,badge:'',dlSpeed:p.speed,ulSpeed:'',speedIcon:'60%',
-                            ctaText:'Đăng ký ngay',ctaUrl:'#',ctaAlt:'Xem chi tiết',ctaAltUrl:'',
+                            ctaPrimaryOn:true,ctaSecondaryOn:true,ctaText:'Đăng ký ngay',ctaUrl:'#',ctaAlt:'Xem chi tiết',ctaAltUrl:'',
                             features:'',tooltipOn:false,tooltipContent:''
                           }));
                           const nc=[...kept,...newPkgs];
@@ -9357,10 +9368,10 @@ class Component extends DCLogic {
         });
         const DEF_TABS_SA = [
           mkTabSA('t1', 'Cơ bản', [
-            { id:'p1', code:'SA-VVIP1', name:'Gói V.Vip 1', price:'120.000đ/tháng', visible:true, badge:'', ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'', ctaAltUrl:'', features:'Xem trực tiếp thể thao\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+            { id:'p1', code:'SA-VVIP1', name:'Gói V.Vip 1', price:'120.000đ/tháng', visible:true, badge:'', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'', ctaAltUrl:'', features:'Xem trực tiếp thể thao\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
           ]),
           mkTabSA('t2', 'Cao cấp', [
-            { id:'p2', code:'SA-VVIP2', name:'Gói V.Vip 2', price:'150.000đ/tháng', visible:true, badge:'Phổ biến', ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'', ctaAltUrl:'', features:'Xem trực tiếp thể thao\nHBO, K+\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+            { id:'p2', code:'SA-VVIP2', name:'Gói V.Vip 2', price:'150.000đ/tháng', visible:true, badge:'Phổ biến', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'', ctaAltUrl:'', features:'Xem trực tiếp thể thao\nHBO, K+\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
           ]),
         ];
         class SaProductsEd extends React.Component {
@@ -9376,6 +9387,13 @@ class Component extends DCLogic {
             const lb = { fontSize:12, fontWeight:600, color:'var(--color-text-subtle)', marginBottom:4, display:'block' };
             const fld2 = (l,c) => h('div',{style:{marginBottom:12}}, h('label',{style:lb},l), c);
             const g2 = (...it) => h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}, ...it);
+            const ctaBox = (title, enabled, onChange, content) => h('div',{style:{marginBottom:12,padding:'10px 12px',border:'1px solid var(--color-border)',borderRadius:10,background:'var(--color-surface-alt)'}},
+              h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:enabled?10:0}},
+                h('div',{style:{fontSize:12.5,fontWeight:700,color:'var(--color-text)'}},title),
+                h(DS.Switch,{size:'sm',label:enabled?'Bật':'Tắt',checked:enabled,onChange})
+              ),
+              enabled ? content : null
+            );
             return h('div',{style:{display:'flex',flexDirection:'column',gap:0}},
               h('div',{style:{marginBottom:16}},
                 fld2('Tiêu đề section', h(DS.Input,{defaultValue:'Chọn gói dịch vụ SA phù hợp'})),
@@ -9438,10 +9456,14 @@ class Component extends DCLogic {
                       fld2('Ảnh Mobile',  h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgMt'+tab.id+selIdx,defaultValue:sel.imgMobile||'',placeholder:'URL ảnh mobile...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgMobile:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload')))
                     ),
                     fld2('Giá cước', h('div',{style:{padding:'0 12px',height:48,background:'var(--color-surface-sunken)',borderRadius:12,fontSize:13,color:'var(--color-text-muted)',border:'1px solid var(--color-border)',display:'flex',alignItems:'center'}},sel.price||'—')),
-                    fld2('CTA chính — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})})),
-                    g2(
-                      fld2('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt||'',placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
-                      fld2('CTA phụ — URL',  h(DS.Input,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
+                    ctaBox('CTA luồng toàn trình', sel.ctaPrimaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaPrimaryOn:v}),
+                      fld2('CTA luồng toàn trình — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})}))
+                    ),
+                    ctaBox('CTA phụ', sel.ctaSecondaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaSecondaryOn:v}),
+                      g2(
+                        fld2('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt||'',placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
+                        fld2('CTA phụ — URL',  h(DS.Input,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
+                      )
                     ),
                     fld2('Tính năng nổi bật (mỗi dòng 1 mục)', h('div',null, h(DS.Textarea,{key:'ft'+tab.id+selIdx,rows:3,defaultValue:sel.features,placeholder:'HBO, K+\nHỗ trợ 24/7\nXem trực tiếp thể thao',onBlur:e=>this.updPkg(tab.id,selIdx,{features:e.target.value})}), h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4,display:'flex',alignItems:'center',gap:4}}, h(DS.Icon,{name:'info-circle-line',size:12,color:'var(--color-text-subtle)'}), 'Mỗi dòng là 1 tính năng — xuống dòng bằng Enter, không phải word-wrap')))
                   ) :
@@ -9483,7 +9505,7 @@ class Component extends DCLogic {
                         h(DS.Button,{level:'primary',onClick:()=>{
                           const kept=pkgs.filter(p=>addSel.has(p.code));
                           const toAdd=SA_PKGS.filter(p=>addSel.has(p.code)&&!existingCodes.has(p.code));
-                          const newPkgs=toAdd.map((p,i)=>({id:'p'+Date.now()+i,code:p.code,name:p.name,price:p.price,visible:true,badge:'',ctaText:'Đăng ký ngay',ctaUrl:'#',ctaAlt:'',ctaAltUrl:'',features:'',tooltipOn:false,tooltipContent:''}));
+                          const newPkgs=toAdd.map((p,i)=>({id:'p'+Date.now()+i,code:p.code,name:p.name,price:p.price,visible:true,badge:'',ctaPrimaryOn:true,ctaSecondaryOn:true,ctaText:'Đăng ký ngay',ctaUrl:'#',ctaAlt:'',ctaAltUrl:'',features:'',tooltipOn:false,tooltipContent:''}));
                           const nc=[...kept,...newPkgs];
                           this.updTab(tab.id,{pkgs:nc,selIdx:nc.length?Math.min(selIdx<0?0:selIdx,nc.length-1):-1,addOpen:false,addSel:new Set()});
                         }},'Lưu ('+addSel.size+' gói)')
