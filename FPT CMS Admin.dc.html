@@ -3750,6 +3750,7 @@ class Component extends DCLogic {
     const blockQuery = (this.state.secBlockSearch || '').toLowerCase();
     const shownBlocks = blockQuery ? allBlocks.filter(b => b.toLowerCase().includes(blockQuery)) : allBlocks;
     const secCodeRef = React.createRef();
+    const secTitlePlaceholder = 'Hero Banner Trang chủ';
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -3771,12 +3772,12 @@ class Component extends DCLogic {
             h('div', null, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order != null ? r.order : '') : '' }), true))
           ),
           this.field('Tiêu đề section', h(DS.Input, {
-            defaultValue: r ? r.name : '', placeholder: 'VD: Hero Banner Trang chủ',
+            defaultValue: r ? r.name : '', placeholder: secTitlePlaceholder,
             onChange: e => { if (secCodeRef.current) secCodeRef.current.value = this.ldpSlugify(e && e.target ? e.target.value : e); }
           }), true),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
             h('div', null, this.field('Mã Section', h('input', {
-              ref: secCodeRef, disabled: true, defaultValue: r ? r.code : '', placeholder: 'VD: sec-hero-home',
+              ref: secCodeRef, disabled: true, defaultValue: r ? r.code : '', placeholder: this.ldpSlugify(secTitlePlaceholder),
               style: { width: '100%', height: 'var(--control-h-md)', boxSizing: 'border-box', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', background: 'var(--color-surface-alt)', color: 'var(--color-text-subtle)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit', cursor: 'not-allowed', outline: 'none' }
             }), true)),
             h('div', null, this.field('Loại Section', h(DS.Select, { options: TYPES, defaultValue: r ? r.type : TYPES[0], searchable: true, searchPlaceholder: 'Tìm loại Section…' }), true))
