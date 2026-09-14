@@ -3710,6 +3710,7 @@ class Component extends DCLogic {
     const toggleBlock = (b) => { const cur = this.state.secEditorBlocks || []; this.setState({ secEditorBlocks: cur.includes(b) ? cur.filter(x => x !== b) : [...cur, b] }); };
     const blockQuery = (this.state.secBlockSearch || '').toLowerCase();
     const shownBlocks = blockQuery ? allBlocks.filter(b => b.toLowerCase().includes(blockQuery)) : allBlocks;
+    const secCodeRef = React.createRef();
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -3727,15 +3728,18 @@ class Component extends DCLogic {
         ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
-            h('div', null, this.field('Thuộc trang', h(DS.Select, { options: PAGES, defaultValue: r ? r.page : PAGES[0], searchable: true, searchPlaceholder: 'Tìm trang…' }), true)),
+            h('div', null, this.field('Thuộc trang', h(DS.Select, { options: PAGES, defaultValue: r ? r.page : undefined, placeholder: 'Chọn trang hiển thị', searchable: true, searchPlaceholder: 'Tìm trang…' }), true)),
             h('div', null, this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order != null ? r.order : '') : '' }), true))
           ),
+          this.field('Tiêu đề section', h(DS.Input, {
+            defaultValue: r ? r.name : '', placeholder: 'VD: Hero Banner Trang chủ',
+            onChange: e => { if (secCodeRef.current) secCodeRef.current.value = this.ldpSlugify(e && e.target ? e.target.value : e); }
+          }), true),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('Tiêu đề section', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Hero Banner Trang chủ' }), true)),
-            h('div', null, this.field('Tiêu đề hiển thị', h(DS.Input, { defaultValue: r ? (r.title || '') : '', placeholder: 'VD: Khuyến mãi nổi bật' }), true))
-          ),
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('Mã Section', h(DS.Input, { defaultValue: r ? r.code : '', placeholder: 'VD: sec-hero-home' }), true)),
+            h('div', null, this.field('Mã Section', h('input', {
+              ref: secCodeRef, disabled: true, defaultValue: r ? r.code : '', placeholder: 'VD: sec-hero-home',
+              style: { width: '100%', height: 'var(--control-h-md)', boxSizing: 'border-box', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', background: 'var(--color-surface-alt)', color: 'var(--color-text-subtle)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit', cursor: 'not-allowed', outline: 'none' }
+            }), true)),
             h('div', null, this.field('Loại Section', h(DS.Select, { options: TYPES, defaultValue: r ? r.type : TYPES[0], searchable: true, searchPlaceholder: 'Tìm loại Section…' }), true))
           ),
           this.field('Mô tả ngắn', h(DS.Textarea, { rows: 2, placeholder: 'Nhập mô tả cho Section này...' }))
