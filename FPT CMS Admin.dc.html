@@ -4182,7 +4182,7 @@ class Component extends DCLogic {
           h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 8 } },
             'Kéo–thả để sắp xếp thứ tự hiển thị ngoài website. Cần tối thiểu 1 item để Block được hiển thị; khuyến nghị tối đa 20 item/block (Slider) hoặc 12 item/block (Grid).')
         ),
-        section(3, 'share-01-line', 'Nút xem thêm (Call-to-action)',
+        section(3, 'share-01-line', 'CTA',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
             limField('Tiêu đề nút', 'blkCtaText', 100, false, 'VD: Xem thêm gói cước'),
             limField('Link điều hướng', 'blkCtaUrl', 500, false, 'VD: https://fpt.vn/... hoặc /danh-sach-sa')
@@ -10159,7 +10159,7 @@ class Component extends DCLogic {
       { id: 6, name: 'Skyeyes3play4 (1 cam) - uat (PTTT)', applyAll: false, skus: ['CAM-IQ3'], methods: {},
         createdAt: '14/07/2026 10:36', createdBy: 'Đỗ Liên Thảo', updatedAt: '14/07/2026 10:36', updatedBy: 'Đỗ Liên Thảo' },
       { id: 7, name: 'Khuyến mãi Internet toàn gói', applyAll: false,
-        skus: ['INT-GIGA', 'INT-SKY', 'INT-META', 'INT-LUX500', 'INT-LUX800', 'INT-LUX1000', 'INT-COMBO200'],
+        skus: ['INT-GIGA', 'INT-SKY', 'INT-META', 'INT-LUX500', 'INT-LUX800', 'INT-LUX1000', 'INT-COMBO200'].concat(Array.from({ length: 43 }, (_, i) => 'PKG-DEMO' + String(i + 1).padStart(2, '0'))),
         methods: { vietqr: { start: '2026-08-01', end: '2026-08-31', descriptions: ['Ưu đãi thanh toán 50K'] }, momo: { start: '2026-08-01', end: '2026-08-31', descriptions: [] } },
         createdAt: '05/08/2026 09:12', createdBy: 'Đặng Xuân Phong', updatedAt: '10/08/2026 15:30', updatedBy: 'tannn40' },
     ];
@@ -10228,13 +10228,42 @@ class Component extends DCLogic {
     const pg = this.state.paycfg_pg || 1;
     const sz = this.state.paycfg_sz || 10;
 
+    // "+n" hover popover, viewport-clamped — DS.Tooltip renders `whiteSpace: nowrap` and
+    // `position: absolute` centered on the trigger, so a long joined list (e.g. 45 mã) blows
+    // way past both table edges. This wraps text, caps width, and positions via `position: fixed`
+    // measured live from the trigger's getBoundingClientRect(), same principle as the DS.Select
+    // clipping fix in §8 — never confined to a parent that might clip it.
+    const OverflowTip = ({ text, children }) => {
+      const ref = React.useRef(null);
+      const [rect, setRect] = React.useState(null);
+      const show = () => { if (ref.current) setRect(ref.current.getBoundingClientRect()); };
+      const hide = () => setRect(null);
+      let tipStyle = null;
+      if (rect) {
+        const maxW = Math.min(420, window.innerWidth - 32);
+        const left = Math.max(8, Math.min(rect.left + rect.width / 2 - maxW / 2, window.innerWidth - maxW - 8));
+        const showBelow = rect.top < 70;
+        tipStyle = {
+          position: 'fixed', left, width: maxW, zIndex: 9999,
+          ...(showBelow ? { top: rect.bottom + 8 } : { bottom: window.innerHeight - rect.top + 8 }),
+          padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--gray-12)', color: 'var(--gray-1)',
+          fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 500, lineHeight: 1.4,
+          whiteSpace: 'normal', wordBreak: 'break-word', boxShadow: 'var(--shadow-md)', pointerEvents: 'none'
+        };
+      }
+      return h('span', { ref, style: { position: 'relative', display: 'inline-flex' }, onMouseEnter: show, onMouseLeave: hide, onFocus: show, onBlur: hide },
+        children,
+        rect && h('span', { role: 'tooltip', style: tipStyle }, text)
+      );
+    };
+
     const chipList = (theme, MAX, list, allBadge) => {
       if (allBadge) return h(DS.Badge, { theme: 'brand' }, allBadge);
       const visible = (list || []).slice(0, MAX);
       const rest = (list || []).slice(MAX);
       return h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' } },
         ...visible.map(v => h(DS.Badge, { key: v, theme }, v)),
-        rest.length > 0 && h(DS.Tooltip, { key: '__more', label: rest.join(', '), placement: 'top' },
+        rest.length > 0 && h(OverflowTip, { key: '__more', text: rest.join(', ') },
           h(DS.Badge, { theme: 'brand', style: { cursor: 'default' } }, '+' + rest.length)
         )
       );
