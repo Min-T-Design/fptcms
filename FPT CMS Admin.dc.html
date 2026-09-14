@@ -3897,9 +3897,7 @@ class Component extends DCLogic {
       blkView: 'form', blkEditRow: r,
       blkName: r ? r.name : '',
       blkCode: r ? r.code : '',
-      blkCodeDirty: !!r,
       blkShortName: r ? (r.shortName || '') : '',
-      blkOrder: r && r.order != null ? String(r.order) : '0',
       blkLayout: r ? r.layout.toLowerCase() : 'slider',
       blkDataSource: r ? r.datasourceKey : 'internet',
       blkPkgs: r && (r.datasourceKey === 'internet' || r.datasourceKey === 'goi-sa') ? selectedPackageDemo : [],
@@ -4149,27 +4147,28 @@ class Component extends DCLogic {
       ), required);
     };
 
-    // Auto-sinh Mã block từ Tên block cho tới khi người dùng tự sửa mã (dirty state) — BR-03
-    const onNameChange = v => { if (!s.blkCodeDirty) this.setState({ blkCode: this.ldpSlugify(v).slice(0, 100) }); };
-    const markCodeDirty = () => { if (!s.blkCodeDirty) this.setState({ blkCodeDirty: true }); };
+    // Mã block luôn tự sinh từ Tên block, không cho chỉnh tay — BR-03
+    const onNameChange = v => this.setState({ blkCode: this.ldpSlugify(v).slice(0, 100) });
 
     return this.editorShell(
       r ? 'Chỉnh sửa: ' + r.name : 'Tạo Block mới',
       r ? ('Mã: ' + r.code) : 'Thông tin Block', close,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         section(1, 'file-doc-line', 'Thông tin cơ bản',
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 14 } },
-            limField('Tên block', 'blkName', 255, true, 'VD: Block Gói Internet Cáp Quang Gia Đình', { after: onNameChange }),
-            limField('Mã block', 'blkCode', 100, true, 'VD: block-home-1', { hint: 'a-z, 0-9, gạch nối (-), gạch dưới (_)', after: markCodeDirty }),
-            this.field('Thứ tự', h(DS.Input, {
-              type: 'number', min: 0, value: s.blkOrder != null ? s.blkOrder : '0',
-              onChange: e => { let v = (e && e.target ? e.target.value : e) || ''; if (v !== '' && Number(v) < 0) v = '0'; this.setState({ blkOrder: v }); }
-            }), true)
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
+            limField('Tên block', 'blkName', 255, true, 'Block Gói Internet Cáp Quang Gia Đình', { after: onNameChange }),
+            this.field('Mã block', h('div', null,
+              h('input', {
+                disabled: true, value: s.blkCode || '', placeholder: this.ldpSlugify('Block Gói Internet Cáp Quang Gia Đình'),
+                style: { width: '100%', height: 'var(--control-h-md)', boxSizing: 'border-box', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', background: 'var(--color-surface-alt)', color: 'var(--color-text-subtle)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit', cursor: 'not-allowed', outline: 'none' }
+              }),
+              h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 4 } }, 'Tự động tạo từ Tên block · a-z, 0-9, gạch nối (-), gạch dưới (_)')
+            ), true)
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
-            limField('Tên rút gọn', 'blkShortName', 100, false, 'VD: Internet cá nhân'),
+            limField('Tên rút gọn', 'blkShortName', 100, false, 'Internet cá nhân'),
             this.field('Loại block', h(DS.Select, {
-              options: [{ value: 'slider', label: 'Slider (Trượt ngang)' }, { value: 'grid', label: 'Grid (Lưới 3-4 cột)' }, { value: 'accordion', label: 'Accordion (Đóng/mở)' }, { value: 'row', label: 'Row (Dòng ngang)' }, { value: 'list', label: 'List (Danh sách dọc)' }],
+              options: [{ value: 'slider', label: 'Slider (Trượt ngang)' }, { value: 'tabs', label: 'Tabs (Chuyển tab)' }, { value: 'row', label: 'Row (Dòng ngang)' }],
               value: layout, searchable: true, searchPlaceholder: 'Tìm loại block…', onChange: v => this.setState({ blkLayout: v })
             }), true)
           )
@@ -4183,10 +4182,10 @@ class Component extends DCLogic {
           h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 8 } },
             'Kéo–thả để sắp xếp thứ tự hiển thị ngoài website. Cần tối thiểu 1 item để Block được hiển thị; khuyến nghị tối đa 20 item/block (Slider) hoặc 12 item/block (Grid).')
         ),
-        section(3, 'share-01-line', 'CTA',
+        section(3, 'share-01-line', 'CTA (Call to action)',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
-            limField('Tiêu đề nút', 'blkCtaText', 100, false, 'VD: Xem thêm gói cước'),
-            limField('Link điều hướng', 'blkCtaUrl', 500, false, 'VD: https://fpt.vn/... hoặc /danh-sach-sa')
+            limField('Tiêu đề nút', 'blkCtaText', 100, false, 'Xem thêm gói cước'),
+            limField('Link điều hướng', 'blkCtaUrl', 500, false, 'https://fpt.vn/... hoặc /danh-sach-sa')
           )
         ),
         this.renderBlockPickerModal()
