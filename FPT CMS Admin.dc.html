@@ -3931,7 +3931,8 @@ class Component extends DCLogic {
     const selPages = this.state.secEditorPages || (r ? (r.pages || []) : []);
     const SEC_TYPES = this.SEC_TYPES();
     const secType = this.state.secEditorType !== undefined ? this.state.secEditorType : (r ? r.type : SEC_TYPES[0].value);
-    const allBlocks = this.BLOCKS().map(b => b.name);
+    // FAQ: chỉ cho gắn Block thuộc "Loại dữ liệu" = Câu hỏi (datasourceKey 'faq') — không hiển thị các block khác loại.
+    const allBlocks = (secType === 'question' ? this.BLOCKS().filter(b => b.datasourceKey === 'faq') : this.BLOCKS()).map(b => b.name);
     const selBlocks = this.state.secEditorBlocks || [];
     const toggleBlock = (b) => { const cur = this.state.secEditorBlocks || []; this.setState({ secEditorBlocks: cur.includes(b) ? cur.filter(x => x !== b) : [...cur, b] }); };
     const blockQuery = (this.state.secBlockSearch || '').toLowerCase();
