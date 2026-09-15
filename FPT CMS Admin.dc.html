@@ -2814,10 +2814,7 @@ class Component extends DCLogic {
     this.openDrawer({ title: r.name, subtitle: 'Chi tiết Chương trình Banner & Popup', width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên chương trình', r.name),
-        this.detailRow('Kênh áp dụng', r.channel),
         this.detailRow('Gói bán áp dụng', h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } }, r.skus.map(s => h(DS.Badge, { key: s, theme: 'brand' }, s)))),
-        this.detailRow('Khoảng thời gian', r.period),
-        this.detailRow('Ưu tiên', String(r.priority)),
         this.detailRow('Trạng thái', this.statusBadge(r.status)),
 
         sub('Trang thông tin đăng ký'),
@@ -3962,9 +3959,9 @@ class Component extends DCLogic {
     const showFilterBlock = secType === 'tabs' && hasRowLayoutBlock;
     // Tabs + Block gắn vào có "Loại block" = Row: không hiển thị block Nút CTA (Call-to-action).
     const hideCtaForTabsRow = secType === 'tabs' && hasRowLayoutBlock;
-    // Tabs: các Block gắn vào phải cùng "Loại dữ liệu" (datasourceKey ở module Quản lý Blocks) — chọn 1 block sẽ khoá các block khác loại dữ liệu.
+    // Gắn Blocks (mọi Loại Section): các Block gắn vào phải cùng "Loại dữ liệu" (datasourceKey ở module Quản lý Blocks) — chọn 1 block sẽ khoá các block khác loại dữ liệu.
     const blockDatasourceByName = new Map(this.BLOCKS().map(b => [b.name, { key: b.datasourceKey, label: b.datasource }]));
-    const lockDatasourceKey = secType === 'tabs' && selBlocks.length > 0 ? (blockDatasourceByName.get(selBlocks[0]) || {}).key : null;
+    const lockDatasourceKey = GAN_BLOCK_TYPES.includes(secType) && selBlocks.length > 0 ? (blockDatasourceByName.get(selBlocks[0]) || {}).key : null;
     const lockDatasourceLabel = lockDatasourceKey ? (blockDatasourceByName.get(selBlocks[0]) || {}).label : null;
 
     const blocks = [];
@@ -4010,13 +4007,14 @@ class Component extends DCLogic {
       )
     ] });
     else if (MEDIA_SINGLE_TYPES.includes(secType)) blocks.push({ icon: 'image-line', title: 'Media & Icon', content: [
-      this.uploadBox('Hình ảnh', 'JPG, PNG, WebP · ≤200KB')
+      this.uploadBox('Hình ảnh', 'JPG, PNG, WebP · ≤200KB'),
+      this.field('Link banner', h(DS.Input, { defaultValue: r ? (r.bannerLink || '') : '', placeholder: 'VD: /khuyen-mai' }))
     ] });
     if (TEXT_EDITOR_TYPES.includes(secType)) blocks.push({ icon: 'edit-01-line', title: 'Nội dung section', content: [
       this.richTextEditor(r ? (r.html || '') : '')
     ] });
     if (GAN_BLOCK_TYPES.includes(secType)) blocks.push({ icon: 'dots-grid-line', title: 'Gắn Blocks', content: [
-      lockDatasourceKey && h(DS.Alert, { theme: 'info', key: 'gan-block-lock-hint' }, 'Tabs chỉ cho gắn các Block cùng "Loại dữ liệu": ' + lockDatasourceLabel + '.'),
+      lockDatasourceKey && h(DS.Alert, { theme: 'info', key: 'gan-block-lock-hint' }, 'Chỉ cho gắn các Block cùng "Loại dữ liệu": ' + lockDatasourceLabel + '.'),
       selBlocks.length > 0 && h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '7px 10px', border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface)' } },
         selBlocks.map(b => h(DS.Tag, {
           key: b, size: 'sm',
@@ -4032,7 +4030,7 @@ class Component extends DCLogic {
             const bDs = blockDatasourceByName.get(b) || {};
             const mismatched = !ck && lockDatasourceKey && bDs.key !== lockDatasourceKey;
             const onPick = () => {
-              if (mismatched) { this.toast('warning', 'Khác loại dữ liệu', 'Block "' + b + '" thuộc loại dữ liệu "' + (bDs.label || '—') + '", khác với "' + lockDatasourceLabel + '" đã chọn. Tabs chỉ cho gắn các Block cùng loại dữ liệu.'); return; }
+              if (mismatched) { this.toast('warning', 'Khác loại dữ liệu', 'Block "' + b + '" thuộc loại dữ liệu "' + (bDs.label || '—') + '", khác với "' + lockDatasourceLabel + '" đã chọn. Chỉ cho gắn các Block cùng loại dữ liệu.'); return; }
               toggleBlock(b);
             };
             return h('div', {
