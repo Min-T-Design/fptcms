@@ -5078,7 +5078,7 @@ class Component extends DCLogic {
             onChange: v => this.setState({ menuStatusFilter: v, menu_pg: 1 })
           }))
         ),
-        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openMenuForm(null) }, 'Tạo menu link')
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openMenuForm(null) }, 'Tạo Menu')
       ),
       data.length ? this.tbl(columns, sliced, 'id', r => this.openMenuDetail(r)) : this.empty('Chưa có menu nào.'),
       data.length ? this.renderPagBar(data.length, 'menu', 'menu') : null
@@ -5323,13 +5323,13 @@ class Component extends DCLogic {
     }
 
     return this.editorShell(
-      isEdit ? 'Chỉnh sửa menu: ' + r.name : 'Tạo menu link', 'Điều hướng đa cấp', () => this.closeMenuForm(),
+      isEdit ? 'Chỉnh sửa menu: ' + r.name : 'Tạo Menu mới', 'Điều hướng đa cấp', () => this.closeMenuForm(),
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } }, ...formSections),
       () => {
         this.closeMenuForm();
-        this.toast('success', isEdit ? 'Đã cập nhật' : 'Đã tạo', isEdit ? 'Menu "' + r.name + '" đã được cập nhật.' : 'Menu link mới đã được tạo thành công.');
+        this.toast('success', isEdit ? 'Đã cập nhật' : 'Đã tạo', isEdit ? 'Menu "' + r.name + '" đã được cập nhật.' : 'Menu mới đã được tạo thành công.');
       },
-      isEdit ? 'Lưu' : 'Tạo menu',
+      isEdit ? 'Lưu' : 'Tạo Menu',
       statusToggle
     );
   }
