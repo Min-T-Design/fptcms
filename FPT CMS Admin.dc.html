@@ -2195,7 +2195,6 @@ class Component extends DCLogic {
     const billingTypeOptions = ['Trả trước', 'Trả sau'];
     const periodOptions = Array.from({ length: 36 }, (_, i) => (i + 1) + ' tháng');
     const checkoutBadges = this.getBadgeTagList().filter(b => b.status === 'active' && (b.categories || []).includes('checkout'));
-    const NO_TAGLINE = 'Không có tag';
     const checkoutBadgeOptions = checkoutBadges.map(b => ({
       value: b.name,
       label: h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 5, fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.4px', background: b.bgColor, color: b.textColor } }, b.name)
@@ -2394,8 +2393,9 @@ class Component extends DCLogic {
     // ── Helper dùng chung cho khối chỉnh sửa chu kỳ (Gói Internet / Gói SA / Camera) ──
     const renderTaglineSelect = (value, onChange) => checkoutBadgeOptions.length
       ? h(DS.Select, {
-          options: [NO_TAGLINE, ...checkoutBadgeOptions], value: value || NO_TAGLINE,
-          onChange: val => onChange(val === NO_TAGLINE ? '' : val)
+          options: checkoutBadgeOptions, value: value || '', placeholder: 'Không có tag',
+          searchable: true, searchPlaceholder: 'Tìm tag line…',
+          onChange: val => onChange(val)
         })
       : h('div', { title: 'Chưa có Badge/Tag phân loại "Check out" — tạo tại Quản lý Badge/Tag.', style: { fontSize: 11, color: 'var(--color-text-subtle)', padding: '9px 0' } }, 'Chưa có Tag line');
     // Nội dung ưu đãi: mỗi dòng tối đa 20 ký tự (hard-cap, có counter đổi màu khi đạt giới hạn — CLAUDE.md §13),
@@ -2875,12 +2875,12 @@ class Component extends DCLogic {
     const popupOptions = ['Popup Flash Sale', 'Popup Camera AI', 'Popup Ưu đãi Thanh toán', 'Popup Nhập mã KM', 'Popup Tri ân Khách hàng'];
     const fieldHint = t => t && h('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 4 } }, t);
     const bannerSelect = (label, def, hint) => h('div', null,
-      h(DS.Select, { label, options: ['— Không hiển thị —', ...bannerOptions], defaultValue: def || '— Không hiển thị —', searchable: true, searchPlaceholder: 'Tìm banner…' }),
+      h(DS.Select, { label, options: bannerOptions, defaultValue: def || '', placeholder: '— Không hiển thị —', searchable: true, searchPlaceholder: 'Tìm banner…' }),
       fieldHint(hint)
     );
     const popupBlock = (label, def, hint, extra) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
       h('div', null,
-        h(DS.Select, { label, options: ['— Không hiển thị —', ...popupOptions], defaultValue: def || '— Không hiển thị —', searchable: true, searchPlaceholder: 'Tìm popup…' }),
+        h(DS.Select, { label, options: popupOptions, defaultValue: def || '', placeholder: '— Không hiển thị —', searchable: true, searchPlaceholder: 'Tìm popup…' }),
         fieldHint(hint)
       ),
       extra
@@ -3783,8 +3783,9 @@ class Component extends DCLogic {
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
             h('div', null, this.field('Tiêu đề (H1)', h(DS.Input, { defaultValue: r ? r.h1 : '', placeholder: 'Nhập tiêu đề chính hiển thị' }), true)),
             h('div', null, this.field('Tag tin tức', h(DS.Select, {
-              options: [{ value: '', label: '— Chọn tag —' }].concat(this.NEWS_TAGS().map(t => ({ value: t.slug, label: t.name }))),
+              options: this.NEWS_TAGS().map(t => ({ value: t.slug, label: t.name })),
               defaultValue: r ? (r.newsTag || '') : '',
+              placeholder: 'Chọn tag…',
               searchable: true, searchPlaceholder: 'Tìm tag…'
             }), true))
           )
@@ -3931,7 +3932,7 @@ class Component extends DCLogic {
     const PAGES = this.PAGES().map(p => p.name);
     const selPages = this.state.secEditorPages || (r ? (r.pages || []) : []);
     const SEC_TYPES = this.SEC_TYPES();
-    const secType = this.state.secEditorType !== undefined ? this.state.secEditorType : (r ? r.type : SEC_TYPES[0].value);
+    const secType = this.state.secEditorType !== undefined ? this.state.secEditorType : (r ? r.type : '');
     // FAQ: chỉ cho gắn Block thuộc "Loại dữ liệu" = Câu hỏi (datasourceKey 'faq') — không hiển thị các block khác loại.
     const allBlocks = (secType === 'question' ? this.BLOCKS().filter(b => b.datasourceKey === 'faq') : this.BLOCKS()).map(b => b.name);
     const selBlocks = this.state.secEditorBlocks || [];
@@ -3990,7 +3991,7 @@ class Component extends DCLogic {
           style: { width: '100%', height: 'var(--control-h-md)', boxSizing: 'border-box', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', background: 'var(--color-surface-alt)', color: 'var(--color-text-subtle)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit', cursor: 'not-allowed', outline: 'none' }
         }), true)),
         h('div', null, this.field('Loại Section', h(DS.Select, {
-          options: SEC_TYPES, value: secType, searchable: true, searchPlaceholder: 'Tìm loại Section…',
+          options: SEC_TYPES, value: secType, placeholder: 'Chọn loại Section…', searchable: true, searchPlaceholder: 'Tìm loại Section…',
           onChange: v => this.setState({ secEditorType: v })
         }), true))
       ),
@@ -4146,8 +4147,8 @@ class Component extends DCLogic {
       blkName: r ? r.name : '',
       blkCode: r ? r.code : '',
       blkShortName: r ? (r.shortName || '') : '',
-      blkLayout: r ? r.layout.toLowerCase() : 'slider',
-      blkDataSource: r ? r.datasourceKey : 'internet',
+      blkLayout: r ? r.layout.toLowerCase() : '',
+      blkDataSource: r ? r.datasourceKey : '',
       blkPkgs: r && (r.datasourceKey === 'internet' || r.datasourceKey === 'goi-sa') ? selectedPackageDemo : [],
       blkCards: r && r.datasourceKey === 'goi-cuoc' ? selectedSkuDemo : [],
       blkArticles: [
@@ -4417,14 +4418,14 @@ class Component extends DCLogic {
             limField('Tên rút gọn', 'blkShortName', 100, false, 'Internet cá nhân'),
             this.field('Loại block', h(DS.Select, {
               options: [{ value: 'slider', label: 'Slider (Trượt ngang)' }, { value: 'tabs', label: 'Tabs (Chuyển tab)' }, { value: 'row', label: 'Row (Dòng ngang)' }],
-              value: layout, searchable: true, searchPlaceholder: 'Tìm loại block…', onChange: v => this.setState({ blkLayout: v })
+              value: layout, placeholder: 'Chọn loại block…', searchable: true, searchPlaceholder: 'Tìm loại block…', onChange: v => this.setState({ blkLayout: v })
             }), true)
           )
         ),
         section(2, 'apps-2-line', 'Danh sách đã chọn',
           this.field('Loại dữ liệu', h(DS.Select, {
             options: [{ value: 'internet', label: 'Internet' }, { value: 'goi-sa', label: 'Gói SA' }, { value: 'goi-cuoc', label: 'Sản phẩm SKU' }, { value: 'tin-tuc', label: 'Tin tức' }, { value: 'faq', label: 'Câu hỏi' }],
-            value: ds, onChange: v => this.setState({ blkDataSource: v, blkPkgs: [], blkCards: [], blkArticles: [], blkFaqs: [], blkPickerModal: null, blkPickerSelected: {}, blkPickerSearch: '', blkPickerCat: '' })
+            value: ds, placeholder: 'Chọn loại dữ liệu…', onChange: v => this.setState({ blkDataSource: v, blkPkgs: [], blkCards: [], blkArticles: [], blkFaqs: [], blkPickerModal: null, blkPickerSelected: {}, blkPickerSearch: '', blkPickerCat: '' })
           }), true),
           dynSection || h('div', { style: { fontSize: 13, color: 'var(--color-text-subtle)' } }, 'Chọn loại dữ liệu để thêm nội dung vào Block.'),
           h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 8 } },
@@ -4944,7 +4945,7 @@ class Component extends DCLogic {
           h('div', { style: { flex: 1, minWidth: 0, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 } },
             h('div', { style: { gridColumn: 'span 3' } },
               this.field('Liên kết Package gốc (từ Product Hub - PDH)',
-                h(DS.Select, { options: [{ value: '', label: '-- Không liên kết (Nhập tay thủ công) --' }, ...this.SKUS().map(sku => ({ value: sku.code, label: sku.code + ' - ' + sku.name }))], value: cf.pdh || '', searchable: true, searchPlaceholder: 'Tìm SKU…', onChange: v => setF('pdh', v) })
+                h(DS.Select, { options: this.SKUS().map(sku => ({ value: sku.code, label: sku.code + ' - ' + sku.name })), value: cf.pdh || '', placeholder: '-- Không liên kết (Nhập tay thủ công) --', searchable: true, searchPlaceholder: 'Tìm SKU…', onChange: v => setF('pdh', v) })
               )
             ),
             this.field('Nhãn nổi bật (Badge)', h(DS.Input, { value: cf.badge || '', onChange: e => setF('badge', e.target ? e.target.value : e), placeholder: 'VD: Phù hợp cá nhân, gia đình nhỏ' })),
@@ -5451,10 +5452,10 @@ class Component extends DCLogic {
     );
   }
   openPopupEditor(r) {
-    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : 'menu-page', popupEditorTrigger: r ? r.trigger : 'immediate', popupPagesDDOpen: false, popupPagesDDQ: '' });
+    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupPagesDDOpen: false, popupPagesDDQ: '' });
   }
   closePopupEditor() {
-    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupPagesDDOpen: undefined, popupPagesDDQ: undefined });
+    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupPagesDDOpen: undefined, popupPagesDDQ: undefined });
   }
   renderPopup() {
     if (this.state.popupEditor !== undefined) return this.renderPopupEditor(this.state.popupEditor);
@@ -5523,10 +5524,10 @@ class Component extends DCLogic {
   }
 
   openBannerEditor(r) {
-    this.setState({ bannerEditor: r, bannerEditorPages: r ? [...r.pages] : ['Trang chủ'], bannerEditorType: r ? r.bannerType : 'normal', bannerPagesDDOpen: false, bannerPagesDDQ: '' });
+    this.setState({ bannerEditor: r, bannerEditorPages: r ? [...r.pages] : ['Trang chủ'], bannerEditorType: r ? r.bannerType : '', bannerEditorTarget: r ? r.target : '', bannerPagesDDOpen: false, bannerPagesDDQ: '' });
   }
   closeBannerEditor() {
-    this.setState({ bannerEditor: undefined, bannerEditorPages: undefined, bannerEditorType: undefined, bannerPagesDDOpen: undefined, bannerPagesDDQ: undefined });
+    this.setState({ bannerEditor: undefined, bannerEditorPages: undefined, bannerEditorType: undefined, bannerEditorTarget: undefined, bannerPagesDDOpen: undefined, bannerPagesDDQ: undefined });
   }
   openBannerDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -5554,7 +5555,8 @@ class Component extends DCLogic {
     const isNew = !r; const back = () => this.closeBannerEditor();
     const pages = r ? r.pages : ['Trang chủ'];
     const selectedPages = this.state.bannerEditorPages || pages;
-    const bannerType = this.state.bannerEditorType || (r ? r.bannerType : 'normal');
+    const bannerType = this.state.bannerEditorType !== undefined ? this.state.bannerEditorType : (r ? r.bannerType : '');
+    const bannerTarget = this.state.bannerEditorTarget !== undefined ? this.state.bannerEditorTarget : (r ? r.target : '');
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -5583,8 +5585,8 @@ class Component extends DCLogic {
         ),
         section(3, 'share-01-line', 'Cấu hình Liên kết & Áp dụng',
           h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { flex: 1 } }, this.field('Loại banner', h(DS.Select, { options: [{ value: 'normal', label: 'Trang thường (Menu Trang)' }, { value: 'checkout', label: 'Trang Checkout' }], value: bannerType, onChange: v => this.setState({ bannerEditorType: v }) }))),
-            h('div', { style: { width: 190 } }, this.field('Target', h(DS.Select, { options: [{ value: '_self', label: '_self (Mở cùng tab)' }, { value: '_blank', label: '_blank (Mở tab mới)' }], defaultValue: r ? r.target : '_self' }), true))
+            h('div', { style: { flex: 1 } }, this.field('Loại banner', h(DS.Select, { options: [{ value: 'normal', label: 'Trang thường (Menu Trang)' }, { value: 'checkout', label: 'Trang Checkout' }], value: bannerType, placeholder: 'Chọn loại banner…', onChange: v => this.setState({ bannerEditorType: v }) }))),
+            h('div', { style: { width: 190 } }, this.field('Target', h(DS.Select, { options: [{ value: '_self', label: '_self (Mở cùng tab)' }, { value: '_blank', label: '_blank (Mở tab mới)' }], value: bannerTarget, placeholder: 'Chọn target…', onChange: v => this.setState({ bannerEditorTarget: v }) }), true))
           ),
           this.field('Link URL đích', h(DS.Input, { defaultValue: r ? r.link : '', placeholder: 'VD: fpt.vn/khuyen-mai/thang-6' }), true),
           bannerType !== 'checkout'
@@ -5630,8 +5632,9 @@ class Component extends DCLogic {
   renderPopupEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.closePopupEditor();
-    const type = this.state.popupEditorType || (r ? r.type : 'menu-page');
-    const trigger = this.state.popupEditorTrigger || (r ? r.trigger : 'immediate');
+    const type = this.state.popupEditorType !== undefined ? this.state.popupEditorType : (r ? r.type : '');
+    const trigger = this.state.popupEditorTrigger !== undefined ? this.state.popupEditorTrigger : (r ? r.trigger : '');
+    const frequency = this.state.popupEditorFrequency !== undefined ? this.state.popupEditorFrequency : (r ? r.frequency : '');
     const selectedPages = this.state.popupEditorPages || (r && r.pages) || [];
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
@@ -5651,7 +5654,7 @@ class Component extends DCLogic {
           h('div', { style: { display: 'flex', gap: 12 } },
             h('div', { style: { flex: 1 } }, this.field('Tên Popup', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Flash Sale T6' }), true)),
             h('div', { style: { width: 230 } }, this.field('Loại popup', h(DS.Select, {
-              options: this.POPUP_TYPES(), value: type, onChange: v => this.setState({ popupEditorType: v })
+              options: this.POPUP_TYPES(), value: type, placeholder: 'Chọn loại popup…', onChange: v => this.setState({ popupEditorType: v })
             }), true))
           ),
           this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }), true),
@@ -5674,12 +5677,12 @@ class Component extends DCLogic {
         section(3, 'zap-line', 'Hành vi hiển thị',
           h('div', { style: { display: 'flex', gap: 12 } },
             h('div', { style: { flex: 1 } }, this.field('Kiểu kích hoạt', h(DS.Select, {
-              options: this.POPUP_TRIGGERS(), value: trigger, onChange: v => this.setState({ popupEditorTrigger: v })
+              options: this.POPUP_TRIGGERS(), value: trigger, placeholder: 'Chọn kiểu kích hoạt…', onChange: v => this.setState({ popupEditorTrigger: v })
             }), true)),
             trigger === 'delay' && h('div', { style: { width: 170 } }, this.field('Thời gian trễ (giây)', h(DS.Input, { type: 'number', defaultValue: r ? String(r.delaySec || 5) : '5' }), true)),
             h('div', { style: { width: 200 } }, this.field('Thời gian tự đóng (giây)', h(DS.Input, { type: 'number', defaultValue: r && r.autoCloseSec ? String(r.autoCloseSec) : '', placeholder: 'Để trống nếu không tự đóng' })))
           ),
-          this.field('Tần suất hiển thị', h(DS.Select, { options: this.POPUP_FREQUENCIES(), defaultValue: r ? r.frequency : 'every-session' }), true)
+          this.field('Tần suất hiển thị', h(DS.Select, { options: this.POPUP_FREQUENCIES(), value: frequency, placeholder: 'Chọn tần suất hiển thị…', onChange: v => this.setState({ popupEditorFrequency: v }) }), true)
         )
       ),
       () => { back(); this.toast('success', 'Đã lưu Popup', isNew ? 'Popup mới đã được tạo.' : 'Popup "' + r.name + '" đã được cập nhật.'); },
@@ -5982,7 +5985,7 @@ class Component extends DCLogic {
           ),
         ),
         h('div', { style: { display: 'flex', gap: 8 } },
-          h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ faqEditor: null, faqDraft: { cat: 'Thanh toán cước', lang: 'Tiếng Việt', q: '', answer: '', order: '1', active: true } }) }, 'Thêm Câu hỏi (FAQ)')
+          h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ faqEditor: null, faqDraft: { cat: '', lang: '', q: '', answer: '', order: '1', active: true } }) }, 'Thêm Câu hỏi (FAQ)')
         )
       ),
       this.filterChipsBar([
@@ -6045,7 +6048,7 @@ class Component extends DCLogic {
     const isNew = !r; const back = () => this.setState({ faqEditor: undefined, faqDraft: null });
     const setD = patch => this.setState(s => ({ faqDraft: Object.assign({}, s.faqDraft, patch) }));
     const catOpts = this.FAQ_CATS().map(c => ({ value: c.name, label: c.name }));
-    const d = this.state.faqDraft || { cat: catOpts[0] && catOpts[0].value, lang: 'Tiếng Việt', q: '', answer: '', order: '1', active: true };
+    const d = this.state.faqDraft || { cat: '', lang: '', q: '', answer: '', order: '1', active: true };
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -6062,8 +6065,8 @@ class Component extends DCLogic {
         ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { flex: 1 } }, this.field('Danh mục', h(DS.Select, { options: catOpts, value: d.cat, onChange: v => setD({ cat: v }), searchable: true, searchPlaceholder: 'Tìm danh mục…' }), true)),
-            h('div', { style: { flex: 1 } }, this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], value: d.lang, onChange: v => setD({ lang: v }) }), true))
+            h('div', { style: { flex: 1 } }, this.field('Danh mục', h(DS.Select, { options: catOpts, value: d.cat, placeholder: 'Chọn danh mục…', onChange: v => setD({ cat: v }), searchable: true, searchPlaceholder: 'Tìm danh mục…' }), true)),
+            h('div', { style: { flex: 1 } }, this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], value: d.lang, placeholder: 'Chọn ngôn ngữ…', onChange: v => setD({ lang: v }) }), true))
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
             this.field('Câu hỏi', h(DS.Input, { value: d.q, onChange: e => setD({ q: e && e.target ? e.target.value : e }) }), true),
@@ -6110,7 +6113,7 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
           this.field('Tên danh mục', h(DS.Input, { defaultValue: r ? r.name : '' }), true),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
-            this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], defaultValue: r ? (r.lang || 'Tiếng Việt') : 'Tiếng Việt' })),
+            this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], defaultValue: r ? (r.lang || '') : '', placeholder: 'Chọn ngôn ngữ…' })),
             this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order) : '1' }))
           )
         )
@@ -10836,7 +10839,7 @@ class Component extends DCLogic {
   renderArticleEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const catOpts   = this.NEWS_CATS().map(c => ({ value: c.name, label: c.name }));
-    const subCatOpts = [{ value: '', label: '— Chuyên mục phụ —' }, ...catOpts];
+    const subCatOpts = catOpts;
     const isNew = !r || !r.id;
     const closeEditor = () => this.setState({ newsArticleEdit: null });
     const slugInputRef = React.createRef();
@@ -10872,10 +10875,10 @@ class Component extends DCLogic {
             h('div', null, this.field('Tags', h(DS.Input, { defaultValue: r ? (r.tags || '') : '', placeholder: 'camera, khuyen-mai, wifi7' })))
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            this.field('Loại nội dung', h(DS.Select, { options: [{ value: 'article', label: 'Tin bài / Bài viết' }, { value: 'video', label: 'Video bài viết' }, { value: 'promotion', label: 'Thông tin khuyến mãi' }, { value: 'guide', label: 'Hướng dẫn kỹ thuật' }], defaultValue: r ? (r.type || 'article') : 'article' }), true),
-            this.field('Chuyên mục chính', h(DS.Select, { options: catOpts, defaultValue: r ? r.cat : catOpts[0] && catOpts[0].value, searchable: true, searchPlaceholder: 'Tìm chuyên mục…' }), true)
+            this.field('Loại nội dung', h(DS.Select, { options: [{ value: 'article', label: 'Tin bài / Bài viết' }, { value: 'video', label: 'Video bài viết' }, { value: 'promotion', label: 'Thông tin khuyến mãi' }, { value: 'guide', label: 'Hướng dẫn kỹ thuật' }], defaultValue: r ? (r.type || '') : '', placeholder: 'Chọn loại nội dung…' }), true),
+            this.field('Chuyên mục chính', h(DS.Select, { options: catOpts, defaultValue: r ? r.cat : '', placeholder: 'Chọn chuyên mục…', searchable: true, searchPlaceholder: 'Tìm chuyên mục…' }), true)
           ),
-          this.field('Chuyên mục phụ', h(DS.Select, { options: subCatOpts, defaultValue: r ? (r.subCat || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục…' })),
+          this.field('Chuyên mục phụ', h(DS.Select, { options: subCatOpts, defaultValue: r ? (r.subCat || '') : '', placeholder: '— Chuyên mục phụ —', searchable: true, searchPlaceholder: 'Tìm chuyên mục…' })),
           this.field('Ngày đăng', h('button', {
                 onClick: () => {
                   const v = (this.state.form || {}).newsDate || '';
@@ -11066,7 +11069,7 @@ class Component extends DCLogic {
       ]) },
     ];
     return this.listCard(
-      this.toolbar(h('div', { style: { fontSize: 13.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Liên kết bài viết theo Tag đến gói cước'), h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openModal({ kind: 'form', floatingDropdown: true, title: 'Thêm Thông tin hay mới', description: 'Chọn một Tag có sẵn để cấu hình', render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, marginTop: 4 } }, this.field('Chọn Tag', h(DS.Select, { options: ['internet', 'camera', 'wifi7', 'khuyen-mai'], defaultValue: 'internet' }), true), h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } }, h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy'), h(DS.Button, { level: 'primary', onClick: () => { this.closeModal(); this.setState({ tagMappingEditor: { tag: 'internet', skus: [], fallback: true }, tagSkuConfirmed: ['INT-GIGA', 'INT-SKY'], tagSkuSel: ['INT-GIGA', 'INT-SKY'], tagSkuQ: '', tagSkuCat: 'all', tagEditingTag: 'internet' }); } }, 'Xác nhận'))) }) }, 'Thêm Thông tin hay mới')),
+      this.toolbar(h('div', { style: { fontSize: 13.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Liên kết bài viết theo Tag đến gói cước'), h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openModal({ kind: 'form', floatingDropdown: true, title: 'Thêm Thông tin hay mới', description: 'Chọn một Tag có sẵn để cấu hình', render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, marginTop: 4 } }, this.field('Chọn Tag', h(DS.Select, { options: ['internet', 'camera', 'wifi7', 'khuyen-mai'], defaultValue: '', placeholder: 'Chọn tag…' }), true), h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } }, h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy'), h(DS.Button, { level: 'primary', onClick: () => { this.closeModal(); this.setState({ tagMappingEditor: { tag: 'internet', skus: [], fallback: true }, tagSkuConfirmed: ['INT-GIGA', 'INT-SKY'], tagSkuSel: ['INT-GIGA', 'INT-SKY'], tagSkuQ: '', tagSkuCat: 'all', tagEditingTag: 'internet' }); } }, 'Xác nhận'))) }) }, 'Thêm Thông tin hay mới')),
       this.tbl(columns, this.sliceData(this.TAG_MAPPINGS(), 'tagMap'), 'tag'),
       this.renderPagBar(this.TAG_MAPPINGS().length, 'tagMap', 'mapping')
     );
@@ -11305,7 +11308,7 @@ class Component extends DCLogic {
   renderNewsCatEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.setState({ newsCatEditor: undefined });
-    const parentOpts = [{ value: '', label: '— Chuyên mục cha —' }, ...this.NEWS_CATS().filter(c => !r || c.id !== r.id).map(c => ({ value: c.name, label: c.name }))];
+    const parentOpts = this.NEWS_CATS().filter(c => !r || c.id !== r.id).map(c => ({ value: c.name, label: c.name }));
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -11325,11 +11328,11 @@ class Component extends DCLogic {
         section(1, 'folder-line', 'Thông tin cơ bản',
           this.field('Tên', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'Nhập tên chuyên mục' }), true),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
-            this.field('Chuyên mục cha', h(DS.Select, { options: parentOpts, defaultValue: r ? (r.parent || '') : '', searchable: true, searchPlaceholder: 'Tìm chuyên mục cha…' })),
-            this.field('Kiểu giao diện', h(DS.Select, { options: [{ value: 'default', label: 'Mặc định' }, { value: 'grid', label: 'Grid 3 cột' }, { value: 'list', label: 'Danh sách' }], defaultValue: r ? (r.layout || 'default') : 'default' }))
+            this.field('Chuyên mục cha', h(DS.Select, { options: parentOpts, defaultValue: r ? (r.parent || '') : '', placeholder: '— Chuyên mục cha —', searchable: true, searchPlaceholder: 'Tìm chuyên mục cha…' })),
+            this.field('Kiểu giao diện', h(DS.Select, { options: [{ value: 'default', label: 'Mặc định' }, { value: 'grid', label: 'Grid 3 cột' }, { value: 'list', label: 'Danh sách' }], defaultValue: r ? (r.layout || '') : '', placeholder: 'Chọn kiểu giao diện…' }))
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
-            this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || 'vi') : 'vi' })),
+            this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || '') : '', placeholder: 'Chọn ngôn ngữ…' })),
             this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order || 0) : '0' }))
           )
         ),
@@ -11408,7 +11411,7 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
         this.field('Tên Tag', h(DS.Input, { defaultValue: r ? r.name : '' }), true),
         this.field('URL Slug', h(DS.Input, { defaultValue: r ? r.slug : '' }), true),
-        this.field('Trạng thái', h(DS.Select, { options: [{ value: 'active', label: 'Active' }, { value: 'draft', label: 'Draft' }], defaultValue: r ? r.status : 'active' }), true)
+        this.field('Trạng thái', h(DS.Select, { options: [{ value: 'active', label: 'Active' }, { value: 'draft', label: 'Draft' }], defaultValue: r ? r.status : '', placeholder: 'Chọn trạng thái…' }), true)
       ),
       () => { back(); this.toast('success', 'Đã lưu', 'Tag đã được lưu.'); },
       isNew ? 'Thêm Tag' : 'Lưu Tag'
@@ -11483,7 +11486,7 @@ class Component extends DCLogic {
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, marginTop: 4, width: 460, maxWidth: '100%' } },
       this.field('Họ và tên', h(DS.Input, { defaultValue: r ? r.name : '' }), true),
       this.field('Email', h(DS.Input, { defaultValue: r ? r.email : '' }), true),
-      this.field('Vai trò', h(DS.Select, { options: ['Admin CMS', 'Biên tập viên', 'Người duyệt', 'Viewer'], defaultValue: r ? r.role : 'Viewer' }), true),
+      this.field('Vai trò', h(DS.Select, { options: ['Admin CMS', 'Biên tập viên', 'Người duyệt', 'Viewer'], defaultValue: r ? r.role : '', placeholder: 'Chọn vai trò…' }), true),
       this.field('Trạng thái', h('div', { style: { display: 'flex', gap: 16 } }, h(DS.Radio, { name: 'userst', label: 'Hoạt động', defaultChecked: !r || r.status === 'active' }), h(DS.Radio, { name: 'userst', label: 'Tạm khóa', defaultChecked: r && r.status === 'locked' })), true),
       h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 6 } }, h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy'), h(DS.Button, { level: 'primary', onClick: () => { this.closeModal(); this.toast('success', 'Đã lưu', 'Thông tin tài khoản đã được cập nhật.'); } }, 'Lưu'))
     );
@@ -11557,7 +11560,7 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 560 } },
         this.field('Họ và tên', h(DS.Input, { defaultValue: r ? r.name : '' }), true),
         this.field('Email', h(DS.Input, { defaultValue: r ? r.email : '' }), true),
-        this.field('Vai trò', h(DS.Select, { options: ['Admin CMS', 'Biên tập viên', 'Người duyệt', 'Viewer'], defaultValue: r ? r.role : 'Viewer' }), true),
+        this.field('Vai trò', h(DS.Select, { options: ['Admin CMS', 'Biên tập viên', 'Người duyệt', 'Viewer'], defaultValue: r ? r.role : '', placeholder: 'Chọn vai trò…' }), true),
         this.field('Trạng thái', h('div', { style: { display: 'flex', gap: 16 } },
           h(DS.Radio, { name: 'userst_e', label: 'Hoạt động', defaultChecked: !r || r.status === 'active' }),
           h(DS.Radio, { name: 'userst_e', label: 'Tạm khóa', defaultChecked: !!(r && r.status === 'locked') })
