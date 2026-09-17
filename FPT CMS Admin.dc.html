@@ -477,6 +477,14 @@ class Component extends DCLogic {
     const [theme, label] = map[status] || ['neutral', status];
     return h('div', { style: { display: 'flex' } }, h(DS.Badge, { theme, dot: true, style: { whiteSpace: 'nowrap' } }, label));
   }
+  // Trạng thái hiệu lực của 1 dòng khi cột "Hoạt động" bị bật/tắt thủ công (override qua Switch) —
+  // dùng chung cho cả badge Trạng thái lẫn chính Switch để 2 cột luôn khớp nhau.
+  effStatus(overrideMap, r, onFallback) {
+    const override = (overrideMap || {})[r.id];
+    if (override === undefined) return r.status;
+    if (override === false) return 'hidden';
+    return r.status === 'hidden' ? onFallback : r.status;
+  }
 
   renderVals() { return { app: this.renderApp() }; }
 
@@ -5417,10 +5425,10 @@ class Component extends DCLogic {
       { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, whiteSpace: 'nowrap' } }, r.period) },
       { key: 'order', header: 'Thứ tự', width: 72, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
       { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
-      { key: 'status', header: 'Trạng thái', width: 110, align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'status', header: 'Trạng thái', width: 110, render: (_, r) => this.statusBadge(this.effStatus(this.state.bannerActiveMap, r, 'active')) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
-          const isOn = (this.state.bannerActiveMap || {})[r.id] !== undefined ? !!(this.state.bannerActiveMap || {})[r.id] : r.status !== 'hidden';
+          const isOn = this.effStatus(this.state.bannerActiveMap, r, 'active') !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-banner-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
               this.setState(s => ({ bannerActiveMap: { ...s.bannerActiveMap, [r.id]: v } }));
@@ -5513,10 +5521,10 @@ class Component extends DCLogic {
       { key: 'name', header: 'Tên Popup', width: 200, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
       { key: 'type', header: 'Trang áp dụng', width: 190, render: (_, r) => this.popupTypeCell(r) },
       { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.period) },
-      { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'status', header: 'Trạng thái', width: 120, render: (_, r) => this.statusBadge(this.effStatus(this.state.popupActiveMap, r, 'running')) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
-          const isOn = (this.state.popupActiveMap || {})[r.id] !== undefined ? !!(this.state.popupActiveMap || {})[r.id] : r.status !== 'hidden';
+          const isOn = this.effStatus(this.state.popupActiveMap, r, 'running') !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-popup-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', title: 'Bật/Tắt Popup', onChange: v => {
               this.setState(s => ({ popupActiveMap: { ...s.popupActiveMap, [r.id]: v } }));
@@ -5621,7 +5629,18 @@ class Component extends DCLogic {
         section(3, 'share-01-line', 'Cấu hình Liên kết & Áp dụng',
           h('div', { style: { display: 'flex', gap: 12 } },
             h('div', { style: { flex: 1 } }, this.field('Loại banner', h(DS.Select, { options: [{ value: 'normal', label: 'Trang thường (Menu Trang)' }, { value: 'checkout', label: 'Trang Checkout' }], value: bannerType, placeholder: 'Chọn loại banner…', onChange: v => this.setState({ bannerEditorType: v }) }))),
-            h('div', { style: { width: 190 } }, this.field('Target', h(DS.Select, { options: [{ value: '_self', label: '_self (Mở cùng tab)' }, { value: '_blank', label: '_blank (Mở tab mới)' }], value: bannerTarget, placeholder: 'Chọn target…', onChange: v => this.setState({ bannerEditorTarget: v }) }), true))
+            h('div', { style: { width: 190 } }, this.field('Target', h(DS.Select, {
+              options: [
+                { value: '_self', label: '_self (Mở cùng tab)' },
+                { value: '_blank', label: '_blank (Mở tab mới)' },
+                { value: '_parent', label: '_parent (frame cha)' },
+                { value: '_top', label: '_top (toàn bộ cửa sổ)' },
+              ],
+              value: bannerTarget,
+              placeholder: 'Chọn target…',
+              searchable: true, searchPlaceholder: 'Tìm target…',
+              onChange: v => this.setState({ bannerEditorTarget: v })
+            }), true))
           ),
           this.field('Link URL đích', h(DS.Input, { defaultValue: r ? r.link : '', placeholder: 'VD: fpt.vn/khuyen-mai/thang-6' }), true),
           bannerType !== 'checkout'
