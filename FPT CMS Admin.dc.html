@@ -470,6 +470,7 @@ class Component extends DCLogic {
       active: ['success', 'Hoạt động'], inactive: ['neutral', 'Ngừng hoạt động'],
       draft: ['warning', 'Nháp'], locked: ['danger', 'Tạm khóa'],
       running: ['success', 'Đang chạy'], expired: ['danger', 'Hết hạn'], disabled: ['neutral', 'Đã tắt'],
+      scheduled: ['info', 'Đặt lịch'],
       global: ['info', 'Dùng Global'], custom: ['brand', 'Tùy chỉnh riêng'],
       publish: ['success', 'Đã xuất bản'], published: ['success', 'Đã đăng'], hidden: ['warning', 'Tạm ẩn'],
     };
@@ -3339,7 +3340,7 @@ class Component extends DCLogic {
     { id:9,  name:'Tính năng nổi bật',     title:'Tính năng nổi bật',         code:'sec-features',            pages:['Trang chủ'],                 type:'features',     status:'active',   order:3,    blocks:['CTA Đăng ký'],                                createdAt:'01/03/2026 08:00' },
     { id:10, name:'FAQ Trang chủ',          title:'Câu hỏi thường gặp',        code:'sec-faq',                 pages:['Trang chủ'],                 type:'accordion',    status:'inactive', order:4,    blocks:['FAQ thanh toán'],                             createdAt:'01/03/2026 08:00' },
     { id:11, name:'Hero Khuyến mãi',        title:'Ưu đãi tháng 6',            code:'sec-km-hero',             pages:['Khuyến mãi Tháng 6'],        type:'hero_banner',  status:'active',   order:1,    blocks:['Banner dọc KM'],                              createdAt:'25/02/2026 09:15' },
-    { id:12, name:'Internet gia đình',      title:'Gói Internet Gia Đình',     code:'internet-gia-dinh',       pages:['Internet detail sections2'], type:'product_list', status:'active',   order:1,    blocks:['Card gói Giga','Card gói Sky','Banner dọc KM'],createdAt:'20/02/2026 14:30' },
+    { id:12, name:'Internet gia đình',      title:'Gói Internet Gia Đình',     code:'internet-gia-dinh',       pages:['Internet detail sections2'], type:'product_list', status:'active',   order:1,    blocks:['Card gói Giga','Card gói Sky','Banner dọc KM','Ultrafast'],createdAt:'20/02/2026 14:30' },
     { id:13, name:'Camera An Ninh',         title:'Camera An Ninh FPT',        code:'camera-an-ninh',          pages:['Camera An Ninh FPT'],        type:'hero_banner',  status:'active',   order:1,    blocks:[],                                             createdAt:'18/02/2026 10:05' },
     { id:14, name:'Best Sellers',           title:'Sản phẩm bán chạy',         code:'best-sellers',            pages:['Camera An Ninh FPT'],        type:'product_list', status:'active',   order:2,    blocks:['Camera Only','Ultrafast'],                    createdAt:'18/02/2026 10:20' },
   ]; }
@@ -3392,15 +3393,17 @@ class Component extends DCLogic {
     { id: 1, name: 'Banner Hero Trang Chủ Q3', order: 1, pages: ['Trang chủ'], link: '/khuyen-mai-quy-3', bannerType: 'normal', target: '_self', period: '01/08/2026 – 31/08/2026', createdAt: '20/07/2026', status: 'active' },
     { id: 2, name: 'Banner Wi-Fi 7 Ưu đãi', order: 2, pages: ['Trang chủ', 'Internet - Wifi'], link: '/internet/wifi-7', bannerType: 'normal', target: '_self', period: '15/07/2026 – 15/09/2026', createdAt: '10/07/2026', status: 'active' },
     { id: 3, name: 'Banner Camera AI Khuyến mãi Hè', order: 3, pages: ['Danh mục Camera'], link: '/camera-an-ninh/khuyen-mai', bannerType: 'normal', target: '_blank', period: '01/05/2026 – 31/05/2026', createdAt: '20/04/2026', status: 'expired' },
-    { id: 4, name: 'Banner Smart Home Sale', order: 4, pages: ['FPT Smart Home', 'Smart Tivi'], link: '/fpt-smart-home/sale', bannerType: 'normal', target: '_self', period: '01/07/2026 – 15/07/2026', createdAt: '25/06/2026', status: 'disabled' },
+    { id: 4, name: 'Banner Smart Home Sale', order: 4, pages: ['FPT Smart Home', 'Smart Tivi'], link: '/fpt-smart-home/sale', bannerType: 'normal', target: '_self', period: '01/07/2026 – 15/07/2026', createdAt: '25/06/2026', status: 'hidden' },
     { id: 5, name: 'Banner Ưu đãi Thanh toán Online', order: 5, pages: ['Trang chủ'], link: '/checkout/uu-dai-online', bannerType: 'checkout', target: '_self', period: 'Liên tục', createdAt: '10/03/2026', status: 'active' },
     { id: 6, name: 'Banner Giới thiệu Access Point', order: 6, pages: ['Danh mục Camera', 'Smart Tivi', 'FPT Smart Home'], link: '/access-point', bannerType: 'normal', target: '_blank', period: '01/06/2026 – 30/06/2026', createdAt: '15/05/2026', status: 'expired' },
+    { id: 7, name: 'Banner Khuyến mãi Tháng 10', order: 7, pages: ['Trang chủ'], link: '/khuyen-mai-thang-10', bannerType: 'normal', target: '_self', period: '01/10/2026 – 31/10/2026', createdAt: '15/09/2026', status: 'scheduled' },
   ]; }
   POPUPS() { return [
     { id: 1, name: 'Flash Sale T5', type: 'menu-page', pages: ['Trang chủ'], period: '15/05/2026 – 20/05/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'running' },
     { id: 2, name: 'Khuyến mãi Camera', type: 'checkout', checkoutScope: 'Gói Camera AI', period: '01/05/2026 – 31/05/2026', trigger: 'immediate', delaySec: 0, autoCloseSec: 8, frequency: 'every-session', status: 'running' },
     { id: 3, name: 'Ưu đãi lắp mới Internet', type: 'menu-page', pages: ['Trang chủ', 'Internet - Wifi'], period: '10/04/2026 – 10/05/2026', trigger: 'delay', delaySec: 3, autoCloseSec: 0, frequency: 'always', status: 'expired' },
-    { id: 4, name: 'Popup Tết 2026', type: 'menu-page', pages: ['Trang chủ', 'Danh mục Camera'], period: '20/01/2026 – 05/02/2026', trigger: 'scroll', delaySec: 0, autoCloseSec: 0, frequency: 'always', status: 'disabled' },
+    { id: 4, name: 'Popup Tết 2026', type: 'menu-page', pages: ['Trang chủ', 'Danh mục Camera'], period: '20/01/2026 – 05/02/2026', trigger: 'scroll', delaySec: 0, autoCloseSec: 0, frequency: 'always', status: 'hidden' },
+    { id: 5, name: 'Popup Khuyến mãi Tháng 10', type: 'menu-page', pages: ['Trang chủ'], period: '01/10/2026 – 15/10/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'scheduled' },
   ]; }
   FAQS() { return [
     { id: 1, cat: 'Thanh toán cước', q: 'Làm thế nào để thanh toán cước trực tuyến?', a: 'FPT Telecom hỗ trợ đa dạng hình thức thanh toán: ứng dụng Hi FPT, ví điện tử MoMo, VNPay, ZaloPay, chuyển khoản ngân hàng hoặc tại quầy giao dịch FPT.', lang: 'Tiếng Việt', order: 1, status: 'active', createdAt: '14/01/2026' },
@@ -3824,6 +3827,41 @@ class Component extends DCLogic {
     const startIdx = (pg - 1) * sz;
     const sliced = this.sliceData(data, 'secs');
     const idxMap = new Map(sliced.map((r, i) => [r.id, startIdx + i + 1]));
+    // "+n" hover popover, viewport-clamped — same chipList/OverflowTip pattern as
+    // renderPaymentListTab (Phương thức thanh toán), reused here for the Block column.
+    const OverflowTip = ({ text, children }) => {
+      const ref = React.useRef(null);
+      const [rect, setRect] = React.useState(null);
+      const show = () => { if (ref.current) setRect(ref.current.getBoundingClientRect()); };
+      const hide = () => setRect(null);
+      let tipStyle = null;
+      if (rect) {
+        const maxW = Math.min(420, window.innerWidth - 32);
+        const left = Math.max(8, Math.min(rect.left + rect.width / 2 - maxW / 2, window.innerWidth - maxW - 8));
+        const showBelow = rect.top < 70;
+        tipStyle = {
+          position: 'fixed', left, width: maxW, zIndex: 9999,
+          ...(showBelow ? { top: rect.bottom + 8 } : { bottom: window.innerHeight - rect.top + 8 }),
+          padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--gray-12)', color: 'var(--gray-1)',
+          fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 500, lineHeight: 1.4,
+          whiteSpace: 'normal', wordBreak: 'break-word', boxShadow: 'var(--shadow-md)', pointerEvents: 'none'
+        };
+      }
+      return h('span', { ref, style: { position: 'relative', display: 'inline-flex' }, onMouseEnter: show, onMouseLeave: hide, onFocus: show, onBlur: hide },
+        children,
+        rect && h('span', { role: 'tooltip', style: tipStyle }, text)
+      );
+    };
+    const chipList = (theme, MAX, list) => {
+      const visible = (list || []).slice(0, MAX);
+      const rest = (list || []).slice(MAX);
+      return h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' } },
+        ...visible.map(v => h(DS.Badge, { key: v, theme }, v)),
+        rest.length > 0 && h(OverflowTip, { key: '__more', text: rest.join(', ') },
+          h(DS.Badge, { theme: 'brand', style: { cursor: 'default' } }, '+' + rest.length)
+        )
+      );
+    };
     const columns = [
       { key: '_num', header: '#', width: 44, align: 'center',
         render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 12 } }, idxMap.get(r.id) || '') },
@@ -3843,16 +3881,11 @@ class Component extends DCLogic {
           h('strong', null, r.name),
           h('div', { style: { color: '#f43f5e', fontSize: 11, marginTop: 2, fontWeight: 500, fontFamily: 'monospace' } }, r.code)
         ) },
-      { key: 'blocks', header: 'Block', width: 200,
+      { key: 'blocks', header: 'Block', width: 240,
         render: (_, r) => {
           const bl = r.blocks || [];
           if (!bl.length) return h('span', { style: { color: 'var(--color-text-subtle)' } }, '—');
-          const shown = bl.slice(0, 1);
-          const more = bl.length - 1;
-          return h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'nowrap' } },
-            shown.map(b => h('span', { key: b, style: { background: 'rgba(243,101,35,0.13)', color: 'var(--color-accent-text)', padding: '2px 8px', borderRadius: 10, fontSize: 11, whiteSpace: 'nowrap' } }, b)),
-            more > 0 && h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-subtle)', padding: '2px 7px', borderRadius: 10, fontSize: 11, whiteSpace: 'nowrap', cursor: 'default' } }, '+' + more)
-          );
+          return chipList('brand', 3, bl);
         } },
       { key: 'type', header: 'Loại', width: 110,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'monospace' } }, r.type) },
@@ -3989,7 +4022,7 @@ class Component extends DCLogic {
         h('div', null, this.field('Mã Section', h('input', {
           ref: secCodeRef, disabled: true, defaultValue: r ? r.code : '', placeholder: this.ldpSlugify(secTitlePlaceholder),
           style: { width: '100%', height: 'var(--control-h-md)', boxSizing: 'border-box', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', background: 'var(--color-surface-alt)', color: 'var(--color-text-subtle)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit', cursor: 'not-allowed', outline: 'none' }
-        }), true)),
+        }))),
         h('div', null, this.field('Loại Section', h(DS.Select, {
           options: SEC_TYPES, value: secType, placeholder: 'Chọn loại Section…', searchable: true, searchPlaceholder: 'Tìm loại Section…',
           onChange: v => this.setState({ secEditorType: v })
@@ -5356,7 +5389,7 @@ class Component extends DCLogic {
     const q = (this.state.bannerSearch || '').toLowerCase();
     const pageF = this.state.bannerPageFilter || 'all';
     const statusF = this.state.bannerStatusFilter || 'all';
-    const statusLabel = { active: 'Hoạt động', expired: 'Hết hạn', disabled: 'Đã tắt' };
+    const statusLabel = { active: 'Hoạt động', expired: 'Hết hạn', hidden: 'Tạm ẩn', scheduled: 'Đặt lịch' };
     const data = this.BANNERS().filter(b => {
       if (q && !b.name.toLowerCase().includes(q)) return false;
       if (pageF !== 'all' && !b.pages.includes(pageF)) return false;
@@ -5387,7 +5420,7 @@ class Component extends DCLogic {
       { key: 'status', header: 'Trạng thái', width: 110, align: 'center', render: (_, r) => this.statusBadge(r.status) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
-          const isOn = (this.state.bannerActiveMap || {})[r.id] !== undefined ? !!(this.state.bannerActiveMap || {})[r.id] : r.status === 'active';
+          const isOn = (this.state.bannerActiveMap || {})[r.id] !== undefined ? !!(this.state.bannerActiveMap || {})[r.id] : r.status !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-banner-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
               this.setState(s => ({ bannerActiveMap: { ...s.bannerActiveMap, [r.id]: v } }));
@@ -5411,8 +5444,9 @@ class Component extends DCLogic {
             onChange: v => this.setState({ bannerPageFilter: v, banners_pg: 1 })
           })),
           h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
-            options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'expired', label: 'Hết hạn' }, { value: 'disabled', label: 'Đã tắt' }],
+            options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'scheduled', label: 'Đặt lịch' }, { value: 'expired', label: 'Hết hạn' }, { value: 'hidden', label: 'Tạm ẩn' }],
             value: statusF,
+            searchable: true, searchPlaceholder: 'Tìm trạng thái…',
             onChange: v => this.setState({ bannerStatusFilter: v, banners_pg: 1 })
           }))
         ),
@@ -5463,7 +5497,7 @@ class Component extends DCLogic {
     const q = (this.state.popupSearch || '').toLowerCase();
     const pageF = this.state.popupPageFilter || 'all';
     const statusF = this.state.popupStatusFilter || 'all';
-    const statusLabel = { running: 'Đang chạy', expired: 'Hết hạn', disabled: 'Đã tắt' };
+    const statusLabel = { running: 'Đang chạy', expired: 'Hết hạn', hidden: 'Tạm ẩn', scheduled: 'Đặt lịch' };
     const data = this.POPUPS().filter(p => {
       if (q && !p.name.toLowerCase().includes(q)) return false;
       if (pageF !== 'all' && !(p.pages || []).includes(pageF)) return false;
@@ -5482,7 +5516,7 @@ class Component extends DCLogic {
       { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => this.statusBadge(r.status) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
-          const isOn = (this.state.popupActiveMap || {})[r.id] !== undefined ? !!(this.state.popupActiveMap || {})[r.id] : r.status === 'running';
+          const isOn = (this.state.popupActiveMap || {})[r.id] !== undefined ? !!(this.state.popupActiveMap || {})[r.id] : r.status !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-popup-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', title: 'Bật/Tắt Popup', onChange: v => {
               this.setState(s => ({ popupActiveMap: { ...s.popupActiveMap, [r.id]: v } }));
@@ -5506,8 +5540,9 @@ class Component extends DCLogic {
             onChange: v => this.setState({ popupPageFilter: v, popups_pg: 1 })
           })),
           h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
-            options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'running', label: 'Đang chạy' }, { value: 'expired', label: 'Hết hạn' }, { value: 'disabled', label: 'Đã tắt' }],
+            options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'running', label: 'Đang chạy' }, { value: 'scheduled', label: 'Đặt lịch' }, { value: 'expired', label: 'Hết hạn' }, { value: 'hidden', label: 'Tạm ẩn' }],
             value: statusF,
+            searchable: true, searchPlaceholder: 'Tìm trạng thái…',
             onChange: v => this.setState({ popupStatusFilter: v, popups_pg: 1 })
           }))
         ),
@@ -5569,7 +5604,7 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
           h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
-          h(DS.Switch, { defaultChecked: !r || r.status !== 'disabled' })
+          h(DS.Switch, { defaultChecked: !r || r.status !== 'hidden' })
         ),
         section(1, 'file-doc-line', 'Thông tin chung Banner',
           h('div', { style: { display: 'flex', gap: 12 } },
@@ -5598,7 +5633,7 @@ class Component extends DCLogic {
                 this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ bannerEditorPages: v }), { stateKey: 'bannerPagesDD', placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
               )
             : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Banner Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.'),
-          this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }), true)
+          this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))
         )
       ),
       () => { back(); this.toast('success', 'Đã lưu Banner', isNew ? 'Banner mới đã được tạo.' : 'Banner "' + r.name + '" đã được cập nhật.'); },
@@ -5648,7 +5683,7 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
           h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
-          h(DS.Switch, { defaultChecked: !r || r.status === 'running' })
+          h(DS.Switch, { defaultChecked: !r || r.status !== 'hidden' })
         ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'flex', gap: 12 } },
@@ -5657,7 +5692,7 @@ class Component extends DCLogic {
               options: this.POPUP_TYPES(), value: type, placeholder: 'Chọn loại popup…', onChange: v => this.setState({ popupEditorType: v })
             }), true))
           ),
-          this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }), true),
+          this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } })),
           type !== 'checkout'
             ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
                 h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
