@@ -4481,7 +4481,7 @@ class Component extends DCLogic {
             }), true)
           )
         ),
-        section(2, 'apps-2-line', 'Danh sách đã chọn',
+        section(2, 'apps-2-line', 'Danh sách gói đã chọn',
           this.field('Loại dữ liệu', h(DS.Select, {
             options: [{ value: 'internet', label: 'Internet' }, { value: 'goi-sa', label: 'Gói SA' }, { value: 'goi-cuoc', label: 'Sản phẩm SKU' }, { value: 'tin-tuc', label: 'Tin tức' }, { value: 'faq', label: 'Câu hỏi' }],
             value: ds, placeholder: 'Chọn loại dữ liệu…', onChange: v => this.setState({ blkDataSource: v, blkPkgs: [], blkCards: [], blkArticles: [], blkFaqs: [], blkPickerModal: null, blkPickerSelected: {}, blkPickerSearch: '', blkPickerCat: '' })
@@ -4490,7 +4490,7 @@ class Component extends DCLogic {
           h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 8 } },
             'Kéo–thả để sắp xếp thứ tự hiển thị ngoài website. Cần tối thiểu 1 item để Block được hiển thị; khuyến nghị tối đa 20 item/block (Slider) hoặc 12 item/block (Grid).')
         ),
-        section(3, 'share-01-line', 'CTA (Call to action)',
+        section(3, 'share-01-line', 'Nút CTA',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
             limField('Tiêu đề nút', 'blkCtaText', 100, false, 'Xem thêm gói cước'),
             limField('Link điều hướng', 'blkCtaUrl', 500, false, 'https://fpt.vn/... hoặc /danh-sach-sa')
@@ -6460,7 +6460,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     return h('div', { style: { padding: '12px 14px', background: 'var(--color-accent-bg)', border: '1px dashed var(--color-accent)', borderRadius: 10, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 } },
       h('div', { style: { flex: '1 1 200px', minWidth: 0 } },
-        h('div', { style: { fontWeight: 600, fontSize: 13, color: 'var(--color-accent)' } }, 'Xem trước trực quan Landing Page'),
+        h('div', { style: { fontWeight: 600, fontSize: 13, color: 'var(--color-accent)' } }, 'Xem trước Landing Page'),
         h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, 'Xem toàn màn hình, chuyển đổi Desktop / Mobile')
       ),
       h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'eye-line', style: { borderColor: 'var(--color-accent)', color: 'var(--color-accent)', flexShrink: 0 }, onClick: () => this.setState({ ldpFullPreview: rec, ldpPreviewDevice: this.state.ldpPreviewDevice || 'desktop' }) }, 'Preview LDP')
