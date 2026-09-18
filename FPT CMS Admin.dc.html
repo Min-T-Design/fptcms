@@ -6746,7 +6746,7 @@ class Component extends DCLogic {
               if (slugBlocked) { this.setState({ ldpStep: 2 }); this.toast('danger', 'URL chưa hợp lệ', slugCheck.msg || 'Vui lòng kiểm tra lại URL Slug ở bước Thông tin trang.'); return; }
               this.confirm(
                 isResubmit ? 'Gửi duyệt lại LDP?' : 'Gửi LDP đi duyệt?',
-                'Nhánh URL cấp 1 "' + curLv1 + '" là nhánh mới trên fpt.vn và cần Super Admin phê duyệt. Hãy kiểm tra kỹ chính tả và ý nghĩa của slug Level 1 trước khi gửi. Sau khi gửi, LDP sẽ ở trạng thái "Chờ duyệt" và chưa hiển thị cho người dùng cho tới khi được duyệt.',
+                h('span', null, 'Nhánh URL cấp 1 mới "', h('strong', null, curLv1), '" cần Bộ phận kiểm duyệt. Vui lòng kiểm tra kỹ chính tả slug trước khi gửi. Sau khi gửi, LDP sẽ ở trạng thái "Chờ duyệt", không thể chỉnh sửa và tạm ẩn cho đến khi được duyệt.'),
                 () => this.submitLdpForApproval()
               );
             }
@@ -6989,7 +6989,7 @@ class Component extends DCLogic {
                                     ? h('span', null, 'Nhánh đang có LDP chạy (', h('strong', null, lv1Live.name), ') nên ', h('strong', null, 'bắt buộc nhập Level 2'), '.')
                                     : h('span', null, 'Nhánh chưa có LDP nào đang chạy nên ', h('strong', null, 'Level 2 không bắt buộc'), ' (có thể để trống).')
                                 ))
-                              : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" là nhánh URL cấp 1 mới — cần Super Admin duyệt trước khi xuất bản.')))
+                              : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" là nhánh URL cấp 1 mới - Nội dung cần được Bộ phận kiểm duyệt (trùng URL, bảo mật, kỹ thuật) trước khi xuất bản.')))
                   );
                 })(),
                 h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } },
