@@ -2895,6 +2895,10 @@ class Component extends DCLogic {
       ),
       extra
     );
+    const delayFields = (delayDef, autoCloseDef, suffix) => h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+      this.field('Delay mở (giây)' + (suffix || ''), h(DS.Input, { type: 'number', min: 0, defaultValue: String(delayDef != null ? delayDef : 0) })),
+      this.field('Tự tắt sau (giây)' + (suffix || ''), h(DS.Input, { type: 'number', min: 0, defaultValue: String(autoCloseDef != null ? autoCloseDef : 0) }))
+    );
     const sections = [
         { key: 'info', title: 'Thông tin chung & điều kiện áp dụng', icon: 'filter-lines-line', content:
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, alignItems: 'start' } },
@@ -2969,7 +2973,9 @@ class Component extends DCLogic {
               h('div', { style: { flex: 1 } }, bannerSelect('Banner đầu trang (Header)', r ? r.headerBanner : null, 'Ví dụ: Banner ưu đãi nổi bật đầu trang đăng ký')),
               h('div', { style: { flex: 1 } }, bannerSelect('Banner chân trang (Footer)', r ? r.footerBanner : null, 'Ví dụ: Banner nhắc lại ưu đãi cuối trang đăng ký'))
             ),
-            popupBlock('Pop-up', r ? r.popupCheckout : null, 'Ví dụ: Popup giới thiệu ưu đãi khi vào trang đăng ký')
+            popupBlock('Pop-up', r ? r.popupCheckout : null, 'Ví dụ: Popup giới thiệu ưu đãi khi vào trang đăng ký',
+              delayFields(r ? r.regPopupDelay : 0, r ? r.regPopupAutoClose : 0)
+            )
           )
         },
         { key: 'pay', title: 'Trang thanh toán & nhập mã KM', icon: 'send-01-line', content:
@@ -2981,7 +2987,9 @@ class Component extends DCLogic {
             h('div', { style: { display: 'flex', gap: 12 } },
               h('div', { style: { flex: 1 } }, bannerSelect('Header Banner (Thanh toán)', r ? r.payHeaderBanner : null, 'Ví dụ: Banner nhắc ưu đãi đang áp dụng ở bước thanh toán')),
               h('div', { style: { flex: 1 } }, bannerSelect('Footer Banner (Thanh toán)', r ? r.payFooterBanner : null, 'Ví dụ: Banner hỗ trợ / CSKH cuối trang thanh toán'))
-            )
+            ),
+            delayFields(r ? r.payModalDelay : 0, r ? r.payModalAutoClose : 0, ' (Modal)'),
+            delayFields(r ? r.payVoucherDelay : 0, r ? r.payVoucherAutoClose : 0, ' (Mã KM)')
           )
         },
         { key: 'done', title: 'Trang hoàn tất đơn hàng', icon: 'check-circle-line', content:
@@ -2990,7 +2998,9 @@ class Component extends DCLogic {
               h('div', { style: { flex: 1 } }, bannerSelect('Banner đầu trang (Header)', r ? r.doneHeaderBanner : null, 'Ví dụ: Banner chúc mừng đặt hàng thành công')),
               h('div', { style: { flex: 1 } }, bannerSelect('Banner quảng bá App / Sản phẩm', r ? r.doneAppBanner : null, 'Ví dụ: Banner giới thiệu App HiFPT góc dưới trang'))
             ),
-            popupBlock('Pop-up tri ân / hướng dẫn tải App', r ? r.donePopup : null, 'Ví dụ: Popup cảm ơn kèm hướng dẫn tải ứng dụng')
+            popupBlock('Pop-up tri ân / hướng dẫn tải App', r ? r.donePopup : null, 'Ví dụ: Popup cảm ơn kèm hướng dẫn tải ứng dụng',
+              delayFields(r ? r.doneDelay : 0, r ? r.doneAutoClose : 0)
+            )
           )
         }
       ];
@@ -4059,7 +4069,7 @@ class Component extends DCLogic {
     if (CTA_TYPES.includes(secType) && !hideCtaForTabsRow) blocks.push({ icon: 'share-01-line', title: 'Nút CTA (Call-to-action)', content: [
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
         h('div', null, this.field('Text hiển thị', h(DS.Input, { defaultValue: r ? (r.ctaText || '') : '', placeholder: 'VD: Xem thêm' }))),
-        h('div', null, this.field('Link URL đích', h(DS.Input, { defaultValue: r ? (r.ctaUrl || '') : '', placeholder: 'VD: /internet' })))
+        h('div', null, this.field('Link điều hướng', h(DS.Input, { defaultValue: r ? (r.ctaUrl || '') : '', placeholder: 'VD: /internet' })))
       )
     ] });
     if (MEDIA_ICON2_TYPES.includes(secType)) blocks.push({ icon: 'image-line', title: 'Media & Icon', content: [
@@ -5635,8 +5645,19 @@ class Component extends DCLogic {
         section(1, 'file-doc-line', 'Thông tin chung Banner',
           h('div', { style: { display: 'flex', gap: 12 } },
             h('div', { style: { flex: 1 } }, this.field('Tên Banner', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Banner Hero Trang Chủ T6' }), true)),
-            h('div', { style: { width: 150 } }, this.field('Thứ tự ưu tiên', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order) : '1' }), true))
-          )
+            h('div', { style: { width: 230 } }, this.field('Loại banner', h(DS.Select, { options: [{ value: 'normal', label: 'Trang thường (Menu Trang)' }, { value: 'checkout', label: 'Trang Checkout' }], value: bannerType, placeholder: 'Chọn loại banner…', onChange: v => this.setState({ bannerEditorType: v }) }))),
+            h('div', { style: { width: 120 } }, this.field('Thứ tự ưu tiên', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order) : '1' }), true))
+          ),
+          this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } })),
+          bannerType !== 'checkout'
+            ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+                h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                  h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Trang áp dụng hiển thị', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+                  selectedPages.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '(Đã chọn: ' + selectedPages.length + ' trang)')
+                ),
+                this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ bannerEditorPages: v }), { stateKey: 'bannerPagesDD', placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
+              )
+            : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Banner Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.')
         ),
         section(2, 'image-line', 'Tài ảnh Banner (Drag & Drop)',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
@@ -5644,9 +5665,8 @@ class Component extends DCLogic {
             this.uploadBox('Banner Mobile', 'JPG, PNG, WEBP · ≤150KB')
           )
         ),
-        section(3, 'share-01-line', 'Cấu hình Liên kết & Áp dụng',
+        section(3, 'share-01-line', 'Cấu hình Liên kết',
           h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { flex: 1 } }, this.field('Loại banner', h(DS.Select, { options: [{ value: 'normal', label: 'Trang thường (Menu Trang)' }, { value: 'checkout', label: 'Trang Checkout' }], value: bannerType, placeholder: 'Chọn loại banner…', onChange: v => this.setState({ bannerEditorType: v }) }))),
             h('div', { style: { width: 190 } }, this.field('Target', h(DS.Select, {
               options: [
                 { value: '_self', label: '_self (Mở cùng tab)' },
@@ -5658,19 +5678,9 @@ class Component extends DCLogic {
               placeholder: 'Chọn target…',
               searchable: true, searchPlaceholder: 'Tìm target…',
               onChange: v => this.setState({ bannerEditorTarget: v })
-            }), true))
-          ),
-          this.field('Link URL đích', h(DS.Input, { defaultValue: r ? r.link : '', placeholder: 'VD: fpt.vn/khuyen-mai/thang-6' }), true),
-          bannerType !== 'checkout'
-            ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-                  h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Trang áp dụng hiển thị', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
-                  selectedPages.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '(Đã chọn: ' + selectedPages.length + ' trang)')
-                ),
-                this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ bannerEditorPages: v }), { stateKey: 'bannerPagesDD', placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
-              )
-            : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Banner Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.'),
-          this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))
+            }), true)),
+            h('div', { style: { flex: 1 } }, this.field('Link URL đích', h(DS.Input, { defaultValue: r ? r.link : '', placeholder: 'VD: fpt.vn/khuyen-mai/thang-6' }), true))
+          )
         )
       ),
       () => { back(); this.toast('success', 'Đã lưu Banner', isNew ? 'Banner mới đã được tạo.' : 'Banner "' + r.name + '" đã được cập nhật.'); },
@@ -5746,8 +5756,8 @@ class Component extends DCLogic {
         ),
         section(2, 'image-line', 'Hình ảnh',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            this.uploadBox('Popup Desktop', 'JPG, PNG, WEBP · tối đa 200KB'),
-            this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · tối đa 150KB')
+            this.uploadBox('Popup Desktop', 'JPG, PNG, WEBP · ≤200KB'),
+            this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · ≤150KB')
           )
         ),
         type !== 'checkout' && section(3, 'zap-line', 'Hành vi hiển thị',
