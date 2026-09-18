@@ -2888,16 +2888,16 @@ class Component extends DCLogic {
       h(DS.Select, { label, options: bannerOptions, defaultValue: def || '', placeholder: '— Không hiển thị —', searchable: true, searchPlaceholder: 'Tìm banner…' }),
       fieldHint(hint)
     );
-    const popupBlock = (label, def, hint, extra) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-      h('div', null,
-        h(DS.Select, { label, options: popupOptions, defaultValue: def || '', placeholder: '— Không hiển thị —', searchable: true, searchPlaceholder: 'Tìm popup…' }),
-        fieldHint(hint)
+    const popupBlock = (label, def, hint, delayDef, autoCloseDef, extra) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+      h('div', { style: { display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12, alignItems: 'start' } },
+        h('div', null,
+          h(DS.Select, { label, options: popupOptions, defaultValue: def || '', placeholder: '— Không hiển thị —', searchable: true, searchPlaceholder: 'Tìm popup…' }),
+          fieldHint(hint)
+        ),
+        this.field('Delay mở (giây)', h(DS.Input, { type: 'number', min: 0, defaultValue: String(delayDef != null ? delayDef : 0) })),
+        this.field('Tự tắt sau (giây)', h(DS.Input, { type: 'number', min: 0, defaultValue: String(autoCloseDef != null ? autoCloseDef : 0) }))
       ),
       extra
-    );
-    const delayFields = (delayDef, autoCloseDef, suffix) => h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-      this.field('Delay mở (giây)' + (suffix || ''), h(DS.Input, { type: 'number', min: 0, defaultValue: String(delayDef != null ? delayDef : 0) })),
-      this.field('Tự tắt sau (giây)' + (suffix || ''), h(DS.Input, { type: 'number', min: 0, defaultValue: String(autoCloseDef != null ? autoCloseDef : 0) }))
     );
     const sections = [
         { key: 'info', title: 'Thông tin chung & điều kiện áp dụng', icon: 'filter-lines-line', content:
@@ -2974,22 +2974,27 @@ class Component extends DCLogic {
               h('div', { style: { flex: 1 } }, bannerSelect('Banner chân trang (Footer)', r ? r.footerBanner : null, 'Ví dụ: Banner nhắc lại ưu đãi cuối trang đăng ký'))
             ),
             popupBlock('Pop-up', r ? r.popupCheckout : null, 'Ví dụ: Popup giới thiệu ưu đãi khi vào trang đăng ký',
-              delayFields(r ? r.regPopupDelay : 0, r ? r.regPopupAutoClose : 0)
+              r ? r.regPopupDelay : 0, r ? r.regPopupAutoClose : 0
             )
           )
         },
         { key: 'pay', title: 'Trang thanh toán & nhập mã KM', icon: 'send-01-line', content:
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
             popupBlock('Pop-up đồ họa (Modal Popup)', r ? r.payModalPopup : null,
-              'Ví dụ: Popup khuyến mãi hiển thị ngay khi vào trang thanh toán'
+              'Ví dụ: Popup khuyến mãi hiển thị ngay khi vào trang thanh toán',
+              r ? r.payModalDelay : 0, r ? r.payModalAutoClose : 0,
+              h('div', { style: { display: 'flex', gap: 16 } },
+                h(DS.Radio, { name: 'payModalFreq', label: '1 lần/phiên', defaultChecked: !r || r.payModalFreq !== 'Mỗi lần vào' }),
+                h(DS.Radio, { name: 'payModalFreq', label: 'Mỗi lần vào', defaultChecked: !!(r && r.payModalFreq === 'Mỗi lần vào') })
+              )
             ),
-            popupBlock('Pop-up khi áp Voucher (nhập mã KM)', r ? r.payVoucherPopup : null, 'Ví dụ: Popup xác nhận ưu đãi khi áp mã giảm giá'),
+            popupBlock('Pop-up khi áp Voucher (nhập mã KM)', r ? r.payVoucherPopup : null, 'Ví dụ: Popup xác nhận ưu đãi khi áp mã giảm giá',
+              r ? r.payVoucherDelay : 0, r ? r.payVoucherAutoClose : 0
+            ),
             h('div', { style: { display: 'flex', gap: 12 } },
               h('div', { style: { flex: 1 } }, bannerSelect('Header Banner (Thanh toán)', r ? r.payHeaderBanner : null, 'Ví dụ: Banner nhắc ưu đãi đang áp dụng ở bước thanh toán')),
               h('div', { style: { flex: 1 } }, bannerSelect('Footer Banner (Thanh toán)', r ? r.payFooterBanner : null, 'Ví dụ: Banner hỗ trợ / CSKH cuối trang thanh toán'))
-            ),
-            delayFields(r ? r.payModalDelay : 0, r ? r.payModalAutoClose : 0, ' (Modal)'),
-            delayFields(r ? r.payVoucherDelay : 0, r ? r.payVoucherAutoClose : 0, ' (Mã KM)')
+            )
           )
         },
         { key: 'done', title: 'Trang hoàn tất đơn hàng', icon: 'check-circle-line', content:
@@ -2999,7 +3004,7 @@ class Component extends DCLogic {
               h('div', { style: { flex: 1 } }, bannerSelect('Banner quảng bá App / Sản phẩm', r ? r.doneAppBanner : null, 'Ví dụ: Banner giới thiệu App HiFPT góc dưới trang'))
             ),
             popupBlock('Pop-up tri ân / hướng dẫn tải App', r ? r.donePopup : null, 'Ví dụ: Popup cảm ơn kèm hướng dẫn tải ứng dụng',
-              delayFields(r ? r.doneDelay : 0, r ? r.doneAutoClose : 0)
+              r ? r.doneDelay : 0, r ? r.doneAutoClose : 0
             )
           )
         }
