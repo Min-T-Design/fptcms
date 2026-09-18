@@ -6224,7 +6224,7 @@ class Component extends DCLogic {
     const columns = [
       { key: 'name', header: 'Landing Page', width: 210, render: (_, a) => h('div', null,
           h('div', { style: { fontWeight: 700, fontSize: 13.5, marginBottom: 3 } }, a.name),
-          h('span', { style: { background: 'var(--color-accent-bg)', color: 'var(--color-accent-text)', border: '1px solid var(--color-accent)', padding: '1px 8px', borderRadius: 8, fontSize: 11, fontWeight: 600 } }, a.tplLabel)
+          h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', padding: '1px 8px', borderRadius: 8, fontSize: 11, fontWeight: 600 } }, a.tplLabel)
         ) },
       { key: 'url', header: 'Slug đề xuất', width: 220, render: (_, a) => h('span', { style: { fontFamily: 'monospace', fontSize: 12, whiteSpace: 'nowrap' } },
           h('span', { style: { color: 'var(--color-text-subtle)' } }, 'fpt.vn/'),
@@ -6342,17 +6342,22 @@ class Component extends DCLogic {
       if (!canReject) { this.setState({ ldpReviewReasonErr: true }); this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng nhập lý do từ chối.'); return; }
       this.rejectLdp(rec, reason.trim());
     };
+    // Viền trên tách rõ thanh nút khỏi nội dung đã cuộn phía trên — modal đã dài hơn từ khi có khối "Nội dung sections".
+    const footerRow = (...btns) => h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 10, width: '100%', borderTop: '1px solid var(--color-border)', paddingTop: 14 } }, ...btns);
     const footer = decided
-      ? h(DS.Button, { level: 'secondary', size: 'sm', onClick: back }, 'Đóng')
+      ? footerRow(h(DS.Button, { level: 'secondary', size: 'sm', onClick: back }, 'Đóng'))
       : decision === 'reject'
-        ? [
+        ? footerRow(
             h(DS.Button, { key: 'c', level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false }) }, 'Hủy'),
             h(DS.Button, { key: 'r', level: 'primary', size: 'sm', leadingIcon: 'x-circle-line', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: confirmReject }, 'Xác nhận từ chối')
-          ]
-        : [
-            h(DS.Button, { key: 'r', level: 'secondary', size: 'sm', leadingIcon: 'x-circle-line', onClick: () => this.setState({ ldpReviewDecision: 'reject' }) }, 'Từ chối'),
+          )
+        : footerRow(
+            h(DS.Button, { key: 'r', level: 'secondary', size: 'sm', leadingIcon: 'x-circle-line', onClick: () => this.setState({ ldpReviewDecision: 'reject' }, () => {
+              const el = document.getElementById('ldp-reject-reason-box');
+              if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }) }, 'Từ chối'),
             h(DS.Button, { key: 'a', level: 'primary', size: 'sm', leadingIcon: 'check-line', onClick: doApprove }, 'Duyệt & xuất bản')
-          ];
+          );
     return h(DS.Modal, {
       open: true, onClose: back, size: 'lg', style: { maxWidth: 720 },
       title: 'Duyệt LDP: ' + rec.name,
@@ -6361,6 +6366,7 @@ class Component extends DCLogic {
     },
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
         h(DS.Badge, { theme: stMap[rec.status][1], dot: true, style: { alignSelf: 'flex-start' } }, stMap[rec.status][0]),
+        this.ldpPreviewTrigger(rec),
         card('Trang Landing Page đề xuất', 'globe-01-line', h('div', null,
           h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', padding: '16px 18px', background: 'var(--color-surface-sunken)', borderRadius: 12, fontFamily: 'monospace', fontSize: 15 } },
             h('span', { style: { color: 'var(--color-text-subtle)' } }, 'fpt.vn/'),
@@ -6377,6 +6383,19 @@ class Component extends DCLogic {
         card('Slug Level 1 cần duyệt', 'marker-pin-01-line',
           h('div', { style: { textAlign: 'center', fontFamily: 'monospace', fontSize: 22, fontWeight: 700, color: slugColor, padding: '20px 16px', background: 'var(--color-surface-sunken)', borderRadius: 12, wordBreak: 'break-all' } }, rec.lv1)
         ),
+        card('Nội dung sections (' + secCount + ')', 'file-doc-line', secList.length
+          ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+              secList.map((s, i) => h('div', { key: s.id, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10 } },
+                h('div', { style: { width: 24, height: 24, borderRadius: 6, background: 'var(--color-surface-sunken)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', flexShrink: 0, fontVariantNumeric: 'tabular-nums' } }, String(i + 1).padStart(2, '0')),
+                h('div', { style: { flex: 1, minWidth: 0 } },
+                  h('div', { style: { fontWeight: 600, fontSize: 13 } }, s.name),
+                  h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 1 } }, s.desc)
+                ),
+                h('span', { style: { background: s.ec, color: s.tc, padding: '2px 10px', borderRadius: 10, fontSize: 11, whiteSpace: 'nowrap', fontWeight: 600, flexShrink: 0 } }, s.type)
+              ))
+            )
+          : h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', textAlign: 'center', padding: '10px 0' } }, 'Không có dữ liệu section cho template này.')
+        ),
         decided
           ? card('Kết quả duyệt', rec.status === 'approved' ? 'check-circle-line' : 'x-circle-line', h('div', null,
               infoRow('Trạng thái', stMap[rec.status][0]),
@@ -6388,7 +6407,7 @@ class Component extends DCLogic {
               ) : null
             ))
           : null,
-        decision === 'reject' ? h('div', { style: { border: '1px solid var(--color-danger)', borderRadius: 12, padding: 14, background: 'var(--color-danger-bg)' } },
+        decision === 'reject' ? h('div', { id: 'ldp-reject-reason-box', style: { border: '1px solid var(--color-danger)', borderRadius: 12, padding: 14, background: 'var(--color-danger-bg)' } },
           h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 } },
             h(DS.Icon, { name: 'x-circle-line', size: 16, color: 'var(--color-danger-text)' }),
             h('span', { style: { fontWeight: 700, fontSize: 13.5, color: 'var(--color-danger-text)' } }, 'Lý do từ chối'),
@@ -6422,6 +6441,22 @@ class Component extends DCLogic {
     const yr = m[3].length === 2 ? 2000 + (+m[3]) : (+m[3]);
     return new Date(yr, (+m[2]) - 1, (+m[1]), (+(m[4] || 0)), (+(m[5] || 0))).getTime();
   }
+  // Preview LDP = mở tab trình duyệt mới tới URL trang (app là bản mockup nên không cần dựng UI xem trước riêng,
+  // hành vi này giống hệt nút "Xem trang" mở tab mới của 1 CMS thật).
+  ldpPreviewUrl(rec) {
+    return 'https://fpt.vn/' + rec.lv1 + (rec.l2 ? '/' + rec.l2 : '');
+  }
+  // Ô nhấn "Preview LDP" — dùng lại pattern bordered-accent-box đã có ở renderLdpStep3 (khối "Cấu hình Popup Form").
+  ldpPreviewTrigger(rec) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    return h('div', { style: { padding: '12px 14px', background: 'var(--color-accent-bg)', border: '1px dashed var(--color-accent)', borderRadius: 10, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 } },
+      h('div', { style: { flex: '1 1 200px', minWidth: 0 } },
+        h('div', { style: { fontWeight: 600, fontSize: 13, color: 'var(--color-accent)' } }, 'Xem trước trực quan Landing Page'),
+        h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, 'Mở trang ở tab mới để review')
+      ),
+      h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'eye-line', style: { borderColor: 'var(--color-accent)', color: 'var(--color-accent)', flexShrink: 0 }, onClick: () => window.open(this.ldpPreviewUrl(rec), '_blank') }, 'Preview LDP')
+    );
+  }
   // Xem nhanh (chỉ đọc) yêu cầu đã duyệt / từ chối — theo §2, dùng Right Drawer, không mở trang review.
   openLdpApprovalDrawer(a) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -6432,9 +6467,10 @@ class Component extends DCLogic {
       title: a.name, subtitle: a.id + ' · ' + a.tplLabel, width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0 16px', borderBottom: '1px solid var(--color-border)', marginBottom: 4 } },
-          h('span', { style: { background: 'var(--color-accent-bg)', color: 'var(--color-accent-text)', border: '1px solid var(--color-accent)', padding: '3px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700 } }, a.tplLabel),
+          h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', padding: '3px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700 } }, a.tplLabel),
           h(DS.Badge, { theme: st[1], dot: true }, st[0])
         ),
+        h('div', { style: { margin: '4px 0 12px' } }, this.ldpPreviewTrigger(a)),
         a.status === 'rejected' && a.reason ? h(DS.Alert, { theme: 'danger', title: 'Bị Super Admin từ chối', style: { borderRadius: 10, margin: '4px 0 8px' } },
           h('div', { style: { fontSize: 12 } }, a.reason, h('div', { style: { marginTop: 4, color: 'var(--color-text-subtle)' } }, (a.reviewedBy || '') + (a.reviewedAt ? ' · ' + a.reviewedAt : '')))
         ) : null,
