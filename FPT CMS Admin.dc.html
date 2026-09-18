@@ -503,7 +503,8 @@ class Component extends DCLogic {
       this.renderToasts(),
       this.renderDrawer(),
       this.renderDatePickerModal(),
-      this.renderModal()
+      this.renderModal(),
+      this.renderLdpFullPreview()
     );
   }
 
@@ -5671,10 +5672,14 @@ class Component extends DCLogic {
         r.type === 'menu-page' && this.detailRow('Trang áp dụng hiển thị (' + (r.pages || []).length + ')', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 } }, (r.pages || []).map(p => h(DS.Tag, { key: p, size: 'sm' }, p)))),
         r.type === 'checkout' && this.detailRow('Phạm vi Checkout', r.checkoutScope || '—'),
         this.detailRow('Thời gian hiển thị', r.period),
-        this.detailRow('Kiểu kích hoạt', triggerLabel[r.trigger]),
-        r.trigger === 'delay' && this.detailRow('Thời gian trễ', (r.delaySec || 0) + ' giây'),
-        this.detailRow('Thời gian tự đóng', r.autoCloseSec ? r.autoCloseSec + ' giây' : 'Không tự đóng'),
-        this.detailRow('Tần suất hiển thị', freqLabel[r.frequency]),
+        r.type === 'checkout'
+          ? this.detailRow('Hành vi hiển thị', 'Theo cấu hình Gói bán tại module Checkout')
+          : h(React.Fragment, { key: 'behavior' },
+              this.detailRow('Kiểu kích hoạt', triggerLabel[r.trigger]),
+              r.trigger === 'delay' && this.detailRow('Thời gian trễ', (r.delaySec || 0) + ' giây'),
+              this.detailRow('Thời gian tự đóng', r.autoCloseSec ? r.autoCloseSec + ' giây' : 'Không tự đóng'),
+              this.detailRow('Tần suất hiển thị', freqLabel[r.frequency])
+            ),
         this.detailRow('Trạng thái', this.statusBadge(r.status))
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
@@ -5728,7 +5733,7 @@ class Component extends DCLogic {
             this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · tối đa 150KB')
           )
         ),
-        section(3, 'zap-line', 'Hành vi hiển thị',
+        type !== 'checkout' && section(3, 'zap-line', 'Hành vi hiển thị',
           h('div', { style: { display: 'flex', gap: 12 } },
             h('div', { style: { flex: 1 } }, this.field('Kiểu kích hoạt', h(DS.Select, {
               options: this.POPUP_TRIGGERS(), value: trigger, placeholder: 'Chọn kiểu kích hoạt…', onChange: v => this.setState({ popupEditorTrigger: v })
@@ -6383,19 +6388,6 @@ class Component extends DCLogic {
         card('Slug Level 1 cần duyệt', 'marker-pin-01-line',
           h('div', { style: { textAlign: 'center', fontFamily: 'monospace', fontSize: 22, fontWeight: 700, color: slugColor, padding: '20px 16px', background: 'var(--color-surface-sunken)', borderRadius: 12, wordBreak: 'break-all' } }, rec.lv1)
         ),
-        card('Nội dung sections (' + secCount + ')', 'file-doc-line', secList.length
-          ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-              secList.map((s, i) => h('div', { key: s.id, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10 } },
-                h('div', { style: { width: 24, height: 24, borderRadius: 6, background: 'var(--color-surface-sunken)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', flexShrink: 0, fontVariantNumeric: 'tabular-nums' } }, String(i + 1).padStart(2, '0')),
-                h('div', { style: { flex: 1, minWidth: 0 } },
-                  h('div', { style: { fontWeight: 600, fontSize: 13 } }, s.name),
-                  h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 1 } }, s.desc)
-                ),
-                h('span', { style: { background: s.ec, color: s.tc, padding: '2px 10px', borderRadius: 10, fontSize: 11, whiteSpace: 'nowrap', fontWeight: 600, flexShrink: 0 } }, s.type)
-              ))
-            )
-          : h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', textAlign: 'center', padding: '10px 0' } }, 'Không có dữ liệu section cho template này.')
-        ),
         decided
           ? card('Kết quả duyệt', rec.status === 'approved' ? 'check-circle-line' : 'x-circle-line', h('div', null,
               infoRow('Trạng thái', stMap[rec.status][0]),
@@ -6441,8 +6433,8 @@ class Component extends DCLogic {
     const yr = m[3].length === 2 ? 2000 + (+m[3]) : (+m[3]);
     return new Date(yr, (+m[2]) - 1, (+m[1]), (+(m[4] || 0)), (+(m[5] || 0))).getTime();
   }
-  // Preview LDP = mở tab trình duyệt mới tới URL trang (app là bản mockup nên không cần dựng UI xem trước riêng,
-  // hành vi này giống hệt nút "Xem trang" mở tab mới của 1 CMS thật).
+  // Preview LDP = mở overlay xem trước toàn màn hình ngay trong app (renderLdpFullPreview),
+  // không điều hướng sang tab/trang khác — hỗ trợ xem ở 2 dạng Desktop/Mobile.
   ldpPreviewUrl(rec) {
     return 'https://fpt.vn/' + rec.lv1 + (rec.l2 ? '/' + rec.l2 : '');
   }
@@ -6452,9 +6444,66 @@ class Component extends DCLogic {
     return h('div', { style: { padding: '12px 14px', background: 'var(--color-accent-bg)', border: '1px dashed var(--color-accent)', borderRadius: 10, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 } },
       h('div', { style: { flex: '1 1 200px', minWidth: 0 } },
         h('div', { style: { fontWeight: 600, fontSize: 13, color: 'var(--color-accent)' } }, 'Xem trước trực quan Landing Page'),
-        h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, 'Mở trang ở tab mới để review')
+        h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, 'Xem toàn màn hình, chuyển đổi Desktop / Mobile')
       ),
-      h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'eye-line', style: { borderColor: 'var(--color-accent)', color: 'var(--color-accent)', flexShrink: 0 }, onClick: () => window.open(this.ldpPreviewUrl(rec), '_blank') }, 'Preview LDP')
+      h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'eye-line', style: { borderColor: 'var(--color-accent)', color: 'var(--color-accent)', flexShrink: 0 }, onClick: () => this.setState({ ldpFullPreview: rec, ldpPreviewDevice: this.state.ldpPreviewDevice || 'desktop' }) }, 'Preview LDP')
+    );
+  }
+  // Overlay xem trước toàn màn hình cho Preview LDP (thay cho window.open tab mới) — mock hóa nội dung
+  // page từ LDP_SECTION_DATA theo template, dựng dạng khung Desktop (full width) hoặc Mobile (khung điện thoại).
+  renderLdpFullPreview() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const rec = this.state.ldpFullPreview; if (!rec) return null;
+    if (DS && DS.ICONS && !DS.ICONS['monitor-line']) {
+      DS.ICONS['monitor-line'] = '<g fill="none"><rect x="2" y="3" width="16" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M10 14V17M7 17H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></g>';
+    }
+    const device = this.state.ldpPreviewDevice || 'desktop';
+    const isMobile = device === 'mobile';
+    const secList = this.LDP_SECTION_DATA()[rec.tplId] || [];
+    const close = () => this.setState({ ldpFullPreview: null });
+    const url = this.ldpPreviewUrl(rec);
+    const deviceBtn = (val, icon, label) => h(DS.Button, {
+      key: val, level: device === val ? 'primary' : 'secondary', size: 'sm', leadingIcon: icon,
+      onClick: () => this.setState({ ldpPreviewDevice: val })
+    }, label);
+    const sectionBlock = (s, i) => h('div', {
+      key: s.id,
+      style: {
+        padding: isMobile ? '18px 14px' : '32px 40px',
+        borderBottom: '1px solid var(--color-border-pale)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 8,
+        background: i % 2 ? 'var(--color-surface-alt)' : 'var(--color-surface)'
+      }
+    },
+      h('div', { style: { fontSize: isMobile ? 28 : 34 } }, s.emoji),
+      h('div', { style: { fontWeight: 700, fontSize: isMobile ? 14 : 17 } }, s.name),
+      h('div', { style: { fontSize: isMobile ? 11.5 : 13, color: 'var(--color-text-subtle)', maxWidth: 520 } }, s.desc),
+      h('span', { style: { marginTop: 4, background: s.ec, color: s.tc, padding: '2px 10px', borderRadius: 10, fontSize: 10.5, fontWeight: 600 } }, s.type)
+    );
+    return h('div', { style: { position: 'fixed', inset: 0, zIndex: 2000, background: 'var(--color-bg)', display: 'flex', flexDirection: 'column' } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface)', flexShrink: 0 } },
+        h(DS.IconButton, { icon: 'x-circle-line', label: 'Đóng', level: 'tertiary', onClick: close }),
+        h('div', { style: { display: 'flex', flexDirection: 'column', minWidth: 0 } },
+          h('div', { style: { fontWeight: 700, fontSize: 14.5 } }, 'Xem trước: ' + rec.name),
+          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', fontFamily: 'monospace' } }, url)
+        ),
+        h('div', { style: { flex: 1 } }),
+        h('div', { style: { display: 'flex', gap: 8 } },
+          deviceBtn('desktop', 'monitor-line', 'Desktop'),
+          deviceBtn('mobile', 'phone-line', 'Mobile')
+        )
+      ),
+      h('div', { className: 'fpt-scroll', style: { flex: 1, overflow: 'auto', display: 'flex', justifyContent: 'center', padding: isMobile ? '28px 16px' : 0, background: isMobile ? 'var(--color-surface-sunken)' : 'var(--color-surface)' } },
+        h('div', {
+          style: isMobile
+            ? { width: 390, maxWidth: '100%', background: 'var(--color-surface)', borderRadius: 32, border: '8px solid #1a1a1a', boxShadow: 'var(--shadow-overlay)', overflow: 'hidden', flexShrink: 0 }
+            : { width: '100%', maxWidth: 1200, background: 'var(--color-surface)' }
+        },
+          secList.length
+            ? secList.map(sectionBlock)
+            : h('div', { style: { padding: 60, textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13 } }, 'Không có dữ liệu section cho template này.')
+        )
+      )
     );
   }
   // Xem nhanh (chỉ đọc) yêu cầu đã duyệt / từ chối — theo §2, dùng Right Drawer, không mở trang review.
