@@ -6671,6 +6671,8 @@ class Component extends DCLogic {
               { value: 'hidden', label: 'Tạm ẩn' },
               { value: 'expired', label: 'Hết hạn' },
               { value: 'draft', label: 'Nháp' },
+              { value: 'pending', label: 'Chờ duyệt' },
+              { value: 'rejected', label: 'Từ chối' },
             ], searchable: true, searchPlaceholder: 'Tìm trạng thái…', onChange: v => this.setState({ ldpListStatus: v, ldp_pg: 1 }) })
           ),
 
