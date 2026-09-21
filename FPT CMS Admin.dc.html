@@ -3614,7 +3614,7 @@ class Component extends DCLogic {
     const liveAtLv1 = this.ldpLv1LiveLdp(slug1, currentId);
     if (liveAtLv1 && !slug2) {
       return { ok: false, block: true, kind: 'needL2', bad1: true, bad2: false,
-        msg: 'Nhánh "' + slug1 + '" đang tồn tại trang đang chạy ("' + liveAtLv1.name + '"). Vui lòng nhập Level 2 (tên trang con) để không ghi đè trang đang chạy.' };
+        msg: 'Nhánh "' + slug1 + '" đang tồn tại ("' + liveAtLv1.name + '"). Vui lòng nhập Level 2 (tên trang con) để không ghi đè trang đang chạy.' };
     }
     const categoryAtLv1 = this.ldpLv1Category(slug1);
     if (categoryAtLv1 && !slug2) {
@@ -3638,7 +3638,7 @@ class Component extends DCLogic {
       // Trùng đúng nhánh Level 2 với một LDP đang CHẠY — báo lỗi ngay dưới ô Level 2, không dùng câu chung.
       if (st === 'publish') {
         return { ok: false, block: true, kind: 'clashL2', bad1: false, bad2: true,
-          msg: 'Nhánh "' + slug1 + '" và "' + slug2 + '" đang tồn tại trang đang chạy ("' + clash.name + '"). Vui lòng nhập Level 2 khác để không ghi đè trang đang chạy.' };
+          msg: 'Nhánh "' + slug1 + '" và "' + slug2 + '" đang tồn tại ("' + clash.name + '"). Vui lòng nhập Level 2 khác để không ghi đè trang đang chạy.' };
       }
       if (['hidden', 'pending'].includes(st)) {
         const stLabel = st === 'pending' ? 'đang chờ duyệt' : 'đang tạm ẩn';
