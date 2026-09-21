@@ -3606,17 +3606,19 @@ class Component extends DCLogic {
   //           Nhánh không có LDP đang chạy và không trùng danh mục (trống hoặc chỉ còn LDP hết hạn) → Level 2 tuỳ chọn.
   //  Lớp 2 — chống trùng URL toàn cục (LDP khác đang chạy / tạm ẩn / chờ duyệt, hoặc trang portal tĩnh).
   //  Ngoại lệ — bỏ qua chính bản ghi đang sửa (currentId); LDP cũ hết hạn/đã xoá thì cho tái dùng kèm cảnh báo vàng.
+  //  Vị trí hiển thị lỗi (bad1/bad2 quyết định ô nào viền đỏ + câu báo nằm dưới ô nào trong renderLdpStep2):
+  //    trùng cấp 1 (needL2 / needL2Cat) → dưới ô Level 1;  trùng cấp 2 (clashL2) → dưới ô Level 2.
   ldpSlugValidate(slug1, slug2, currentId) {
     slug1 = (slug1 || '').trim(); slug2 = (slug2 || '').trim();
     if (!slug1) return { ok: false, block: true, kind: 'empty1' };
     const liveAtLv1 = this.ldpLv1LiveLdp(slug1, currentId);
     if (liveAtLv1 && !slug2) {
-      return { ok: false, block: true, kind: 'needL2', bad1: false, bad2: true,
-        msg: 'Nhánh "' + slug1 + '" đang có trang LDP chạy ("' + liveAtLv1.name + '"). Vui lòng nhập Level 2 (tên trang con) để không ghi đè trang đang chạy.' };
+      return { ok: false, block: true, kind: 'needL2', bad1: true, bad2: false,
+        msg: 'Nhánh "' + slug1 + '" đang tồn tại trang đang chạy ("' + liveAtLv1.name + '"). Vui lòng nhập Level 2 (tên trang con) để không ghi đè trang đang chạy.' };
     }
     const categoryAtLv1 = this.ldpLv1Category(slug1);
     if (categoryAtLv1 && !slug2) {
-      return { ok: false, block: true, kind: 'needL2Cat', bad1: false, bad2: true,
+      return { ok: false, block: true, kind: 'needL2Cat', bad1: true, bad2: false,
         msg: 'Nhánh "' + slug1 + '" đã tồn tại trang danh mục ("' + categoryAtLv1.name + '"). Vui lòng nhập Level 2 (tên trang con) để không ghi đè trang hiện có.' };
     }
     const path = [slug1, slug2].filter(Boolean).join('/');
@@ -3636,7 +3638,7 @@ class Component extends DCLogic {
       // Trùng đúng nhánh Level 2 với một LDP đang CHẠY — báo lỗi ngay dưới ô Level 2, không dùng câu chung.
       if (st === 'publish') {
         return { ok: false, block: true, kind: 'clashL2', bad1: false, bad2: true,
-          msg: 'Nhánh "' + slug2 + '" đang có trang LDP chạy ("' + clash.name + '"). Vui lòng nhập Level 2 khác để không ghi đè trang đang chạy.' };
+          msg: 'Nhánh "' + slug1 + '" và "' + slug2 + '" đang tồn tại trang đang chạy ("' + clash.name + '"). Vui lòng nhập Level 2 khác để không ghi đè trang đang chạy.' };
       }
       if (['hidden', 'pending'].includes(st)) {
         const stLabel = st === 'pending' ? 'đang chờ duyệt' : 'đang tạm ẩn';
@@ -7069,27 +7071,30 @@ class Component extends DCLogic {
             : h('div', null,
                 h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' } },
                   h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 12px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0 } }, 'fpt.vn/'),
-                  h('div', { style: { flex: '1 1 170px', minWidth: 150, position: 'relative' } },
-                    h(DS.Input, {
-                      value: slug1,
-                      onChange: e => set('urlSlug1', this.ldpSlugify(e && e.target ? e.target.value : e)),
-                      onFocus: e => { const r = e.target.getBoundingClientRect(); this.setState({ ldpLv1Menu: true, ldpLv1MenuUp: (window.innerHeight - r.bottom) < 280 }); },
-                      onBlur: () => setTimeout(() => this.setState({ ldpLv1Menu: false }), 120),
-                      onKeyDown: e => { if (e.key === 'Escape') this.setState({ ldpLv1Menu: false }); },
-                      placeholder: 'Chọn hoặc nhập nhánh Level 1',
-                      error: slug1Err,
-                    }),
-                    this.state.ldpLv1Menu ? h('div', { style: Object.assign({ position: 'absolute', left: 0, right: 0, zIndex: 50, maxHeight: 264, overflowY: 'auto', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, boxShadow: 'var(--shadow-overlay)', padding: 6 }, this.state.ldpLv1MenuUp ? { bottom: 'calc(100% + 4px)' } : { top: 'calc(100% + 4px)' }) },
-                      h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.04em', padding: '6px 10px 5px' } }, 'Nhánh Level 1 có sẵn'),
-                      lv1MenuOpts.length ? lv1MenuOpts.map(v => {
-                        const active = slug1 === v;
-                        return h('div', { key: v, onMouseDown: ev => { ev.preventDefault(); set('urlSlug1', v); this.setState({ ldpLv1Menu: false }); }, className: 'fpt-navitem', style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 7, fontSize: 12.5, cursor: 'pointer', background: active ? 'var(--color-accent-bg)' : 'transparent' } },
-                          h(DS.Icon, { name: active ? 'check-line' : 'git-branch-line', size: 14, color: active ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
-                          h('span', { style: { fontFamily: 'monospace', fontWeight: 600, color: active ? 'var(--color-accent-text)' : 'var(--color-text)' } }, v)
-                        );
-                      }) : h('div', { style: { padding: '10px', fontSize: 12, color: 'var(--color-text-subtle)' } },
-                        'Không có nhánh khớp — "', h('strong', { style: { fontFamily: 'monospace' } }, slug1), '" sẽ là nhánh Level 1 mới (cần duyệt).')
-                    ) : null,
+                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } },
+                    // Vùng neo dropdown chỉ bao ô input — thông báo lỗi nằm NGOÀI để menu luôn bám sát ô, không bị đẩy xuống dưới dòng lỗi.
+                    h('div', { style: { position: 'relative' } },
+                      h(DS.Input, {
+                        value: slug1,
+                        onChange: e => set('urlSlug1', this.ldpSlugify(e && e.target ? e.target.value : e)),
+                        onFocus: e => { const r = e.target.getBoundingClientRect(); this.setState({ ldpLv1Menu: true, ldpLv1MenuUp: (window.innerHeight - r.bottom) < 280 }); },
+                        onBlur: () => setTimeout(() => this.setState({ ldpLv1Menu: false }), 120),
+                        onKeyDown: e => { if (e.key === 'Escape') this.setState({ ldpLv1Menu: false }); },
+                        placeholder: 'Chọn hoặc nhập nhánh Level 1',
+                        error: slug1Err,
+                      }),
+                      this.state.ldpLv1Menu ? h('div', { style: Object.assign({ position: 'absolute', left: 0, right: 0, zIndex: 50, maxHeight: 264, overflowY: 'auto', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, boxShadow: 'var(--shadow-overlay)', padding: 6 }, this.state.ldpLv1MenuUp ? { bottom: 'calc(100% + 4px)' } : { top: 'calc(100% + 4px)' }) },
+                        h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.04em', padding: '6px 10px 5px' } }, 'Nhánh Level 1 có sẵn'),
+                        lv1MenuOpts.length ? lv1MenuOpts.map(v => {
+                          const active = slug1 === v;
+                          return h('div', { key: v, onMouseDown: ev => { ev.preventDefault(); set('urlSlug1', v); this.setState({ ldpLv1Menu: false }); }, className: 'fpt-navitem', style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 7, fontSize: 12.5, cursor: 'pointer', background: active ? 'var(--color-accent-bg)' : 'transparent' } },
+                            h(DS.Icon, { name: active ? 'check-line' : 'git-branch-line', size: 14, color: active ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
+                            h('span', { style: { fontFamily: 'monospace', fontWeight: 600, color: active ? 'var(--color-accent-text)' : 'var(--color-text)' } }, v)
+                          );
+                        }) : h('div', { style: { padding: '10px', fontSize: 12, color: 'var(--color-text-subtle)' } },
+                          'Không có nhánh khớp — "', h('strong', { style: { fontFamily: 'monospace' } }, slug1), '" sẽ là nhánh Level 1 mới (cần duyệt).')
+                      ) : null
+                    ),
                     scopeL1 ? scopedErrMsg(slugCheck.msg) : null
                   ),
                   h('span', { style: { display: 'flex', alignItems: 'center', height: 48, color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
