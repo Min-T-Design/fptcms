@@ -2872,6 +2872,7 @@ class Component extends DCLogic {
     const isSaRuleSku = s => s.group === 'Truyền hình' && s.kind === 'Dịch vụ';
     const isOtherRuleSku = s => !isInternetRuleSku(s) && !isCameraRuleSku(s) && !isSaRuleSku(s);
     const filterBtns = [
+      { id: 'all', label: 'Tất cả', test: () => true },
       { id: 'internet', label: 'Gói Internet', test: isInternetRuleSku },
       { id: 'camera', label: 'Camera', test: isCameraRuleSku },
       { id: 'sa', label: 'Gói SA', test: isSaRuleSku },
@@ -2880,7 +2881,7 @@ class Component extends DCLogic {
     // ── Tab bậc 1 — nguồn hệ thống: ECP / FCP (đồng bộ với "Danh sách sản phẩm" ở module Phương thức thanh toán) ──
     const sourceTabDefs = [{ id: 'ecp', label: 'ECP' }, { id: 'fcp', label: 'FCP' }];
     const skuSourceF = this.state.ruleSkuSource || 'ecp';
-    const skuGroupF = this.state.ruleSkuGroup || 'internet';
+    const skuGroupF = this.state.ruleSkuGroup || 'all';
     const activeFilterBtn = filterBtns.find(f => f.id === skuGroupF) || filterBtns[0];
     const skuQ = (this.state.ruleSkuQ || '').toLowerCase();
     const filteredSkus = skus.filter(s => (s.source || 'ECP').toLowerCase() === skuSourceF && activeFilterBtn.test(s) && (!skuQ || s.code.toLowerCase().includes(skuQ) || s.name.toLowerCase().includes(skuQ)));
@@ -2920,7 +2921,7 @@ class Component extends DCLogic {
                   const active = t.id === skuSourceF;
                   return h('button', {
                     key: t.id, type: 'button', role: 'tab', 'aria-selected': active,
-                    onClick: () => this.setState({ ruleSkuSource: t.id, ruleSkuGroup: 'internet', ruleSkuQ: '' }),
+                    onClick: () => this.setState({ ruleSkuSource: t.id, ruleSkuGroup: 'all', ruleSkuQ: '' }),
                     style: {
                       flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       padding: '7px 10px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: active ? 700 : 500,
