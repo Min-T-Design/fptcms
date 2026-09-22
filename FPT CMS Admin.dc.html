@@ -417,6 +417,8 @@ class Component extends DCLogic {
         { id: 'sys-users', label: 'Người dùng' },
         { id: 'sys-permissions', label: 'Phân quyền tính năng' },
       ]},
+      { type: 'cat', label: 'BÁO CÁO' },
+      { type: 'item', id: 'sales-report', label: 'Báo cáo bán hàng', icon: 'bar-chart-square-02-line' },
     ];
   }
   TITLES() {
@@ -426,6 +428,7 @@ class Component extends DCLogic {
       'blocks': 'Quản lý Blocks', 'landing': 'Landing Page (LDP)', 'ldp-approval': 'Duyệt LDP', 'cms-menu': 'Quản lý Menu',
       'banner': 'Quản lý Banner', 'cms-popup': 'Quản lý Popup', 'news': 'Quản lý Tin tức', 'faq': 'Quản lý FAQ',
       'sys-roles': 'Quản lý Vai trò', 'sys-users': 'Quản lý Người dùng', 'sys-permissions': 'Phân quyền tính năng',
+      'sales-report': 'Báo cáo bán hàng',
       'profile': 'Thông tin tài khoản',
     };
   }
@@ -700,6 +703,7 @@ class Component extends DCLogic {
       case 'sys-roles': return this.renderRoles();
       case 'sys-users': return this.renderUsers();
       case 'sys-permissions': return this.renderRbac();
+      case 'sales-report': return this.renderSalesReport();
       case 'profile': return this.renderProfile();
       default: return this.renderStub();
     }
@@ -11685,6 +11689,7 @@ class Component extends DCLogic {
     { group: 'MEDIA & QUẢNG BÁ', modules: ['Quản lý Banner', 'Quản lý Popup'] },
     { group: 'BÀI VIẾT & NỘI DUNG', modules: ['Quản lý Tin tức', 'Quản lý FAQ', 'Cấu hình Thông tin hay'] },
     { group: 'CÀI ĐẶT & HỆ THỐNG', modules: ['Quản lý Vai trò', 'Quản lý Người dùng', 'Phân quyền tính năng'] },
+    { group: 'BÁO CÁO', modules: ['Báo cáo bán hàng'] },
   ]; }
   openRoleDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -11811,6 +11816,144 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: 16, borderBottom: '1px solid var(--color-border)' } }, h(DS.Icon, { name: 'lock-01-line', size: 18, color: 'var(--color-accent)' }), h('div', { style: { flex: 1 } }, h('div', { style: { fontWeight: 700, fontSize: 14 } }, 'Ma trận phân quyền tính năng'), h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Super Admin luôn full quyền (khóa cứng). Frontend ẩn menu/nút theo quyền; backend validate ở API.'))),
       h('div', { className: 'fpt-scroll fpt-drag-scroll', style: { overflow: 'auto' } }, h('table', { style: { width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-sans)' } }, h('thead', null, headerRow, subHeader), h('tbody', null, rows))),
       h('div', { style: { display: 'flex', justifyContent: 'flex-end', padding: 16, borderTop: '1px solid var(--color-border)' } }, h(DS.Button, { level: 'primary', leadingIcon: 'check-line', onClick: () => this.toast('success', 'Đã lưu phân quyền', 'Ma trận phân quyền áp dụng tức thì cho các vai trò.') }, 'Lưu phân quyền'))
+    );
+  }
+
+  // ===== Báo cáo bán hàng =====
+  // Demo dữ liệu chi tiết PTTB (Phát triển thuê bao) — khớp cấu trúc cột ở wireframe "Chi tiết".
+  // Dữ liệu thật cho từng cột sẽ được bổ sung sau qua file Excel.
+  SALES_REPORT_DETAIL_DEMO() {
+    const rows = [
+      ['HNI_02', 'HCM_ECOM', 'Phòng kinh doanh 1', 'Sky', 'ĐKOL', 'HNAFR0028', 'Internet Hub AX3000GZ'],
+      ['HNI_07', 'HDG', 'Phòng kinh doanh 4', 'Sky', 'IBB', 'HNAFR0070', 'Internet Hub AX3000GZ'],
+      ['HNI_07', 'HNI_07', 'Phòng kinh doanh 2', 'Giga', 'IBB', 'HNAFR0217', 'Internet Hub AX3000GZ'],
+      ['HNI_04', 'HNI_06', 'Phòng kinh doanh 6', 'Giga', 'IBB', 'HNAFR0274', 'Internet Hub AX3000GZ'],
+      ['HNI_02', 'HNI_02', 'Phòng kỹ thuật', 'Sky F1', 'TIN/PNC', 'HNAFR0301', 'ONT 1 port 1G + Access Point'],
+      ['HNI_07', 'HNI_07', 'Phòng kinh doanh 7', 'Giga', 'IBB', 'HNAFR0136', 'Internet Hub AX3000GZ'],
+      ['HNI_07', 'HNI_07', 'Phòng kinh doanh 5', 'Giga', 'IBB', 'HNAFR0304', 'Internet Hub AX3000GZ'],
+      ['HNI_03', 'HNI_03', 'Phòng kỹ thuật', 'Giga', 'TIN/PNC', 'HNAFR0124', 'Internet hub AX1800GZ'],
+      ['HNI_02', 'HNI_01', 'Phòng CUS', 'Sky', 'KXĐ', 'HNAFR0127', 'Internet Hub AX3000GZ'],
+      ['HNI_03', 'HNI_03', 'Phòng kỹ thuật', 'Giga', 'TIN/PNC', 'HNAFR0235', 'Internet hub AX1800GZ'],
+      ['HNI_01', 'HNI_ECOM', 'Phòng kinh doanh 3', 'Sky', 'ĐKOL', 'HNAFR0214', 'Internet Hub AX3000GZ'],
+      ['HNI_03', 'HNI_03', 'Phòng kỹ thuật', 'Giga', 'KXĐ', 'HNAFR0055', 'Internet hub AX1800GZ'],
+      ['HNI_01', 'HCM_TCDT', 'Phòng kinh doanh 1', 'Sky', 'IBB', 'HNAFR0268', 'Internet Hub AX3000GZ'],
+      ['HNI_03', 'HNI_03', 'Phòng kinh doanh 5', 'Sky F1', 'IBB', 'HNAFR0334', 'Internet Hub AX3000GZ + Wi-Fi Extender'],
+      ['HNI_07', 'HNI_07', 'Phòng kinh doanh 5', 'Giga', 'IBB', 'HNAFR0061', 'Internet hub AX1800GZ'],
+      ['HNI_06', 'HNI_09', 'Phòng kinh doanh 3', 'Giga', 'IBB', 'HNAFR0100', 'Internet Hub AX3000GZ'],
+    ];
+    return rows.map((r, i) => ({
+      stt: i + 1, region: 'Hà Nội', mgrBranch: r[0], sellBranch: r[1], dept: r[2],
+      channel: '', pkg: r[3], source: r[4], svcType: '', contract: r[5],
+      deviceReg: r[6], deviceDeploy: '', status: 'Bình thường',
+    }));
+  }
+  renderSalesReport() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const tab = this.state.salesReportTab || 'filter';
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      h(DS.Tabs, { value: tab, onChange: v => this.setState({ salesReportTab: v }), items: [
+        { value: 'filter', label: 'Điều kiện lọc', icon: 'filter-lines-line' },
+        { value: 'detail', label: 'Chi tiết', icon: 'file-doc-line' },
+      ] }),
+      h('div', { key: tab, className: 'fpt-tab-content' },
+        tab === 'filter' ? this.renderSalesReportFilter() : this.renderSalesReportDetail()
+      )
+    );
+  }
+  runSalesReport() {
+    this.setState({ salesReportRun: true, salesReportTab: 'detail', salesReportDetail_pg: 1 });
+    this.toast('success', 'Đã tạo báo cáo', 'Báo cáo đã được tạo theo điều kiện lọc đã chọn (dữ liệu demo).');
+  }
+  renderSalesReportFilter() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const sel = (label, opts, extra) => this.field(label, h(DS.Select, Object.assign({ options: opts, containerStyle: { width: '100%' } }, extra)));
+    const col = (...items) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, flex: '1 1 360px', minWidth: 300 } }, ...items);
+
+    return h(DS.Card, { style: { padding: 24 } },
+      h('div', { style: { textAlign: 'center', paddingBottom: 14, marginBottom: 20, borderBottom: '1px solid var(--color-border)' } },
+        h('span', { style: { fontSize: 15, fontWeight: 800, letterSpacing: '.04em', color: 'var(--color-text)' } }, 'MASTER REPORT')
+      ),
+      h('div', { style: { display: 'flex', gap: 32, flexWrap: 'wrap' } },
+        col(
+          sel('Vùng kinh doanh', ['Miền Bắc', 'Miền Trung', 'Miền Nam'], { placeholder: 'Chọn vùng kinh doanh...' }),
+          sel('Chi nhánh', ['HNI_01', 'HNI_02', 'HNI_03', 'HNI_04', 'HNI_06', 'HNI_07', 'HNI_09', 'HNI_ECOM', 'HDG', 'HCM_ECOM', 'HCM_TCDT'], { placeholder: 'Chọn chi nhánh...', searchable: true, searchPlaceholder: 'Tìm chi nhánh...' }),
+          sel('Phòng kinh doanh', ['Phòng kinh doanh 1', 'Phòng kinh doanh 2', 'Phòng kinh doanh 3', 'Phòng kinh doanh 4', 'Phòng kinh doanh 5', 'Phòng kinh doanh 6', 'Phòng kinh doanh 7', 'Phòng kỹ thuật', 'Phòng CUS'], { placeholder: 'Chọn phòng kinh doanh...', searchable: true, searchPlaceholder: 'Tìm phòng kinh doanh...' }),
+          this.field('Thời gian hiệu lực', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } })),
+          sel('Loại hình khách hàng', ['Cá nhân', 'Doanh nghiệp', 'Hộ gia đình'], { placeholder: 'Chọn loại hình khách hàng...' }),
+          sel('Đối tượng khách hàng', ['Khách hàng mới', 'Khách hàng hiện hữu', 'Khách hàng tiềm năng'], { placeholder: 'Chọn đối tượng khách hàng...' }),
+          sel('Tình trạng hợp đồng', ['Đang hoạt động', 'Chờ duyệt', 'Đã hủy', 'Hết hạn', 'Tạm ngưng'], { placeholder: 'Chọn tình trạng hợp đồng...', searchable: true, searchPlaceholder: 'Tìm tình trạng hợp đồng...' }),
+          sel('Tình trạng online', ['Tất cả', 'Online', 'Offline'], { placeholder: 'Chọn tình trạng online...' }),
+          sel('Hủy trước sử dụng', ['Có bao gồm', 'Không bao gồm'], { placeholder: 'Chọn hủy trước sử dụng...' })
+        ),
+        col(
+          sel('Dịch vụ/ sản phẩm', ['Dịch vụ chính', 'Dịch vụ phụ', 'Thiết bị', 'SA'], { placeholder: 'Chọn dịch vụ/ sản phẩm...' }),
+          sel('Loại dịch vụ', ['Internet', 'Truyền hình', 'Camera', 'Cloud', 'Combo'], { placeholder: 'Chọn loại dịch vụ...', searchable: true, searchPlaceholder: 'Tìm loại dịch vụ...' }),
+          sel('Kênh bán', ['Tất cả', 'ECP', 'FCP', 'Trực tiếp', 'Online', 'Telesale'], { placeholder: 'Chọn kênh bán...', searchable: true, searchPlaceholder: 'Tìm kênh bán...' }),
+          sel('Loại báo cáo', ['Báo cáo PTTB', 'Báo cáo doanh thu', 'Báo cáo thuê bao rời mạng'], { placeholder: 'Chọn loại báo cáo...' }),
+          sel('Xem theo chiều', ['Chi nhánh quản lý', 'Chi nhánh bán', 'Phòng kinh doanh', 'Kênh bán'], { placeholder: 'Chọn xem theo chiều...' }),
+          sel('Loại thiết bị (Optional)', ['Modem/ONT', 'Router Wi-Fi', 'Camera', 'Set-top Box', 'Access Point'], { placeholder: 'Chọn loại thiết bị...', searchable: true, searchPlaceholder: 'Tìm loại thiết bị...' }),
+          sel('Loại thời gian HĐ', ['Ngày tạo HĐ', 'Ngày kích hoạt', 'Ngày hủy'], { placeholder: 'Chọn loại thời gian HĐ...' }),
+          sel('Gói Dịch vụ', ['Sky', 'Sky F1', 'Giga', 'Giga Plus', 'Meta', 'Combo Gia đình'], { placeholder: 'Chọn gói dịch vụ...', searchable: true, searchPlaceholder: 'Tìm gói dịch vụ...' })
+        )
+      ),
+      h('div', { style: { marginTop: 24, display: 'flex', justifyContent: 'flex-end' } },
+        h(DS.Button, { level: 'primary', leadingIcon: 'filter-funnel-line', onClick: () => this.runSalesReport() }, 'Xem báo cáo')
+      )
+    );
+  }
+  openSalesReportRowDetail(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    this.openDrawer({ title: r.contract, subtitle: 'Chi tiết phát triển thuê bao', width: 460,
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
+        this.detailRow('Vùng miền', r.region), this.detailRow('CN Quản lý', r.mgrBranch),
+        this.detailRow('CN Bán', r.sellBranch), this.detailRow('Phòng kinh doanh', r.dept),
+        this.detailRow('Kênh bán', r.channel), this.detailRow('Gói dịch vụ', r.pkg),
+        this.detailRow('Nguồn bán', r.source), this.detailRow('Loại dịch vụ', r.svcType),
+        this.detailRow('Hợp đồng', r.contract), this.detailRow('Thiết bị đăng ký', r.deviceReg),
+        this.detailRow('Thiết bị triển khai', r.deviceDeploy),
+        this.detailRow('Tình trạng', h(DS.Badge, { theme: 'success', dot: true }, r.status))
+      ),
+      footer: () => h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
+        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng')
+      )
+    });
+  }
+  renderSalesReportDetail() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    if (!this.state.salesReportRun) {
+      return h(DS.Card, { style: { padding: 60, textAlign: 'center' } },
+        h('div', { style: { width: 52, height: 52, borderRadius: 12, background: 'var(--color-accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' } }, h(DS.Icon, { name: 'filter-lines-line', size: 24, color: 'var(--color-accent)' })),
+        h('h2', { style: { fontSize: 18, margin: '0 0 6px' } }, 'Chưa có dữ liệu báo cáo'),
+        h('p', { style: { color: 'var(--color-text-muted)', fontSize: 13.5, margin: '0 0 16px' } }, 'Vui lòng thiết lập điều kiện lọc và bấm "Xem báo cáo" để xem chi tiết.'),
+        h(DS.Button, { level: 'primary', leadingIcon: 'filter-lines-line', onClick: () => this.setState({ salesReportTab: 'filter' }) }, 'Đến Điều kiện lọc')
+      );
+    }
+    const data = this.SALES_REPORT_DETAIL_DEMO();
+    const page = this.sliceData(data, 'salesReportDetail');
+    const columns = [
+      { key: 'stt', header: 'STT', width: 56 },
+      { key: 'region', header: 'Vùng miền', width: 110 },
+      { key: 'mgrBranch', header: 'CN Quản lý', width: 110 },
+      { key: 'sellBranch', header: 'CN Bán', width: 110 },
+      { key: 'dept', header: 'Phòng kinh doanh', width: 160 },
+      { key: 'channel', header: 'Kênh bán', width: 110, render: (_, r) => r.channel || '—' },
+      { key: 'pkg', header: 'Gói dịch vụ', width: 110 },
+      { key: 'source', header: 'Nguồn bán', width: 110 },
+      { key: 'svcType', header: 'Loại dịch vụ', width: 120, render: (_, r) => r.svcType || '—' },
+      { key: 'contract', header: 'Hợp đồng', width: 130 },
+      { key: 'deviceReg', header: 'Thiết bị đăng ký', width: 220 },
+      { key: 'deviceDeploy', header: 'Thiết bị triển khai', width: 180, render: (_, r) => r.deviceDeploy || '—' },
+      { key: 'status', header: 'Tình trạng', width: 120, render: (_, r) => h(DS.Badge, { theme: 'success', dot: true }, r.status) },
+    ];
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+      h('h3', { style: { margin: 0, fontSize: 15.5, fontWeight: 800, textAlign: 'center', letterSpacing: '.02em' } }, 'CHI TIẾT BÁO CÁO PHÁT TRIỂN THUÊ BAO'),
+      this.listCard(
+        h('div', { style: { padding: '12px 16px', borderBottom: '1px solid var(--color-border)' } },
+          h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'download-01-line', onClick: () => this.toast('success', 'Xuất Excel', 'Đã xuất báo cáo ra file Excel (demo).') }, 'Xuất Excel')
+        ),
+        this.tbl(columns, page, 'contract', r => this.openSalesReportRowDetail(r)),
+        this.renderPagBar(data.length, 'salesReportDetail', 'bản ghi')
+      )
     );
   }
 
