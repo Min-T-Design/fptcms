@@ -127,6 +127,102 @@ function FptRequiredField({ control }) {
   }, withError(control));
 }
 
+// Multi-select "tag picker" (checkbox list w/ search) reused for "Thuộc trang" and similar
+// multi-page pickers. CLAUDE.md §8: the open menu must never push page content down or get
+// clipped by an ancestor's overflow:hidden — it renders as position:fixed, measured live from
+// the trigger's getBoundingClientRect() and kept anchored on scroll/resize, same mechanics as
+// DS.Select. Defined once at module scope (not per-render) so its own open/query hook state
+// survives parent re-renders instead of remounting on every keystroke elsewhere in the editor.
+function FptTagPicker({ options, selected, onChange, placeholder, searchPlaceholder }) {
+  const h = React.createElement;
+  const DS = window.ZENKaizenDesignSystem_4069b4;
+  const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState('');
+  const [menuPos, setMenuPos] = React.useState(null);
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    const close = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, []);
+
+  React.useEffect(() => { if (open) setQuery(''); }, [open]);
+
+  React.useLayoutEffect(() => {
+    if (!open) return;
+    const MARGIN = 8, MAX_H = 320;
+    const reposition = () => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom - MARGIN;
+      const spaceAbove = rect.top - MARGIN;
+      const dir = spaceBelow < 220 && spaceAbove > spaceBelow ? 'up' : 'down';
+      const budget = Math.max(160, Math.min(MAX_H, (dir === 'down' ? spaceBelow : spaceAbove) - 6));
+      setMenuPos({
+        left: rect.left, width: rect.width,
+        top: dir === 'down' ? rect.bottom + 6 : undefined,
+        bottom: dir === 'up' ? window.innerHeight - rect.top + 6 : undefined,
+        listMaxHeight: Math.max(120, Math.min(220, budget - 100)),
+        dir
+      });
+    };
+    reposition();
+    window.addEventListener('scroll', reposition, true);
+    window.addEventListener('resize', reposition);
+    return () => {
+      window.removeEventListener('scroll', reposition, true);
+      window.removeEventListener('resize', reposition);
+    };
+  }, [open]);
+
+  const visible = query ? options.filter(o => o.toLowerCase().includes(query.toLowerCase())) : options;
+  const toggle = o => onChange(selected.includes(o) ? selected.filter(x => x !== o) : [...selected, o]);
+
+  return h('div', { ref, style: { position: 'relative' } },
+    h('div', {
+      onClick: () => setOpen(o => !o),
+      style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minHeight: 44, padding: '7px 10px', border: '1px solid ' + (open ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 10, cursor: 'pointer', background: 'var(--color-surface)', boxShadow: open ? 'var(--shadow-focus)' : 'none' }
+    },
+      selected.length === 0 && h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 13.5, padding: '2px 4px' } }, placeholder || 'Chọn...'),
+      selected.map(o => h(DS.Tag, {
+        key: o, size: 'sm',
+        style: { background: 'var(--color-accent-bg)', border: '1px solid var(--color-accent)', color: 'var(--color-accent-text)', fontWeight: 600 },
+        onClose: () => toggle(o)
+      }, o)),
+      h('div', { style: { flex: 1 } }),
+      selected.length > 0 && h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex' } },
+        h(DS.IconButton, { icon: 'x-circle-line', level: 'tertiary', size: 'sm', label: 'Bỏ chọn tất cả', onClick: () => onChange([]) })
+      ),
+      h(DS.Icon, { name: open ? 'chevron-up-line' : 'chevron-down-line', size: 18, color: 'var(--color-text-subtle)' })
+    ),
+    open && menuPos && h('div', {
+      style: {
+        position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, width: menuPos.width,
+        zIndex: 1200, border: '1px solid var(--color-border)', borderRadius: 10, padding: 10, background: 'var(--color-surface)',
+        boxShadow: 'var(--shadow-overlay)', animation: (menuPos.dir === 'up' ? 'fptDropdownUp' : 'fptDropdown') + ' .16s cubic-bezier(.2,0,0,1)'
+      }
+    },
+      h(DS.Input, { leadingIcon: 'search-medium-line', placeholder: searchPlaceholder || 'Tìm kiếm...', value: query, onChange: e => setQuery(e.target ? e.target.value : e) }),
+      h('div', { className: 'fpt-scroll', style: { maxHeight: menuPos.listMaxHeight, overflowY: 'auto', marginTop: 8, display: 'flex', flexDirection: 'column' } },
+        visible.length === 0
+          ? h('div', { style: { padding: '14px 4px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy kết quả')
+          : visible.map(o => {
+              const isSel = selected.includes(o);
+              return h('div', { key: o, onClick: () => toggle(o), style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 8px', borderRadius: 8, cursor: 'pointer', background: isSel ? 'var(--color-accent-bg)' : 'transparent' } },
+                h('span', { style: { fontSize: 13.5 } }, o),
+                h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggle(o) }))
+              );
+            })
+      ),
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border-pale)' } },
+        h('button', { type: 'button', onClick: () => onChange(options.slice()), style: { background: 'none', border: 'none', padding: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--color-accent-text)', cursor: 'pointer' } }, 'Chọn tất cả'),
+        h('button', { type: 'button', onClick: () => onChange([]), style: { background: 'none', border: 'none', padding: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--color-danger-text)', cursor: 'pointer' } }, 'Bỏ chọn tất cả')
+      )
+    )
+  );
+}
+
 class Component extends DCLogic {
   state = {
     darkMode: false,
@@ -3268,52 +3364,12 @@ class Component extends DCLogic {
     );
   }
   // Multi-select combobox: chip box + search + checkbox list + chọn/bỏ chọn tất cả.
-  // Expands inline (no floating overlay) so it never needs the DS.Select viewport-clip fix.
+  // Renders as a viewport-anchored floating menu (position:fixed, CLAUDE.md §8) via the
+  // module-level FptTagPicker component, instead of pushing page content down.
   tagPicker(options, selected, onChange, opts) {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const h = React.createElement;
     opts = opts || {};
-    const openKey = opts.stateKey + 'Open';
-    const queryKey = opts.stateKey + 'Q';
-    const open = !!this.state[openKey];
-    const query = this.state[queryKey] || '';
-    const visible = query ? options.filter(o => o.toLowerCase().includes(query.toLowerCase())) : options;
-    const toggle = o => onChange(selected.includes(o) ? selected.filter(x => x !== o) : [...selected, o]);
-    return h('div', null,
-      h('div', {
-        onClick: () => this.setState({ [openKey]: !open }),
-        style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minHeight: 44, padding: '7px 10px', border: '1px solid ' + (open ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 10, cursor: 'pointer', background: 'var(--color-surface)', boxShadow: open ? 'var(--shadow-focus)' : 'none' }
-      },
-        selected.length === 0 && h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 13.5, padding: '2px 4px' } }, opts.placeholder || 'Chọn...'),
-        selected.map(o => h(DS.Tag, {
-          key: o, size: 'sm',
-          style: { background: 'var(--color-accent-bg)', border: '1px solid var(--color-accent)', color: 'var(--color-accent-text)', fontWeight: 600 },
-          onClose: () => toggle(o)
-        }, o)),
-        h('div', { style: { flex: 1 } }),
-        selected.length > 0 && h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex' } },
-          h(DS.IconButton, { icon: 'x-circle-line', level: 'tertiary', size: 'sm', label: 'Bỏ chọn tất cả', onClick: () => onChange([]) })
-        ),
-        h(DS.Icon, { name: open ? 'chevron-up-line' : 'chevron-down-line', size: 18, color: 'var(--color-text-subtle)' })
-      ),
-      open && h('div', { style: { marginTop: 8, border: '1px solid var(--color-border)', borderRadius: 10, padding: 10, background: 'var(--color-surface)' } },
-        h(DS.Input, { leadingIcon: 'search-medium-line', placeholder: opts.searchPlaceholder || 'Tìm kiếm...', value: query, onChange: e => this.setState({ [queryKey]: e.target ? e.target.value : e }) }),
-        h('div', { className: 'fpt-scroll', style: { maxHeight: 220, overflowY: 'auto', marginTop: 8, display: 'flex', flexDirection: 'column' } },
-          visible.length === 0
-            ? h('div', { style: { padding: '14px 4px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy kết quả')
-            : visible.map(o => {
-                const isSel = selected.includes(o);
-                return h('div', { key: o, onClick: () => toggle(o), style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 8px', borderRadius: 8, cursor: 'pointer', background: isSel ? 'var(--color-accent-bg)' : 'transparent' } },
-                  h('span', { style: { fontSize: 13.5 } }, o),
-                  h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggle(o) }))
-                );
-              })
-        ),
-        h('div', { style: { display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border-pale)' } },
-          h('button', { type: 'button', onClick: () => onChange(options.slice()), style: { background: 'none', border: 'none', padding: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--color-accent-text)', cursor: 'pointer' } }, 'Chọn tất cả'),
-          h('button', { type: 'button', onClick: () => onChange([]), style: { background: 'none', border: 'none', padding: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--color-danger-text)', cursor: 'pointer' } }, 'Bỏ chọn tất cả')
-        )
-      )
-    );
+    return h(FptTagPicker, { options, selected, onChange, placeholder: opts.placeholder, searchPlaceholder: opts.searchPlaceholder });
   }
   editorShell(title, subtitle, onBack, content, onSave, saveLabel, headerExtra, shellKey) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -3388,6 +3444,18 @@ class Component extends DCLogic {
     { id:12, name:'Tin tức công nghệ nổi bật',       code:'tin-tuc-cong-nghe-noi-bat',         section:'Tin tức',                            layout:'Grid',      datasource:'Bài viết',   datasourceKey:'tin-tuc',  order:null, createdAt:'15/03/2026 14:02' },
     { id:13, name:'Tin tức khách hàng',              code:'tin-tuc-khach-hang',                section:'Tin tức khách hàng',                 layout:'Slider',    datasource:'Tin tức',     datasourceKey:'tin-tuc',  order:null, createdAt:'10/03/2026 11:40' },
     { id:14, name:'Bảng giá gói Internet dạng dòng', code:'bang-gia-goi-internet-dang-dong',   section:'Gói Internet (dạng Row)',            layout:'Row',        datasource:'Internet',     datasourceKey:'internet', order:null, createdAt:'12/06/2026 10:00' },
+    // Block "Loại dữ liệu" = Câu hỏi (faq) — nhiều demo hơn để Section FAQ có đủ block chọn + kích hoạt thanh tìm kiếm (>10 mục).
+    { id:15, name:'Câu hỏi thường gặp - Internet',    code:'cau-hoi-thuong-gap-internet',        section:'Câu hỏi thường gặp',                 layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'20/06/2026 09:12' },
+    { id:16, name:'Câu hỏi thường gặp - Truyền hình', code:'cau-hoi-thuong-gap-truyen-hinh',     section:'Câu hỏi thường gặp',                 layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'19/06/2026 11:04' },
+    { id:17, name:'Câu hỏi thường gặp - Camera An Ninh', code:'cau-hoi-thuong-gap-camera-an-ninh', section:'Câu hỏi thường gặp',               layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'18/06/2026 15:30' },
+    { id:18, name:'Câu hỏi thường gặp - Dịch vụ F-Safe', code:'cau-hoi-thuong-gap-f-safe',       section:'Câu hỏi thường gặp',                 layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'17/06/2026 08:47' },
+    { id:19, name:'Câu hỏi thường gặp - Thanh toán cước', code:'cau-hoi-thuong-gap-thanh-toan-cuoc', section:'Câu hỏi thường gặp',               layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'16/06/2026 13:20' },
+    { id:20, name:'Câu hỏi thường gặp - Lắp đặt mới', code:'cau-hoi-thuong-gap-lap-dat-moi',     section:'Câu hỏi thường gặp',                 layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'15/06/2026 10:05' },
+    { id:21, name:'Câu hỏi thường gặp - Đổi gói cước', code:'cau-hoi-thuong-gap-doi-goi-cuoc',   section:'Câu hỏi thường gặp',                 layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'14/06/2026 09:38' },
+    { id:22, name:'Câu hỏi thường gặp - Hủy dịch vụ', code:'cau-hoi-thuong-gap-huy-dich-vu',     section:'Câu hỏi thường gặp',                 layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'13/06/2026 16:52' },
+    { id:23, name:'Câu hỏi thường gặp - Bảo hành thiết bị', code:'cau-hoi-thuong-gap-bao-hanh-thiet-bi', section:'Câu hỏi thường gặp',         layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'12/06/2026 14:10' },
+    { id:24, name:'Câu hỏi thường gặp - Hỗ trợ kỹ thuật', code:'cau-hoi-thuong-gap-ho-tro-ky-thuat', section:'Câu hỏi thường gặp',              layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'11/06/2026 08:25' },
+    { id:25, name:'Câu hỏi thường gặp - Khuyến mãi', code:'cau-hoi-thuong-gap-khuyen-mai',       section:'Câu hỏi thường gặp',                 layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'10/06/2026 17:44' },
   ]; }
   MENU() { return [
     { id: 1,  pid: 0,  level: 0, name: 'Sản phẩm dịch vụ',                   type: 'category', pos: 'Header', url: '/san-pham',                               target: '_self',  order: 0, date: '29/01/2026 09:40', status: 'active' },
@@ -4009,7 +4077,7 @@ class Component extends DCLogic {
   }
   renderSectionEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ secEditor: undefined, secEditorBlocks: undefined, secEditorPages: undefined, secEditorType: undefined, secPagesDDOpen: undefined, secPagesDDQ: undefined });
+    const isNew = !r; const back = () => this.setState({ secEditor: undefined, secEditorBlocks: undefined, secEditorPages: undefined, secEditorType: undefined });
     const PAGES = this.PAGES().map(p => p.name);
     const selPages = this.state.secEditorPages || (r ? (r.pages || []) : []);
     const SEC_TYPES = this.SEC_TYPES();
@@ -4055,7 +4123,7 @@ class Component extends DCLogic {
           h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Thuộc trang', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
           selPages.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '(Đã chọn: ' + selPages.length + ' trang)')
         ),
-        this.tagPicker(PAGES, selPages, v => this.setState({ secEditorPages: v }), { stateKey: 'secPagesDD', placeholder: 'Chọn trang hiển thị...', searchPlaceholder: 'Tìm trang…' })
+        this.tagPicker(PAGES, selPages, v => this.setState({ secEditorPages: v }), { placeholder: 'Chọn trang hiển thị...', searchPlaceholder: 'Tìm trang…' })
       ),
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
         h('div', null, this.field('Tên section', h(DS.Input, {
@@ -5534,10 +5602,10 @@ class Component extends DCLogic {
     );
   }
   openPopupEditor(r) {
-    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupPagesDDOpen: false, popupPagesDDQ: '' });
+    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '' });
   }
   closePopupEditor() {
-    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupPagesDDOpen: undefined, popupPagesDDQ: undefined });
+    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined });
   }
   renderPopup() {
     if (this.state.popupEditor !== undefined) return this.renderPopupEditor(this.state.popupEditor);
@@ -5607,10 +5675,10 @@ class Component extends DCLogic {
   }
 
   openBannerEditor(r) {
-    this.setState({ bannerEditor: r, bannerEditorPages: r ? [...r.pages] : ['Trang chủ'], bannerEditorType: r ? r.bannerType : '', bannerEditorTarget: r ? r.target : '', bannerPagesDDOpen: false, bannerPagesDDQ: '' });
+    this.setState({ bannerEditor: r, bannerEditorPages: r ? [...r.pages] : ['Trang chủ'], bannerEditorType: r ? r.bannerType : '', bannerEditorTarget: r ? r.target : '' });
   }
   closeBannerEditor() {
-    this.setState({ bannerEditor: undefined, bannerEditorPages: undefined, bannerEditorType: undefined, bannerEditorTarget: undefined, bannerPagesDDOpen: undefined, bannerPagesDDQ: undefined });
+    this.setState({ bannerEditor: undefined, bannerEditorPages: undefined, bannerEditorType: undefined, bannerEditorTarget: undefined });
   }
   openBannerDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -5667,7 +5735,7 @@ class Component extends DCLogic {
                   h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Trang áp dụng hiển thị', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
                   selectedPages.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '(Đã chọn: ' + selectedPages.length + ' trang)')
                 ),
-                this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ bannerEditorPages: v }), { stateKey: 'bannerPagesDD', placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
+                this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ bannerEditorPages: v }), { placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
               )
             : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Banner Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.')
         ),
@@ -5762,7 +5830,7 @@ class Component extends DCLogic {
                   h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Trang áp dụng hiển thị'),
                   selectedPages.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '(Đã chọn: ' + selectedPages.length + ' trang)')
                 ),
-                this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ popupEditorPages: v }), { stateKey: 'popupPagesDD', placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
+                this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ popupEditorPages: v }), { placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
               )
             : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Popup Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.')
         ),
@@ -11851,14 +11919,20 @@ class Component extends DCLogic {
   renderSalesReport() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const tab = this.state.salesReportTab || 'filter';
+    const panels = {
+      filter: () => this.renderSalesReportFilter(),
+      detail: () => this.renderSalesReportDetail(),
+      online: () => this.renderSalesReportOnline(),
+      'online-search': () => this.renderSalesReportOnlineSearch(),
+    };
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       h(DS.Tabs, { value: tab, onChange: v => this.setState({ salesReportTab: v }), items: [
         { value: 'filter', label: 'Điều kiện lọc', icon: 'filter-lines-line' },
         { value: 'detail', label: 'Chi tiết', icon: 'file-doc-line' },
+        { value: 'online', label: 'Báo cáo đăng ký online', icon: 'globe-01-line' },
+        { value: 'online-search', label: 'Tìm kiếm', icon: 'search-medium-line' },
       ] }),
-      h('div', { key: tab, className: 'fpt-tab-content' },
-        tab === 'filter' ? this.renderSalesReportFilter() : this.renderSalesReportDetail()
-      )
+      h('div', { key: tab, className: 'fpt-tab-content' }, (panels[tab] || panels.filter)())
     );
   }
   runSalesReport() {
@@ -11867,38 +11941,172 @@ class Component extends DCLogic {
   }
   renderSalesReportFilter() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const sel = (label, opts, extra) => this.field(label, h(DS.Select, Object.assign({ options: opts, containerStyle: { width: '100%' } }, extra)));
-    const col = (...items) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, flex: '1 1 360px', minWidth: 300 } }, ...items);
+    const sel = (label, opts, extra) => this.field(label, h(DS.Select, Object.assign({ options: opts, size: 'sm', containerStyle: { width: '100%' } }, extra)));
 
-    return h(DS.Card, { style: { padding: 24 } },
-      h('div', { style: { textAlign: 'center', paddingBottom: 14, marginBottom: 20, borderBottom: '1px solid var(--color-border)' } },
-        h('span', { style: { fontSize: 15, fontWeight: 800, letterSpacing: '.04em', color: 'var(--color-text)' } }, 'MASTER REPORT')
+    return h(DS.Card, { style: { padding: 0 } },
+      this.toolbar(
+        h('span', { style: { fontSize: 15, fontWeight: 800, letterSpacing: '.04em', color: 'var(--color-text)' } }, 'MASTER REPORT'),
+        h(DS.Button, { level: 'primary', leadingIcon: 'filter-funnel-line', onClick: () => this.runSalesReport() }, 'Xem báo cáo')
       ),
-      h('div', { style: { display: 'flex', gap: 32, flexWrap: 'wrap' } },
-        col(
-          sel('Vùng kinh doanh', ['Miền Bắc', 'Miền Trung', 'Miền Nam'], { placeholder: 'Chọn vùng kinh doanh...' }),
-          sel('Chi nhánh', ['HNI_01', 'HNI_02', 'HNI_03', 'HNI_04', 'HNI_06', 'HNI_07', 'HNI_09', 'HNI_ECOM', 'HDG', 'HCM_ECOM', 'HCM_TCDT'], { placeholder: 'Chọn chi nhánh...', searchable: true, searchPlaceholder: 'Tìm chi nhánh...' }),
-          sel('Phòng kinh doanh', ['Phòng kinh doanh 1', 'Phòng kinh doanh 2', 'Phòng kinh doanh 3', 'Phòng kinh doanh 4', 'Phòng kinh doanh 5', 'Phòng kinh doanh 6', 'Phòng kinh doanh 7', 'Phòng kỹ thuật', 'Phòng CUS'], { placeholder: 'Chọn phòng kinh doanh...', searchable: true, searchPlaceholder: 'Tìm phòng kinh doanh...' }),
-          this.field('Thời gian hiệu lực', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } })),
-          sel('Loại hình khách hàng', ['Cá nhân', 'Doanh nghiệp', 'Hộ gia đình'], { placeholder: 'Chọn loại hình khách hàng...' }),
-          sel('Đối tượng khách hàng', ['Khách hàng mới', 'Khách hàng hiện hữu', 'Khách hàng tiềm năng'], { placeholder: 'Chọn đối tượng khách hàng...' }),
-          sel('Tình trạng hợp đồng', ['Đang hoạt động', 'Chờ duyệt', 'Đã hủy', 'Hết hạn', 'Tạm ngưng'], { placeholder: 'Chọn tình trạng hợp đồng...', searchable: true, searchPlaceholder: 'Tìm tình trạng hợp đồng...' }),
-          sel('Tình trạng online', ['Tất cả', 'Online', 'Offline'], { placeholder: 'Chọn tình trạng online...' }),
-          sel('Hủy trước sử dụng', ['Có bao gồm', 'Không bao gồm'], { placeholder: 'Chọn hủy trước sử dụng...' })
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px 20px', padding: 20 } },
+        sel('Vùng kinh doanh', ['Miền Bắc', 'Miền Trung', 'Miền Nam'], { placeholder: 'Chọn vùng kinh doanh...' }),
+        sel('Dịch vụ/ sản phẩm', ['Dịch vụ chính', 'Dịch vụ phụ', 'Thiết bị', 'SA'], { placeholder: 'Chọn dịch vụ/ sản phẩm...' }),
+        sel('Chi nhánh', ['HNI_01', 'HNI_02', 'HNI_03', 'HNI_04', 'HNI_06', 'HNI_07', 'HNI_09', 'HNI_ECOM', 'HDG', 'HCM_ECOM', 'HCM_TCDT'], { placeholder: 'Chọn chi nhánh...', searchable: true, searchPlaceholder: 'Tìm chi nhánh...' }),
+        sel('Loại dịch vụ', ['Internet', 'Truyền hình', 'Camera', 'Cloud', 'Combo'], { placeholder: 'Chọn loại dịch vụ...', searchable: true, searchPlaceholder: 'Tìm loại dịch vụ...' }),
+        sel('Phòng kinh doanh', ['Phòng kinh doanh 1', 'Phòng kinh doanh 2', 'Phòng kinh doanh 3', 'Phòng kinh doanh 4', 'Phòng kinh doanh 5', 'Phòng kinh doanh 6', 'Phòng kinh doanh 7', 'Phòng kỹ thuật', 'Phòng CUS'], { placeholder: 'Chọn phòng kinh doanh...', searchable: true, searchPlaceholder: 'Tìm phòng kinh doanh...' }),
+        sel('Kênh bán', ['Tất cả', 'ECP', 'FCP', 'Trực tiếp', 'Online', 'Telesale'], { placeholder: 'Chọn kênh bán...', searchable: true, searchPlaceholder: 'Tìm kênh bán...' }),
+        h('div', { style: { gridColumn: 'span 2' } }, this.field('Thời gian hiệu lực', h(DS.DateRangePicker, { size: 'sm', placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))),
+        sel('Loại báo cáo', ['Báo cáo PTTB', 'Báo cáo doanh thu', 'Báo cáo thuê bao rời mạng'], { placeholder: 'Chọn loại báo cáo...' }),
+        sel('Loại hình khách hàng', ['Cá nhân', 'Doanh nghiệp', 'Hộ gia đình'], { placeholder: 'Chọn loại hình khách hàng...' }),
+        sel('Xem theo chiều', ['Chi nhánh quản lý', 'Chi nhánh bán', 'Phòng kinh doanh', 'Kênh bán'], { placeholder: 'Chọn xem theo chiều...' }),
+        sel('Đối tượng khách hàng', ['Khách hàng mới', 'Khách hàng hiện hữu', 'Khách hàng tiềm năng'], { placeholder: 'Chọn đối tượng khách hàng...' }),
+        sel('Loại thiết bị (Optional)', ['Modem/ONT', 'Router Wi-Fi', 'Camera', 'Set-top Box', 'Access Point'], { placeholder: 'Chọn loại thiết bị...', searchable: true, searchPlaceholder: 'Tìm loại thiết bị...' }),
+        sel('Tình trạng hợp đồng', ['Đang hoạt động', 'Chờ duyệt', 'Đã hủy', 'Hết hạn', 'Tạm ngưng'], { placeholder: 'Chọn tình trạng hợp đồng...', searchable: true, searchPlaceholder: 'Tìm tình trạng hợp đồng...' }),
+        sel('Loại thời gian HĐ', ['Ngày tạo HĐ', 'Ngày kích hoạt', 'Ngày hủy'], { placeholder: 'Chọn loại thời gian HĐ...' }),
+        sel('Tình trạng online', ['Tất cả', 'Online', 'Offline'], { placeholder: 'Chọn tình trạng online...' }),
+        sel('Gói Dịch vụ', ['Sky', 'Sky F1', 'Giga', 'Giga Plus', 'Meta', 'Combo Gia đình'], { placeholder: 'Chọn gói dịch vụ...', searchable: true, searchPlaceholder: 'Tìm gói dịch vụ...' }),
+        sel('Hủy trước sử dụng', ['Có bao gồm', 'Không bao gồm'], { placeholder: 'Chọn hủy trước sử dụng...' })
+      )
+    );
+  }
+  // ── Báo cáo đăng ký online (DKOL - SPF) + Tìm kiếm — 2 tab bổ sung, dùng chung bộ cột/demo-data/drawer chi tiết ──
+  salesReportOnlineColumns() {
+    return [
+      { key: 'stt', header: 'STT', width: 56 },
+      { key: 'date', header: 'Ngày', width: 100 },
+      { key: 'time', header: 'Giờ (hh:mm:ss)', width: 110 },
+      { key: 'orderCode', header: 'Mã đơn hàng', width: 140 },
+      { key: 'saleType', header: 'Hình thức bán', width: 120, render: (_, r) => this.salesReportSaleTypeBadge(r.saleType) },
+      { key: 'customerName', header: 'Tên khách hàng', width: 220 },
+      { key: 'dob', header: 'Ngày sinh', width: 100, render: (_, r) => r.dob || '—' },
+      { key: 'gender', header: 'Giới tính', width: 90 },
+      { key: 'houseType', header: 'Loại nhà', width: 150 },
+      { key: 'aptName', header: 'Tên chung cư', width: 200, render: (_, r) => r.aptName || '—' },
+      { key: 'province', header: 'Tỉnh/Thành phố', width: 140 },
+    ];
+  }
+  salesReportSaleTypeBadge(v) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const theme = v === 'Bán mới' ? 'success' : v === 'Nâng cấp' ? 'brand' : 'info';
+    return h(DS.Badge, { theme, size: 'sm' }, v);
+  }
+  SALES_REPORT_ONLINE_DEMO() {
+    const rows = [
+      ['18/09/2026', '23:59:46', 'HCMPI0066Z7N', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '23:57:59', 'KHAPI0066Z7L', 'Bán thêm', 'ĐẶNG DUY THANH', '', 'Nam', 'Nhà không địa chỉ', '', 'Khánh Hòa'],
+      ['18/09/2026', '23:57:06', 'HNIPI0066Z7K', 'Bán mới', 'Đỗ Đức Minh Cường', '', 'Nam', 'Nhà chung cư', 'BCC Hateco Xuan Phuong', 'Hà Nội'],
+      ['18/09/2026', '23:57:00', 'HCMPI0066Z7J', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '23:56:37', 'NTNPI0066Z7H', 'Nâng cấp', 'LÊ THỊ NGA', '', 'Nam', 'Nhà Phố', '', 'Khánh Hòa'],
+      ['18/09/2026', '23:56:36', 'HCMPI0066Z7G', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '23:54:54', 'HCMPI0066Z7F', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '23:54:15', 'HCMPI0066Z7C', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '23:49:18', 'HCMPI0066Z77', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '23:47:49', 'HNIPI0066Z73', 'Bán mới', 'ĐẶNG VIỆT ANH', '', 'Nam', 'Nhà Phố', '', 'Hà Nội'],
+      ['18/09/2026', '23:47:20', 'HUEPI0066Z72', 'Bán mới', 'NGÔ QUANG TOÀN', '', 'Nam', 'Nhà Phố', '', 'Huế'],
+      ['18/09/2026', '23:45:50', 'HNIPI0066Z6Y', 'Nâng cấp', 'ĐẶNG VIỆT ANH', '', 'Nam', 'Nhà Phố', '', 'Hà Nội'],
+    ];
+    return rows.map((r, i) => ({ id: 'sro' + i, stt: i + 1, date: r[0], time: r[1], orderCode: r[2], saleType: r[3], customerName: r[4], dob: r[5], gender: r[6], houseType: r[7], aptName: r[8], province: r[9] }));
+  }
+  SALES_REPORT_ONLINE_SEARCH_DEMO() {
+    const rows = [
+      ['20/09/2026', '14:14:52', 'CMUPK0067O2B', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Cà Mau'],
+      ['20/09/2026', '14:14:27', 'HCMPK0067O24', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['20/09/2026', '14:14:14', 'HCMPK0067O20', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '16:27:51', 'HCMPI0066WHY', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '16:27:00', 'HCMPI0066WHF', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '16:18:43', 'HCMPI0066WDU', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '16:08:25', 'HCMPI0066W9N', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '16:08:08', 'HCMPI0066W9F', 'Bán mới', 'test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '15:24:48', 'HCMPI0066VSY', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '14:53:44', 'HCMPI0066VF5', 'Bán mới', 'test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '14:53:25', 'HCMPI0066VEW', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+      ['18/09/2026', '13:40:00', 'HCMPI0066UNI', 'Bán mới', 'test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
+    ];
+    return rows.map((r, i) => ({ id: 'srs' + i, stt: i + 1, date: r[0], time: r[1], orderCode: r[2], saleType: r[3], customerName: r[4], dob: r[5], gender: r[6], houseType: r[7], aptName: r[8], province: r[9] }));
+  }
+  openSalesReportOnlineRowDetail(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    this.openDrawer({ title: r.orderCode, subtitle: 'Chi tiết đăng ký online', width: 440,
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
+        this.detailRow('Ngày', r.date), this.detailRow('Giờ', r.time),
+        this.detailRow('Mã đơn hàng', r.orderCode), this.detailRow('Hình thức bán', this.salesReportSaleTypeBadge(r.saleType)),
+        this.detailRow('Tên khách hàng', r.customerName), this.detailRow('Ngày sinh', r.dob || '—'),
+        this.detailRow('Giới tính', r.gender), this.detailRow('Loại nhà', r.houseType),
+        this.detailRow('Tên chung cư', r.aptName || '—'), this.detailRow('Tỉnh/Thành phố', r.province)
+      ),
+      footer: () => h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
+        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng')
+      )
+    });
+  }
+  exportSplitButton(stateKey, label, items) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const open = this.state[stateKey] === true;
+    return h('div', { style: { position: 'relative' }, onBlur: () => setTimeout(() => this.setState({ [stateKey]: false }), 120) },
+      h(DS.Button, { level: 'secondary', leadingIcon: 'download-01-line', trailingIcon: 'chevron-down-line', onClick: () => this.setState({ [stateKey]: !open }) }, label),
+      open ? h('div', { style: { position: 'absolute', right: 0, top: 'calc(100% + 4px)', zIndex: 50, minWidth: 210, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, boxShadow: 'var(--shadow-overlay)', padding: 6 } },
+        items.map(it => h('div', {
+          key: it.value, className: 'fpt-navitem',
+          onMouseDown: e => { e.preventDefault(); this.setState({ [stateKey]: false }); this.toast('success', 'Đang xuất file', it.label + ' (demo).'); },
+          style: { padding: '8px 10px', borderRadius: 7, fontSize: 13, cursor: 'pointer' }
+        }, it.label))
+      ) : null
+    );
+  }
+  renderSalesReportOnline() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const data = this.SALES_REPORT_ONLINE_DEMO();
+    const page = this.sliceData(data, 'srOnline');
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      h(DS.Card, { style: { padding: 0 } },
+        this.toolbar(
+          h('span', { style: { fontSize: 15, fontWeight: 800, letterSpacing: '.04em', color: 'var(--color-text)' } }, 'Báo cáo DKOL - SPF'),
+          h('div', { style: { display: 'flex', gap: 10, alignItems: 'center' } },
+            h(DS.Button, { level: 'primary', leadingIcon: 'search-medium-line', onClick: () => this.toast('success', 'Đã lọc báo cáo', 'Báo cáo đã được cập nhật theo điều kiện lọc (dữ liệu demo).') }, 'Xem Báo Cáo'),
+            this.exportSplitButton('srOnlineExportOpen', 'Xuất Excel', [
+              { value: 'orders', label: 'Xuất báo cáo đơn hàng' },
+              { value: 'services', label: 'Xuất báo cáo dịch vụ' },
+            ])
+          )
         ),
-        col(
-          sel('Dịch vụ/ sản phẩm', ['Dịch vụ chính', 'Dịch vụ phụ', 'Thiết bị', 'SA'], { placeholder: 'Chọn dịch vụ/ sản phẩm...' }),
-          sel('Loại dịch vụ', ['Internet', 'Truyền hình', 'Camera', 'Cloud', 'Combo'], { placeholder: 'Chọn loại dịch vụ...', searchable: true, searchPlaceholder: 'Tìm loại dịch vụ...' }),
-          sel('Kênh bán', ['Tất cả', 'ECP', 'FCP', 'Trực tiếp', 'Online', 'Telesale'], { placeholder: 'Chọn kênh bán...', searchable: true, searchPlaceholder: 'Tìm kênh bán...' }),
-          sel('Loại báo cáo', ['Báo cáo PTTB', 'Báo cáo doanh thu', 'Báo cáo thuê bao rời mạng'], { placeholder: 'Chọn loại báo cáo...' }),
-          sel('Xem theo chiều', ['Chi nhánh quản lý', 'Chi nhánh bán', 'Phòng kinh doanh', 'Kênh bán'], { placeholder: 'Chọn xem theo chiều...' }),
-          sel('Loại thiết bị (Optional)', ['Modem/ONT', 'Router Wi-Fi', 'Camera', 'Set-top Box', 'Access Point'], { placeholder: 'Chọn loại thiết bị...', searchable: true, searchPlaceholder: 'Tìm loại thiết bị...' }),
-          sel('Loại thời gian HĐ', ['Ngày tạo HĐ', 'Ngày kích hoạt', 'Ngày hủy'], { placeholder: 'Chọn loại thời gian HĐ...' }),
-          sel('Gói Dịch vụ', ['Sky', 'Sky F1', 'Giga', 'Giga Plus', 'Meta', 'Combo Gia đình'], { placeholder: 'Chọn gói dịch vụ...', searchable: true, searchPlaceholder: 'Tìm gói dịch vụ...' })
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px 20px', padding: 20 } },
+          h('div', { style: { gridColumn: 'span 2' } }, this.field('Thời gian', h(DS.DateRangePicker, { size: 'sm', showTime: false, defaultStart: new Date(), defaultEnd: new Date(), placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))),
+          this.field('Nguồn bán', h(DS.Select, { size: 'sm', options: ['Tất cả', 'ĐKOL', 'IBB', 'TIN/PNC', 'KXĐ'], defaultValue: 'Tất cả', searchable: true, searchPlaceholder: 'Tìm nguồn bán...', containerStyle: { width: '100%' } }))
         )
       ),
-      h('div', { style: { marginTop: 24, display: 'flex', justifyContent: 'flex-end' } },
-        h(DS.Button, { level: 'primary', leadingIcon: 'filter-funnel-line', onClick: () => this.runSalesReport() }, 'Xem báo cáo')
+      this.listCard(
+        this.tbl(this.salesReportOnlineColumns(), page, 'id', r => this.openSalesReportOnlineRowDetail(r)),
+        this.renderPagBar(data.length, 'srOnline', 'kết quả')
+      )
+    );
+  }
+  renderSalesReportOnlineSearch() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const data = this.SALES_REPORT_ONLINE_SEARCH_DEMO();
+    const page = this.sliceData(data, 'srSearch');
+    const inp = (label, ph) => this.field(label, h(DS.Input, { size: 'sm', placeholder: ph, containerStyle: { width: '100%' } }));
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      h(DS.Card, { style: { padding: 0 } },
+        this.toolbar(
+          h('span', { style: { fontSize: 15, fontWeight: 800, letterSpacing: '.04em', color: 'var(--color-text)' } }, 'Tìm kiếm nâng cao'),
+          h('div', { style: { display: 'flex', gap: 10, alignItems: 'center' } },
+            h(DS.Button, { level: 'primary', leadingIcon: 'search-medium-line', onClick: () => this.toast('success', 'Đã tìm kiếm', 'Kết quả đã được cập nhật theo điều kiện tìm kiếm (dữ liệu demo).') }, 'Xem Báo Cáo'),
+            h(DS.Button, { level: 'secondary', leadingIcon: 'download-01-line', onClick: () => this.toast('success', 'Xuất Excel', 'Đã xuất kết quả tìm kiếm ra file Excel (demo).') }, 'Xuất Excel')
+          )
+        ),
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px 20px', padding: 20 } },
+          h('div', { style: { gridColumn: 'span 2' } }, this.field('Thời gian', h(DS.DateRangePicker, { size: 'sm', showTime: false, defaultStart: new Date(2026, 8, 1), defaultEnd: new Date(2026, 8, 30), placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))),
+          inp('Mã đơn hàng', 'Nhập mã đơn hàng...'),
+          inp('Mã hợp đồng', 'Nhập mã hợp đồng...'),
+          this.field('Số điện thoại', h(DS.Input, { size: 'sm', defaultValue: '0907685512', placeholder: 'Nhập số điện thoại...', containerStyle: { width: '100%' } })),
+          inp('Camp Source', 'Nhập camp source...'),
+          inp('Camp Medium', 'Nhập camp medium...'),
+          inp('Camp Name', 'Nhập camp name...')
+        )
+      ),
+      this.listCard(
+        this.tbl(this.salesReportOnlineColumns(), page, 'id', r => this.openSalesReportOnlineRowDetail(r)),
+        this.renderPagBar(data.length, 'srSearch', 'kết quả')
       )
     );
   }
