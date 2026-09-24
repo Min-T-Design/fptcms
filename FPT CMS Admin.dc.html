@@ -339,7 +339,6 @@ class Component extends DCLogic {
     ldpTplFilter: 'all', ldpTplSearch: '',
     ldpListSearch: '', ldpListTpl: 'all', ldpListStatus: 'all', ldpListGoal: 'all',
     ldpForm2: {}, ldpStep2Err: {}, ldpLibTab: 'all', ldpLibSearch: '', ldpCustomSecs: [], ldpLibDragId: null, ldpSecDragOverCanvas: false,
-    ldpLv1Menu: false, ldpLv1MenuUp: false,
     // ── Duyệt LDP module ──
     ldpApprTab: 'pending', ldpApprSearch: '', ldpApprStatusF: 'all', ldpApprSubmitter: 'all', ldpApprReviewer: 'all', ldpAppr_pg: 1, ldpAppr_sz: 10,
     ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false, ldpApprovals: null, ldpExtraApprovedLv1: [],
@@ -3739,6 +3738,8 @@ class Component extends DCLogic {
     return this.MENU().find(m => m.type === 'category' && m.status === 'active' && this.ldpSlugify((m.url || '').replace(/^\//, '')) === slug1) || null;
   }
   // Kiểm tra ràng buộc slug LDP:
+  //  Giai đoạn hiện tại, Level 1 chỉ được chọn từ các nhánh portal có sẵn.
+  //  Không cho tạo mới nhánh URL cấp 1 từ form LDP.
   //  Lớp 1 — nếu nhánh Level 1 đã có LDP đang CHẠY, hoặc đã có trang danh mục (Menu) chiếm nhánh đó,
   //           thì BẮT BUỘC nhập Level 2 (chống ghi đè trang đang chạy / trang danh mục hiện có).
   //           Nhánh không có LDP đang chạy và không trùng danh mục (trống hoặc chỉ còn LDP hết hạn) → Level 2 tuỳ chọn.
@@ -3749,6 +3750,10 @@ class Component extends DCLogic {
   ldpSlugValidate(slug1, slug2, currentId) {
     slug1 = (slug1 || '').trim(); slug2 = (slug2 || '').trim();
     if (!slug1) return { ok: false, block: true, kind: 'empty1' };
+    if (!this.LDP_FIXED_LV1().includes(slug1)) {
+      return { ok: false, block: true, kind: 'invalidLv1', bad1: true, bad2: false,
+        msg: 'Vui lòng chọn một nhánh Level 1 có sẵn.' };
+    }
     const liveAtLv1 = this.ldpLv1LiveLdp(slug1, currentId);
     if (liveAtLv1 && !slug2) {
       return { ok: false, block: true, kind: 'needL2', bad1: true, bad2: false,
@@ -7357,7 +7362,8 @@ class Component extends DCLogic {
     const slugLocked = !!(editRow && this.ldpSlugLocked(effStatus));
     const slugCheck = slugLocked ? { ok: true } : this.ldpSlugValidate(curLv1, curL2, editRow ? editRow.id : null);
     const slugBlocked = !!slugCheck.block;
-    const needsApproval = !slugLocked && !!curLv1 && !this.ldpApprovedLv1Set().has(curLv1);
+    // Level 1 chỉ được chọn từ danh sách nhánh portal có sẵn, nên không phát sinh luồng duyệt nhánh mới.
+    const needsApproval = !slugLocked && !!curLv1 && !this.LDP_FIXED_LV1().includes(curLv1);
     const isResubmit = !!(editRow && effStatus === 'rejected');
     const topActions = h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
       step > minStep && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'arrow-left-line', onClick: () => this.setState({ ldpStep: step - 1 }) }, step === 2 ? 'Quay lại Template' : 'Quay lại Thông tin'),
@@ -7548,8 +7554,7 @@ class Component extends DCLogic {
       { value: 'tin-tuc',             label: 'Tin tức',                  children: [] },
       { value: 'lien-he',             label: 'Liên hệ',                  children: [] },
     ];
-    const approvedLv1 = this.ldpApprovedLv1Set();
-    const lv1Exists = !!slug1 && approvedLv1.has(slug1);
+    const lv1Exists = !!slug1 && this.LDP_FIXED_LV1().includes(slug1);
     const slugCheck = slugLocked ? { ok: true } : this.ldpSlugValidate(slug1, slug2, editRow ? editRow.id : null);
     const slug1Err = !!(slugCheck.block && slugCheck.bad1);
     const slug2Err = !!(slugCheck.block && slugCheck.bad2);
@@ -7558,10 +7563,8 @@ class Component extends DCLogic {
     const editId = editRow ? editRow.id : null;
     const lv1Live = this.ldpLv1LiveLdp(slug1, editId);              // LDP đang chạy trên nhánh đang chọn (nếu có)
     const lv1L2Required = !!lv1Live;                                 // Lớp 1: chỉ bắt buộc Level 2 khi nhánh có LDP đang chạy
-    // Danh sách nhánh Level 1 có sẵn — chỉ 7 nhánh cố định, hiển thị dạng dropdown khi focus ô Level 1.
-    const lv1AllOpts = FPT_CATS.map(c => c.value);
-    const lv1Query = this.ldpSlugify(slug1);
-    const lv1MenuOpts = lv1Query ? lv1AllOpts.filter(v => v.includes(lv1Query)) : lv1AllOpts;
+    // Danh sách nhánh Level 1 có sẵn — chỉ 7 nhánh cố định, chọn bằng DS.Select.
+    const lv1Options = FPT_CATS.map(c => ({ value: c.value, label: c.label + ' (' + c.value + ')' }));
     const slug  = [slug1, slug2].filter(s => s).join('/') || 'khuyen-mai/km-t5';
     const tplDefaultColors = { internet: '#ffffff', sa: '#0a1628', landingpage: '#f4f6fa', customhtml: '#ffffff' };
     const defaultBgColor = tplDefaultColors[this.state.ldpTpl] || '#ffffff';
@@ -7597,29 +7600,16 @@ class Component extends DCLogic {
                 h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' } },
                   h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 12px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0 } }, 'fpt.vn/'),
                   h('div', { style: { flex: '1 1 170px', minWidth: 150 } },
-                    // Vùng neo dropdown chỉ bao ô input — thông báo lỗi nằm NGOÀI để menu luôn bám sát ô, không bị đẩy xuống dưới dòng lỗi.
-                    h('div', { style: { position: 'relative' } },
-                      h(DS.Input, {
-                        value: slug1,
-                        onChange: e => set('urlSlug1', this.ldpSlugify(e && e.target ? e.target.value : e)),
-                        onFocus: e => { const r = e.target.getBoundingClientRect(); this.setState({ ldpLv1Menu: true, ldpLv1MenuUp: (window.innerHeight - r.bottom) < 280 }); },
-                        onBlur: () => setTimeout(() => this.setState({ ldpLv1Menu: false }), 120),
-                        onKeyDown: e => { if (e.key === 'Escape') this.setState({ ldpLv1Menu: false }); },
-                        placeholder: 'Chọn hoặc nhập nhánh Level 1',
-                        error: slug1Err,
-                      }),
-                      this.state.ldpLv1Menu ? h('div', { style: Object.assign({ position: 'absolute', left: 0, right: 0, zIndex: 50, maxHeight: 264, overflowY: 'auto', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, boxShadow: 'var(--shadow-overlay)', padding: 6 }, this.state.ldpLv1MenuUp ? { bottom: 'calc(100% + 4px)' } : { top: 'calc(100% + 4px)' }) },
-                        h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.04em', padding: '6px 10px 5px' } }, 'Nhánh Level 1 có sẵn'),
-                        lv1MenuOpts.length ? lv1MenuOpts.map(v => {
-                          const active = slug1 === v;
-                          return h('div', { key: v, onMouseDown: ev => { ev.preventDefault(); set('urlSlug1', v); this.setState({ ldpLv1Menu: false }); }, className: 'fpt-navitem', style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 7, fontSize: 12.5, cursor: 'pointer', background: active ? 'var(--color-accent-bg)' : 'transparent' } },
-                            h(DS.Icon, { name: active ? 'check-line' : 'git-branch-line', size: 14, color: active ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
-                            h('span', { style: { fontFamily: 'monospace', fontWeight: 600, color: active ? 'var(--color-accent-text)' : 'var(--color-text)' } }, v)
-                          );
-                        }) : h('div', { style: { padding: '10px', fontSize: 12, color: 'var(--color-text-subtle)' } },
-                          'Không có nhánh khớp — "', h('strong', { style: { fontFamily: 'monospace' } }, slug1), '" sẽ là nhánh Level 1 mới (cần duyệt).')
-                      ) : null
-                    ),
+                    h(DS.Select, {
+                      value: slug1,
+                      options: lv1Options,
+                      placeholder: 'Chọn nhánh Level 1',
+                      searchable: true,
+                      searchPlaceholder: 'Tìm nhánh Level 1…',
+                      onChange: v => set('urlSlug1', v),
+                      error: slug1Err,
+                      containerStyle: { width: '100%' }
+                    }),
                     scopeL1 ? scopedErrMsg(slugCheck.msg) : null
                   ),
                   h('span', { style: { display: 'flex', alignItems: 'center', height: 48, color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
@@ -7632,7 +7622,7 @@ class Component extends DCLogic {
                   const tone = slugCheck.block ? 'var(--color-danger-text)' : slugCheck.warn ? 'var(--color-warning-text)' : (!slug1 ? 'var(--color-text-subtle)' : (lv1Exists ? 'var(--color-success-text)' : 'var(--color-warning-text)'));
                   return h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: tone, fontWeight: (slugCheck.block || slugCheck.warn) ? 600 : 400 } },
                     !slug1
-                      ? h('span', null, 'Bấm vào ô Level 1 để chọn nhánh có sẵn, hoặc gõ tên nhánh Level 1 mới.')
+                      ? h('span', null, 'Chọn một nhánh Level 1 có sẵn.')
                       : slugCheck.block
                         ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'x-circle-line', size: 14 }), h('span', null, slugCheck.msg))
                         : slugCheck.warn
@@ -7644,7 +7634,7 @@ class Component extends DCLogic {
                                     ? h('span', null, 'Nhánh đang có LDP chạy (', h('strong', null, lv1Live.name), ') nên ', h('strong', null, 'bắt buộc nhập Level 2'), '.')
                                     : h('span', null, 'Nhánh chưa có LDP nào đang chạy nên ', h('strong', null, 'Level 2 không bắt buộc'), ' (có thể để trống).')
                                 ))
-                              : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, 'Nhánh "', h('strong', null, slug1), '" là nhánh URL cấp 1 mới - Nội dung cần được Bộ phận kiểm duyệt (trùng URL, bảo mật, kỹ thuật) trước khi xuất bản.')))
+                              : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'x-circle-line', size: 14 }), h('span', null, 'Vui lòng chọn một nhánh Level 1 có sẵn.')))
                   );
                 })(),
                 h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } },
@@ -12402,31 +12392,107 @@ class Component extends DCLogic {
   }
   renderSalesReportFilter() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const sel = (label, opts, extra) => this.field(label, h(DS.Select, Object.assign({ options: opts, size: 'sm', containerStyle: { width: '100%' } }, extra)));
+    const srf = this.state.srf || {};
+    const setF = (k, v) => this.setState({ srf: Object.assign({}, srf, { [k]: v }) });
+    const resetF = () => this.setState({ srf: {} });
+    const advOpen = this.state.srfAdvOpen !== false;
+
+    const sel = (key, label, opts, extra) => this.field(label, h(DS.Select, Object.assign({
+      options: opts, size: 'sm', containerStyle: { width: '100%' },
+      value: srf[key] || '', onChange: v => setF(key, v)
+    }, extra)));
+    const grid = (...content) => h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '10px 16px' } }, ...content);
+    const badge = (n, on) => h('span', { style: { width: 26, height: 26, borderRadius: '50%', background: on ? 'var(--color-accent)' : 'var(--color-text-subtle)', color: '#fff', fontSize: 12.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } }, String(n));
+    const subgroup = (icon, title, desc, ...content) => h('div', { key: 'sg-' + title, style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+        h(DS.Icon, { name: icon, size: 17, color: 'var(--color-accent)' }),
+        h('div', null,
+          h('div', { style: { fontSize: 13, fontWeight: 700, color: 'var(--color-text)' } }, title),
+          desc && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, desc)
+        )
+      ),
+      grid(...content)
+    );
+
+    const ADV_KEYS = ['branch', 'salesDept', 'channel', 'serviceType', 'deviceType', 'servicePackage', 'customerType', 'customerObject', 'contractStatus', 'onlineStatus', 'cancelBeforeUse'];
+    const advCount = ADV_KEYS.filter(k => srf[k]).length;
+    const effRange = srf.effRange || {};
+    const fmtDate = d => d ? new Date(d).toLocaleDateString('vi-VN') : '';
+    const chips = [];
+    if (effRange.start || effRange.end) chips.push(this.filterChip('Thời gian: ' + fmtDate(effRange.start) + ' - ' + fmtDate(effRange.end), 'brand', () => setF('effRange', null)));
+    [['region', 'Vùng kinh doanh'], ['product', 'Dịch vụ/ sản phẩm'], ['reportType', 'Loại báo cáo'], ['viewBy', 'Xem theo chiều'], ['contractTimeType', 'Loại thời gian HĐ'],
+      ['branch', 'Chi nhánh'], ['salesDept', 'Phòng kinh doanh'], ['channel', 'Kênh bán'],
+      ['serviceType', 'Loại dịch vụ'], ['deviceType', 'Loại thiết bị'], ['servicePackage', 'Gói dịch vụ'],
+      ['customerType', 'Loại hình KH'], ['customerObject', 'Đối tượng KH'], ['contractStatus', 'Tình trạng HĐ'], ['onlineStatus', 'Tình trạng online'], ['cancelBeforeUse', 'Hủy trước sử dụng']
+    ].forEach(([k, lb]) => { if (srf[k]) chips.push(this.filterChip(lb + ': ' + srf[k], 'brand', () => setF(k, ''))); });
 
     return h(DS.Card, { style: { padding: 0 } },
-      this.toolbar(
-        h('span', { style: { fontSize: 15, fontWeight: 800, letterSpacing: '.04em', color: 'var(--color-text)' } }, 'MASTER REPORT'),
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: '1px solid var(--color-border)' } },
+        h('div', null,
+          h('div', { style: { fontSize: 15, fontWeight: 800, letterSpacing: '.04em', color: 'var(--color-text)' } }, 'MASTER REPORT'),
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 2 } }, 'Chọn điều kiện để tạo báo cáo')
+        ),
+        h('div', { style: { flex: 1 } }),
+        h(DS.Button, { level: 'tertiary', size: 'sm', onClick: resetF }, 'Đặt lại'),
         h(DS.Button, { level: 'primary', leadingIcon: 'filter-funnel-line', onClick: () => this.runSalesReport() }, 'Xem báo cáo')
       ),
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px 20px', padding: 20 } },
-        sel('Vùng kinh doanh', ['Miền Bắc', 'Miền Trung', 'Miền Nam'], { placeholder: 'Chọn vùng kinh doanh...' }),
-        sel('Dịch vụ/ sản phẩm', ['Dịch vụ chính', 'Dịch vụ phụ', 'Thiết bị', 'SA'], { placeholder: 'Chọn dịch vụ/ sản phẩm...' }),
-        sel('Chi nhánh', ['HNI_01', 'HNI_02', 'HNI_03', 'HNI_04', 'HNI_06', 'HNI_07', 'HNI_09', 'HNI_ECOM', 'HDG', 'HCM_ECOM', 'HCM_TCDT'], { placeholder: 'Chọn chi nhánh...', searchable: true, searchPlaceholder: 'Tìm chi nhánh...' }),
-        sel('Loại dịch vụ', ['Internet', 'Truyền hình', 'Camera', 'Cloud', 'Combo'], { placeholder: 'Chọn loại dịch vụ...', searchable: true, searchPlaceholder: 'Tìm loại dịch vụ...' }),
-        sel('Phòng kinh doanh', ['Phòng kinh doanh 1', 'Phòng kinh doanh 2', 'Phòng kinh doanh 3', 'Phòng kinh doanh 4', 'Phòng kinh doanh 5', 'Phòng kinh doanh 6', 'Phòng kinh doanh 7', 'Phòng kỹ thuật', 'Phòng CUS'], { placeholder: 'Chọn phòng kinh doanh...', searchable: true, searchPlaceholder: 'Tìm phòng kinh doanh...' }),
-        sel('Kênh bán', ['Tất cả', 'ECP', 'FCP', 'Trực tiếp', 'Online', 'Telesale'], { placeholder: 'Chọn kênh bán...', searchable: true, searchPlaceholder: 'Tìm kênh bán...' }),
-        h('div', { style: { gridColumn: 'span 2' } }, this.field('Thời gian hiệu lực', h(DS.DateRangePicker, { size: 'sm', placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))),
-        sel('Loại báo cáo', ['Báo cáo PTTB', 'Báo cáo doanh thu', 'Báo cáo thuê bao rời mạng'], { placeholder: 'Chọn loại báo cáo...' }),
-        sel('Loại hình khách hàng', ['Cá nhân', 'Doanh nghiệp', 'Hộ gia đình'], { placeholder: 'Chọn loại hình khách hàng...' }),
-        sel('Xem theo chiều', ['Chi nhánh quản lý', 'Chi nhánh bán', 'Phòng kinh doanh', 'Kênh bán'], { placeholder: 'Chọn xem theo chiều...' }),
-        sel('Đối tượng khách hàng', ['Khách hàng mới', 'Khách hàng hiện hữu', 'Khách hàng tiềm năng'], { placeholder: 'Chọn đối tượng khách hàng...' }),
-        sel('Loại thiết bị (Optional)', ['Modem/ONT', 'Router Wi-Fi', 'Camera', 'Set-top Box', 'Access Point'], { placeholder: 'Chọn loại thiết bị...', searchable: true, searchPlaceholder: 'Tìm loại thiết bị...' }),
-        sel('Tình trạng hợp đồng', ['Đang hoạt động', 'Chờ duyệt', 'Đã hủy', 'Hết hạn', 'Tạm ngưng'], { placeholder: 'Chọn tình trạng hợp đồng...', searchable: true, searchPlaceholder: 'Tìm tình trạng hợp đồng...' }),
-        sel('Loại thời gian HĐ', ['Ngày tạo HĐ', 'Ngày kích hoạt', 'Ngày hủy'], { placeholder: 'Chọn loại thời gian HĐ...' }),
-        sel('Tình trạng online', ['Tất cả', 'Online', 'Offline'], { placeholder: 'Chọn tình trạng online...' }),
-        sel('Gói Dịch vụ', ['Sky', 'Sky F1', 'Giga', 'Giga Plus', 'Meta', 'Combo Gia đình'], { placeholder: 'Chọn gói dịch vụ...', searchable: true, searchPlaceholder: 'Tìm gói dịch vụ...' }),
-        sel('Hủy trước sử dụng', ['Có bao gồm', 'Không bao gồm'], { placeholder: 'Chọn hủy trước sử dụng...' })
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, padding: '18px 20px 20px' } },
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 12, overflow: 'hidden' } },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: 'var(--color-accent-bg)' } },
+            badge(1, true),
+            h('div', null,
+              h('div', { style: { fontSize: 13.5, fontWeight: 700, color: 'var(--color-text)' } }, 'BỘ LỌC CHÍNH'),
+              h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'Các điều kiện cơ bản để lọc dữ liệu báo cáo')
+            )
+          ),
+          h('div', { style: { padding: '14px 16px' } },
+            h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '10px 16px' } },
+              this.field('Thời gian hiệu lực', h(DS.DateRangePicker, { size: 'sm', startDate: effRange.start || null, endDate: effRange.end || null, onChange: r => setF('effRange', r), placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } })),
+              sel('reportType', 'Loại báo cáo', ['Báo cáo PTTB', 'Báo cáo doanh thu', 'Báo cáo thuê bao rời mạng'], { placeholder: 'Chọn loại báo cáo...' }),
+              sel('viewBy', 'Xem theo chiều', ['Chi nhánh quản lý', 'Chi nhánh bán', 'Phòng kinh doanh', 'Kênh bán'], { placeholder: 'Chọn xem theo chiều...' }),
+              sel('region', 'Vùng kinh doanh', ['Miền Bắc', 'Miền Trung', 'Miền Nam'], { placeholder: 'Chọn vùng kinh doanh...' }),
+              sel('product', 'Dịch vụ/ sản phẩm', ['Dịch vụ chính', 'Dịch vụ phụ', 'Thiết bị', 'SA'], { placeholder: 'Chọn dịch vụ/ sản phẩm...' }),
+              sel('contractTimeType', 'Loại thời gian HĐ', ['Ngày tạo HĐ', 'Ngày kích hoạt', 'Ngày hủy'], { placeholder: 'Chọn loại thời gian HĐ...' })
+            ),
+            chips.length > 0 && h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--color-border)' } },
+              h('span', { style: { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', flexShrink: 0 } }, 'Bộ lọc đã chọn:'),
+              ...chips,
+              h('div', { style: { flex: 1 } }),
+              h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)' }, onClick: resetF }, 'Xóa tất cả')
+            )
+          )
+        ),
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 12, overflow: 'hidden' } },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: 'var(--color-surface-alt)', cursor: 'pointer', userSelect: 'none' }, onClick: () => this.setState({ srfAdvOpen: !advOpen }) },
+            badge(2, false),
+            h('div', null,
+              h('div', { style: { fontSize: 13.5, fontWeight: 700, color: 'var(--color-text)' } }, 'BỘ LỌC NÂNG CAO'),
+              h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'Tinh chỉnh kết quả báo cáo theo các tiêu chí chi tiết')
+            ),
+            h('div', { style: { flex: 1 } }),
+            advCount > 0 && h(DS.Tag, { size: 'sm', color: 'var(--color-accent)' }, 'Đã chọn: ' + advCount),
+            h(DS.Icon, { name: advOpen ? 'chevron-up-line' : 'chevron-down-line', size: 18, color: 'var(--color-text-subtle)' })
+          ),
+          advOpen && h('div', { style: { padding: '16px', display: 'flex', flexDirection: 'column', gap: 18 } },
+            subgroup('building-02-line', 'Phạm vi tổ chức', 'Chọn đơn vị tổ chức trong doanh nghiệp',
+              sel('branch', 'Chi nhánh', ['HNI_01', 'HNI_02', 'HNI_03', 'HNI_04', 'HNI_06', 'HNI_07', 'HNI_09', 'HNI_ECOM', 'HDG', 'HCM_ECOM', 'HCM_TCDT'], { placeholder: 'Chọn chi nhánh...', searchable: true, searchPlaceholder: 'Tìm chi nhánh...' }),
+              sel('salesDept', 'Phòng kinh doanh', ['Phòng kinh doanh 1', 'Phòng kinh doanh 2', 'Phòng kinh doanh 3', 'Phòng kinh doanh 4', 'Phòng kinh doanh 5', 'Phòng kinh doanh 6', 'Phòng kinh doanh 7', 'Phòng kỹ thuật', 'Phòng CUS'], { placeholder: 'Chọn phòng kinh doanh...', searchable: true, searchPlaceholder: 'Tìm phòng kinh doanh...' }),
+              sel('channel', 'Kênh bán', ['Tất cả', 'ECP', 'FCP', 'Trực tiếp', 'Online', 'Telesale'], { placeholder: 'Chọn kênh bán...', searchable: true, searchPlaceholder: 'Tìm kênh bán...' })
+            ),
+            subgroup('folder-line', 'Sản phẩm & gói dịch vụ', 'Chọn loại dịch vụ, thiết bị và gói dịch vụ',
+              sel('serviceType', 'Loại dịch vụ', ['Internet', 'Truyền hình', 'Camera', 'Cloud', 'Combo'], { placeholder: 'Chọn loại dịch vụ...', searchable: true, searchPlaceholder: 'Tìm loại dịch vụ...' }),
+              sel('deviceType', 'Loại thiết bị (Optional)', ['Modem/ONT', 'Router Wi-Fi', 'Camera', 'Set-top Box', 'Access Point'], { placeholder: 'Chọn loại thiết bị...', searchable: true, searchPlaceholder: 'Tìm loại thiết bị...' }),
+              sel('servicePackage', 'Gói dịch vụ', ['Sky', 'Sky F1', 'Giga', 'Giga Plus', 'Meta', 'Combo Gia đình'], { placeholder: 'Chọn gói dịch vụ...', searchable: true, searchPlaceholder: 'Tìm gói dịch vụ...' })
+            ),
+            subgroup('user-circle-line', 'Khách hàng & hợp đồng', 'Lọc theo đặc điểm khách hàng và trạng thái hợp đồng',
+              sel('customerType', 'Loại hình khách hàng', ['Cá nhân', 'Doanh nghiệp', 'Hộ gia đình'], { placeholder: 'Chọn loại hình khách hàng...' }),
+              sel('customerObject', 'Đối tượng khách hàng', ['Khách hàng mới', 'Khách hàng hiện hữu', 'Khách hàng tiềm năng'], { placeholder: 'Chọn đối tượng khách hàng...' }),
+              sel('contractStatus', 'Tình trạng hợp đồng', ['Đang hoạt động', 'Chờ duyệt', 'Đã hủy', 'Hết hạn', 'Tạm ngưng'], { placeholder: 'Chọn tình trạng hợp đồng...', searchable: true, searchPlaceholder: 'Tìm tình trạng hợp đồng...' }),
+              sel('onlineStatus', 'Tình trạng online', ['Tất cả', 'Online', 'Offline'], { placeholder: 'Chọn tình trạng online...' }),
+              sel('cancelBeforeUse', 'Hủy trước sử dụng', ['Có bao gồm', 'Không bao gồm'], { placeholder: 'Chọn hủy trước sử dụng...' })
+            )
+          )
+        )
       )
     );
   }
