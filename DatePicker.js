@@ -28,7 +28,12 @@
   }
   // Dates are selected at day precision. Normalising prevents the current day
   // from being accidentally disabled after midnight because `new Date()` has a time.
-  function effectiveMinDate(minDate) {
+  // allowPast opts a picker out of the today-floor default — needed for pickers that
+  // filter/report on historical records (e.g. "ngày tạo đơn hàng") rather than schedule
+  // something upcoming; default stays false so every existing scheduling-style picker
+  // keeps its current can't-pick-the-past behavior unchanged.
+  function effectiveMinDate(minDate, allowPast) {
+    if (allowPast) return startOfDay(minDate);
     var today = startOfDay(new Date());
     var requestedMin = startOfDay(minDate);
     return requestedMin && requestedMin > today ? requestedMin : today;
@@ -211,7 +216,7 @@
   function Calendar(props) {
     var value = props.value, onChange = props.onChange;
     var rangeStart = props.rangeStart, rangeEnd = props.rangeEnd, onDayClick = props.onDayClick;
-    var mode = props.mode || "single", minDate = effectiveMinDate(props.minDate), maxDate = props.maxDate, style = props.style;
+    var mode = props.mode || "single", minDate = effectiveMinDate(props.minDate, props.allowPast), maxDate = props.maxDate, style = props.style;
     var today = new Date();
     var seed = value || rangeStart || today;
     var vs = React.useState({ year: seed.getFullYear(), month: seed.getMonth() });
@@ -267,7 +272,7 @@
     var disabled = props.disabled || false;
     var format = props.format || "dd/MM/yyyy";
     var minDate = props.minDate, maxDate = props.maxDate, containerStyle = props.containerStyle;
-    var selectableMinDate = effectiveMinDate(minDate);
+    var selectableMinDate = effectiveMinDate(minDate, props.allowPast);
 
     var os = React.useState(false); var open = os[0], setOpen = os[1];
     var is = React.useState(defaultValue || null); var inner = is[0], setInner = is[1];
@@ -340,7 +345,7 @@
     var disabled = props.disabled || false;
     var format = props.format || "dd/MM/yyyy";
     var minDate = props.minDate, maxDate = props.maxDate;
-    var selectableMinDate = effectiveMinDate(minDate);
+    var selectableMinDate = effectiveMinDate(minDate, props.allowPast);
     var showTime = props.showTime !== false;
     var containerStyle = props.containerStyle;
 

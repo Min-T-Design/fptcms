@@ -223,6 +223,31 @@ function FptTagPicker({ options, selected, onChange, placeholder, searchPlacehol
   );
 }
 
+// Vùng bảng dữ liệu có thể "Thu phóng" (phóng to/thu nhỏ như Excel) qua toolbar hoặc Ctrl + cuộn chuột.
+// Dùng CSS `zoom` (không phải transform:scale) vì zoom co giãn luôn kích thước layout của khối, nên
+// khung cuộn ngang bao ngoài (overflow:auto, không nằm trong khối zoom) tự nhận đúng kích thước đã
+// phóng to/thu nhỏ để hiện thanh cuộn. Ctrl+wheel cần listener DOM gốc không passive — onWheel
+// synthetic của React gắn passive nên event.preventDefault() bên trong nó bị bỏ qua, không chặn được
+// zoom trang mặc định của trình duyệt.
+function FptZoomPane({ zoom, onZoomChange, min = 50, max = 200, step = 10, children }) {
+  const h = React.createElement;
+  const ref = React.useRef(null);
+  const zoomRef = React.useRef(zoom);
+  zoomRef.current = zoom;
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onWheel = e => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      onZoomChange(Math.max(min, Math.min(max, zoomRef.current + (e.deltaY < 0 ? step : -step))));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [onZoomChange, min, max, step]);
+  return h('div', { ref, style: { zoom: zoom / 100 } }, children);
+}
+
 class Component extends DCLogic {
   state = {
     darkMode: false,
@@ -3245,6 +3270,24 @@ class Component extends DCLogic {
       h(DS.Table, { dense: true, style: { border: 'none', borderRadius: 0, overflow: 'visible', minWidth: minW }, columns: cols, data, rowKey, onRowClick })
     );
   }
+  // Bảng có thể thu phóng (Excel-like): giữ nguyên khung cuộn ngang của tbl(), chỉ zoom nội dung
+  // DS.Table bên trong nó — nhờ vậy khung cuộn vẫn nhận đúng kích thước đã phóng to/thu nhỏ để hiện
+  // thanh cuộn thay vì bị tràn ra ngoài card.
+  zoomableTbl(columns, data, rowKey, onRowClick, zoomKey) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const zoom = this.state[zoomKey] || 100;
+    const minW = columns.reduce((s, c) => s + (c.width || 150), 0);
+    const cols = columns.map(c => c.key === 'act' ? { ...c, sticky: true } : c);
+    return h('div', {
+      className: 'fpt-scroll fpt-drag-scroll',
+      style: { overflowX: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' },
+      onScroll: e => { e.currentTarget.classList.toggle('fpt-table-scrolled', e.currentTarget.scrollLeft > 2); }
+    },
+      h(FptZoomPane, { zoom, onZoomChange: z => this.setState({ [zoomKey]: z }), min: 50, max: 200 },
+        h(DS.Table, { dense: true, style: { border: 'none', borderRadius: 0, overflow: 'visible', minWidth: minW }, columns: cols, data, rowKey, onRowClick })
+      )
+    );
+  }
   renderPagBar(total, key, label) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const pg = this.state[key + '_pg'] || 1;
@@ -3691,8 +3734,6 @@ class Component extends DCLogic {
       { id: 2, name: 'Sự kiện FPT Play 2026',       tplId: 'sa',       tplLabel: 'LDP SA',               goal: 'Sự kiện / Branding', lv1: 'truyen-hinh-fpt-play',  l2: 'su-kien-2026',     url: '/truyen-hinh-fpt-play/su-kien-2026',     startDate: '01/01/26', endDate: '31/01/26', createdBy: 'Minh Tú', createdAt: '18/12/25', lastEdit: '28/01/26', lastEditBy: 'Minh Tú', status: 'expired' },
       { id: 3, name: 'Camera AI Tháng 6',           tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-thang-6', url: '/thiet-bi-thong-minh/camera-ai-thang-6', startDate: '01/06/26', endDate: '30/06/26', createdBy: 'Admin User', createdAt: '19/05/26', lastEdit: '02/06/26', lastEditBy: 'Admin',   status: 'publish' },
       { id: 4, name: 'Wi-Fi 7 Launch',              tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Lead Gen',           lv1: 'internet',              l2: 'wifi-7-launch',    url: '/internet/wifi-7-launch',               startDate: '15/06/26', endDate: '15/07/26', createdBy: 'Minh Tú', createdAt: '30/05/26', lastEdit: '14/06/26', lastEditBy: 'Minh Tú', status: 'draft' },
-      { id: 5, name: 'Ưu đãi Sinh viên 2026',       tplId: 'thulead',  tplLabel: 'LDP Thu Lead',         goal: 'Lead Gen',           lv1: 'uu-dai-sinh-vien',      l2: 'dang-ky-2026',     url: '/uu-dai-sinh-vien/dang-ky-2026',         startDate: '01/09/26', endDate: '31/12/26', createdBy: 'Hà Linh', createdAt: '25/08/26', lastEdit: '02/09/26', lastEditBy: 'Hà Linh', status: 'pending', submittedBy: 'Hà Linh', submittedAt: '02/09/26 09:12' },
-      { id: 6, name: 'Landing Tết Nguyên Đán',      tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Branding',           lv1: 'tet-2026',              l2: 'wifi-7',           url: '/tet-2026/wifi-7',                      startDate: '15/01/26', endDate: '15/02/26', createdBy: 'Minh Tú', createdAt: '20/08/26', lastEdit: '29/08/26', lastEditBy: 'Minh Tú', status: 'rejected', submittedBy: 'Minh Tú', submittedAt: '28/08/26 14:03', reviewedBy: 'Super Admin', reviewedAt: '29/08/26 08:30', rejectReason: 'Slug Level 1 "tet-2026" quá chung và mang tính thời điểm, không phản ánh danh mục dịch vụ. Đề xuất đặt trang dưới nhánh "khuyen-mai" (vd: khuyen-mai/tet-2026) để không phát sinh nhánh URL cấp 1 mới.' },
     ];
   }
   // ── Duyệt LDP: dữ liệu & tiện ích chung ──
@@ -7130,12 +7171,12 @@ class Component extends DCLogic {
     });
     const ldpSt = id => this.state.ldpStatuses && this.state.ldpStatuses[id] !== undefined ? this.state.ldpStatuses[id] : null;
     const stBadge = s => {
-      const map = { publish: ['Đang chạy', 'success'], expired: ['Hết hạn', 'danger'], draft: ['Nháp', 'neutral'], hidden: ['Tạm ẩn', 'warning'], pending: ['Chờ duyệt', 'info'], rejected: ['Từ chối', 'danger'] };
+      const map = { publish: ['Đang chạy', 'success'], expired: ['Hết hạn', 'danger'], draft: ['Nháp', 'neutral'], hidden: ['Tạm ẩn', 'warning'] };
       const [lbl, theme] = map[s] || ['—', 'neutral'];
       return h(DS.Badge, { theme, dot: true }, lbl);
     };
     const pageData = this.sliceData(data, 'ldp');
-    const statLabel = { publish: 'Đang chạy', expired: 'Hết hạn', draft: 'Nháp', hidden: 'Tạm ẩn', pending: 'Chờ duyệt', rejected: 'Từ chối' };
+    const statLabel = { publish: 'Đang chạy', expired: 'Hết hạn', draft: 'Nháp', hidden: 'Tạm ẩn' };
     const columns = [
       { key: 'name', header: 'Tên Trang (Campaign)', width: 220, render: (_, r) => h('div', null,
           h('div', { style: { fontWeight: 700, fontSize: 14 } }, r.name),
@@ -7161,7 +7202,7 @@ class Component extends DCLogic {
       { key: 'visible', header: 'Hiển thị', width: 80, align: 'center', render: (_, r) => {
           const curSt = ldpSt(r.id) || r.status;
           const isOn = curSt === 'publish';
-          const isDraft = ['draft', 'expired', 'pending', 'rejected'].includes(curSt);
+          const isDraft = ['draft', 'expired'].includes(curSt);
           if (isDraft) return h('span', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, '—');
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { checked: isOn, size: 'sm', onChange: v => {
@@ -7199,8 +7240,6 @@ class Component extends DCLogic {
               { value: 'hidden', label: 'Tạm ẩn' },
               { value: 'expired', label: 'Hết hạn' },
               { value: 'draft', label: 'Nháp' },
-              { value: 'pending', label: 'Chờ duyệt' },
-              { value: 'rejected', label: 'Từ chối' },
             ], searchable: true, searchPlaceholder: 'Tìm trạng thái…', onChange: v => this.setState({ ldpListStatus: v, ldp_pg: 1 }) })
           ),
 
@@ -12497,81 +12536,937 @@ class Component extends DCLogic {
     );
   }
   // ===== Báo cáo đăng ký Online =====
-  // Module riêng dưới "Báo cáo bán hàng": Báo cáo đăng ký online (DKOL - SPF) + Tìm kiếm, dùng chung bộ cột/demo-data/drawer chi tiết.
-  salesReportOnlineColumns() {
-    return [
-      { key: 'stt', header: 'STT', width: 56 },
-      { key: 'date', header: 'Ngày', width: 100 },
-      { key: 'time', header: 'Giờ (hh:mm:ss)', width: 110 },
-      { key: 'orderCode', header: 'Mã đơn hàng', width: 140 },
-      { key: 'saleType', header: 'Hình thức bán', width: 120, render: (_, r) => this.salesReportSaleTypeBadge(r.saleType) },
-      { key: 'customerName', header: 'Tên khách hàng', width: 220 },
-      { key: 'dob', header: 'Ngày sinh', width: 100, render: (_, r) => r.dob || '—' },
-      { key: 'gender', header: 'Giới tính', width: 90 },
-      { key: 'houseType', header: 'Loại nhà', width: 150 },
-      { key: 'aptName', header: 'Tên chung cư', width: 200, render: (_, r) => r.aptName || '—' },
-      { key: 'province', header: 'Tỉnh/Thành phố', width: 140 },
-    ];
-  }
+  // Module riêng dưới "Báo cáo bán hàng": Báo cáo đăng ký online (DKOL - SPF) + Tìm kiếm, dùng chung 100% bộ cột/demo-data/drawer chi tiết (Đơn hàng/Dịch vụ) — chỉ khác toolbar/bộ lọc phía trên.
   salesReportSaleTypeBadge(v) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const theme = v === 'Bán mới' ? 'success' : v === 'Nâng cấp' ? 'brand' : 'info';
     return h(DS.Badge, { theme, size: 'sm' }, v);
   }
-  SALES_REPORT_ONLINE_DEMO() {
-    const rows = [
-      ['18/09/2026', '23:59:46', 'HCMPI0066Z7N', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '23:57:59', 'KHAPI0066Z7L', 'Bán thêm', 'ĐẶNG DUY THANH', '', 'Nam', 'Nhà không địa chỉ', '', 'Khánh Hòa'],
-      ['18/09/2026', '23:57:06', 'HNIPI0066Z7K', 'Bán mới', 'Đỗ Đức Minh Cường', '', 'Nam', 'Nhà chung cư', 'BCC Hateco Xuan Phuong', 'Hà Nội'],
-      ['18/09/2026', '23:57:00', 'HCMPI0066Z7J', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '23:56:37', 'NTNPI0066Z7H', 'Nâng cấp', 'LÊ THỊ NGA', '', 'Nam', 'Nhà Phố', '', 'Khánh Hòa'],
-      ['18/09/2026', '23:56:36', 'HCMPI0066Z7G', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '23:54:54', 'HCMPI0066Z7F', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '23:54:15', 'HCMPI0066Z7C', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '23:49:18', 'HCMPI0066Z77', 'Bán mới', 'Bán cho người tiêu dùng', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '23:47:49', 'HNIPI0066Z73', 'Bán mới', 'ĐẶNG VIỆT ANH', '', 'Nam', 'Nhà Phố', '', 'Hà Nội'],
-      ['18/09/2026', '23:47:20', 'HUEPI0066Z72', 'Bán mới', 'NGÔ QUANG TOÀN', '', 'Nam', 'Nhà Phố', '', 'Huế'],
-      ['18/09/2026', '23:45:50', 'HNIPI0066Z6Y', 'Nâng cấp', 'ĐẶNG VIỆT ANH', '', 'Nam', 'Nhà Phố', '', 'Hà Nội'],
-    ];
-    return rows.map((r, i) => ({ id: 'sro' + i, stt: i + 1, date: r[0], time: r[1], orderCode: r[2], saleType: r[3], customerName: r[4], dob: r[5], gender: r[6], houseType: r[7], aptName: r[8], province: r[9] }));
+  // ── Đơn hàng / Dịch vụ (Báo cáo đăng ký online): bộ cột & dữ liệu đầy đủ theo 2 sheet nguồn
+  // "Đơn hàng" + "Dịch vụ" của file báo cáo gốc — mỗi sheet ứng với 1 tab dữ liệu riêng.
+  dashFallback(v) { return (v === null || v === undefined || v === '') ? '—' : v; }
+  maskPhone(v) {
+    const s = this.dashFallback(v);
+    if (s === '—') return s;
+    const p = String(s);
+    return p.length === 10 ? p.slice(0, 3) + '****' + p.slice(7) : p;
   }
-  SALES_REPORT_ONLINE_SEARCH_DEMO() {
-    const rows = [
-      ['20/09/2026', '14:14:52', 'CMUPK0067O2B', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Cà Mau'],
-      ['20/09/2026', '14:14:27', 'HCMPK0067O24', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['20/09/2026', '14:14:14', 'HCMPK0067O20', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '16:27:51', 'HCMPI0066WHY', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '16:27:00', 'HCMPI0066WHF', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '16:18:43', 'HCMPI0066WDU', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '16:08:25', 'HCMPI0066W9N', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '16:08:08', 'HCMPI0066W9F', 'Bán mới', 'test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '15:24:48', 'HCMPI0066VSY', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '14:53:44', 'HCMPI0066VF5', 'Bán mới', 'test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '14:53:25', 'HCMPI0066VEW', 'Bán mới', 'Test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-      ['18/09/2026', '13:40:00', 'HCMPI0066UNI', 'Bán mới', 'test', '', 'Nam', 'Nhà Phố', '', 'Hồ Chí Minh'],
-    ];
-    return rows.map((r, i) => ({ id: 'srs' + i, stt: i + 1, date: r[0], time: r[1], orderCode: r[2], saleType: r[3], customerName: r[4], dob: r[5], gender: r[6], houseType: r[7], aptName: r[8], province: r[9] }));
+  fmtVnd(v) { return (v === null || v === undefined || v === '') ? '—' : Number(v).toLocaleString('vi-VN') + ' đ'; }
+  parseVnDate(s) {
+    if (!s) return null;
+    const [dt] = String(s).split(' ');
+    const [dd, mm, yyyy] = dt.split('/');
+    if (!dd || !mm || !yyyy) return null;
+    return new Date(+yyyy, +mm - 1, +dd);
   }
-  openSalesReportOnlineRowDetail(r) {
+  salesReportOnlineChannelOptions() {
+    return [...new Set(this.SALES_REPORT_ONLINE_ORDERS_DEMO().map(r => r.regChannel).filter(Boolean))];
+  }
+  filterSalesReportOnlineOrders(rows, { dateStart, dateEnd, channel, orderCodeQ, contractQ, phoneQ } = {}) {
+    const start = dateStart ? new Date(dateStart.getFullYear(), dateStart.getMonth(), dateStart.getDate()) : null;
+    const end = dateEnd ? new Date(dateEnd.getFullYear(), dateEnd.getMonth(), dateEnd.getDate(), 23, 59, 59, 999) : null;
+    return rows.filter(r => {
+      if (start || end) {
+        const d = this.parseVnDate(r.createdDate);
+        if (d) {
+          if (start && d < start) return false;
+          if (end && d > end) return false;
+        }
+      }
+      if (channel && channel !== 'Tất cả' && r.regChannel !== channel) return false;
+      if (orderCodeQ && !String(r.orderCode || '').toLowerCase().includes(orderCodeQ.toLowerCase())) return false;
+      if (contractQ && !String(r.contractCode || '').toLowerCase().includes(contractQ.toLowerCase())) return false;
+      if (phoneQ && !String(r.phone || '').includes(phoneQ)) return false;
+      return true;
+    });
+  }
+  zoomToolbar(key) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    this.openDrawer({ title: r.orderCode, subtitle: 'Chi tiết đăng ký online', width: 440,
+    const zoom = this.state[key] || 100;
+    const setZoom = z => this.setState({ [key]: Math.max(50, Math.min(200, Math.round(z))) });
+    const presets = [200, 150, 125, 100, 75, 50, 25];
+    const dlgKey = key + 'DialogOpen';
+    const dlgOpen = this.state[dlgKey] === true;
+    const valKey = key + 'DialogValue';
+    const textKey = key + 'DialogText';
+    const customKey = key + 'DialogIsCustom';
+    const val = this.state[valKey] !== undefined ? this.state[valKey] : zoom;
+    const text = this.state[textKey] !== undefined ? this.state[textKey] : String(zoom);
+    const isCustom = this.state[customKey] === true;
+    const openDlg = () => this.setState({ [dlgKey]: true, [valKey]: zoom, [textKey]: String(zoom), [customKey]: !presets.includes(zoom) });
+    const closeDlg = () => this.setState({ [dlgKey]: false });
+    const pickPreset = p => this.setState({ [valKey]: p, [textKey]: String(p), [customKey]: false });
+    const applyZoom = () => {
+      const n = isCustom ? parseInt(text, 10) : val;
+      setZoom(Number.isFinite(n) && n > 0 ? n : zoom);
+      closeDlg();
+    };
+    return h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-alt)', flexWrap: 'wrap' } },
+      h('span', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'Giữ Ctrl và cuộn chuột trên bảng để phóng to/thu nhỏ nhanh'),
+      h('div', { style: { flex: 1 } }),
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 } },
+        h(DS.IconButton, { icon: 'minus-line', label: 'Thu nhỏ', level: 'tertiary', size: 'xs', onClick: () => setZoom(zoom - 10) }),
+        h('div', { style: { width: 110, flexShrink: 0 } }, h(DS.Slider, { min: 50, max: 200, step: 5, value: zoom, onChange: setZoom })),
+        h(DS.IconButton, { icon: 'plus-line', label: 'Phóng to', level: 'tertiary', size: 'xs', onClick: () => setZoom(zoom + 10) }),
+        h('span', {
+          onClick: openDlg,
+          title: 'Bấm để chỉnh tỉ lệ thu phóng',
+          style: { fontSize: 12.5, fontWeight: 700, color: 'var(--color-text)', minWidth: 40, textAlign: 'right', cursor: 'pointer', userSelect: 'none' }
+        }, zoom + '%')
+      ),
+      dlgOpen && h(DS.Modal, { open: true, onClose: closeDlg, title: 'Thu phóng', description: 'Chọn tỉ lệ hiển thị bảng dữ liệu', size: 'sm' },
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 } },
+          presets.map(p => h(DS.Radio, { key: p, name: dlgKey, label: p + '%', checked: !isCustom && val === p, onChange: () => pickPreset(p) })),
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 } },
+            h(DS.Radio, { name: dlgKey, label: 'Tùy chỉnh:', checked: isCustom, onChange: () => this.setState({ [customKey]: true }) }),
+            h(DS.Input, {
+              size: 'sm', type: 'number', min: 50, max: 200, value: text, placeholder: '100', containerStyle: { width: 90 },
+              onFocus: () => this.setState({ [customKey]: true }),
+              onChange: e => this.setState({ [textKey]: e.target.value, [customKey]: true })
+            }),
+            h('span', { style: { fontSize: 13, color: 'var(--color-text-muted)' } }, '%')
+          )
+        ),
+        h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+          h(DS.Button, { level: 'tertiary', onClick: closeDlg }, 'Hủy'),
+          h(DS.Button, { level: 'primary', onClick: applyZoom }, 'OK')
+        )
+      )
+    );
+  }
+  salesReportOnlineOrderFieldDefs() {
+    return [
+      ['stt', 'STT', 56], ['createdDate', 'Ngày tạo đơn hàng', 120], ['createdTime', 'Giờ (hh:mm:ss)', 110],
+      ['completedDate', 'Ngày hoàn tất', 120], ['orderCode', 'Mã đơn hàng', 150], ['phone', 'Số điện thoại', 130], ['customerName', 'Tên khách hàng', 220],
+      ['dob', 'Ngày sinh', 100], ['gender', 'Giới tính', 90], ['houseType', 'Loại nhà', 150], ['aptName', 'Tên chung cư', 190],
+      ['province', 'Tỉnh', 170], ['region', 'Vùng', 190], ['pttPlanned', 'PTTT chọn trên DKOL', 180],
+      ['pttActual', 'PTTT thực tế của khách hàng', 200], ['paymentStatus', 'Tình trạng thanh toán', 160],
+      ['regChannel', 'Kênh đăng ký', 190], ['step1', 'B1: Đăng ký thông tin', 160], ['step2', 'B2: Chọn dịch vụ', 140],
+      ['step3', 'B3 (Chọn PT thanh toán)', 170], ['bingoTT', 'Bingo TT', 110], ['otp', 'OTP', 90],
+      ['leadBTT', 'Lead BTT (Đẩy KHTN chưa)', 180], ['salesReceiveKHTN', 'Sales nhận KHTN', 150],
+      ['salesCloseBingoBTT', 'Sales Chốt Bingo BTT', 170], ['bingoBTT', 'Bingo BTT', 110], ['contractCode', 'Số HĐ', 120],
+      ['orderStatus', 'Tình trạng đơn hàng', 200], ['activeService', 'Dịch vụ trên HĐ đã active', 200],
+      ['stopReasonWeb', 'Lý do dừng trên website', 200], ['notOkReasonBingo', 'Lý do Not Okay của Bingo BTT', 220],
+      ['cancelReasonBeforeUse', 'Lý do hủy trước sử dụng', 200], ['revenue', 'Doanh Thu', 130],
+      ['referralCode', 'Mã giới thiệu', 140], ['voucher', 'Voucher', 110],
+      ['pushKHTNHours', 'Thời gian đẩy KHTN cho Sales (giờ)', 220], ['pushKHTNTime', 'Thời gian đẩy KHTN', 180],
+      ['contractCreateHours', 'Thời gian lên HĐ (giờ)', 180], ['contractActivateTime', 'Thời gian kích hoạt HĐ', 190],
+      ['camSource', 'CamSource', 140], ['utmSource', 'Utm source', 150], ['utmMedium', 'Utm medium', 130],
+      ['utmCampaign', 'Utm campaign', 150], ['utmContent', 'Utm Content', 150], ['url', 'Url', 190],
+      ['trackingId', 'Tracking ID', 270], ['object', 'Đối tượng', 160], ['serviceList', 'Service List', 190],
+      ['domain', 'Domain', 190], ['saleType', 'Hình thức bán', 120], ['guestId', 'GuestId', 130], ['gift', 'Quà tặng', 130]
+    ];
+  }
+  salesReportOnlineOrderColumns() {
+    return this.salesReportOnlineOrderFieldDefs().map(([key, header, width]) => {
+      if (key === 'stt') return { key, header, width };
+      if (key === 'saleType') return { key, header, width, render: (_, r) => this.salesReportSaleTypeBadge(r.saleType) };
+      if (key === 'revenue') return { key, header, width, render: (_, r) => this.fmtVnd(r.revenue) };
+      if (key === 'phone') return { key, header, width, render: (_, r) => this.maskPhone(r.phone) };
+      return { key, header, width, render: (_, r) => this.dashFallback(r[key]) };
+    });
+  }
+  SALES_REPORT_ONLINE_ORDERS_DEMO() {
+    const rows = [
+      [1,"23/09/2026","23:58:59",null,"HCMPN0068WIR","0912345671","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [2,"23/09/2026","23:55:33",null,"NDHPN0068WIO","0987654321","NGUYỄN THỊ CHINH",null,"Nam","Nhà Phố",null,"Ninh Bình - Nam Định","12.Đông Bắc Bộ","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"NOT OK","","","","NDD020734","Hủy","FPT Play","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Play","https://hifpt-api.fpt.net","Bán thêm",null,null],
+      [3,"23/09/2026","23:55:18",null,"HCMPN0068WIN","0932112233","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [4,"23/09/2026","23:53:51",null,"NDHPN0068WIM","0977889900","NGUYỄN THỊ CHINH",null,"Nam","Nhà Phố",null,"Ninh Bình - Nam Định","12.Đông Bắc Bộ","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"OK","","","","NDD020734","Hủy","FPT Play","","","",0,"","",null,"23/09/2026 17:10:08",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Play","https://hifpt-api.fpt.net","Bán thêm",null,null],
+      [5,"23/09/2026","23:52:00",null,"HCMPN0068WII","0909123456","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Momo","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFU0764","Đã hoàn tất","Ultra Fast Stand Alone","","","",39900,"","",null,null,-7,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [6,"23/09/2026","23:51:32",null,"HUEPN0068WIG","0865123789","TRẦN THỊ BÍCH LIÊN",null,"Nam","Nhà Phố",null,"Huế","13.Tây Nguyên - Miền Trung","Thanh toán khi triển khai","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HUFD53189","Đã hoàn tất","Combo","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet,FPT Play","https://hifpt-api.fpt.net","Nâng cấp",null,null],
+      [7,"23/09/2026","23:50:40",null,"HCMPN0068WIE","0798456123","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Napas","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",39900,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [8,"23/09/2026","23:49:59",null,"HCMPN0068WID","0703214567","Liên chí nguyện",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Foxpay-Quoc te","HiFPT-Foxpay-Quoc te","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFU0731","Đã hoàn tất","Pay Wifi","","","",150000,"","",null,null,-6.97,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Pay Wifi","hifpt-wekit","Bán mới",null,null],
+      [9,"23/09/2026","23:49:52",null,"HCMPN0068WIC","0356789012","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Foxpay-Noi dia","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",39900,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [10,"23/09/2026","23:49:50",null,"HCMPN0068WIB","0583214569","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [11,"23/09/2026","23:46:16",null,"HNIPN0068WI9","0912908765","Do Thi Bich Nham",null,"Nam","Nhà Phố",null,"Hà Nội","01.Hà Nội","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","","HND355117","Đã cập nhật thông tin khách hàng","FPT Camera Combo","","","",0,"","",null,"23/09/2026 17:00:09",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null],
+      [12,"23/09/2026","23:45:45",null,"BGGPN0068WI8","0834567891","Test",null,"Nam","Nhà Phố",null,"Bắc Ninh - Bắc Giang","11.Tây Bắc Bộ","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Internet","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [13,"23/09/2026","23:43:26",null,"HNIPN0068WI6","0967123456","NGUYỄN ANH TÚ",null,"Nam","Nhà chung cư","BCC Hoang Duong","Hà Nội","01.Hà Nội","Thanh toán khi triển khai","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HNAEY5975","Đã hoàn tất","FPT Play","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Play","https://hifpt-api.fpt.net","Nâng cấp",null,null],
+      [14,"23/09/2026","23:42:18",null,"HNIPN0068WI5","0781234569","Bui Thi Phuong Thanh",null,"Nam","Nhà Phố",null,"Hà Nội","01.Hà Nội","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","",null,"Đã cập nhật thông tin khách hàng","Sản phẩm khác","Khách hàng tự hủy","","",0,"","",null,"23/09/2026 17:00:10",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Sản phẩm khác","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [15,"23/09/2026","23:42:17",null,"TBHPN0068WI4","0327891456","NGUYỄN MINH VƯƠNG",null,"Nam","Nhà không địa chỉ",null,"Hưng Yên - Thái Bình","12.Đông Bắc Bộ","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","","TBAAE4646","Đã cập nhật thông tin khách hàng","FPT Camera Combo","","","",0,"","",null,"23/09/2026 17:00:09",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null],
+      [16,"23/09/2026","23:41:48",null,"HCMPN0068WI2","0946123789","dai",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","ĐKOL","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null],
+      [17,"23/09/2026","23:41:38",null,"HCMPN0068WI1","0812345690","Nguyễn văn hưng",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","DKOL-ZaloPay","","Chưa thanh toán","ĐKOL","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",50000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null],
+      [18,"23/09/2026","23:41:15",null,"HCMPN0068WI0","0898765432","Nguyễn Trọng Thái",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","ĐKOL","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","",null,"Đã cập nhật thông tin khách hàng","Internet","Khách hàng tự hủy","","",0,"","",null,"23/09/2026 17:00:09",null,null,null,null,null,null,"internet/goi-meta",null,null,"HCM.ECOM.fptvn","Internet","fpt.vn","Bán mới",null,null],
+      [19,"23/09/2026","23:40:14",null,"HCMPN0068WHY","0369874521","Mạc Quang Khải",null,"Nam","Nhà chung cư","BCC Tara Residence","Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","AM","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Combo","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,"accesstrade",null,null,"ngoai-hang-anh/",null,"893cae625e464d419fd358007d52858e","HNI.Ducdv14","Internet,FPT Play","fpt.vn","Bán mới",null,null],
+      [20,"23/09/2026","23:40:08",null,"HCMPN0068WHX","0912456378","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [21,"23/09/2026","23:31:09",null,"HNIPN0068WHS","0708912345","NGUYỄN HỮU HOÀN",null,"Nữ","Nhà chung cư","CC Học viện Quân y","Hà Nội","01.Hà Nội","","","Chưa thanh toán","ĐKOL","OK","OK","NOT OK","NOT OK",null,"OK","","","","HNACA5028","Đã cập nhật thông tin khách hàng","FPT Play","","","",0,"","",null,"23/09/2026 16:50:09",null,null,null,"ldp_epl",null,null,null,null,null,"HCM.ECOM.fptvn","FPT Play","fpt.vn","Nâng cấp",null,null],
+      [22,"23/09/2026","23:31:06",null,"BDGPN0068WHR","0947896321","Hồ Minh Nhật",null,"Nam","Nhà Phố",null,"Hồ Chí Minh - Bình Dương","09.Bình Dương","Thanh toán khi triển khai","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","BDABC8713","Đã hoàn tất","Internet","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet","https://hifpt-api.fpt.net","Nâng cấp",null,null],
+      [23,"23/09/2026","23:31:05",null,"HCMPN0068WHQ","0879123456","Gkfjg",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","ĐKOL","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null],
+      [24,"23/09/2026","23:29:43",null,"HCMPN0068WHM","0938123457","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [25,"23/09/2026","23:29:07",null,"KHAPN0068WHL","0356124789","Lê Khắc Vĩnh Thuỵ",null,"Nam","Nhà chung cư","BCC Tòa Nhà CT6","Khánh Hòa","06.Khánh Hòa","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"NOT OK","","","","NTAAL5257","Hủy","Internet","","","",471500,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet","https://hifpt-api.fpt.net","Nâng cấp",null,null],
+      [26,"23/09/2026","23:27:26",null,"HCMPN0068WHI","0912345690","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",39900,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [27,"23/09/2026","23:27:07",null,"HCMPN0068WHH","0967895412","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [28,"23/09/2026","23:25:55",null,"HNIPN0068WHG","0823456781","Lê Trung Dương",null,"Nam","Nhà Phố",null,"Hà Nội","01.Hà Nội","Thanh toán khi triển khai","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HNAAM6172","Đang xử lý","FPT Camera Combo","","","",200000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null],
+      [29,"23/09/2026","23:25:47",null,"HCMPN0068WHF","0791234568","Nguyễn văn hưng",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","DKOL-ZaloPay","","Chưa thanh toán","ĐKOL","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",50000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null],
+      [30,"23/09/2026","23:25:18",null,"HCMPN0068WHC","0367891234","Nguyễn Minh Đức",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","Thanh toán khi triển khai","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFQ7138","Đang xử lý","FPT Camera Combo","","","",200000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null],
+      [31,"23/09/2026","23:23:26",null,"HPGPN0068WH9","0918273645","Bùi Trung Thành","26/08/1991","Nam","Nhà Phố",null,"Hải Phòng","04.Hải Phòng","HiFPT-Napas","HiFPT-Napas","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HPAAU2440","Đang xử lý","Internet","","","",299000,"","",null,null,-6.98,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [32,"23/09/2026","23:22:16",null,"HCMPN0068WH7","0938576412","NGUYỄN ĐỨC QUÝ",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"OK","","","",null,"Đã cập nhật thông tin khách hàng","FPT Camera Combo","Khách hàng tự hủy","","",550000,"","",null,"23/09/2026 16:40:08",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [33,"23/09/2026","23:22:01",null,"HCMPN0068WH6","0774125836","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [34,"23/09/2026","23:21:55",null,"HCMPN0068WH5","0369258147","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [35,"23/09/2026","23:21:52",null,"HCMPN0068WH4","0912837465","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [36,"23/09/2026","23:20:50",null,"HCMPN0068WH1","0987123456","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [37,"23/09/2026","23:19:58",null,"HCMPN0068WGZ","0345678912","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Napas","HiFPT-Napas","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFU0729","Đã hoàn tất","Ultra Fast Stand Alone","","","",39900,"","",null,null,-6.97,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [38,"23/09/2026","23:19:36",null,"HCMPN0068WGX","0798654123","Phương",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Combo","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet,FPT Play","https://hifpt-api.fpt.net","Bán mới",null,null],
+      [39,"23/09/2026","23:19:02",null,"HCMPN0068WGW","0912765438","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null]
+    ];
+    const keys = this.salesReportOnlineOrderFieldDefs().map(d => d[0]);
+    return rows.map((r, i) => {
+      const o = { id: 'sroo' + i };
+      keys.forEach((k, idx) => { o[k] = r[idx]; });
+      return o;
+    });
+  }
+  openSalesReportOnlineOrderDetail(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const defs = this.salesReportOnlineOrderFieldDefs().filter(([key]) => key !== 'stt');
+    this.openDrawer({
+      title: r.orderCode, subtitle: 'Chi tiết đơn hàng đăng ký online', width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
-        this.detailRow('Ngày', r.date), this.detailRow('Giờ', r.time),
-        this.detailRow('Mã đơn hàng', r.orderCode), this.detailRow('Hình thức bán', this.salesReportSaleTypeBadge(r.saleType)),
-        this.detailRow('Tên khách hàng', r.customerName), this.detailRow('Ngày sinh', r.dob || '—'),
-        this.detailRow('Giới tính', r.gender), this.detailRow('Loại nhà', r.houseType),
-        this.detailRow('Tên chung cư', r.aptName || '—'), this.detailRow('Tỉnh/Thành phố', r.province)
+        ...defs.map(([key, header]) => this.detailRow(header,
+          key === 'saleType' ? this.salesReportSaleTypeBadge(r.saleType) :
+          key === 'revenue' ? this.fmtVnd(r.revenue) :
+          key === 'phone' ? this.maskPhone(r.phone) : r[key]
+        ))
       ),
       footer: () => h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng')
       )
     });
   }
-  exportSplitButton(stateKey, label, items) {
+  salesReportOnlineServiceFieldDefs() {
+    return [
+      ['orderCode', 'Mã đơn hàng', 180], ['contractNo', 'Số hợp đồng', 150], ['service', 'Dịch vụ', 150],
+      ['servicePackage', 'Gói dịch vụ', 160], ['subscriptionType', 'Hình thức thuê bao', 200]
+    ];
+  }
+  salesReportOnlineServiceColumns() {
+    return this.salesReportOnlineServiceFieldDefs().map(([key, header, width]) => ({ key, header, width, render: (_, r) => this.dashFallback(r[key]) }));
+  }
+  SALES_REPORT_ONLINE_SERVICES_DEMO() {
+    const rows = [
+      ["0000GKNAZ7WG",null,"Internet","Giga","1 tháng"],
+      ["0000GROZLIJK",null,"Internet","Sky","1 tháng"],
+      ["0000GTBPA76O",null,"Internet","Sky","Trả trước 6 tháng"],
+      ["0000GTBZVEO0",null,"Combo","VIP","Trả trước 6 tháng"],
+      ["0000GTBZVEO0",null,"Combo","Giga","Trả trước 6 tháng"],
+      ["0000GTGR8MPS",null,"Ultra Fast","Ultra Fast","Trả trước 1 tháng"],
+      ["0000GTGRRSTC",null,"Internet","Sky","1 tháng"],
+      ["0000GTGSRT40",null,"Combo","VIP","Trả trước 6 tháng"],
+      ["0000GTGSRT40",null,"Combo","Giga","Trả trước 6 tháng"],
+      ["0000GTGVB9R4",null,"Combo","VIP","Trả trước 6 tháng"],
+      ["0000GTGVB9R4",null,"Combo","Giga","Trả trước 6 tháng"],
+      ["0000GTGXNNOG",null,"Combo","Giga","1 tháng"],
+      ["0000GTGXNNOG",null,"Combo","VIP","1 tháng"],
+      ["0000GTGY6EF4",null,"Internet","Giga","1 tháng"],
+      ["0000GTHHZJJ4",null,"Internet","Giga","Trả trước 6 tháng"],
+      ["0000GTHKHFK0",null,"Internet","Giga","1 tháng"],
+      ["0000GTHKXDJ4",null,"Internet","Sky","Trả trước 6 tháng"],
+      ["0000GTIAJIQO",null,"Internet","Sky","1 tháng"],
+      ["0000GTID90E8",null,"Internet","Sky F1","Trả trước 6 tháng"],
+      ["0000GTIQRCPS",null,"Ultra Fast","Ultra Fast","Trả trước 1 tháng"],
+      ["0000GTJOHI80",null,"Internet","Giga","1 tháng"],
+      ["0000GVHR1VB4",null,"Internet","Sky F1","Trả trước 6 tháng"],
+      ["0000GVI3V84G",null,"Internet","Sky F1","Trả trước 12 tháng"],
+      ["0000GVIIST34",null,"Internet","Sky","1 tháng"],
+      ["0000GVIKBI8W",null,"Internet","Sky F1","Trả trước 3 tháng"],
+      ["0000GVIKC2M8",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["0000GVIKS5K0",null,"Internet","Sky F1","Trả trước 6 tháng"],
+      ["0000H10433SW",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000H104VNS0",null,"Internet","Sky F1","Trả trước 6 tháng"],
+      ["0000H10TRDHC",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000H10Y1VEO",null,"Combo","Giga","1 tháng"],
+      ["0000H10Y1VEO",null,"Combo","VIP","1 tháng"],
+      ["0000H115E7KW",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["0000H11T43VK",null,"Internet","Sky","1 tháng"],
+      ["0000H12Q6YIO",null,"Combo","Giga","1 tháng"],
+      ["0000H12Q6YIO",null,"Combo","VIP","1 tháng"],
+      ["0000H157V2HS",null,"Combo","Giga","1 tháng"],
+      ["0000H157V2HS",null,"Combo","VIP","1 tháng"],
+      ["0000H1NY12W0",null,"Internet","Sky F1","Trả trước 3 tháng"],
+      ["0000H1O2PDHC",null,"Internet","Sky","1 tháng"],
+      ["0000H97P7PFK",null,"Internet","Giga","1 tháng"],
+      ["0000HAQQ3TXC",null,"Internet","Giga","Trả trước 3 tháng"],
+      ["0000HRFLWK00",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["0000HZCBHQ80",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000HZCDFQXS",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000HZDW4080",null,"Combo","VIP","1 tháng"],
+      ["0000HZDW4080",null,"Combo","Sky","1 tháng"],
+      ["0000HZDYE64G",null,"Internet","Giga","1 tháng"],
+      ["0000HZFL6T7K",null,"Combo","VIP","1 tháng"],
+      ["0000HZFL6T7K",null,"Combo","Sky","1 tháng"],
+      ["0000HZFM6IRK",null,"Combo","Giga","1 tháng"],
+      ["0000HZFM6IRK",null,"Combo","VIP","1 tháng"],
+      ["0000I3SUUS74",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000I3T0LYO0",null,"Internet","Giga","1 tháng"],
+      ["0000I7UMUNNK",null,"Internet","Giga","Trả trước 3 tháng"],
+      ["0000ILTRYH5S",null,"Combo","Sky","Trả trước 5 tháng"],
+      ["0000ILTRYH5S",null,"Combo","VIP","Trả trước 5 tháng"],
+      ["0000JGNJZ0SG",null,"Internet","Giga","1 tháng"],
+      ["0000JGTWW4AO",null,"Internet","Giga","1 tháng"],
+      ["0000JGV90KRK",null,"FPT Camera Only","FCAM-Play 4",null],
+      ["0000JGV90KRK",null,"FPT Camera Only","7D",null],
+      ["0000JYHVOKTC",null,"Internet","Giga F1","Trả trước 12 tháng"],
+      ["0000JYID2FNK",null,"Internet","Giga F1","Trả trước 12 tháng"],
+      ["0000JYIR5ZFK",null,"Combo","Giga","Trả trước 12 tháng"],
+      ["0000JYIR5ZFK",null,"Combo","IQ3+","Trả trước 12 tháng"],
+      ["0000JYIR5ZFK",null,"Combo","FCAM-Play 4","Trả trước 12 tháng"],
+      ["0000JYL55EQO",null,"Tripple","FCAM-Play 4","Trả trước 3 tháng"],
+      ["0000JYL55EQO",null,"Tripple","IQ3+","Trả trước 3 tháng"],
+      ["0000JYL55EQO",null,"Tripple","VIP","Trả trước 3 tháng"],
+      ["0000JYL55EQO",null,"Tripple","Meta","Trả trước 3 tháng"],
+      ["0000JYL64ZLS",null,"Tripple","FCAM-Play 4","Trả trước 3 tháng"],
+      ["0000JYL64ZLS",null,"Tripple","IQ3+","Trả trước 3 tháng"],
+      ["0000JYL64ZLS",null,"Tripple","VIP","Trả trước 3 tháng"],
+      ["0000JYL64ZLS",null,"Tripple","Meta","Trả trước 3 tháng"],
+      ["0000JYL71A0W",null,"Tripple","IQ3+","Trả trước 6 tháng"],
+      ["0000JYL71A0W",null,"Tripple","Meta","Trả trước 6 tháng"],
+      ["0000JYL71A0W",null,"Tripple","FCAM-IQ 4S","Trả trước 6 tháng"],
+      ["0000JYL71A0W",null,"Tripple","VIP","Trả trước 6 tháng"],
+      ["0000JYLA9RSW",null,"Tripple","IQ3+","Trả trước 3 tháng"],
+      ["0000JYLA9RSW",null,"Tripple","VIP","Trả trước 3 tháng"],
+      ["0000JYLA9RSW",null,"Tripple","FCAM-IQ 4S","Trả trước 3 tháng"],
+      ["0000JYLA9RSW",null,"Tripple","Meta","Trả trước 3 tháng"],
+      ["0000JYLK3IO0",null,"Combo","Meta","1 tháng"],
+      ["0000JYLK3IO0",null,"Combo","VIP","1 tháng"],
+      ["0000JYLPTW74",null,"FPT Camera Only","3D",null],
+      ["0000JYLPTW74",null,"FPT Camera Only","FCAM-Play 4",null],
+      ["0000JYNQ53MO",null,"Combo","VIP","Trả trước 3 tháng"],
+      ["0000JYNQ53MO",null,"Combo","Meta","Trả trước 3 tháng"],
+      ["0000JYOENKGW",null,"Internet","Giga","1 tháng"],
+      ["0000JYOENKGW",null,"Internet","FSafe","1 tháng"],
+      ["0000KARQ4VSW",null,"Combo","Sky","Trả trước 2 tháng"],
+      ["0000KARQ4VSW",null,"Combo","VIP","Trả trước 2 tháng"],
+      ["0000KG9TZJK0",null,"Internet","Sky","1 tháng"],
+      ["0000KI2MCFK0",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000KI2SQU3K",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000KKUYPJTS",null,"Internet","Sky F2","Trả trước 3 tháng"],
+      ["0000KKVFZVSW",null,"Internet","Sky F2","Trả trước 3 tháng"],
+      ["0000KKXCIVJ4",null,"Combo","IQ3+","Trả trước 3 tháng"],
+      ["0000KKXCIVJ4",null,"Combo","FCAM-Play 4","Trả trước 3 tháng"],
+      ["0000KKXCIVJ4",null,"Combo","Giga","Trả trước 3 tháng"],
+      ["0000KKXJ7HZ4",null,"Internet","Sky F2","Trả trước 3 tháng"],
+      ["0000KOH306OW",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["0000KOH306OW",null,"Combo","Meta F1","Trả trước 6 tháng"],
+      ["0000KOK2L7S0",null,"Combo","FCAM-Play 4","Trả trước 3 tháng"],
+      ["0000KOK2L7S0",null,"Combo","An Tâm 7","Trả trước 3 tháng"],
+      ["0000KOK2L7S0",null,"Combo","Giga F1","Trả trước 3 tháng"],
+      ["0000KOR2CNS0",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["0000KOR2CNS0",null,"Combo","Sky","Trả trước 6 tháng"],
+      ["0000KOR48C5C",null,"Combo","V.VIP","Trả trước 24 tháng"],
+      ["0000KOR48C5C",null,"Combo","Meta","Trả trước 24 tháng"],
+      ["0000KP0KL4F4",null,"FPT Camera Only","FCAM-Play 4",null],
+      ["0000KP0KL4F4",null,"FPT Camera Only","An Tâm 15",null],
+      ["0000KP2BA3Y8",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["0000KP2BA3Y8",null,"Combo","LUX - 500","Trả trước 6 tháng"],
+      ["0000KPOP83J4",null,"Tripple","V.VIP","Trả trước 3 tháng"],
+      ["0000KPOP83J4",null,"Tripple","FCAM-Play 4","Trả trước 3 tháng"],
+      ["0000KPOP83J4",null,"Tripple","An Tâm 7","Trả trước 3 tháng"],
+      ["0000KPOP83J4",null,"Tripple","Sky","Trả trước 3 tháng"],
+      ["0000KPOUI2GW",null,"Combo","V.VIP","1 tháng"],
+      ["0000KPOUI2GW",null,"Combo","Meta","1 tháng"],
+      ["0000KPOX9WYO",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["0000KPOX9WYO",null,"Combo","FPT SpeedX2","Trả trước 6 tháng"],
+      ["0000KPP4W0M8",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["0000KPP4W0M8",null,"Combo","Meta","Trả trước 6 tháng"],
+      ["0000KPP67TC0",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["0000KPP67TC0",null,"Combo","FPT SpeedX2","Trả trước 6 tháng"],
+      ["0000KS83EV1C",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["0000KS83EV1C",null,"Combo","Meta","Trả trước 6 tháng"],
+      ["0000KS8ZHB4W",null,"Combo","V.VIP","1 tháng"],
+      ["0000KS8ZHB4W",null,"Combo","Sky","1 tháng"],
+      ["0000KSAMGB0G",null,"Combo","V.VIP","1 tháng"],
+      ["0000KSAMGB0G",null,"Combo","Sky","1 tháng"],
+      ["0000KSB5A70G",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["0000KSB5A70G",null,"Combo","Sky","Trả trước 6 tháng"],
+      ["0000KSBCF4RK",null,"Combo","V.VIP","1 tháng"],
+      ["0000KSBCF4RK",null,"Combo","Sky","1 tháng"],
+      ["0000KSGP140W",null,"Internet","Giga","1 tháng"],
+      ["0000KSMLHS4G",null,"Internet","Sky","1 tháng"],
+      ["0000KSX8M5K0",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000KTJPKHGG",null,"Combo","V.VIP","1 tháng"],
+      ["0000KTJPKHGG",null,"Combo","Giga","1 tháng"],
+      ["0000KTK26ODC",null,"Combo","V.VIP","1 tháng"],
+      ["0000KTK26ODC",null,"Combo","Giga","1 tháng"],
+      ["0000KYJH6FQ8",null,"Combo","FCAM-Play 4","Trả trước 12 tháng"],
+      ["0000KYJH6FQ8",null,"Combo","An Tâm 7 - Max","Trả trước 12 tháng"],
+      ["0000KYJH6FQ8",null,"Combo","Sky","Trả trước 12 tháng"],
+      ["0000KZ42IG68",null,"Internet","Sky F1","Trả trước 12 tháng"],
+      ["0000KZ5R2UOW",null,"Combo","V.VIP","1 tháng"],
+      ["0000KZ5R2UOW",null,"Combo","Sky","1 tháng"],
+      ["0000KZUQ1VZ4",null,"Internet","Giga","1 tháng"],
+      ["0000L2OQQXEO",null,"Combo","V.VIP","1 tháng"],
+      ["0000L2OQQXEO",null,"Combo","Giga","1 tháng"],
+      ["0000L2QHICTC",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000L2QJB0CG",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000L34KS0SG",null,"Tripple","V.VIP","Trả trước 12 tháng"],
+      ["0000L34KS0SG",null,"Tripple","An Tâm 7","Trả trước 12 tháng"],
+      ["0000L34KS0SG",null,"Tripple","FCAM-Play 4","Trả trước 12 tháng"],
+      ["0000L34KS0SG",null,"Tripple","Sky","Trả trước 12 tháng"],
+      ["0000L5J1VQZK",null,"Internet","Giga F1","Trả trước 3 tháng"],
+      ["0000L6A7R0U8",null,"Tripple","V.VIP","Trả trước 3 tháng"],
+      ["0000L6A7R0U8",null,"Tripple","An Tâm 7","Trả trước 3 tháng"],
+      ["0000L6A7R0U8",null,"Tripple","FCAM-IQ 4S","Trả trước 3 tháng"],
+      ["0000L6A7R0U8",null,"Tripple","Sky","Trả trước 3 tháng"],
+      ["0000L6Y1EU00",null,"Internet","Giga","1 tháng"],
+      ["0000L8TY9UN4",null,"Combo","V.VIP","1 tháng"],
+      ["0000L8TY9UN4",null,"Combo","Giga","1 tháng"],
+      ["0000LAEVK274",null,"Combo","FCAM-Play 4","1 tháng"],
+      ["0000LAEVK274",null,"Combo","An Tâm 7","1 tháng"],
+      ["0000LAEVK274",null,"Combo","Sky","1 tháng"],
+      ["0000LBKGOF9C",null,"Combo","Giga","1 tháng"],
+      ["0000LBKGOF9C",null,"Combo","FCAM-Play 4","1 tháng"],
+      ["0000LBKGOF9C",null,"Combo","An Tâm 7","1 tháng"],
+      ["0000LBKV83VK",null,"Combo","V.VIP","1 tháng"],
+      ["0000LBKV83VK",null,"Combo","Giga","1 tháng"],
+      ["0000LBKWXAIO",null,"Combo","FCAM-IQ 4S","1 tháng"],
+      ["0000LBKWXAIO",null,"Combo","An Tâm 7","1 tháng"],
+      ["0000LBKWXAIO",null,"Combo","Sky","1 tháng"],
+      ["0000LBKZ73UO",null,"Internet","Giga","1 tháng"],
+      ["0000LBLBY7J4",null,"Internet","Giga","1 tháng"],
+      ["0000LBLD1A4G",null,"Internet","Giga","1 tháng"],
+      ["0000LBLF5TC0",null,"Combo","V.VIP","1 tháng"],
+      ["0000LBLF5TC0",null,"Combo","Giga","1 tháng"],
+      ["0000LBLR07GG",null,"Combo","Giga","1 tháng"],
+      ["0000LBLR07GG",null,"Combo","FCAM-Play 4","1 tháng"],
+      ["0000LBLR07GG",null,"Combo","An Tâm 7","1 tháng"],
+      ["0000LBLWR674",null,"Internet","F-Game","Trả trước 3 tháng"],
+      ["0000LBM1MRQ8",null,"Combo","Giga","1 tháng"],
+      ["0000LBM1MRQ8",null,"Combo","FCAM-IQ 4S","1 tháng"],
+      ["0000LBM1MRQ8",null,"Combo","An Tâm 7","1 tháng"],
+      ["0000LBM2LIXS",null,"Combo","Giga","1 tháng"],
+      ["0000LBM2LIXS",null,"Combo","FCAM-Play 4","1 tháng"],
+      ["0000LBM2LIXS",null,"Combo","An Tâm 7","1 tháng"],
+      ["0000LBM6IR40",null,"Combo","Giga","1 tháng"],
+      ["0000LBM6IR40",null,"Combo","FCAM-Play 4","1 tháng"],
+      ["0000LBM6IR40",null,"Combo","An Tâm 7","1 tháng"],
+      ["0000LBMOK3NK",null,"Tripple","V.VIP","1 tháng"],
+      ["0000LBMOK3NK",null,"Tripple","Giga","1 tháng"],
+      ["0000LBMOK3NK",null,"Tripple","FCAM-Play 4","1 tháng"],
+      ["0000LBMOK3NK",null,"Tripple","An Tâm 7","1 tháng"],
+      ["0000LBZ4RUQO",null,"Combo","Giga","1 tháng"],
+      ["0000LBZ4RUQO",null,"Combo","FCAM-Play 4","1 tháng"],
+      ["0000LBZ4RUQO",null,"Combo","An Tâm 7","1 tháng"],
+      ["0000LBZ6CDLS",null,"Combo","Giga","1 tháng"],
+      ["0000LBZ6CDLS",null,"Combo","FCAM-Play 4","1 tháng"],
+      ["0000LBZ6CDLS",null,"Combo","An Tâm 7","1 tháng"],
+      ["0000LC033PXC",null,"Combo","V.VIP","1 tháng"],
+      ["0000LC033PXC",null,"Combo","Giga","1 tháng"],
+      ["0000LEK5KO74",null,"Internet","Giga","1 tháng"],
+      ["0000LEK5KO74",null,"Internet","FSafe","1 tháng"],
+      ["0000LGRQE5UO",null,"Internet","Sky","1 tháng"],
+      ["0000LGS0HA68",null,"Internet","F-Game","1 tháng"],
+      ["0000LJ2ZA9R4",null,"Internet","F-Game","1 tháng"],
+      ["0000LK6AU4GW",null,"Internet","Sky F1","Trả trước 12 tháng"],
+      ["0000LLFLXT4W",null,"Internet","Giga F1","Trả trước 12 tháng"],
+      ["0000LO13V3WG",null,"Combo","V.VIP","1 tháng"],
+      ["0000LO13V3WG",null,"Combo","Giga","1 tháng"],
+      ["0000LRA4BGOW",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000LRAO3FS0",null,"Ultra Fast Stand Alone","Ultra Fast SA","Trả trước 1 tháng"],
+      ["0000M6GDLD40",null,"FPT Camera Combo","FCAM-IQ 4S",null],
+      ["0000M6GDLD40",null,"FPT Camera Combo","An Tâm 7",null],
+      ["0000M6GVMWGW",null,"FPT Camera Combo","FCAM-IQ 4S",null],
+      ["0000M6GVMWGW",null,"FPT Camera Combo","An Tâm 7",null],
+      ["0000M6GWTZSW",null,"FPT Camera Combo","An Tâm 7 - Max",null],
+      ["0000M6GWTZSW",null,"FPT Camera Combo","FCAM-Play 4",null],
+      ["0000M6GZN6QO",null,"Combo","FCAM-IQ 4S","Trả trước 3 tháng"],
+      ["0000M6GZN6QO",null,"Combo","An Tâm 7 - Max","Trả trước 3 tháng"],
+      ["0000M6GZN6QO",null,"Combo","Giga","Trả trước 3 tháng"],
+      ["0000M6H1OGW0",null,"FPT Camera Combo","An Tâm 7 - Max",null],
+      ["0000M6H1OGW0",null,"FPT Camera Combo","FCAM-IQ 4S",null],
+      ["0000M6H1OGW0",null,"FPT Camera Combo","FCAM-Play 4",null],
+      ["0000M6H7608W",null,"FPT Camera Combo","An Tâm 7 - Max",null],
+      ["0000M6H7608W",null,"FPT Camera Combo","FCAM-IQ 4S",null],
+      ["0000M6H7608W",null,"FPT Camera Combo","FCAM-Play 4",null],
+      ["0000ViVoTest",null,"Combo","V.VIP","Trả trước 3 tháng"],
+      ["0000ViVoTest",null,"Combo","V.VIP","Trả trước 3 tháng"],
+      ["0000ViVoTest",null,"Combo","V.VIP","Trả trước 3 tháng"],
+      ["0000ViVoTest",null,"Combo","Sky","Trả trước 3 tháng"],
+      ["0000ViVoTest",null,"Combo","Sky","Trả trước 3 tháng"],
+      ["0000ViVoTest",null,"Combo","Sky","Trả trước 3 tháng"],
+      ["AGG2T003Y39W",null,"Combo","VIP","Trả trước 3 tháng"],
+      ["AGG2T003Y39W",null,"Combo","VIP","Trả trước 3 tháng"],
+      ["AGG2T003Y39W",null,"Combo","VIP","Trả trước 3 tháng"],
+      ["AGG2T003Y39W",null,"Combo","Sky","Trả trước 3 tháng"],
+      ["AGG2T003Y39W",null,"Combo","Sky","Trả trước 3 tháng"],
+      ["AGG2T003Y39W",null,"Combo","Sky","Trả trước 3 tháng"],
+      ["AGG2T003Y3GZ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y3GZ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y3GZ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y45R",null,"Internet","Sky","1 tháng"],
+      ["AGG2T003Y45R",null,"Internet","Sky","1 tháng"],
+      ["AGG2T003Y45R",null,"Internet","Sky","1 tháng"],
+      ["AGG2T003Y57D",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y57D",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y57D",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y592",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y592",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y592",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y6NC",null,"Combo","V.VIP","1 tháng"],
+      ["AGG2T003Y6NC",null,"Combo","V.VIP","1 tháng"],
+      ["AGG2T003Y6NC",null,"Combo","V.VIP","1 tháng"],
+      ["AGG2T003Y6NC",null,"Combo","Sky","1 tháng"],
+      ["AGG2T003Y6NC",null,"Combo","Sky","1 tháng"],
+      ["AGG2T003Y6NC",null,"Combo","Sky","1 tháng"],
+      ["AGG2T003Y6XU",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y6XU",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y6XU",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y74B",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y74B",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y74B",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y80I",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y80I",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y80I",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y9A3",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y9A3",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y9A3",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003Y9DS",null,"FPT Camera Only","IQ3+","Trả trước 6 tháng"],
+      ["AGG2T003Y9DS",null,"FPT Camera Only","IQ3+","Trả trước 6 tháng"],
+      ["AGG2T003Y9DS",null,"FPT Camera Only","IQ3+","Trả trước 6 tháng"],
+      ["AGG2T003YAR9",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003YAR9",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003YB3B",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003YB3B",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2T003YFGK",null,"FPT Camera Combo","FCAM-IQ 4S",null],
+      ["AGG2T003YFGK",null,"FPT Camera Combo","FCAM-IQ 4S",null],
+      ["AGG2U003YHCH",null,"Internet","Sky F1","1 tháng"],
+      ["AGG2U003YHCH",null,"Internet","Sky F1","1 tháng"],
+      ["AGG2U003YHUN",null,"Combo","V.VIP","1 tháng"],
+      ["AGG2U003YHUN",null,"Combo","V.VIP","1 tháng"],
+      ["AGG2U003YHUN",null,"Combo","Sky","1 tháng"],
+      ["AGG2U003YHUN",null,"Combo","Sky","1 tháng"],
+      ["AGG2U003YKEV",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2U003YKEV",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2U003YKUF",null,"Internet","Sky","1 tháng"],
+      ["AGG2U003YKUF",null,"Internet","Sky","1 tháng"],
+      ["AGG2U003YKZE",null,"Internet","Sky","1 tháng"],
+      ["AGG2U003YKZE",null,"Internet","Sky","1 tháng"],
+      ["AGG2U003YLI1",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["AGG2U003YLI1",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["AGG2U003YLYQ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2U003YLYQ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2U003YOLS",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2U003YOLS",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2U003YP4U",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2U003YP4U",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2U003YQIU",null,"Combo","V.VIP","1 tháng"],
+      ["AGG2U003YQIU",null,"Combo","V.VIP","1 tháng"],
+      ["AGG2U003YQIU",null,"Combo","Sky","1 tháng"],
+      ["AGG2U003YQIU",null,"Combo","Sky","1 tháng"],
+      ["AGG2V003YQVY",null,"Combo","V.VIP","1 tháng"],
+      ["AGG2V003YQVY",null,"Combo","V.VIP","1 tháng"],
+      ["AGG2V003YQVY",null,"Combo","Sky","1 tháng"],
+      ["AGG2V003YQVY",null,"Combo","Sky","1 tháng"],
+      ["AGG2V003YUSY",null,"FPT Play Stands Alone","V.VIP 2","Trả trước 1 tháng"],
+      ["AGG2V003YUSY",null,"FPT Play Stands Alone","V.VIP 2","Trả trước 1 tháng"],
+      ["AGG2V003YXHN",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2V003YXHN",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2V003Z2R6",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2V003Z2R6",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZASU",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZASU",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZAUI",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZAUI",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZE2R",null,"Combo","VIP","1 tháng"],
+      ["AGG2W003ZE2R",null,"Combo","VIP","1 tháng"],
+      ["AGG2W003ZE2R",null,"Combo","Sky","1 tháng"],
+      ["AGG2W003ZE2R",null,"Combo","Sky","1 tháng"],
+      ["AGG2W003ZEO4",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZEO4",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZFY0",null,"Internet","Sky","1 tháng"],
+      ["AGG2W003ZFY0",null,"Internet","Sky","1 tháng"],
+      ["AGG2W003ZG9D",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZG9D",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZICL",null,"Internet","Sky","1 tháng"],
+      ["AGG2W003ZICL",null,"Internet","Sky","1 tháng"],
+      ["AGG2W003ZKFJ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZKFJ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZMSJ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZMSJ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2W003ZRNC",null,"Combo","VIP","1 tháng"],
+      ["AGG2W003ZRNC",null,"Combo","VIP","1 tháng"],
+      ["AGG2W003ZRNC",null,"Combo","Sky","1 tháng"],
+      ["AGG2W003ZRNC",null,"Combo","Sky","1 tháng"],
+      ["AGG2X003ZUKQ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2X003ZUKQ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2X003ZVGV",null,"Combo","VIP","1 tháng"],
+      ["AGG2X003ZVGV",null,"Combo","VIP","1 tháng"],
+      ["AGG2X003ZVGV",null,"Combo","Sky","1 tháng"],
+      ["AGG2X003ZVGV",null,"Combo","Sky","1 tháng"],
+      ["AGG2Y00402CL",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2Y00402E7",null,"Combo","V.VIP","1 tháng"],
+      ["AGG2Y00402E7",null,"Combo","Sky","1 tháng"],
+      ["AGG2Y00403MU",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG2Z0040IT3",null,"Combo","VIP","1 tháng"],
+      ["AGG2Z0040IT3",null,"Combo","Sky","1 tháng"],
+      ["AGG2Z0040IUG",null,"Combo","VIP","1 tháng"],
+      ["AGG2Z0040IUG",null,"Combo","Sky","1 tháng"],
+      ["AGG2Z0040IUL",null,"Internet","Sky","Trả trước 12 tháng"],
+      ["AGG2Z0040M8K",null,"Combo","VIP","1 tháng"],
+      ["AGG2Z0040M8K",null,"Combo","Sky","1 tháng"],
+      ["AGG300040OPN",null,"Internet","Sky","1 tháng"],
+      ["AGG300040OZL",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG300040QHZ",null,"Internet","Sky","1 tháng"],
+      ["AGG300040SVX",null,"Combo","V.VIP","1 tháng"],
+      ["AGG300040SVX",null,"Combo","Sky","1 tháng"],
+      ["AGG300040TEM",null,"Internet","Sky","1 tháng"],
+      ["AGG300040U5O",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["AGG300040U5O",null,"Combo","Sky","Trả trước 6 tháng"],
+      ["AGG310040WPR",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3100412XW",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3200417A1",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3200418S3",null,"Internet","F-Game","1 tháng"],
+      ["AGG3200419LU",null,"Combo","VIP","1 tháng"],
+      ["AGG3200419LU",null,"Combo","Sky","1 tháng"],
+      ["AGG320041AAV",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG320041AG0",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["AGG320041AG0",null,"Combo","Meta","Trả trước 6 tháng"],
+      ["AGG330041FQB",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG330041IQQ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG330041J7C",null,"Combo","V.VIP","1 tháng"],
+      ["AGG330041J7C",null,"Combo","Sky","1 tháng"],
+      ["AGG330041K10",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG330041L4D",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG340041QQV",null,"Combo","VIP","1 tháng"],
+      ["AGG340041QQV",null,"Combo","Sky","1 tháng"],
+      ["AGG350041Z56",null,"Combo","V.VIP","Trả trước 3 tháng"],
+      ["AGG350041Z56",null,"Combo","Meta","Trả trước 3 tháng"],
+      ["AGG3500420D1",null,"Internet","Sky","1 tháng"],
+      ["AGG3500421FC",null,"Internet","Sky","1 tháng"],
+      ["AGG3500423UG",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG360042792",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3600427FX",null,"Internet","Sky","1 tháng"],
+      ["AGG3600429ZD",null,"Combo","VIP","1 tháng"],
+      ["AGG3600429ZD",null,"Combo","Sky","1 tháng"],
+      ["AGG370042E2Z",null,"Internet","Sky","1 tháng"],
+      ["AGG370042EE2",null,"Internet","Sky F1","1 tháng"],
+      ["AGG370042EHH",null,"Combo","VIP","1 tháng"],
+      ["AGG370042EHH",null,"Combo","Sky","1 tháng"],
+      ["AGG370042ICK",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG370042J2U",null,"Combo","V.VIP","1 tháng"],
+      ["AGG370042J2U",null,"Combo","Sky","1 tháng"],
+      ["AGG370042M8U",null,"Combo","V.VIP","1 tháng"],
+      ["AGG370042M8U",null,"Combo","Sky","1 tháng"],
+      ["AGG380042MCU",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG380042MDV",null,"Internet","Sky","1 tháng"],
+      ["AGG380042MKN",null,"Internet","Sky","1 tháng"],
+      ["AGG380042QIH",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG380042QMP",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG380042UN1",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3900435KK",null,"Internet","Sky","1 tháng"],
+      ["AGG3900437NT",null,"Internet","Sky F1","1 tháng"],
+      ["AGG390043A93",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG390043B12",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG390043D3A",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG390043DEZ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3A0043ID1",null,"Internet","Sky","1 tháng"],
+      ["AGG3A0043II6",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3A0043J5X",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["AGG3A0043KHI",null,"Internet","Sky","1 tháng"],
+      ["AGG3A0043LAZ",null,"FPT Camera Only","IQ3+","Trả trước 12 tháng"],
+      ["AGG3A0043LPP",null,"Internet","Sky","1 tháng"],
+      ["AGG3A0043MFG",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3B0043QND",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3B0043S3R",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3B0043UAW",null,"Internet","Sky","1 tháng"],
+      ["AGG3B0043UEU",null,"Internet","Sky","1 tháng"],
+      ["AGG3C0043YMP",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3C0043ZP2",null,"Internet","Sky","Trả trước 2 tháng"],
+      ["AGG3C00441FP",null,"Internet","Super600 Biz Plus","Trả trước 12 tháng"],
+      ["AGG3C00443JR",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3C00444UW",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3C00445OK",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3C004462M",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3C004489X",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3C00448OG",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3C00448UN",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3C0044FTV",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3D0044H4X",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3D0044H4X",null,"Combo","Sky","1 tháng"],
+      ["AGG3D0044H6L",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3D0044H6L",null,"Combo","Sky","1 tháng"],
+      ["AGG3D0044MC3",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3D0044P5V",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3D0044P5V",null,"Combo","Sky","1 tháng"],
+      ["AGG3E0044PFO",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3E0044PFO",null,"Combo","Sky","1 tháng"],
+      ["AGG3E0044PT3",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3E0044SDQ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3E0044T0T",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3E0044VXT",null,"Internet","Sky","1 tháng"],
+      ["AGG3F0044XEQ",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3F0044XKF",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3F0044Y7W",null,"Internet","Sky","1 tháng"],
+      ["AGG3F0044ZUH",null,"Combo","FCAM-IQ 4S","Trả trước 12 tháng"],
+      ["AGG3F0044ZUH",null,"Combo","3D - Max5","Trả trước 12 tháng"],
+      ["AGG3F0044ZUH",null,"Combo","Sky","Trả trước 12 tháng"],
+      ["AGG3F00454AR",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3G00457VV",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3G00457VV",null,"Combo","Sky","1 tháng"],
+      ["AGG3G00457WD",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3G00457WD",null,"Combo","Sky","1 tháng"],
+      ["AGG3G00457WS",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3G004580G",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3G004580G",null,"Combo","Sky","1 tháng"],
+      ["AGG3G0045A5M",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3G0045AB9",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3G0045AJW",null,"Combo","VIP","1 tháng"],
+      ["AGG3G0045AJW",null,"Combo","Sky","1 tháng"],
+      ["AGG3G0045D4T",null,"Internet","Sky","Trả trước 12 tháng"],
+      ["AGG3H0045IJD",null,"Internet","Sky","1 tháng"],
+      ["AGG3H0045K35",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["AGG3H0045K4O",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3H0045K7A",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3H0045KCZ",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["AGG3H0045KQK",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["AGG3H0045KTN",null,"Combo","VIP","1 tháng"],
+      ["AGG3H0045KTN",null,"Combo","Sky","1 tháng"],
+      ["AGG3H0045MVS",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3H0045PPE",null,"Internet","Sky","1 tháng"],
+      ["AGG3H0045PUC",null,"Internet","Sky","1 tháng"],
+      ["AGG3H0045PWU",null,"Internet","Sky","1 tháng"],
+      ["AGG3I0045UHD",null,"Internet","Sky","1 tháng"],
+      ["AGG3I0045UJW",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3I0045UUM",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3I0045UWO",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3I0045WL7",null,"Internet","Sky","1 tháng"],
+      ["AGG3I0045ZEG",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3I0045ZEG",null,"Combo","Sky","1 tháng"],
+      ["AGG3J00462KQ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3J00462XD",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3J0046467",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3J00464Z5",null,"Internet","Sky","1 tháng"],
+      ["AGG3J0046891",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3K0046AIS",null,"Internet","Sky","1 tháng"],
+      ["AGG3K0046BMJ",null,"Internet","Sky","1 tháng"],
+      ["AGG3K0046DHH",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3K0046DHH",null,"Combo","Sky","1 tháng"],
+      ["AGG3L0046I36",null,"Internet","Sky","1 tháng"],
+      ["AGG3L0046JCM",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3L0046JKW",null,"Internet","Sky F1","1 tháng"],
+      ["AGG3L0046JSK",null,"Internet","Sky F1","1 tháng"],
+      ["AGG3L0046LZZ",null,"Internet","Sky","1 tháng"],
+      ["AGG3M0046RZM",null,"Combo","VIP","1 tháng"],
+      ["AGG3M0046RZM",null,"Combo","Sky","1 tháng"],
+      ["AGG3M0046SEL",null,"Combo","VIP","1 tháng"],
+      ["AGG3M0046SEL",null,"Combo","Sky","1 tháng"],
+      ["AGG3M0046SJX",null,"Combo","VIP","1 tháng"],
+      ["AGG3M0046SJX",null,"Combo","Sky","1 tháng"],
+      ["AGG3M0046SOU",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3M0046STE",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3M0046STE",null,"Combo","Sky","1 tháng"],
+      ["AGG3M0046T41",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3M0046T41",null,"Combo","Sky","1 tháng"],
+      ["AGG3M0046U6A",null,"Internet","Sky","1 tháng"],
+      ["AGG3M0046VC0",null,"Internet","Sky","Trả trước 12 tháng"],
+      ["AGG3M0046XOK",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["AGG3N00471SO",null,"Internet","Sky","1 tháng"],
+      ["AGG3N00472L3",null,"Combo","VIP","1 tháng"],
+      ["AGG3N00472L3",null,"Combo","Sky","1 tháng"],
+      ["AGG3N00472RO",null,"Combo","VIP","1 tháng"],
+      ["AGG3N00472RO",null,"Combo","Sky","1 tháng"],
+      ["AGG3N00472U1",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3N00473CB",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3N00474BQ",null,"Internet","Sky","1 tháng"],
+      ["AGG3N00474PG",null,"Combo","F-Game","1 tháng"],
+      ["AGG3N00474PG",null,"Combo","VIP","1 tháng"],
+      ["AGG3N00474YE",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3N0047516",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3N004755L",null,"Combo","F-Game","1 tháng"],
+      ["AGG3N004755L",null,"Combo","VIP","1 tháng"],
+      ["AGG3N00475LU",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3N00475NP",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3N00475RU",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG3N0047637",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG3N00477H0",null,"Combo","V.VIP","1 tháng"],
+      ["AGG3N00477H0",null,"Combo","Sky","1 tháng"],
+      ["AGG3N00477S2",null,"Internet","Sky","Trả trước 2 tháng"],
+      ["AGG3N00477T0",null,"Internet","Sky","Trả trước 2 tháng"],
+      ["AGG3N00477TP",null,"Internet","Sky","Trả trước 2 tháng"],
+      ["AGG3N00477UC",null,"Internet","Sky","1 tháng"],
+      ["AGG3N00477W0",null,"Internet","Sky","1 tháng"],
+      ["AGG3N00477WE",null,"Internet","Sky","Trả trước 2 tháng"],
+      ["AGG3N00477WL",null,"Internet","Sky","1 tháng"],
+      ["AGG3N0047ARQ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5L0047CKK",null,"Internet","Sky","1 tháng"],
+      ["AGG5L0047DCR",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5L0047DX7",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5L0047EYZ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5L0047F5D",null,"Internet","Sky","1 tháng"],
+      ["AGG5L0047HQU",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5L0047ILX",null,"Internet","Sky","1 tháng"],
+      ["AGG5L0047MQQ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5M0047S9G",null,"Internet","Sky","1 tháng"],
+      ["AGG5M0047UIE",null,"Internet","Sky","1 tháng"],
+      ["AGG5N0047X7F",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5N0047Y24",null,"Internet","Sky","1 tháng"],
+      ["AGG5N0047ZQA",null,"Internet","Sky","1 tháng"],
+      ["AGG5N00483A9",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5N00483BV",null,"Combo","VIP","Trả trước 3 tháng"],
+      ["AGG5N00483BV",null,"Combo","Sky F1","Trả trước 3 tháng"],
+      ["AGG5O004868X",null,"Combo","VIP","1 tháng"],
+      ["AGG5O004868X",null,"Combo","Sky","1 tháng"],
+      ["AGG5O00487OS",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5O00488ZJ",null,"Combo","Sky F1","1 tháng"],
+      ["AGG5O00488ZJ",null,"Combo","VIP","1 tháng"],
+      ["AGG5O0048AYN",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5O0048C04",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5O0048E31",null,"Internet","Sky","1 tháng"],
+      ["AGG5P0048JGQ",null,"Internet","Sky","1 tháng"],
+      ["AGG5P0048MFJ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5P0048PDK",null,"Internet","F-Game","Trả trước 3 tháng"],
+      ["AGG5P0048PKX",null,"Internet","F-Game","Trả trước 3 tháng"],
+      ["AGG5P0048PNE",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["AGG5P0048PNE",null,"Combo","Sky","Trả trước 6 tháng"],
+      ["AGG5P0048PO2",null,"Internet","F-Game","Trả trước 3 tháng"],
+      ["AGG5P0048PO4",null,"Combo","V.VIP","Trả trước 6 tháng"],
+      ["AGG5P0048PO4",null,"Combo","Sky","Trả trước 6 tháng"],
+      ["AGG5P0048PO9",null,"Combo","V.VIP","1 tháng"],
+      ["AGG5P0048PO9",null,"Combo","Meta F1","1 tháng"],
+      ["AGG5Q0048RRX",null,"Combo","VIP","1 tháng"],
+      ["AGG5Q0048RRX",null,"Combo","Sky","1 tháng"],
+      ["AGG5Q0048SQT",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5Q0048UIS",null,"Internet","Sky","1 tháng"],
+      ["AGG5Q0048URY",null,"Internet","Sky","1 tháng"],
+      ["AGG5Q0048UTL",null,"Internet","Sky","1 tháng"],
+      ["AGG5Q0048UWO",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["AGG5Q0048X9S",null,"Internet","Sky","1 tháng"],
+      ["AGG5Q0048XOA",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5Q0048Y7X",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5R00492G6",null,"Combo","VIP","1 tháng"],
+      ["AGG5R00492G6",null,"Combo","Sky","1 tháng"],
+      ["AGG5R00495VI",null,"Combo","VIP","1 tháng"],
+      ["AGG5R00495VI",null,"Combo","Sky","1 tháng"],
+      ["AGG5R00498YK",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5R0049E4R",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5R0049KJX",null,"Combo","V.VIP","1 tháng"],
+      ["AGG5R0049KJX",null,"Combo","Sky","1 tháng"],
+      ["AGG5S0049XGB",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5S0049Y4Q",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5S0049YHV",null,"Combo","V.VIP","1 tháng"],
+      ["AGG5S0049YHV",null,"Combo","Sky","1 tháng"],
+      ["AGG5T004A53X",null,"FPT Camera Combo","3D - Max5",null],
+      ["AGG5T004A53X",null,"FPT Camera Combo","FCAM-IQ 4S",null],
+      ["AGG5T004A5D6",null,"Internet","Sky","1 tháng"],
+      ["AGG5T004A64P",null,"Internet","Sky","1 tháng"],
+      ["AGG5T004AA8N",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5T004AA9R",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5U004AC9Z",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5U004AE63",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5U004AECR",null,"Internet","Sky","1 tháng"],
+      ["AGG5U004AELH",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5U004AEN6",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5U004AEUN",null,"Internet","Sky","1 tháng"],
+      ["AGG5U004AF2D",null,"Internet","Sky","1 tháng"],
+      ["AGG5U004AG1O",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5U004AHHZ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5U004AHLU",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5U004AHPJ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5U004AHWW",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5U004AIAK",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5U004AKLN",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5V004AMXI",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5V004AO0L",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5V004AP1A",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5V004ARUG",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5V004ASVG",null,"Internet","Sky","1 tháng"],
+      ["AGG5V004AUC2",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5V004AVPJ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5V004AVPW",null,"Internet","F-Game","Trả trước 6 tháng"],
+      ["AGG5W004AWUY",null,"Internet","Sky","1 tháng"],
+      ["AGG5W004AYL1",null,"Internet","Sky","1 tháng"],
+      ["AGG5W004AZ16",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004AZ2W",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004AZ3L",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004AZ5U",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004AZCA",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004AZCW",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004AZDA",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004AZDM",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004AZJK",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5W004AZNL",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004B15M",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004B15Z",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004B18T",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004B1ZS",null,"FPT Camera Only","IQ3+","Trả trước 6 tháng"],
+      ["AGG5W004B3O0",null,"Internet","Sky","1 tháng"],
+      ["AGG5W004B3VQ",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004B3W6",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5W004B49Q",null,"Internet","Sky","1 tháng"],
+      ["AGG5W004B4A8",null,"Internet","Sky","1 tháng"],
+      ["AGG5W004B4H7",null,"Combo","V.VIP","1 tháng"],
+      ["AGG5W004B4H7",null,"Combo","Sky","1 tháng"],
+      ["AGG5X004B7WQ",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5X004B8UK",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5X004B9PD",null,"FPT Camera Combo","FCAM-Play 4",null],
+      ["AGG5X004B9PD",null,"FPT Camera Combo","IQ3+",null],
+      ["AGG5X004BBE6",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["AGG5X004BCYL",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5X004BDNZ",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5X004BDPN",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5X004BDQL",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Y004BG5W",null,"Internet","FSafe","1 tháng"],
+      ["AGG5Y004BG5W",null,"Internet","Sky","1 tháng"],
+      ["AGG5Y004BGMR",null,"Internet","Sky","Trả trước 3 tháng"],
+      ["AGG5Y004BH59",null,"Internet","Sky","1 tháng"],
+      ["AGG5Y004BHQ2",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Y004BHXQ",null,"Internet","Sky","1 tháng"],
+      ["AGG5Y004BJI0",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5Y004BJSN",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5Y004BKAK",null,"Combo","VIP","Trả trước 3 tháng"],
+      ["AGG5Y004BKAK",null,"Combo","Sky","Trả trước 3 tháng"],
+      ["AGG5Y004BKS9",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5Y004BL5P",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5Y004BM9H",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Y004BM9W",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Y004BMOA",null,"FPT Play","V.VIP","Trả trước 0 tháng"],
+      ["AGG5Y004BN0J",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Y004BN3E",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Y004BO9U",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Y004BO9U",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Z004BPKD",null,"FPT Camera Combo","IQ7+",null],
+      ["AGG5Z004BPKD",null,"FPT Camera Combo","IQ7+",null],
+      ["AGG5Z004BPKD",null,"FPT Camera Combo","FCAM-IQ 4S",null],
+      ["AGG5Z004BPKD",null,"FPT Camera Combo","FCAM-IQ 4S",null],
+      ["AGG5Z004BPOF",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Z004BPOF",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Z004BPP3",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Z004BPP3",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Z004BQ1E",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Z004BQ1E",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Z004BQ4R",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Z004BQ4R",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Z004BQ5H",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Z004BQ5H",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"],
+      ["AGG5Z004BR3Q",null,"Combo","VIP","Trả trước 3 tháng"],
+      ["AGG5Z004BR3Q",null,"Combo","VIP","Trả trước 3 tháng"],
+      ["AGG5Z004BR3Q",null,"Combo","Sky F1","Trả trước 3 tháng"],
+      ["AGG5Z004BR3Q",null,"Combo","Sky F1","Trả trước 3 tháng"],
+      ["AGG67004CVOE",null,"Internet","Sky","1 tháng"],
+      ["AGG67004CWF1",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng"]
+    ];
+    const keys = this.salesReportOnlineServiceFieldDefs().map(d => d[0]);
+    return rows.map((r, i) => {
+      const o = { id: 'sros' + i };
+      keys.forEach((k, idx) => { o[k] = r[idx]; });
+      return o;
+    });
+  }
+  openSalesReportOnlineServiceDetail(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    this.openDrawer({
+      title: r.orderCode, subtitle: 'Chi tiết dịch vụ đăng ký', width: 400,
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
+        ...this.salesReportOnlineServiceFieldDefs().map(([key, header]) => this.detailRow(header, r[key]))
+      ),
+      footer: () => h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
+        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng')
+      )
+    });
+  }
+  exportSplitButton(stateKey, label, items, size) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const open = this.state[stateKey] === true;
     return h('div', { style: { position: 'relative' }, onBlur: () => setTimeout(() => this.setState({ [stateKey]: false }), 120) },
-      h(DS.Button, { level: 'secondary', leadingIcon: 'download-01-line', trailingIcon: 'chevron-down-line', onClick: () => this.setState({ [stateKey]: !open }) }, label),
+      h(DS.Button, { level: 'secondary', size: size || 'md', leadingIcon: 'download-01-line', trailingIcon: 'chevron-down-line', onClick: () => this.setState({ [stateKey]: !open }) }, label),
       open ? h('div', { style: { position: 'absolute', right: 0, top: 'calc(100% + 4px)', zIndex: 50, minWidth: 210, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, boxShadow: 'var(--shadow-overlay)', padding: 6 } },
         items.map(it => h('div', {
           key: it.value, className: 'fpt-navitem',
@@ -12583,62 +13478,86 @@ class Component extends DCLogic {
   }
   renderSalesReportOnline() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const data = this.SALES_REPORT_ONLINE_DEMO();
-    const page = this.sliceData(data, 'srOnline');
+    const dataTab = this.state.srOnlineDataTab || 'orders';
+    const isOrders = dataTab === 'orders';
+    const rawData = isOrders ? this.SALES_REPORT_ONLINE_ORDERS_DEMO() : this.SALES_REPORT_ONLINE_SERVICES_DEMO();
+    const dateStart = this.state.srOnlineDateStart !== undefined ? this.state.srOnlineDateStart : null;
+    const dateEnd = this.state.srOnlineDateEnd !== undefined ? this.state.srOnlineDateEnd : null;
+    const channel = this.state.srOnlineChannel || 'Tất cả';
+    const data = isOrders ? this.filterSalesReportOnlineOrders(rawData, { dateStart, dateEnd, channel }) : rawData;
+    const pgKey = isOrders ? 'srOnlineOrders' : 'srOnlineServices';
+    const page = this.sliceData(data, pgKey);
+    const columns = isOrders ? this.salesReportOnlineOrderColumns() : this.salesReportOnlineServiceColumns();
+    const zoomKey = 'srOnlineZoom';
+    const channelOptions = ['Tất cả', ...this.salesReportOnlineChannelOptions()];
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       h(DS.Card, { style: { padding: 0 } },
         this.toolbar(
           h('span', { style: { fontSize: 15, fontWeight: 800, letterSpacing: '.04em', color: 'var(--color-text)' } }, 'Báo cáo DKOL - SPF'),
           h('div', { style: { display: 'flex', gap: 10, alignItems: 'center' } },
-            h(DS.Button, { level: 'primary', leadingIcon: 'search-medium-line', onClick: () => this.toast('success', 'Đã lọc báo cáo', 'Báo cáo đã được cập nhật theo điều kiện lọc (dữ liệu demo).') }, 'Xem Báo Cáo'),
+            h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'search-medium-line', onClick: () => this.toast('success', 'Đã lọc báo cáo', 'Báo cáo đã được cập nhật theo điều kiện lọc.') }, 'Xem Báo Cáo'),
             this.exportSplitButton('srOnlineExportOpen', 'Xuất Excel', [
               { value: 'orders', label: 'Xuất báo cáo đơn hàng' },
               { value: 'services', label: 'Xuất báo cáo dịch vụ' },
-            ])
+            ], 'sm')
           )
         ),
-        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px 20px', padding: 20 } },
-          h('div', { style: { gridColumn: 'span 2' } }, this.field('Thời gian', h(DS.DateRangePicker, { size: 'sm', showTime: false, defaultStart: new Date(), defaultEnd: new Date(), placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))),
-          this.field('Nguồn bán', h(DS.Select, { size: 'sm', options: ['Tất cả', 'ĐKOL', 'IBB', 'TIN/PNC', 'KXĐ'], defaultValue: 'Tất cả', searchable: true, searchPlaceholder: 'Tìm nguồn bán...', containerStyle: { width: '100%' } }))
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(5, minmax(180px, 1fr))', gap: '14px 20px', padding: 20 } },
+          h('div', { style: { gridColumn: 'span 2' } }, this.field('Thời gian', h(DS.DateRangePicker, { size: 'sm', showTime: false, allowPast: true, startDate: dateStart, endDate: dateEnd, onChange: ({ start, end }) => this.setState({ srOnlineDateStart: start, srOnlineDateEnd: end }), placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))),
+          this.field('Kênh đăng ký', h(DS.Select, { size: 'sm', options: channelOptions, value: channel, searchable: true, searchPlaceholder: 'Tìm kênh đăng ký...', onChange: v => this.setState({ srOnlineChannel: v }), containerStyle: { width: '100%' } }))
         )
       ),
       this.listCard(
-        h('div', { style: { borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)', overflow: 'hidden' } },
-          this.tbl(this.salesReportOnlineColumns(), page, 'id', r => this.openSalesReportOnlineRowDetail(r))
+        h('div', { style: { padding: '10px 0 0' } },
+          h(DS.Tabs, { value: dataTab, onChange: v => this.setState({ srOnlineDataTab: v }), items: [
+            { value: 'orders', label: 'Đơn hàng', icon: 'file-doc-line' },
+            { value: 'services', label: 'Dịch vụ', icon: 'folder-line' },
+          ] })
         ),
-        this.renderPagBar(data.length, 'srOnline', 'kết quả')
+        this.zoomToolbar(zoomKey),
+        this.zoomableTbl(columns, page, 'id', isOrders ? r => this.openSalesReportOnlineOrderDetail(r) : r => this.openSalesReportOnlineServiceDetail(r), zoomKey),
+        this.renderPagBar(data.length, pgKey, isOrders ? 'đơn hàng' : 'dịch vụ')
       )
     );
   }
   renderSalesReportOnlineSearch() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const data = this.SALES_REPORT_ONLINE_SEARCH_DEMO();
-    const page = this.sliceData(data, 'srSearch');
-    const inp = (label, ph) => this.field(label, h(DS.Input, { size: 'sm', placeholder: ph, containerStyle: { width: '100%' } }));
+    const dataTab = this.state.srSearchDataTab || 'orders';
+    const isOrders = dataTab === 'orders';
+    const rawData = isOrders ? this.SALES_REPORT_ONLINE_ORDERS_DEMO() : this.SALES_REPORT_ONLINE_SERVICES_DEMO();
+    const dateStart = this.state.srSearchDateStart !== undefined ? this.state.srSearchDateStart : null;
+    const dateEnd = this.state.srSearchDateEnd !== undefined ? this.state.srSearchDateEnd : null;
+    const orderCodeQ = this.state.srSearchOrderCodeQ || '';
+    const contractQ = this.state.srSearchContractQ || '';
+    const phoneQ = this.state.srSearchPhoneQ || '';
+    const data = isOrders ? this.filterSalesReportOnlineOrders(rawData, { dateStart, dateEnd, orderCodeQ, contractQ, phoneQ }) : rawData;
+    const pgKey = isOrders ? 'srSearchOrders' : 'srSearchServices';
+    const page = this.sliceData(data, pgKey);
+    const columns = isOrders ? this.salesReportOnlineOrderColumns() : this.salesReportOnlineServiceColumns();
+    const zoomKey = 'srSearchZoom';
+    const inp = (label, ph, key) => this.field(label, h(DS.Input, { size: 'sm', placeholder: ph, value: this.state[key] || '', onChange: e => this.setState({ [key]: e.target.value }), containerStyle: { width: '100%' } }));
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       h(DS.Card, { style: { padding: 0 } },
         this.toolbar(
-          h('span', { style: { fontSize: 15, fontWeight: 800, letterSpacing: '.04em', color: 'var(--color-text)' } }, 'Tìm kiếm nâng cao'),
-          h('div', { style: { display: 'flex', gap: 10, alignItems: 'center' } },
-            h(DS.Button, { level: 'primary', leadingIcon: 'search-medium-line', onClick: () => this.toast('success', 'Đã tìm kiếm', 'Kết quả đã được cập nhật theo điều kiện tìm kiếm (dữ liệu demo).') }, 'Xem Báo Cáo'),
-            h(DS.Button, { level: 'secondary', leadingIcon: 'download-01-line', onClick: () => this.toast('success', 'Xuất Excel', 'Đã xuất kết quả tìm kiếm ra file Excel (demo).') }, 'Xuất Excel')
-          )
+          h('span', { style: { fontSize: 15, fontWeight: 800, letterSpacing: '.04em', color: 'var(--color-text)' } }, 'Tìm kiếm nâng cao')
         ),
-        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px 20px', padding: 20 } },
-          h('div', { style: { gridColumn: 'span 2' } }, this.field('Thời gian', h(DS.DateRangePicker, { size: 'sm', showTime: false, defaultStart: new Date(2026, 8, 1), defaultEnd: new Date(2026, 8, 30), placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))),
-          inp('Mã đơn hàng', 'Nhập mã đơn hàng...'),
-          inp('Mã hợp đồng', 'Nhập mã hợp đồng...'),
-          this.field('Số điện thoại', h(DS.Input, { size: 'sm', defaultValue: '0907685512', placeholder: 'Nhập số điện thoại...', containerStyle: { width: '100%' } })),
-          inp('Camp Source', 'Nhập camp source...'),
-          inp('Camp Medium', 'Nhập camp medium...'),
-          inp('Camp Name', 'Nhập camp name...')
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(5, minmax(180px, 1fr))', gap: '14px 20px', padding: 20 } },
+          h('div', { style: { gridColumn: 'span 2' } }, this.field('Thời gian', h(DS.DateRangePicker, { size: 'sm', showTime: false, allowPast: true, startDate: dateStart, endDate: dateEnd, onChange: ({ start, end }) => this.setState({ srSearchDateStart: start, srSearchDateEnd: end }), placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } }))),
+          inp('Mã đơn hàng', 'Nhập mã đơn hàng...', 'srSearchOrderCodeQ'),
+          inp('Số hợp đồng', 'Nhập số hợp đồng...', 'srSearchContractQ'),
+          inp('Số điện thoại', 'Nhập số điện thoại...', 'srSearchPhoneQ')
         )
       ),
       this.listCard(
-        h('div', { style: { borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)', overflow: 'hidden' } },
-          this.tbl(this.salesReportOnlineColumns(), page, 'id', r => this.openSalesReportOnlineRowDetail(r))
+        h('div', { style: { padding: '10px 0 0' } },
+          h(DS.Tabs, { value: dataTab, onChange: v => this.setState({ srSearchDataTab: v }), items: [
+            { value: 'orders', label: 'Đơn hàng', icon: 'file-doc-line' },
+            { value: 'services', label: 'Dịch vụ', icon: 'folder-line' },
+          ] })
         ),
-        this.renderPagBar(data.length, 'srSearch', 'kết quả')
+        this.zoomToolbar(zoomKey),
+        this.zoomableTbl(columns, page, 'id', isOrders ? r => this.openSalesReportOnlineOrderDetail(r) : r => this.openSalesReportOnlineServiceDetail(r), zoomKey),
+        this.renderPagBar(data.length, pgKey, isOrders ? 'đơn hàng' : 'dịch vụ')
       )
     );
   }
