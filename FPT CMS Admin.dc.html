@@ -3858,10 +3858,11 @@ class Component extends DCLogic {
   //  Cấu trúc 1 cấp (fpt.vn/{slug}) — chỉ áp dụng khi Level 1 là nhánh đã được ISC duyệt (ldpApprovedLv1Set(),
   //           trừ 7 nhánh cố định) → Level 2 tuỳ chọn. Module Duyệt LDP đang tạm ẩn phase này nên nhánh loại
   //           này chưa xuất hiện trong danh sách chọn — logic vẫn giữ để dùng lại khi mở lại module.
-  //  Cấu trúc 2 cấp (fpt.vn/{lv1}/{lv2}) — bắt buộc khi Level 1 là 1 trong 7 trang danh mục hiện hữu
-  //           (LDP_FIXED_LV1): Level 2 LUÔN bắt buộc, không phụ thuộc nhánh có LDP đang chạy hay không.
+  //  Cấu trúc 2 cấp (fpt.vn/{lv1}/{lv2}) — tuỳ chọn với 1 trong 7 trang danh mục hiện hữu (LDP_FIXED_LV1):
+  //           Level 2 KHÔNG bắt buộc nếu nhánh Cấp 1 đó hiện chưa có LDP nào "Đang chạy" (case 1A) — chỉ bắt
+  //           buộc nhập thêm khi nhánh đang bị 1 LDP khác chiếm dụng (case 1B, xem needL2 bên dưới).
   //  Chặn xung đột routing — một slug 1 cấp chỉ được gán cho duy nhất 1 LDP "Đang chạy" tại 1 thời điểm:
-  //    Trường hợp 1 (trùng nhánh Cấp 1 độc lập, slug2 còn trống) → bad1: true.
+  //    Trường hợp 1B (trùng nhánh Cấp 1 độc lập, slug2 còn trống, nhánh đang có LDP khác chạy) → bad1: true.
   //    Trường hợp 2 (trùng toàn bộ đường dẫn 2 cấp) → bad2: true.
   //  Ngoại lệ — bỏ qua chính bản ghi đang sửa (currentId); LDP cũ hết hạn/đã xoá thì cho tái dùng kèm cảnh báo vàng.
   //  bad1/bad2 dùng để tô viền đỏ đúng field (slug1Err/slug2Err) trong renderLdpStep2; thông báo text luôn hiện
@@ -3878,10 +3879,11 @@ class Component extends DCLogic {
       const liveAtLv1 = this.ldpLv1LiveLdp(slug1, currentId);
       if (liveAtLv1) {
         return { ok: false, block: true, kind: 'needL2', bad1: true, bad2: false,
-          msg: 'Nhánh Cấp 1 fpt.vn/' + slug1 + ' hiện đang có chiến dịch [' + liveAtLv1.name + '] đang chạy. Vui lòng nhập thêm Slug Cấp 2 (tên trang con) hoặc đổi nhánh khác để không ghi đè lên trang đang chạy.' };
+          msg: 'Nhánh Cấp 1 fpt.vn/' + slug1 + ' hiện đang có chiến dịch [' + liveAtLv1.name + '] đang chạy. Vui lòng nhập thêm Slug Cấp 2 (tên trang con) hoặc chọn nhánh khác để không ghi đè lên trang đang chạy.' };
       }
-      return { ok: false, block: true, kind: 'needL2Required', bad1: true, bad2: false,
-        msg: 'Nhánh "' + slug1 + '" là trang danh mục hiện hữu trên fpt.vn — bắt buộc nhập Slug Cấp 2 (tên trang con) mới có thể tiếp tục.' };
+      // Trường hợp 1A: nhánh Cấp 1 hiện không có LDP nào đang chạy → URL 1 cấp (fpt.vn/{slug1}) hợp lệ luôn,
+      // không còn bắt buộc nhập thêm Slug Cấp 2 — rơi xuống các bước kiểm tra dùng chung bên dưới (portal/clash)
+      // để double-check path = slug1 không trùng trang tĩnh portal hay LDP khác.
     }
     const path = this.ldpNormalizePath([slug1, slug2].filter(Boolean).join('/'));
     const portal = this.LDP_PORTAL_URLS()[path];
@@ -5401,9 +5403,8 @@ class Component extends DCLogic {
             } })
           );
         } },
-      { key: 'act',    header: 'Thao tác',  width: 80,  align: 'right',  render: (_, r) => this.rowActions([
+      { key: 'act',    header: 'Thao tác',  width: 50,  align: 'right',  render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openMenuForm(r) },
-        { icon: 'trash-line',   label: 'Xóa', onClick: () => this.confirm('Xóa menu?', 'Menu "' + r.name + '" và các menu con sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa menu "' + r.name + '".'); }, true) },
       ]) },
     ];
 
@@ -5733,9 +5734,8 @@ class Component extends DCLogic {
             } })
           );
         } },
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openBannerEditor(r) },
-        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Banner?', 'Banner "' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa banner.'); }, true) },
       ]) },
     ];
     return this.listCard(
@@ -5829,9 +5829,8 @@ class Component extends DCLogic {
             } })
           );
         } },
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openPopupEditor(r) },
-        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Popup?', 'Popup "' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa popup.'); }, true) },
       ]) },
     ];
     return this.listCard(
@@ -6109,12 +6108,17 @@ class Component extends DCLogic {
       { key: 'url', header: 'URL', width: 200, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 11.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: 190 } }, r.url || '—') },
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
       { key: 'status', header: 'Trạng thái', width: 130, align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+          const isOn = r.status !== 'inactive';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-ads-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              this.setState({ adsListData: this.getAdsList().map(x => x.id === r.id ? Object.assign({}, x, { status: v ? 'active' : 'inactive' }) : x) });
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Quảng cáo "' + r.title.slice(0, 60) + '".');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openAdEditor(r) },
-        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa quảng cáo?', 'Quảng cáo "' + r.title.slice(0, 60) + '" sẽ bị xóa.', () => {
-            this.setState({ adsListData: this.getAdsList().filter(x => x.id !== r.id) });
-            this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa quảng cáo.');
-          }, true) },
       ]) },
     ];
     return this.listCard(
@@ -6154,12 +6158,17 @@ class Component extends DCLogic {
       { key: 'desc', header: 'Mô tả nhóm', width: 260, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.desc || '—') },
       { key: 'count', header: 'Số quảng cáo', width: 110, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, adsAll.filter(a => a.catCode === r.code).length) },
       { key: 'status', header: 'Trạng thái', width: 130, align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+          const isOn = r.status !== 'inactive';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-adcat-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              this.setState({ adCatsListData: this.getAdCatsList().map(x => x.id === r.id ? Object.assign({}, x, { status: v ? 'active' : 'inactive' }) : x) });
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Danh mục "' + r.name + '".');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ adCatEditor: r, adCatDraft: null }) },
-        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa danh mục?', 'Danh mục "' + r.name + '" sẽ bị xóa.', () => {
-            this.setState({ adCatsListData: this.getAdCatsList().filter(x => x.id !== r.id) });
-            this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa danh mục.');
-          }, true) },
       ]) },
     ];
     return this.listCard(
@@ -6710,9 +6719,18 @@ class Component extends DCLogic {
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
       { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
       { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+          const isOn = r.status !== 'inactive';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-faq-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              const base = this.state.faqItems || this.FAQS();
+              this.setState({ faqItems: base.map(f => f.id === r.id ? Object.assign({}, f, { status: v ? 'active' : 'inactive' }) : f) });
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Câu hỏi FAQ.');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' } }) },
-        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa FAQ?', 'Câu hỏi sẽ bị xóa.', () => { const base = this.state.faqItems || this.FAQS(); this.setState({ faqItems: base.filter(f => f.id !== r.id) }); this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa câu hỏi.'); }, true) },
       ]) },
     ];
     const cats = this.FAQ_CATS().map(c => c.name);
@@ -6751,10 +6769,21 @@ class Component extends DCLogic {
       { key: 'lang', header: 'Ngôn ngữ', width: 110, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.lang || 'Tiếng Việt') },
       { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
       { key: 'count', header: 'Số câu hỏi', width: 100, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
-      { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => {
+          const isOn = (this.state.faqCatActiveMap || {})[r.id] !== undefined ? !!(this.state.faqCatActiveMap || {})[r.id] : r.status !== 'inactive';
+          return this.statusBadge(isOn ? 'active' : 'inactive');
+        } },
+      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+          const isOn = (this.state.faqCatActiveMap || {})[r.id] !== undefined ? !!(this.state.faqCatActiveMap || {})[r.id] : r.status !== 'inactive';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-faqcat-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              this.setState(s => ({ faqCatActiveMap: { ...s.faqCatActiveMap, [r.id]: v } }));
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Danh mục "' + r.name + '".');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqCatEditor: r }) },
-        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa danh mục?', 'Danh mục "' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa danh mục.'); }, true) },
       ]) },
     ];
     return this.listCard(
@@ -7311,9 +7340,8 @@ class Component extends DCLogic {
             } })
           );
         } },
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openLdpEditor(r) },
-          { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Landing Page?', 'Trang "' + r.name + '" sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa landing page "' + r.name + '".'); }) },
         ]) },
     ];
     return this.listCard(
@@ -7697,13 +7725,16 @@ class Component extends DCLogic {
       { value: 'tin-tuc',             label: 'Tin tức',                  children: [] },
       { value: 'lien-he',             label: 'Liên hệ',                  children: [] },
     ];
-    const lv1Exists = !!slug1 && this.LDP_FIXED_LV1().includes(slug1);
     const slugCheck = slugLocked ? { ok: true } : this.ldpSlugValidate(slug1, slug2, editRow ? editRow.id : null);
     const slug1Err = !!(slugCheck.block && slugCheck.bad1);
     const slug2Err = !!(slugCheck.block && slugCheck.bad2);
-    const lv1L2Required = lv1Exists;                                 // Danh mục hiện hữu (7 nhánh cố định) → Level 2 luôn bắt buộc
-    // Danh sách nhánh Level 1 có sẵn — chỉ 7 nhánh cố định, chọn bằng DS.Select.
-    const lv1Options = FPT_CATS.map(c => ({ value: c.value, label: c.label + ' (' + c.value + ')' }));
+    // Lỗi chỉ nói riêng về nhánh Cấp 1 (bad1 mà không phải bad2, VD "đang có chiến dịch chạy" / "chưa chọn nhánh hợp
+    // lệ") thì giới hạn chiều rộng dòng thông báo trong khoảng ~ thanh Lv1 (badge fpt.vn/ + Select) thay vì tràn hết
+    // cả dòng URL Slug — tránh nhìn như đang lấn sang phần Level 2 dù nội dung không liên quan tới Level 2.
+    const scopeL1Only = !!(slugCheck.block && slugCheck.bad1 && !slugCheck.bad2);
+    // Danh sách nhánh Level 1 có sẵn — chỉ 7 nhánh cố định, chọn bằng DS.Select. Mỗi dòng chỉ hiện tên tiếng
+    // Việt rõ nghĩa (bỏ hậu tố "(slug-khong-dau)" — slug thật vẫn thấy được ở dòng "Xem trước" bên dưới).
+    const lv1Options = FPT_CATS.map(c => ({ value: c.value, label: c.label }));
     const slug  = [slug1, slug2].filter(s => s).join('/') || 'khuyen-mai/km-t5';
     const tplDefaultColors = { internet: '#ffffff', sa: '#0a1628', landingpage: '#f4f6fa', customhtml: '#ffffff' };
     const defaultBgColor = tplDefaultColors[this.state.ldpTpl] || '#ffffff';
@@ -7757,7 +7788,7 @@ class Component extends DCLogic {
                 ),
                 (() => {
                   const tone = slugCheck.block ? 'var(--color-danger-text)' : slugCheck.warn ? 'var(--color-warning-text)' : (!slug1 ? 'var(--color-text-subtle)' : 'var(--color-success-text)');
-                  return h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: tone, fontWeight: (slugCheck.block || slugCheck.warn) ? 600 : 400 } },
+                  return h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: tone, fontWeight: (slugCheck.block || slugCheck.warn) ? 600 : 400, maxWidth: scopeL1Only ? '50%' : undefined } },
                     !slug1
                       ? h('span', null, 'Chọn một nhánh Level 1 có sẵn.')
                       : slugCheck.block
@@ -7765,10 +7796,9 @@ class Component extends DCLogic {
                         : slugCheck.warn
                           ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, slugCheck.msg))
                           : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'check-circle-line', size: 14 }), h('span', null,
-                              'Nhánh "', h('strong', null, slug1), '" hợp lệ — URL cấu trúc ', h('strong', null, lv1L2Required ? '2 cấp' : '1 cấp'), '. ',
-                              lv1L2Required
-                                ? h('span', null, 'Đây là danh mục hiện hữu trên fpt.vn nên ', h('strong', null, 'bắt buộc Slug Cấp 2'), ' (đã nhập hợp lệ).')
-                                : h('span', null, 'Nhánh đã được ISC duyệt nên ', h('strong', null, 'Level 2 không bắt buộc'), ' (có thể để trống).')
+                              slug2
+                                ? h('span', null, 'Nhánh "', h('strong', null, slug1), '" hợp lệ — URL cấu trúc 2 cấp: fpt.vn/', h('strong', null, slug1 + '/' + slug2), ' đã sẵn sàng để tiếp tục.')
+                                : h('span', null, 'Đường dẫn fpt.vn/', h('strong', null, slug1), ' hợp lệ (URL cấu trúc 1 cấp) — Đã sẵn sàng để tiếp tục.')
                             ))
                   );
                 })(),
@@ -11520,7 +11550,6 @@ class Component extends DCLogic {
       h('span', { style: { fontSize: 13, fontWeight: 600, color: 'var(--fpt-11)', paddingRight: 6 } }, selCount + ' bài được chọn'),
       h('div', { style: { width: 1, height: 20, background: 'var(--color-border)', margin: '0 2px' } }),
       h(DS.Button, { size: 'sm', level: 'secondary', leadingIcon: 'star-01-line', onClick: () => { const next = !allFeatured; const m = { ...(this.state.newsArtFeaturedMap || {}) }; selArts.forEach(a => { m[a.id] = next; }); this.setState({ newsArtFeaturedMap: m }); this.toast(next ? 'success' : 'neutral', next ? 'Đã đánh dấu nổi bật' : 'Đã bỏ nổi bật', selCount + ' bài.'); } }, allFeatured ? 'Bỏ nổi bật' : 'Nổi bật'),
-      h(DS.Button, { size: 'sm', level: 'secondary', onClick: () => this.confirm('Xóa ' + selCount + ' bài?', 'Các bài đã chọn sẽ bị xóa vĩnh viễn.', () => { this.closeModal(); this.setState({ newsSelRows: {}, newsSelAll: false }); this.toast('success', 'Đã xóa', 'Xóa thành công.'); }, true) }, 'Xóa'),
       h(DS.Button, { size: 'sm', level: 'tertiary', onClick: () => this.setState({ newsSelRows: {}, newsSelAll: false }) }, 'Bỏ chọn'),
     ) : null;
     // Filters
@@ -11559,10 +11588,19 @@ class Component extends DCLogic {
       { key: 'views',  header: 'Lượt xem', width: 78, align: 'right',
         render: (_, r) => h('span', { style: { fontWeight: 600, fontVariantNumeric: 'tabular-nums' } }, r.views.toLocaleString()) },
       { key: 'status', header: 'Trạng thái', width: 96, align: 'center',
-        render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+        render: (_, r) => this.statusBadge(this.effStatus(this.state.newsArtActiveMap, r, 'published')) },
+      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+          if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
+          const isOn = this.effStatus(this.state.newsArtActiveMap, r, 'published') !== 'hidden';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-news-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              this.setState(s => ({ newsArtActiveMap: { ...s.newsArtActiveMap, [r.id]: v } }));
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Bài viết "' + r.title + '".');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ newsArticleEdit: r }) },
-        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa bài viết?', '"' + r.title + '" sẽ bị xóa vĩnh viễn.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa bài viết.'); }, true) },
       ]) },
     ];
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
@@ -11825,23 +11863,34 @@ class Component extends DCLogic {
     const statusOpts = [{ value: 'all', label: 'Tất cả tình trạng' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }];
     const columns = [
       { key: 'idx', header: '#', width: 44, render: (_, r, i) => h('span', { style: { color: 'var(--color-text-subtle)' } }, i + 1) },
-      { key: 'name', header: 'Tên chuyên mục', render: (_, r) => {
+      { key: 'name', header: 'Tên chuyên mục', width: 220, render: (_, r) => {
         const lvl = levelOf(r);
         return h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
           lvl > 1 && h('span', { style: { color: 'var(--color-text-subtle)' } }, '—'.repeat(lvl - 1)),
           h('span', { style: { fontWeight: 600 } }, r.name)
         );
       } },
-      { key: 'slug',   header: 'Slug', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
-      { key: 'parent', header: 'Chuyên mục cha', render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)' } }, r.parent || '—') },
-      { key: 'layout', header: 'Kiểu giao diện', render: (_, r) => h(DS.Badge, { theme: 'neutral' }, r.layout || 'default') },
-      { key: 'level',  header: 'Cấp', align: 'center', render: (_, r) => h('span', null, String(levelOf(r))) },
-      { key: 'order',  header: 'Thứ tự', align: 'center', render: (_, r) => h('span', null, String(r.order || 0)) },
-      { key: 'count',  header: 'Số bài', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
-      { key: 'status', header: 'Tình trạng', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'slug',   header: 'Slug', width: 140, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
+      { key: 'parent', header: 'Chuyên mục cha', width: 150, render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)' } }, r.parent || '—') },
+      { key: 'layout', header: 'Kiểu giao diện', width: 120, render: (_, r) => h(DS.Badge, { theme: 'neutral' }, r.layout || 'default') },
+      { key: 'level',  header: 'Cấp', width: 64, align: 'center', render: (_, r) => h('span', null, String(levelOf(r))) },
+      { key: 'order',  header: 'Thứ tự', width: 80, align: 'center', render: (_, r) => h('span', null, String(r.order || 0)) },
+      { key: 'count',  header: 'Số bài', width: 80, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
+      { key: 'status', header: 'Tình trạng', width: 120, align: 'center', render: (_, r) => {
+          const isOn = (this.state.newsCatActiveMap || {})[r.id] !== undefined ? !!(this.state.newsCatActiveMap || {})[r.id] : r.status !== 'inactive';
+          return this.statusBadge(isOn ? 'active' : 'inactive');
+        } },
+      { key: 'active', header: 'Hoạt động', width: 110, align: 'center', render: (_, r) => {
+          const isOn = (this.state.newsCatActiveMap || {})[r.id] !== undefined ? !!(this.state.newsCatActiveMap || {})[r.id] : r.status !== 'inactive';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-newscat-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              this.setState(s => ({ newsCatActiveMap: { ...s.newsCatActiveMap, [r.id]: v } }));
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Chuyên mục "' + r.name + '".');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa',  onClick: () => this.setState({ newsCatEditor: r }) },
-        { icon: 'trash-line',  label: 'Xóa',  onClick: () => this.confirm('Xóa chuyên mục?', '"' + r.name + '" sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa chuyên mục.'); }, true) },
       ]) },
     ];
     return this.listCard(
@@ -11870,10 +11919,21 @@ class Component extends DCLogic {
       { key: 'name', header: 'Tên Tag', render: (_, r) => h('span', { style: { fontWeight: 600 } }, '#' + r.name) },
       { key: 'slug', header: 'Slug', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
       { key: 'count', header: 'Số bài dùng', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
-      { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => {
+          const isOn = (this.state.newsTagActiveMap || {})[r.id] !== undefined ? !!(this.state.newsTagActiveMap || {})[r.id] : r.status !== 'inactive';
+          return this.statusBadge(isOn ? 'active' : 'inactive');
+        } },
+      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+          const isOn = (this.state.newsTagActiveMap || {})[r.id] !== undefined ? !!(this.state.newsTagActiveMap || {})[r.id] : r.status !== 'inactive';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-newstag-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
+              this.setState(s => ({ newsTagActiveMap: { ...s.newsTagActiveMap, [r.id]: v } }));
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Tag #' + r.name + '.');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ tagEditor: r }) },
-        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Tag?', 'Tag #' + r.name + ' sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa tag.'); }, true) },
       ]) },
     ];
     return this.listCard(
@@ -11897,9 +11957,8 @@ class Component extends DCLogic {
         );
       } },
 
-      { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Cấu hình', onClick: () => this.setState({ tagMappingEditor: r, tagSkuConfirmed: r.skus.length ? [...r.skus] : ['INT-GIGA', 'INT-SKY'], tagSkuSel: r.skus.length ? [...r.skus] : ['INT-GIGA', 'INT-SKY'], tagSkuQ: '', tagSkuCat: 'all', tagEditingTag: r.tag }) },
-        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa mapping?', 'Cấu hình cho tag #' + r.tag + ' sẽ bị xóa.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa mapping.'); }, true) },
       ]) },
     ];
     return this.listCard(
