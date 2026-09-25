@@ -7701,29 +7701,29 @@ class Component extends DCLogic {
     const slug1 = get('urlSlug1', editRow ? (editRow.lv1 || '') : '');
     const slug2 = get('urlSlug2', editRow ? (editRow.l2 || '') : '');
     const FPT_CATS = [
-      { value: 'khuyen-mai',           label: 'Khuyến mãi',              children: [] },
-      { value: 'internet',             label: 'Internet – Wifi',          children: [
+      { value: 'khuyen-mai',           label: 'khuyen-mai',              children: [] },
+      { value: 'internet',             label: 'internet',                children: [
         { value: 'combo-the-thao',  label: 'Combo Internet thể thao giải trí' },
         { value: 'wifi-7',          label: 'Internet Wi-Fi 7' },
         { value: 'game-thu',        label: 'Internet game thủ' },
         { value: 'doanh-nghiep',    label: 'Internet doanh nghiệp' },
       ]},
-      { value: 'truyen-hinh-fpt-play', label: 'Truyền hình & Giải trí',  children: [
+      { value: 'truyen-hinh-fpt-play', label: 'truyen-hinh-fpt-play',    children: [
         { value: 'fpt-play',        label: 'FPT Play' },
         { value: 'nang-cap',        label: 'Nâng cấp gói combo thể thao' },
         { value: 'ngoai-hang-anh',  label: 'Combo Internet Ngoại hạng Anh' },
       ]},
-      { value: 'thiet-bi-thong-minh',  label: 'Thiết bị thông minh',     children: [
+      { value: 'thiet-bi-thong-minh',  label: 'thiet-bi-thong-minh',     children: [
         { value: 'fpt-camera',      label: 'FPT Camera' },
         { value: 'fpt-smart-home',  label: 'FPT Smart Home' },
         { value: 'access-point',    label: 'Access Point' },
         { value: 'smart-tivi',      label: 'Smart Tivi' },
       ]},
-      { value: 'dich-vu-so',          label: 'Dịch vụ số',               children: [
+      { value: 'dich-vu-so',          label: 'dich-vu-so',               children: [
         { value: 'dich-vu-f-safe',  label: 'Dịch vụ F-Safe' },
       ]},
-      { value: 'tin-tuc',             label: 'Tin tức',                  children: [] },
-      { value: 'lien-he',             label: 'Liên hệ',                  children: [] },
+      { value: 'tin-tuc',             label: 'tin-tuc',                  children: [] },
+      { value: 'lien-he',             label: 'lien-he',                  children: [] },
     ];
     const slugCheck = slugLocked ? { ok: true } : this.ldpSlugValidate(slug1, slug2, editRow ? editRow.id : null);
     const slug1Err = !!(slugCheck.block && slugCheck.bad1);
@@ -7732,8 +7732,8 @@ class Component extends DCLogic {
     // lệ") thì giới hạn chiều rộng dòng thông báo trong khoảng ~ thanh Lv1 (badge fpt.vn/ + Select) thay vì tràn hết
     // cả dòng URL Slug — tránh nhìn như đang lấn sang phần Level 2 dù nội dung không liên quan tới Level 2.
     const scopeL1Only = !!(slugCheck.block && slugCheck.bad1 && !slugCheck.bad2);
-    // Danh sách nhánh Level 1 có sẵn — chỉ 7 nhánh cố định, chọn bằng DS.Select. Mỗi dòng chỉ hiện tên tiếng
-    // Việt rõ nghĩa (bỏ hậu tố "(slug-khong-dau)" — slug thật vẫn thấy được ở dòng "Xem trước" bên dưới).
+    // Danh sách nhánh Level 1 có sẵn — chỉ 7 nhánh cố định, chọn bằng DS.Select. Nhãn hiển thị dùng chính
+    // định dạng URL slug (chữ thường, không dấu, nối bằng gạch ngang) để người dùng thấy đúng segment sẽ dùng.
     const lv1Options = FPT_CATS.map(c => ({ value: c.value, label: c.label }));
     const slug  = [slug1, slug2].filter(s => s).join('/') || 'khuyen-mai/km-t5';
     const tplDefaultColors = { internet: '#ffffff', sa: '#0a1628', landingpage: '#f4f6fa', customhtml: '#ffffff' };
@@ -7798,7 +7798,7 @@ class Component extends DCLogic {
                           : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'check-circle-line', size: 14 }), h('span', null,
                               slug2
                                 ? h('span', null, 'Nhánh "', h('strong', null, slug1), '" hợp lệ — URL cấu trúc 2 cấp: fpt.vn/', h('strong', null, slug1 + '/' + slug2), ' đã sẵn sàng để tiếp tục.')
-                                : h('span', null, 'Đường dẫn fpt.vn/', h('strong', null, slug1), ' hợp lệ (URL cấu trúc 1 cấp) — Đã sẵn sàng để tiếp tục.')
+                                : h('span', null, 'Nhánh fpt.vn/', h('strong', null, slug1), ' hợp lệ URL cấu trúc 1 cấp — Đã sẵn sàng để tiếp tục.')
                             ))
                   );
                 })(),
