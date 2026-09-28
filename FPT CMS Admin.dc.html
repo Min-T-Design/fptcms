@@ -4007,7 +4007,7 @@ class Component extends DCLogic {
         this.detailRow('Slug', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: '#f43f5e' } }, r.slug)),
         this.detailRow('Tiêu đề (H1)', r.h1), this.detailRow('Trạng thái', this.statusBadge(r.status)),
         this.detailRow('Tag tin tức', (this.NEWS_TAGS().find(t => t.slug === r.newsTag) || {}).name || r.newsTag), this.detailRow('Meta tiêu đề', r.metaTitle),
-        this.detailRow('Meta mô tả', r.metaDesc), this.detailRow('Nhóm câu hỏi', r.faqCat),
+        this.detailRow('Meta mô tả', r.metaDesc),
         this.detailRow('Người tạo', r.createdBy),
         this.detailRow('Ngày tạo', r.createdAt), this.detailRow('Ngày sửa', r.updatedAt)
       ),
@@ -6107,7 +6107,7 @@ class Component extends DCLogic {
       { key: 'cat', header: 'Danh mục', width: 170, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, this.adCatLabel(r.catCode)) },
       { key: 'url', header: 'URL', width: 200, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 11.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: 190 } }, r.url || '—') },
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
-      { key: 'status', header: 'Trạng thái', width: 130, align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(r.status) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
           const isOn = r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -6157,7 +6157,7 @@ class Component extends DCLogic {
       { key: 'code', header: 'Mã nhóm', width: 180, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-accent-text)', background: 'var(--color-accent-bg)', padding: '2px 8px', borderRadius: 6 } }, r.code) },
       { key: 'desc', header: 'Mô tả nhóm', width: 260, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.desc || '—') },
       { key: 'count', header: 'Số quảng cáo', width: 110, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, adsAll.filter(a => a.catCode === r.code).length) },
-      { key: 'status', header: 'Trạng thái', width: 130, align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(r.status) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
           const isOn = r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -6718,7 +6718,7 @@ class Component extends DCLogic {
       { key: 'cat', header: 'Danh mục', width: 150, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, r.cat) },
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
       { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
-      { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      { key: 'status', header: 'Trạng thái', width: 120, render: (_, r) => this.statusBadge(r.status) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
           const isOn = r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -6769,7 +6769,7 @@ class Component extends DCLogic {
       { key: 'lang', header: 'Ngôn ngữ', width: 110, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.lang || 'Tiếng Việt') },
       { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
       { key: 'count', header: 'Số câu hỏi', width: 100, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
-      { key: 'status', header: 'Trạng thái', width: 120, align: 'center', render: (_, r) => {
+      { key: 'status', header: 'Trạng thái', width: 120, render: (_, r) => {
           const isOn = (this.state.faqCatActiveMap || {})[r.id] !== undefined ? !!(this.state.faqCatActiveMap || {})[r.id] : r.status !== 'inactive';
           return this.statusBadge(isOn ? 'active' : 'inactive');
         } },
@@ -6877,6 +6877,28 @@ class Component extends DCLogic {
   renderFaqCatEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.setState({ faqCatEditor: undefined });
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+        h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
+      ),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
+    );
+
+    // Câu hỏi thuộc danh mục đang sửa, kéo thả để đổi thứ tự hiển thị (ghi thẳng vào faqItems khi thả).
+    const allFaqs = this.state.faqItems || this.FAQS();
+    const catFaqs = r ? allFaqs.filter(f => f.cat === r.name).slice().sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
+    const dragIdx = this.state.faqCatChildDragIdx;
+    const dragOverIdx = this.state.faqCatChildDragOverIdx;
+    const moveCatFaq = (from, to) => {
+      if (to < 0 || to >= catFaqs.length || from === to) return;
+      const reordered = catFaqs.slice();
+      const [it] = reordered.splice(from, 1);
+      reordered.splice(to, 0, it);
+      const orderById = new Map(reordered.map((f, i) => [f.id, i + 1]));
+      this.setState({ faqItems: allFaqs.map(f => orderById.has(f.id) ? Object.assign({}, f, { order: orderById.get(f.id) }) : f) });
+    };
+
     return this.editorShell(
       isNew ? 'Thêm danh mục FAQ' : 'Chỉnh sửa: ' + r.name, '', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -6884,12 +6906,34 @@ class Component extends DCLogic {
           h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
           h(DS.Switch, { defaultChecked: r ? r.status === 'active' : true })
         ),
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+        section(1, 'folder-line', 'Thông tin cơ bản',
           this.field('Tên danh mục', h(DS.Input, { defaultValue: r ? r.name : '' }), true),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 } },
             this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], defaultValue: r ? (r.lang || '') : '', placeholder: 'Chọn ngôn ngữ…' })),
             this.field('Thứ tự', h(DS.Input, { type: 'number', defaultValue: r ? String(r.order) : '1' }))
           )
+        ),
+        section(2, 'message-circle-line', 'Danh sách câu hỏi',
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, isNew
+            ? 'Bạn có thể thêm câu hỏi vào danh mục này sau khi lưu.'
+            : 'Kéo thả để sắp xếp lại thứ tự hiển thị của các câu hỏi trong danh mục này.'),
+          isNew || catFaqs.length === 0
+            ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, fontStyle: 'italic', border: '1px solid var(--color-border)', borderRadius: 10 } }, 'Danh mục này chưa có câu hỏi nào.')
+            : h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+                catFaqs.map((f, i) => h('div', {
+                    key: f.id, draggable: true,
+                    onDragStart: e => { e.dataTransfer.effectAllowed = 'move'; this.setState({ faqCatChildDragIdx: i }); },
+                    onDragOver: e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.setState({ faqCatChildDragOverIdx: i }); },
+                    onDragLeave: () => this.setState({ faqCatChildDragOverIdx: undefined }),
+                    onDrop: e => { e.preventDefault(); const from = this.state.faqCatChildDragIdx; if (from !== undefined && from !== i) moveCatFaq(from, i); this.setState({ faqCatChildDragIdx: undefined, faqCatChildDragOverIdx: undefined }); },
+                    onDragEnd: () => this.setState({ faqCatChildDragIdx: undefined, faqCatChildDragOverIdx: undefined }),
+                    style: { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderBottom: i < catFaqs.length - 1 ? '1px solid var(--color-border-pale)' : 'none', background: dragOverIdx === i ? 'var(--color-accent-bg)' : 'transparent', opacity: dragIdx === i ? 0.4 : 1, cursor: 'grab', transition: 'all .12s' }
+                  },
+                  h(DS.Icon, { name: 'dots-grid-line', size: 15, color: 'var(--color-text-subtle)', style: { flexShrink: 0 }, title: 'Kéo để sắp xếp vị trí' }),
+                  h('span', { style: { flex: 1, fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, f.q),
+                  this.statusBadge(f.status)
+                ))
+              )
         )
       ),
       () => { back(); this.toast('success', 'Đã lưu', 'Danh mục đã được lưu.'); },
@@ -11587,7 +11631,7 @@ class Component extends DCLogic {
       { key: 'date',   header: 'Ngày đăng', width: 90 },
       { key: 'views',  header: 'Lượt xem', width: 78, align: 'right',
         render: (_, r) => h('span', { style: { fontWeight: 600, fontVariantNumeric: 'tabular-nums' } }, r.views.toLocaleString()) },
-      { key: 'status', header: 'Trạng thái', width: 96, align: 'center',
+      { key: 'status', header: 'Trạng thái', width: 96,
         render: (_, r) => this.statusBadge(this.effStatus(this.state.newsArtActiveMap, r, 'published')) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
@@ -11876,7 +11920,7 @@ class Component extends DCLogic {
       { key: 'level',  header: 'Cấp', width: 64, align: 'center', render: (_, r) => h('span', null, String(levelOf(r))) },
       { key: 'order',  header: 'Thứ tự', width: 80, align: 'center', render: (_, r) => h('span', null, String(r.order || 0)) },
       { key: 'count',  header: 'Số bài', width: 80, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
-      { key: 'status', header: 'Tình trạng', width: 120, align: 'center', render: (_, r) => {
+      { key: 'status', header: 'Tình trạng', width: 120, render: (_, r) => {
           const isOn = (this.state.newsCatActiveMap || {})[r.id] !== undefined ? !!(this.state.newsCatActiveMap || {})[r.id] : r.status !== 'inactive';
           return this.statusBadge(isOn ? 'active' : 'inactive');
         } },
@@ -11919,7 +11963,7 @@ class Component extends DCLogic {
       { key: 'name', header: 'Tên Tag', render: (_, r) => h('span', { style: { fontWeight: 600 } }, '#' + r.name) },
       { key: 'slug', header: 'Slug', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
       { key: 'count', header: 'Số bài dùng', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
-      { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => {
+      { key: 'status', header: 'Trạng thái', render: (_, r) => {
           const isOn = (this.state.newsTagActiveMap || {})[r.id] !== undefined ? !!(this.state.newsTagActiveMap || {})[r.id] : r.status !== 'inactive';
           return this.statusBadge(isOn ? 'active' : 'inactive');
         } },
