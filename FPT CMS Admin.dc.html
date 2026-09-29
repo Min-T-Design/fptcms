@@ -6228,7 +6228,7 @@ class Component extends DCLogic {
       { key: 'code', header: 'Mã nhóm', width: 180, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, color: 'var(--color-accent-text)', background: 'var(--color-accent-bg)', padding: '2px 8px', borderRadius: 6 } }, r.code) },
       { key: 'desc', header: 'Mô tả nhóm', width: 260, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.desc || '—') },
       { key: 'count', header: 'Số quảng cáo', width: 110, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, adsAll.filter(a => a.catCode === r.code).length) },
-      { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(r.status) },
+      { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(r.status === 'inactive' ? 'hidden' : r.status) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
           const isOn = r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -6352,6 +6352,8 @@ class Component extends DCLogic {
           this.field('Thời gian quảng cáo', h(DS.DateRangePicker, {
             allowPast: true, placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' },
             startDate: d.dateStart || null, endDate: d.dateEnd || null,
+            // hint '\u00A0' luôn giữ sẵn 1 dòng dưới ô → bật/tắt lỗi hết hạn không đẩy các card bên dưới nhảy layout.
+            hint: '\u00A0',
             error: expiredErr ? 'Quảng cáo đã hết hạn — vui lòng chọn lại thời gian kết thúc để mở lại.' : undefined,
             onChange: v => setD({ dateStart: v && v.start ? v.start : null, dateEnd: v && v.end ? v.end : null })
           }))
@@ -6415,7 +6417,7 @@ class Component extends DCLogic {
               this.statusBadge(this.adEffStatus(a))
             )))
           : '—'),
-        this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        this.detailRow('Trạng thái', this.statusBadge(r.status === 'inactive' ? 'hidden' : r.status)),
         this.detailRow('Thời gian tạo', r.createdAt || '—'),
         this.detailRow('Người tạo', r.createdBy || '—'),
         this.detailRow('Thời gian cập nhật', r.updatedAt || '—'),
