@@ -3664,29 +3664,29 @@ class Component extends DCLogic {
     { name: 'Thiết bị Smart Home', slug: '/thiet-bi-smart-home' },
   ]; }
   AD_CATEGORIES() { return [
-    { id: 1, name: 'Scrolling Announcement Bar', code: 'scrolling_top_bar', desc: 'Thanh chạy chữ thông báo khuyến mãi cố định đầu website', status: 'active', createdAt: '01/06/2026' },
-    { id: 2, name: 'Popup Khuyến mãi', code: 'popup_promo', desc: 'Nhóm quảng cáo dạng popup hiển thị khuyến mãi khi vào trang', status: 'active', createdAt: '05/06/2026' },
-    { id: 3, name: 'Banner Góc màn hình', code: 'corner_banner', desc: 'Quảng cáo nhỏ ghim góc màn hình, không che nội dung chính', status: 'active', createdAt: '10/06/2026' },
-    { id: 4, name: 'Quảng cáo chân trang', code: 'footer_ads', desc: 'Nhóm quảng cáo hiển thị cố định ở chân trang website', status: 'inactive', createdAt: '15/06/2026' },
+    { id: 1, name: 'Scrolling Announcement Bar', code: 'scrolling_top_bar', desc: 'Thanh chạy chữ thông báo khuyến mãi cố định đầu website', status: 'active', createdAt: '01/06/2026 09:00', updatedAt: '12/08/2026 15:20', updatedBy: 'Nguyễn Thị Thùy' },
+    { id: 2, name: 'Popup Khuyến mãi', code: 'popup_promo', desc: 'Nhóm quảng cáo dạng popup hiển thị khuyến mãi khi vào trang', status: 'active', createdAt: '05/06/2026 10:30', updatedAt: '20/07/2026 09:45', updatedBy: 'Trần Minh Khoa' },
+    { id: 3, name: 'Banner Góc màn hình', code: 'corner_banner', desc: 'Quảng cáo nhỏ ghim góc màn hình, không che nội dung chính', status: 'active', createdAt: '10/06/2026 14:10', updatedAt: '10/06/2026 14:10', updatedBy: 'Admin User' },
+    { id: 4, name: 'Quảng cáo chân trang', code: 'footer_ads', desc: 'Nhóm quảng cáo hiển thị cố định ở chân trang website', status: 'inactive', createdAt: '15/06/2026 11:00', updatedAt: '02/09/2026 16:00', updatedBy: 'Admin User' },
   ]; }
   ADS() { return [
     { id: 1, catCode: 'scrolling_top_bar', title: 'Combo Internet V.VIP chỉ từ 220K: Xem Ngoại Hạng Anh - Nhận ngay Camera AI & Cloud miễn phí',
       img: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7aedea66620_1786441194.png',
       bgColor: '#e6aa41', bgImg: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7ae92542251_1786439973.png',
       content: 'Combo Internet V.VIP chỉ từ 220K: Xem Ngoại Hạng Anh - Nhận ngay Camera AI & Cloud miễn phí <a href="#">TẠI ĐÂY</a>',
-      url: 'https://fpt.vn/shop/internet/register/combo-internet-sky-vvip-lite?utm_source=nha-header', target: '_self', order: 1, status: 'active', createdAt: '11/08/2026' },
+      url: 'https://fpt.vn/shop/internet/register/combo-internet-sky-vvip-lite?utm_source=nha-header', target: '_self', order: 1, status: 'active', startAt: '11/08/2026 00:00', endAt: '30/09/2026 23:59', createdAt: '11/08/2026 09:15', updatedAt: '25/08/2026 14:30', updatedBy: 'Nguyễn Thị Thùy' },
     { id: 2, catCode: 'scrolling_top_bar', title: 'Miễn phí lắp đặt Internet tốc độ cao — Ưu đãi cho khách hàng mới',
       img: '', bgColor: '#0072BC', bgImg: '',
       content: 'Miễn phí lắp đặt Internet tốc độ cao — Ưu đãi cho khách hàng mới trong tháng.',
-      url: 'https://fpt.vn/shop/internet', target: '_self', order: 2, status: 'active', createdAt: '02/07/2026' },
+      url: 'https://fpt.vn/shop/internet', target: '_self', order: 2, status: 'active', startAt: '01/07/2026 00:00', endAt: '', createdAt: '02/07/2026 10:20', updatedAt: '02/07/2026 10:20', updatedBy: 'Trần Minh Khoa' },
     { id: 3, catCode: 'popup_promo', title: 'Camera AI thế hệ mới — Giảm ngay 30% khi đăng ký Internet',
       img: '', bgColor: '#22c55e', bgImg: '',
       content: 'Camera AI thế hệ mới — Giảm ngay 30% khi đăng ký kèm Internet.',
-      url: 'https://fpt.vn/shop/camera-an-ninh', target: '_blank', order: 1, status: 'active', createdAt: '20/06/2026' },
+      url: 'https://fpt.vn/shop/camera-an-ninh', target: '_blank', order: 1, status: 'active', startAt: '20/06/2026 08:00', endAt: '31/10/2026 23:59', createdAt: '20/06/2026 16:45', updatedAt: '15/08/2026 11:05', updatedBy: 'Admin User' },
     { id: 4, catCode: 'corner_banner', title: 'FPT Play VIP tặng kèm — Xem trọn giải Ngoại Hạng Anh',
       img: '', bgColor: '#7c3aed', bgImg: '',
       content: 'FPT Play VIP tặng kèm khi đăng ký gói Internet + Truyền hình.',
-      url: 'https://fpt.vn/shop/truyen-hinh-fpt-play', target: '_self', order: 1, status: 'inactive', createdAt: '28/05/2026' },
+      url: 'https://fpt.vn/shop/truyen-hinh-fpt-play', target: '_self', order: 1, status: 'inactive', startAt: '01/06/2026 00:00', endAt: '31/08/2026 23:59', createdAt: '28/05/2026 08:30', updatedAt: '10/07/2026 17:40', updatedBy: 'Admin User' },
   ]; }
   FAQS() { return [
     { id: 1, cat: 'Thanh toán cước', q: 'Làm thế nào để thanh toán cước trực tuyến?', a: 'FPT Telecom hỗ trợ đa dạng hình thức thanh toán: ứng dụng Hi FPT, ví điện tử MoMo, VNPay, ZaloPay, chuyển khoản ngân hàng hoặc tại quầy giao dịch FPT.', lang: 'Tiếng Việt', order: 1, status: 'active', createdAt: '14/01/2026' },
@@ -6078,12 +6078,33 @@ class Component extends DCLogic {
     const now = new Date(); const pad = n => String(n).padStart(2, '0');
     return pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear();
   }
+  nowStr() {
+    const now = new Date(); const pad = n => String(n).padStart(2, '0');
+    return this.todayStr() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+  }
+  adFmtDate(d) {
+    if (!d) return '';
+    const pad = n => String(n).padStart(2, '0');
+    return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  adParseDate(str) {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?$/.exec(str || '');
+    return m ? new Date(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0)) : null;
+  }
+  adPeriodCell(r) {
+    const h = React.createElement;
+    if (!r.startAt && !r.endAt) return h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không giới hạn');
+    const line = (lbl, v) => h('div', { style: { display: 'flex', gap: 6, whiteSpace: 'nowrap' } },
+      h('span', { style: { width: 24, color: 'var(--color-text-subtle)' } }, lbl),
+      h('span', { style: { color: v ? 'var(--color-text-muted)' : 'var(--color-text-subtle)' } }, v || 'Không giới hạn'));
+    return h('div', { style: { fontSize: 12.5, display: 'flex', flexDirection: 'column', gap: 2 } }, line('Từ', r.startAt), line('Đến', r.endAt));
+  }
   openAdEditor(r) {
     this.setState({
       adEditor: r, adCatErr: false,
       adDraft: Object.assign(r
-        ? { catCode: r.catCode, title: r.title, url: r.url || '', target: r.target || '_self', order: String(r.order || 1), bgColor: r.bgColor || '#0072BC', active: r.status === 'active' }
-        : { catCode: '', title: '', url: '', target: '_self', order: '1', bgColor: '#0072BC', active: true },
+        ? { catCode: r.catCode, title: r.title, url: r.url || '', target: r.target || '_self', order: String(r.order || 1), bgColor: r.bgColor || '#0072BC', active: r.status === 'active', dateStart: this.adParseDate(r.startAt), dateEnd: this.adParseDate(r.endAt) }
+        : { catCode: '', title: '', url: '', target: '_self', order: '1', bgColor: '#0072BC', active: true, dateStart: null, dateEnd: null },
         (() => {
           const bg = (r && r.bgColor) || '#0072BC';
           const m = /^linear-gradient\((\d+)deg,\s*(#[0-9a-fA-F]{6}),\s*(#[0-9a-fA-F]{6})\)$/.exec(bg);
@@ -6137,6 +6158,7 @@ class Component extends DCLogic {
       { key: 'cat', header: 'Danh mục', width: 170, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, this.adCatLabel(r.catCode)) },
       { key: 'url', header: 'URL', width: 200, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: 190 } }, r.url || '—') },
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
+      { key: 'period', header: 'Thời gian quảng cáo', width: 190, render: (_, r) => this.adPeriodCell(r) },
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(r.status) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
           const isOn = r.status !== 'inactive';
@@ -6147,6 +6169,9 @@ class Component extends DCLogic {
             } })
           );
         } },
+      { key: 'createdAt', header: 'Thời gian tạo', width: 140, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
+      { key: 'updatedAt', header: 'Thời gian cập nhật', width: 150, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
+      { key: 'updatedBy', header: 'Người cập nhật', width: 140, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedBy || '—') },
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openAdEditor(r) },
       ]) },
@@ -6197,6 +6222,9 @@ class Component extends DCLogic {
             } })
           );
         } },
+      { key: 'createdAt', header: 'Thời gian tạo', width: 140, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
+      { key: 'updatedAt', header: 'Thời gian cập nhật', width: 150, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
+      { key: 'updatedBy', header: 'Người cập nhật', width: 140, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedBy || '—') },
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ adCatEditor: r, adCatDraft: null }) },
       ]) },
@@ -6231,7 +6259,11 @@ class Component extends DCLogic {
         this.detailRow('URL', r.url ? h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12 } }, r.url) : '—'),
         this.detailRow('Target', (this.AD_TARGETS().find(t => t.value === r.target) || {}).label || '—'),
         this.detailRow('Thứ tự', String(r.order || '—')),
-        this.detailRow('Trạng thái', this.statusBadge(r.status))
+        this.detailRow('Thời gian quảng cáo', this.adPeriodCell(r)),
+        this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        this.detailRow('Thời gian tạo', r.createdAt || '—'),
+        this.detailRow('Thời gian cập nhật', r.updatedAt || '—'),
+        this.detailRow('Người cập nhật', r.updatedBy || '—')
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -6320,7 +6352,13 @@ class Component extends DCLogic {
             this.field('Thứ tự', h(DS.Input, { type: 'number', value: d.order, onChange: e => setD({ order: e && e.target ? e.target.value : e }) }))
           ),
           catErr && h('div', { className: 'fpt-req-err-msg' }, 'Trường bắt buộc — vui lòng chọn danh mục quảng cáo.'),
-          this.field('Tiêu đề', h(DS.Input, { value: d.title, onChange: e => setD({ title: e && e.target ? e.target.value : e }), placeholder: 'VD: Combo Internet V.VIP chỉ từ 220K...' }), true)
+          this.field('Tiêu đề', h(DS.Input, { value: d.title, onChange: e => setD({ title: e && e.target ? e.target.value : e }), placeholder: 'VD: Combo Internet V.VIP chỉ từ 220K...' }), true),
+          this.field('Thời gian quảng cáo', h(DS.DateRangePicker, {
+            allowPast: true, placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' },
+            startDate: d.dateStart || null, endDate: d.dateEnd || null,
+            onChange: v => setD({ dateStart: v && v.start ? v.start : null, dateEnd: v && v.end ? v.end : null })
+          })),
+          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: -8 } }, 'Khoảng thời gian quảng cáo được hiển thị trên website. Để trống nếu hiển thị liên tục.')
         ),
         section(2, 'share-01-line', 'Nội dung & Liên kết',
           this.field('Nội dung', this.richTextEditor(r ? (r.content || '') : '', 'ad')),
@@ -6347,10 +6385,12 @@ class Component extends DCLogic {
         const rec = {
           catCode: d.catCode, title: d.title, img: r ? r.img : '', bgColor: d.bgColor, bgImg: r ? r.bgImg : '',
           content: contentHtml, url: d.url, target: d.target, order: Number(d.order) || 1,
-          status: d.active ? 'active' : 'inactive'
+          status: d.active ? 'active' : 'inactive',
+          startAt: this.adFmtDate(d.dateStart), endAt: this.adFmtDate(d.dateEnd),
+          updatedAt: this.nowStr(), updatedBy: 'Admin User'
         };
         if (r) this.setState({ adsListData: list.map(a => a.id === r.id ? Object.assign({}, a, rec) : a) });
-        else { const newId = Math.max(0, ...list.map(a => a.id)) + 1; this.setState({ adsListData: list.concat([Object.assign({ id: newId, createdAt: this.todayStr() }, rec)]) }); }
+        else { const newId = Math.max(0, ...list.map(a => a.id)) + 1; this.setState({ adsListData: list.concat([Object.assign({ id: newId, createdAt: this.nowStr() }, rec)]) }); }
         back();
         this.toast('success', 'Đã lưu', isNew ? 'Quảng cáo mới đã được tạo.' : 'Quảng cáo đã được cập nhật.');
       },
@@ -6378,8 +6418,10 @@ class Component extends DCLogic {
               this.statusBadge(a.status)
             )))
           : '—'),
-        this.detailRow('Ngày tạo', r.createdAt || '—'),
-        this.detailRow('Trạng thái', this.statusBadge(r.status))
+        this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        this.detailRow('Thời gian tạo', r.createdAt || '—'),
+        this.detailRow('Thời gian cập nhật', r.updatedAt || '—'),
+        this.detailRow('Người cập nhật', r.updatedBy || '—')
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -6508,8 +6550,8 @@ class Component extends DCLogic {
       () => {
         const list = this.getAdCatsList();
         if (list.some(c => c.code === d.code && (!r || c.id !== r.id))) { this.toast('danger', 'Mã nhóm đã tồn tại', 'Vui lòng chọn mã nhóm khác.'); return; }
-        if (r) this.setState({ adCatsListData: list.map(c => c.id === r.id ? Object.assign({}, c, { name: d.name, code: d.code, desc: d.desc, pageScope: d.pageScope || 'all', pages: d.pageScope === 'specific' ? (d.pages || []) : [], status: d.active ? 'active' : 'inactive' }) : c) });
-        else { const newId = Math.max(0, ...list.map(c => c.id)) + 1; this.setState({ adCatsListData: list.concat([{ id: newId, name: d.name, code: d.code, desc: d.desc, pageScope: d.pageScope || 'all', pages: d.pageScope === 'specific' ? (d.pages || []) : [], status: d.active ? 'active' : 'inactive', createdAt: this.todayStr() }]) }); }
+        if (r) this.setState({ adCatsListData: list.map(c => c.id === r.id ? Object.assign({}, c, { name: d.name, code: d.code, desc: d.desc, pageScope: d.pageScope || 'all', pages: d.pageScope === 'specific' ? (d.pages || []) : [], status: d.active ? 'active' : 'inactive', updatedAt: this.nowStr(), updatedBy: 'Admin User' }) : c) });
+        else { const newId = Math.max(0, ...list.map(c => c.id)) + 1; this.setState({ adCatsListData: list.concat([{ id: newId, name: d.name, code: d.code, desc: d.desc, pageScope: d.pageScope || 'all', pages: d.pageScope === 'specific' ? (d.pages || []) : [], status: d.active ? 'active' : 'inactive', createdAt: this.nowStr(), updatedAt: this.nowStr(), updatedBy: 'Admin User' }]) }); }
         back();
         this.toast('success', 'Đã lưu', 'Danh mục đã được lưu.');
       },
