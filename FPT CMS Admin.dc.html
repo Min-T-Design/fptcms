@@ -6357,8 +6357,7 @@ class Component extends DCLogic {
             allowPast: true, placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' },
             startDate: d.dateStart || null, endDate: d.dateEnd || null,
             onChange: v => setD({ dateStart: v && v.start ? v.start : null, dateEnd: v && v.end ? v.end : null })
-          })),
-          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: -8 } }, 'Khoảng thời gian quảng cáo được hiển thị trên website. Để trống nếu hiển thị liên tục.')
+          }))
         ),
         section(2, 'share-01-line', 'Nội dung & Liên kết',
           this.field('Nội dung', this.richTextEditor(r ? (r.content || '') : '', 'ad')),
