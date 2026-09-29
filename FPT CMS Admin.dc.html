@@ -6194,7 +6194,7 @@ class Component extends DCLogic {
     return this.listCard(
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
-          h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Input, { value: this.state.adsSearch || '', onChange: e => this.setState({ adsSearch: e && e.target ? e.target.value : e, ads_pg: 1 }), placeholder: 'Tìm tiêu đề, URL...', leadingIcon: 'search-medium-line' })),
+          h('div', { style: { width: 360, flexShrink: 0 } }, h(DS.Input, { value: this.state.adsSearch || '', onChange: e => this.setState({ adsSearch: e && e.target ? e.target.value : e, ads_pg: 1 }), placeholder: 'Tìm tiêu đề, URL...', leadingIcon: 'search-medium-line' })),
           h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, {
             value: catF, options: [{ value: 'all', label: 'Tất cả danh mục' }, ...cats.map(c => ({ value: c.code, label: c.name }))],
             searchable: true, searchPlaceholder: 'Tìm danh mục…', onChange: v => this.setState({ adsCatFilter: v, ads_pg: 1 })
@@ -6222,7 +6222,8 @@ class Component extends DCLogic {
     const search = (this.state.adCatSearch || '').toLowerCase();
     const list = this.getAdCatsList();
     const adsAll = this.getAdsList();
-    const data = list.filter(c => (c.name + ' ' + c.code).toLowerCase().includes(search));
+    const statusF = this.state.adCatStatusFilter || 'all';
+    const data = list.filter(c => (c.name + ' ' + c.code).toLowerCase().includes(search) && (statusF === 'all' || c.status === statusF));
     const columns = [
       { key: 'name', header: 'Tên nhóm quảng cáo', width: 220, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
       { key: 'code', header: 'Mã nhóm', width: 180, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, color: 'var(--color-accent-text)', background: 'var(--color-accent-bg)', padding: '2px 8px', borderRadius: 6 } }, r.code) },
@@ -6248,13 +6249,21 @@ class Component extends DCLogic {
     ];
     return this.listCard(
       this.toolbar(
-        h('div', { style: { flex: '1 1 240px', minWidth: 200 } },
-          h(DS.Input, { value: this.state.adCatSearch || '', onChange: e => this.setState({ adCatSearch: e && e.target ? e.target.value : e, adCat_pg: 1 }), placeholder: 'Tìm danh mục quảng cáo...', leadingIcon: 'search-medium-line' })
+        h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
+          h('div', { style: { width: 360, flexShrink: 0 } },
+            h(DS.Input, { value: this.state.adCatSearch || '', onChange: e => this.setState({ adCatSearch: e && e.target ? e.target.value : e, adCat_pg: 1 }), placeholder: 'Tìm danh mục quảng cáo...', leadingIcon: 'search-medium-line' })
+          ),
+          h('div', { style: { width: 180, flexShrink: 0 } }, h(DS.Select, {
+            value: statusF, options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Tạm ẩn' }],
+            onChange: v => this.setState({ adCatStatusFilter: v, adCat_pg: 1 })
+          }))
         ),
-        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ adCatEditor: null, adCatDraft: null }) }, 'Thêm Danh Mục')
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ adCatEditor: null, adCatDraft: null }), style: { flexShrink: 0 } }, 'Thêm Danh Mục'),
+        true
       ),
-      search ? this.filterChipsBar([
-        this.filterChip('Tìm: ' + search, 'neutral', () => this.setState({ adCatSearch: '', adCat_pg: 1 })),
+      (search || statusF !== 'all') ? this.filterChipsBar([
+        search && this.filterChip('Tìm: ' + search, 'neutral', () => this.setState({ adCatSearch: '', adCat_pg: 1 })),
+        statusF !== 'all' && this.filterChip('Trạng thái: ' + (statusF === 'active' ? 'Hoạt động' : 'Tạm ẩn'), statusF === 'active' ? 'success' : 'warning', () => this.setState({ adCatStatusFilter: 'all', adCat_pg: 1 })),
       ]) : null,
       data.length ? this.tbl(columns, this.sliceData(data, 'adCat'), 'id', r => this.openAdCatDetail(r)) : this.empty('Chưa có danh mục quảng cáo.'),
       data.length ? this.renderPagBar(data.length, 'adCat', 'danh mục') : null
