@@ -37,6 +37,7 @@
   <style>
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
+    button,input,select,textarea{font-family:inherit}
     body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--color-bg);color:var(--color-text);-webkit-font-smoothing:antialiased}
     @keyframes fptSlideIn{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:translateX(0)}}
     @keyframes fptScaleIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
@@ -416,7 +417,7 @@ class Component extends DCLogic {
     },
     checkoutSkuSearch: '',
     pageStatusFilter: 'all',
-    secPageFilter: 'all',
+    secPageFilter: 'all', secStatusFilter: 'all', blkStatusFilter: 'all',
     newsArtCat: 'all', newsArtStatus: 'all', newsArtFeatured: 'all', newsArtStatFilter: 'all',
     newsSelRows: {}, newsSelAll: false, newsArtFeaturedMap: {},
     // ── Blocks module ──
@@ -1309,7 +1310,7 @@ class Component extends DCLogic {
           const sku = skuByCode.get(r.skuCode);
           return h('div', null,
             h('span', { style: { fontWeight: 600 } }, r.displayName || (sku ? sku.name : r.skuCode)),
-            h('div', { style: { fontFamily: 'monospace', fontSize: 11.5, color: 'var(--color-accent-text)', marginTop: 2, fontWeight: 500 } },
+            h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-accent-text)', marginTop: 2, fontWeight: 500 } },
               r.skuCode)
           );
         } },
@@ -2557,7 +2558,7 @@ class Component extends DCLogic {
     };
     const renderBundledSkuCard = (sku) => h(DS.Card, { key: sku.code, style: { padding: 0, overflow: 'hidden', borderRadius: 10 } },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-alt)' } },
-        h('span', { style: { fontFamily: 'monospace', fontWeight: 700, fontSize: 12.5, color: 'var(--color-accent-text)' } }, sku.code),
+        h('span', { style: { fontFamily: 'var(--font-dev)', fontWeight: 700, fontSize: 12.5, color: 'var(--color-accent-text)' } }, sku.code),
         h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, sku.name),
         h('div', { style: { flex: 1 } })
       ),
@@ -2592,7 +2593,7 @@ class Component extends DCLogic {
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
-            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, s.code),
+            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, s.code),
             h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, s.group)
           ),
           h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, s.name),
@@ -3151,7 +3152,7 @@ class Component extends DCLogic {
               h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 200, overflowY: 'auto', overflowX: 'hidden' } },
                 filteredSkus.length ? filteredSkus.map(s => { const isSel = selectedSkus.includes(s.code); return h('div', { key: s.code, onClick: () => toggleSku(s.code), style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2, background: isSel ? 'var(--color-accent-bg)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent' } },
                   h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(s.code), label: '' })),
-                  h('span', { style: { fontFamily: 'monospace', fontSize: 11.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', fontWeight: 700 } }, s.code),
+                  h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', fontWeight: 700 } }, s.code),
                   h('span', { style: { fontSize: 12.5 } }, s.name),
                   h('span', { style: { flex: 1 } }),
                   h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface)', padding: '1px 6px', borderRadius: 4, fontWeight: 500 } }, s.group)
@@ -3441,7 +3442,7 @@ class Component extends DCLogic {
         tbtn(h(DS.Icon, { name: 'paperclip-line', size: 15 }), 'Chèn liên kết', () => { const url = window.prompt('Nhập URL liên kết:'); if (url) exec('createLink', url); }),
         tbtn(h(DS.Icon, { name: 'image-line', size: 15 }), 'Chèn hình ảnh', () => this.toast('info', 'Chèn hình ảnh', 'Mở hộp thoại chọn ảnh (demo).')),
         divider,
-        tbtn(h('span', { style: { fontFamily: 'monospace', fontSize: 12 } }, '</>'), codeView ? 'Xem giao diện' : 'Xem mã HTML', () => this.setState({ [codeViewKey]: !codeView })),
+        tbtn(h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12 } }, '</>'), codeView ? 'Xem giao diện' : 'Xem mã HTML', () => this.setState({ [codeViewKey]: !codeView })),
         tbtn(h('span', { style: { fontSize: 14 } }, expanded ? '⤡' : '⤢'), expanded ? 'Thu gọn khung soạn thảo' : 'Mở rộng khung soạn thảo', () => this.setState({ [expandedKey]: !expanded })),
         divider,
         tbtn(h('span', { style: { fontWeight: 700 } }, '?'), 'Trợ giúp', () => this.toast('info', 'Trợ giúp soạn thảo', 'Phím tắt: Ctrl+B in đậm · Ctrl+I in nghiêng · Ctrl+U gạch chân.'))
@@ -3456,7 +3457,7 @@ class Component extends DCLogic {
       ),
       codeView && h('textarea', {
         key: 'code', readOnly: true, defaultValue: editorRef.current ? editorRef.current.innerHTML : (initialHtml || ''),
-        style: { display: 'block', width: '100%', boxSizing: 'border-box', minHeight: expanded ? 480 : 220, maxHeight: expanded ? 760 : 420, border: 'none', outline: 'none', resize: 'vertical', padding: '14px 16px', fontFamily: 'monospace', fontSize: 12.5, lineHeight: 1.6, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)' }
+        style: { display: 'block', width: '100%', boxSizing: 'border-box', minHeight: expanded ? 480 : 220, maxHeight: expanded ? 760 : 420, border: 'none', outline: 'none', resize: 'vertical', padding: '14px 16px', fontFamily: 'var(--font-dev)', fontSize: 12.5, lineHeight: 1.6, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)' }
       })
     );
   }
@@ -3635,8 +3636,6 @@ class Component extends DCLogic {
   AD_TARGETS() { return [
     { value: '_self', label: '_self (cùng tab)' },
     { value: '_blank', label: '_blank (tab mới)' },
-    { value: '_parent', label: '_parent (frame cha)' },
-    { value: '_top', label: '_top (toàn bộ cửa sổ)' },
   ]; }
   AD_PAGES() { return [
     { name: 'Trang chủ (Homepage)', slug: '/homepage' },
@@ -3957,7 +3956,7 @@ class Component extends DCLogic {
       { key: 'name', header: 'Trang',
         render: (_, r) => h('div', null,
           h('span', { style: { fontWeight: 600 } }, r.name),
-          h('div', { style: { fontFamily: 'monospace', fontSize: 11.5, color: '#f43f5e', marginTop: 2, fontWeight: 500 } }, r.slug)
+          h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: '#f43f5e', marginTop: 2, fontWeight: 500 } }, r.slug)
         )
       },
       { key: 'h1', header: 'Tiêu đề',
@@ -4007,7 +4006,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     this.openDrawer({ title: r.name, subtitle: 'Chi tiết trang', width: 480,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
-        this.detailRow('Slug', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: '#f43f5e' } }, r.slug)),
+        this.detailRow('Slug', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: '#f43f5e' } }, r.slug)),
         this.detailRow('Tiêu đề (H1)', r.h1), this.detailRow('Trạng thái', this.statusBadge(r.status)),
         this.detailRow('Tag tin tức', (this.NEWS_TAGS().find(t => t.slug === r.newsTag) || {}).name || r.newsTag), this.detailRow('Meta tiêu đề', r.metaTitle),
         this.detailRow('Meta mô tả', r.metaDesc),
@@ -4075,7 +4074,7 @@ class Component extends DCLogic {
                 h(DS.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
                 h('div', { style: { flex: 1, minWidth: 0 } },
                   h('div', { style: { fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, sc.name),
-                  h('div', { style: { fontFamily: 'monospace', fontSize: 11, color: '#f43f5e', marginTop: 1 } }, sc.code)
+                  h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11, color: '#f43f5e', marginTop: 1 } }, sc.code)
                 ),
                 this.statusBadge(sc.status)
               );
@@ -4129,11 +4128,14 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.secSearch || '').toLowerCase();
     const fp = this.state.secPageFilter || 'all';
+    const stF = this.state.secStatusFilter || 'all';
+    const secIsOn = s => (this.state.secActiveMap || {})[s.id] !== undefined ? !!(this.state.secActiveMap || {})[s.id] : s.status !== 'inactive';
     const allSections = this.SECTIONS();
     const pages = [...new Set(allSections.flatMap(s => s.pages || []))];
     const data = allSections.filter(s =>
       (!q || (s.name + s.code + (s.title || '')).toLowerCase().includes(q)) &&
-      (fp === 'all' || (s.pages || []).includes(fp))
+      (fp === 'all' || (s.pages || []).includes(fp)) &&
+      (stF === 'all' || (stF === 'active') === secIsOn(s))
     );
     const pg = this.state.secs_pg || 1;
     const sz = this.state.secs_sz || 10;
@@ -4192,7 +4194,7 @@ class Component extends DCLogic {
       { key: 'section', header: 'Section', width: 240,
         render: (_, r) => h('div', null,
           h('strong', null, r.name),
-          h('div', { style: { color: '#f43f5e', fontSize: 11, marginTop: 2, fontWeight: 500, fontFamily: 'monospace' } }, r.code)
+          h('div', { style: { color: '#f43f5e', fontSize: 11, marginTop: 2, fontWeight: 500, fontFamily: 'var(--font-dev)' } }, r.code)
         ) },
       { key: 'blocks', header: 'Block', width: 240,
         render: (_, r) => {
@@ -4201,7 +4203,7 @@ class Component extends DCLogic {
           return chipList('brand', 3, bl);
         } },
       { key: 'type', header: 'Loại', width: 110,
-        render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'monospace' } }, r.type) },
+        render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'var(--font-dev)' } }, r.type) },
       { key: 'createdAt', header: 'Ngày tạo', width: 148,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
       { key: 'active', header: 'Hoạt động', width: 90, align: 'center', render: (_, r) => {
@@ -4223,13 +4225,19 @@ class Component extends DCLogic {
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center' } },
           this.search('Tìm kiếm theo tên section...', 'secSearch'),
-          h('div', { style: { width: 210 } }, h(DS.Select, { options: pageOptions, value: fp, searchable: true, searchPlaceholder: 'Tìm trang…', onChange: v => this.setState({ secPageFilter: v, secs_pg: 1 }) }))
+          h('div', { style: { width: 210 } }, h(DS.Select, { options: pageOptions, value: fp, searchable: true, searchPlaceholder: 'Tìm trang…', onChange: v => this.setState({ secPageFilter: v, secs_pg: 1 }) })),
+          h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
+            options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }],
+            value: stF,
+            onChange: v => this.setState({ secStatusFilter: v, secs_pg: 1 })
+          }))
         ),
         h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ secEditor: null, secEditorBlocks: [], secEditorPages: [], secEditorType: undefined }) }, 'Tạo Section')
       ),
       this.filterChipsBar([
         (this.state.secSearch || '') && this.filterChip('Tìm: ' + this.state.secSearch, 'neutral', () => this.setState({ secSearch: '', secs_pg: 1 })),
         fp !== 'all' && this.filterChip('Trang: ' + fp, 'brand', () => this.setState({ secPageFilter: 'all', secs_pg: 1 })),
+        stF !== 'all' && this.filterChip('Trạng thái: ' + (stF === 'active' ? 'Hoạt động' : 'Ngừng hoạt động'), stF === 'active' ? 'success' : 'neutral', () => this.setState({ secStatusFilter: 'all', secs_pg: 1 })),
       ]),
       data.length ? this.tbl(columns, sliced, 'id', r => this.openSectionDetail(r)) : this.empty('Chưa có section khớp bộ lọc.'),
       data.length ? this.renderPagBar(data.length, 'secs', 'section') : null
@@ -4239,7 +4247,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     this.openDrawer({ title: r.name, subtitle: 'Trang: ' + (r.pages || []).join(', '), width: 480,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
-        this.detailRow('Mã Section', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: '#f43f5e' } }, r.code)),
+        this.detailRow('Mã Section', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: '#f43f5e' } }, r.code)),
         this.detailRow('Tiêu đề hiển thị', r.title), this.detailRow('Thuộc trang', (r.pages || []).join(', ') || '—'),
         this.detailRow('Loại', r.type), this.detailRow('Thứ tự', r.order != null ? String(r.order) : '—'),
         this.detailRow('Trạng thái', this.statusBadge(r.status)),
@@ -4424,7 +4432,11 @@ class Component extends DCLogic {
   renderBlockList() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.blkSearch || '').toLowerCase();
-    const data = this.BLOCKS().filter(b => !q || (b.name + b.code).toLowerCase().includes(q));
+    const stF = this.state.blkStatusFilter || 'all';
+    const dsF = this.state.blkDsFilter || 'all';
+    const dsOptions = [{ value: 'all', label: 'Tất cả loại dữ liệu' }, { value: 'internet', label: 'Internet' }, { value: 'goi-sa', label: 'Gói SA' }, { value: 'camera', label: 'Camera' }, { value: 'thiet-bi-khac', label: 'Thiết bị khác' }, { value: 'tin-tuc', label: 'Tin tức' }, { value: 'faq', label: 'Câu hỏi' }];
+    const blkIsOn = b => (this.state.blkActiveMap || {})[b.id] !== undefined ? !!(this.state.blkActiveMap || {})[b.id] : true;
+    const data = this.BLOCKS().filter(b => (!q || (b.name + b.code).toLowerCase().includes(q)) && (stF === 'all' || (stF === 'active') === blkIsOn(b)) && (dsF === 'all' || b.datasourceKey === dsF));
     const pageSize = this.state.blk_sz || 10;
     const page = this.state.blk_pg || 1;
     const start = (page - 1) * pageSize;
@@ -4433,7 +4445,7 @@ class Component extends DCLogic {
       { key: 'idx', header: '#', width: 44, render: (_, _r, i) => h('span', { style: { color: 'var(--color-text-subtle)' } }, start + i + 1) },
       { key: 'name', header: 'Block', render: (_, r) => h('div', null,
           h('strong', null, r.name),
-          h('div', { style: { fontFamily: 'monospace', fontSize: 11, color: '#f43f5e', marginTop: 2, fontWeight: 500 } }, r.code)
+          h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11, color: '#f43f5e', marginTop: 2, fontWeight: 500 } }, r.code)
         ) },
       { key: 'section', header: 'Tên section', render: (_, r) => h('span', { style: { fontSize: 13, color: r.section === '—' ? 'var(--color-text-subtle)' : 'inherit' }, title: r.section && r.section.length > 75 ? r.section : undefined }, r.section && r.section.length > 75 ? r.section.slice(0, 75) + '…' : r.section) },
       { key: 'loai', header: 'Loại', render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, r.layout + (r.datasource ? ' · ' + r.datasource : '')) },
@@ -4453,9 +4465,25 @@ class Component extends DCLogic {
     ];
     return this.listCard(
       this.toolbar(
-        this.search('Tìm kiếm theo tên block...', 'blkSearch'),
+        h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center' } },
+          this.search('Tìm kiếm theo tên block...', 'blkSearch'),
+          h('div', { style: { width: 190, flexShrink: 0 } }, h(DS.Select, {
+            options: dsOptions, value: dsF, searchable: true, searchPlaceholder: 'Tìm loại dữ liệu…',
+            onChange: v => this.setState({ blkDsFilter: v, blk_pg: 1 })
+          })),
+          h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
+            options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }],
+            value: stF,
+            onChange: v => this.setState({ blkStatusFilter: v, blk_pg: 1 })
+          }))
+        ),
         h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openBlockEdit(null) }, 'Tạo Block')
       ),
+      this.filterChipsBar([
+        (this.state.blkSearch || '') && this.filterChip('Tìm: ' + this.state.blkSearch, 'neutral', () => this.setState({ blkSearch: '', blk_pg: 1 })),
+        dsF !== 'all' && this.filterChip('Loại dữ liệu: ' + (dsOptions.find(o => o.value === dsF) || {}).label, 'neutral', () => this.setState({ blkDsFilter: 'all', blk_pg: 1 })),
+        stF !== 'all' && this.filterChip('Trạng thái: ' + (stF === 'active' ? 'Hoạt động' : 'Ngừng hoạt động'), stF === 'active' ? 'success' : 'neutral', () => this.setState({ blkStatusFilter: 'all', blk_pg: 1 })),
+      ]),
       data.length ? this.tbl(columns, pageData, 'id', r => this.openBlockDetail(r)) : this.empty('Không có block khớp bộ lọc.'),
       this.renderPagBar(data.length, 'blk', 'blocks')
     );
@@ -4570,7 +4598,7 @@ class Component extends DCLogic {
               ? s.blkPkgs.map((p, i) => h('tr', Object.assign({ key: p.code }, mkDrag('blkPkgs', s.blkPkgs, i), { style: dragRowStyle('blkPkgs', i) }),
                   dragCell,
                   h('td', { style: { padding: '10px 8px', fontWeight: 600 } }, p.name,
-                    h('span', { style: { fontFamily: 'monospace', fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 500, marginLeft: 8 } }, p.code)),
+                    h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 500, marginLeft: 8 } }, p.code)),
                   h('td', { style: { textAlign: 'center', padding: '8px' } },
                     h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => this.setState(sv => ({ blkPkgs: sv.blkPkgs.filter(x => x.code !== p.code) })) }, 'Xóa')
                   )
@@ -4596,7 +4624,7 @@ class Component extends DCLogic {
               ? s.blkCards.map((c, i) => h('tr', Object.assign({ key: c.id }, mkDrag('blkCards', s.blkCards, i), { style: dragRowStyle('blkCards', i) }),
                   dragCell,
                   h('td', { style: { padding: '10px 12px', fontWeight: 600 } }, c.name,
-                    h('span', { style: { fontFamily: 'monospace', fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 500, marginLeft: 8 } }, c.pdh)),
+                    h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 500, marginLeft: 8 } }, c.pdh)),
                   h('td', { style: { textAlign: 'center', padding: '8px' } },
                     h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => this.setState(sv => ({ blkCards: sv.blkCards.filter(x => x.id !== c.id) })) }, 'Xóa')
                   )
@@ -4998,7 +5026,7 @@ class Component extends DCLogic {
                 h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggle(sku.code) })),
                 h('div', { style: { flex: 1, minWidth: 0 } },
                   h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 1 } },
-                    h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+                    h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
                     h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
                   ),
                   h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name),
@@ -5075,7 +5103,7 @@ class Component extends DCLogic {
                 h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, disabled: already, onChange: toggle })),
                 h('div', { style: { flex: 1, minWidth: 0 } },
                   h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 1 } },
-                    h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+                    h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
                     h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group),
                     already && h('span', { style: { fontSize: 10, fontWeight: 600, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 6px', borderRadius: 4, marginLeft: 'auto' } }, 'Đã thêm')
                   ),
@@ -5328,7 +5356,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     this.openDrawer({ title: r.name, subtitle: 'Chi tiết Block', width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
-        this.detailRow('Mã Block', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: '#f43f5e' } }, r.code)),
+        this.detailRow('Mã Block', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: '#f43f5e' } }, r.code)),
         this.detailRow('Tên Block', r.name), this.detailRow('Section', r.section),
         this.detailRow('Loại / Layout', r.layout + ' · ' + r.datasource),
         this.detailRow('Thứ tự', r.order != null ? String(r.order) : '—'), this.detailRow('Ngày tạo', r.createdAt)
@@ -5371,10 +5399,10 @@ class Component extends DCLogic {
 
     const treeCell = (r) => {
       const parts = [];
-      if (r.level === 1) parts.push(h('span', { key: 'a', style: { color: 'var(--color-text-subtle)', marginRight: 4, fontFamily: 'monospace', fontSize: 13 } }, '└─'));
+      if (r.level === 1) parts.push(h('span', { key: 'a', style: { color: 'var(--color-text-subtle)', marginRight: 4, fontFamily: 'var(--font-dev)', fontSize: 13 } }, '└─'));
       if (r.level === 2) {
-        parts.push(h('span', { key: 'b', style: { color: 'transparent', fontFamily: 'monospace', fontSize: 13 } }, '└─'));
-        parts.push(h('span', { key: 'c', style: { color: 'var(--color-text-subtle)', marginRight: 4, fontFamily: 'monospace', fontSize: 13 } }, '└─'));
+        parts.push(h('span', { key: 'b', style: { color: 'transparent', fontFamily: 'var(--font-dev)', fontSize: 13 } }, '└─'));
+        parts.push(h('span', { key: 'c', style: { color: 'var(--color-text-subtle)', marginRight: 4, fontFamily: 'var(--font-dev)', fontSize: 13 } }, '└─'));
       }
       parts.push(h('span', { key: 'n', style: { fontWeight: r.level === 0 ? 700 : 500 } }, r.name));
       return h('div', { style: { display: 'flex', alignItems: 'center' } }, ...parts);
@@ -5386,8 +5414,8 @@ class Component extends DCLogic {
       { key: 'idx',    header: '#',        width: 44,  render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)' } }, idxMap.get(r.id)) },
       { key: 'name',   header: 'Tên menu',             render: (_, r) => treeCell(r) },
       { key: 'type',   header: 'Loại',     width: 110, render: (_, r) => typeBadge(r.type) },
-      { key: 'url',    header: 'Link URL',             render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-text-subtle)' }, title: r.url }, r.url && r.url !== '—' ? (r.url.length > 38 ? r.url.slice(0, 38) + '…' : r.url) : '—') },
-      { key: 'target', header: 'Target',   width: 90,  align: 'center', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: r.target === '_blank' ? 'var(--color-warning-text)' : 'var(--color-text-muted)' } }, r.target) },
+      { key: 'url',    header: 'Link URL',             render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-text-subtle)' }, title: r.url }, r.url && r.url !== '—' ? (r.url.length > 38 ? r.url.slice(0, 38) + '…' : r.url) : '—') },
+      { key: 'target', header: 'Target',   width: 90,  align: 'center', render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: r.target === '_blank' ? 'var(--color-warning-text)' : 'var(--color-text-muted)' } }, r.target) },
       { key: 'date',   header: 'Ngày tạo', width: 160, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.date || '—') },
       { key: 'active', header: 'Hoạt động', width: 90,  align: 'center', render: (_, r) => {
           const isOn = (this.state.menuActiveMap || {})[r.id] !== undefined ? !!(this.state.menuActiveMap || {})[r.id] : r.status !== 'inactive';
@@ -5714,7 +5742,7 @@ class Component extends DCLogic {
           h('span', { style: { fontSize: 13 } }, r.pages[0]),
           r.pages.length > 1 && h(DS.Badge, { theme: 'neutral' }, '+' + (r.pages.length - 1) + ' khác')
         ) },
-      { key: 'link', header: 'Link URL', width: 190, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 11.5, color: 'var(--color-text-subtle)' } }, r.link) },
+      { key: 'link', header: 'Link URL', width: 190, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-subtle)' } }, r.link) },
       { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, whiteSpace: 'nowrap' } }, r.period) },
       { key: 'order', header: 'Thứ tự', width: 72, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
       { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
@@ -5870,7 +5898,7 @@ class Component extends DCLogic {
         h('div', { style: { width: '100%', height: 80, background: 'linear-gradient(135deg,var(--fpt-7),var(--fpt-9))', borderRadius: 8, marginBottom: 12 } }),
         this.detailRow('Tên Banner', r.name),
         this.detailRow('Loại banner', r.bannerType === 'checkout' ? 'Trang Checkout' : 'Trang thường (Menu Trang)'),
-        this.detailRow('Link URL đích', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5 } }, r.link)),
+        this.detailRow('Link URL đích', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5 } }, r.link)),
         this.detailRow('Target', r.target),
         this.detailRow('Danh sách trang áp dụng (' + r.pages.length + ')', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 } }, r.pages.map(p => h(DS.Tag, { key: p, size: 'sm' }, p)))),
         this.detailRow('Thời gian hiển thị', r.period),
@@ -6053,9 +6081,16 @@ class Component extends DCLogic {
   openAdEditor(r) {
     this.setState({
       adEditor: r, adCatErr: false,
-      adDraft: r
-        ? { catCode: r.catCode, title: r.title, url: r.url || '', target: r.target || '_self', order: String(r.order || 1), bgColor: r.bgColor || '#0072BC', active: r.status === 'active', pageScope: r.pageScope || 'all', pages: r.pages || [] }
-        : { catCode: '', title: '', url: '', target: '_self', order: '1', bgColor: '#0072BC', active: true, pageScope: 'all', pages: [] }
+      adDraft: Object.assign(r
+        ? { catCode: r.catCode, title: r.title, url: r.url || '', target: r.target || '_self', order: String(r.order || 1), bgColor: r.bgColor || '#0072BC', active: r.status === 'active' }
+        : { catCode: '', title: '', url: '', target: '_self', order: '1', bgColor: '#0072BC', active: true },
+        (() => {
+          const bg = (r && r.bgColor) || '#0072BC';
+          const m = /^linear-gradient\((\d+)deg,\s*(#[0-9a-fA-F]{6}),\s*(#[0-9a-fA-F]{6})\)$/.exec(bg);
+          return m
+            ? { bgMode: 'gradient', gradAngle: Number(m[1]), gradFrom: m[2], gradTo: m[3], solidColor: '#0072BC' }
+            : { bgMode: 'solid', gradAngle: 135, gradFrom: '#0072BC', gradTo: '#7c3aed', solidColor: bg };
+        })())
     });
   }
   closeAdEditor() {
@@ -6100,7 +6135,7 @@ class Component extends DCLogic {
           h('span', { style: { fontWeight: 600, fontSize: 13, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } }, r.title)
         ) },
       { key: 'cat', header: 'Danh mục', width: 170, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, this.adCatLabel(r.catCode)) },
-      { key: 'url', header: 'URL', width: 200, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 11.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: 190 } }, r.url || '—') },
+      { key: 'url', header: 'URL', width: 200, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: 190 } }, r.url || '—') },
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(r.status) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
@@ -6149,7 +6184,7 @@ class Component extends DCLogic {
     const data = list.filter(c => (c.name + ' ' + c.code).toLowerCase().includes(search));
     const columns = [
       { key: 'name', header: 'Tên nhóm quảng cáo', width: 220, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
-      { key: 'code', header: 'Mã nhóm', width: 180, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-accent-text)', background: 'var(--color-accent-bg)', padding: '2px 8px', borderRadius: 6 } }, r.code) },
+      { key: 'code', header: 'Mã nhóm', width: 180, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, color: 'var(--color-accent-text)', background: 'var(--color-accent-bg)', padding: '2px 8px', borderRadius: 6 } }, r.code) },
       { key: 'desc', header: 'Mô tả nhóm', width: 260, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.desc || '—') },
       { key: 'count', header: 'Số quảng cáo', width: 110, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, adsAll.filter(a => a.catCode === r.code).length) },
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(r.status) },
@@ -6189,18 +6224,12 @@ class Component extends DCLogic {
         this.detailRow('Ảnh', r.img ? h('img', { src: r.img, style: { maxWidth: 120, maxHeight: 80, borderRadius: 6, objectFit: 'contain', background: r.bgColor || 'transparent' } }) : '—'),
         this.detailRow('Màu nền', r.bgColor ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
           h('span', { style: { width: 18, height: 18, borderRadius: 5, background: r.bgColor, border: '1px solid var(--color-border-strong)', flexShrink: 0 } }),
-          h('span', { style: { fontFamily: 'monospace', fontSize: 12 } }, r.bgColor.toUpperCase())
+          h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, wordBreak: 'break-all' } }, /^#/.test(r.bgColor) ? r.bgColor.toUpperCase() : r.bgColor)
         ) : '—'),
         this.detailRow('Ảnh nền', r.bgImg ? h('img', { src: r.bgImg, style: { maxWidth: 200, maxHeight: 60, borderRadius: 6, objectFit: 'cover' } }) : '—'),
         this.detailRow('Nội dung', r.content ? h('div', { style: { fontSize: 13 }, dangerouslySetInnerHTML: { __html: r.content } }) : '—'),
-        this.detailRow('URL', r.url ? h('span', { style: { fontFamily: 'monospace', fontSize: 12 } }, r.url) : '—'),
+        this.detailRow('URL', r.url ? h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12 } }, r.url) : '—'),
         this.detailRow('Target', (this.AD_TARGETS().find(t => t.value === r.target) || {}).label || '—'),
-        this.detailRow('Trang áp dụng', (r.pageScope === 'specific' && (r.pages || []).length)
-          ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } }, r.pages.map(slug => {
-              const p = this.AD_PAGES().find(pp => pp.slug === slug);
-              return h('span', { key: slug, style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 9px', borderRadius: 99, fontSize: 11.5, fontWeight: 600 } }, p ? p.name : slug);
-            }))
-          : 'Tất cả các trang'),
         this.detailRow('Thứ tự', String(r.order || '—')),
         this.detailRow('Trạng thái', this.statusBadge(r.status))
       ),
@@ -6214,28 +6243,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.closeAdEditor();
     const setD = patch => this.setState(s => ({ adDraft: Object.assign({}, s.adDraft, patch) }));
-    const d = this.state.adDraft || { catCode: '', title: '', url: '', target: '_self', order: '1', bgColor: '#0072BC', active: true, pageScope: 'all', pages: [] };
-    const allPages = this.AD_PAGES();
-    const pageQ = (this.state.adPageSearchQ || '').toLowerCase();
-    const visiblePages = pageQ ? allPages.filter(p => (p.name + ' ' + p.slug).toLowerCase().includes(pageQ)) : allPages;
-    const scopeCard = (val, label) => h('div', {
-      key: val, onClick: () => setD({ pageScope: val }),
-      style: { padding: '12px 14px', border: '1.5px solid ' + (d.pageScope === val ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 10, cursor: 'pointer', background: d.pageScope === val ? 'var(--color-accent-bg)' : 'var(--color-surface)', transition: 'all .12s' }
-    }, h(DS.Radio, { name: 'adPageScope', label, checked: d.pageScope === val, onChange: () => setD({ pageScope: val }) }));
-    const togglePage = slug => setD({ pages: (d.pages || []).includes(slug) ? (d.pages || []).filter(s => s !== slug) : [...(d.pages || []), slug] });
-    const pageRow = p => {
-      const checked = (d.pages || []).includes(p.slug);
-      return h('div', {
-        key: p.slug, onClick: () => togglePage(p.slug),
-        style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--color-border-pale)', background: checked ? 'var(--color-accent-bg)' : 'transparent', transition: 'background .15s' }
-      },
-        h('div', { style: { width: 16, height: 16, borderRadius: 4, flexShrink: 0, border: '1.5px solid', borderColor: checked ? 'var(--color-accent)' : 'var(--color-border-strong)', background: checked ? 'var(--color-accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, checked && h(DS.Icon, { name: 'check-line', size: 11, color: '#fff' })),
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 } },
-          h('span', { style: { fontSize: 13, fontWeight: checked ? 600 : 400 } }, p.name),
-          h('span', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, p.slug)
-        )
-      );
-    };
+    const d = this.state.adDraft || { catCode: '', title: '', url: '', target: '_self', order: '1', bgColor: '#0072BC', active: true };
     const cats = this.getAdCatsList();
     const catErr = !!this.state.adCatErr;
     const catOptions = cats.map(c => ({ value: c.code, label: c.name }));
@@ -6252,6 +6260,52 @@ class Component extends DCLogic {
         searchable: true, searchPlaceholder: 'Tìm danh mục quảng cáo…',
         onChange: v => { setD({ catCode: v }); if (v && this.state.adCatErr) this.setState({ adCatErr: false }); }
       })
+    );
+    const isHex = v => /^#[0-9a-fA-F]{6}$/.test(v || '');
+    const makeGrad = (a, b, ang) => 'linear-gradient(' + ang + 'deg, ' + a + ', ' + b + ')';
+    const bgMode = d.bgMode || 'solid';
+    const gFrom = d.gradFrom || '#0072BC', gTo = d.gradTo || '#7c3aed', gAng = d.gradAngle === undefined ? 135 : d.gradAngle;
+    const setSolid = v => setD({ solidColor: v, bgColor: v });
+    const setGrad = patch => { const n = Object.assign({ gradFrom: gFrom, gradTo: gTo, gradAngle: gAng }, patch); setD(Object.assign({}, patch, { bgColor: makeGrad(n.gradFrom, n.gradTo, n.gradAngle) })); };
+    const solidPresets = ['#0072BC', '#e6aa41', '#22c55e', '#7c3aed', '#ef4444', '#f97316', '#0891b2', '#111827'];
+    const gradPresets = [['#f97316', '#ef4444', 135], ['#0072BC', '#22c55e', 135], ['#7c3aed', '#3b82f6', 90], ['#0891b2', '#22c55e', 45], ['#111827', '#7c3aed', 135], ['#e6aa41', '#f97316', 90]];
+    const swatch = (key, bg, title, selected, onClick) => h('button', { key, type: 'button', title, onClick, style: { width: 30, height: 30, borderRadius: 8, padding: 0, cursor: 'pointer', flexShrink: 0, background: bg, border: selected ? '2px solid var(--color-accent)' : '1px solid var(--color-border-strong)', boxShadow: selected ? '0 0 0 2px var(--color-accent-bg)' : 'none', transition: 'all .12s' } });
+    const colorPick = (value, onPick, title) => h('label', { title, style: { position: 'relative', width: 30, height: 30, borderRadius: 8, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: value, flexShrink: 0 } },
+      h('input', { type: 'color', value: isHex(value) ? value : '#000000', onChange: e => onPick(e.target.value), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
+    );
+    const modeBtn = (m, label) => h('button', { key: m, type: 'button', onClick: () => { if (bgMode !== m) setD(m === 'solid' ? { bgMode: 'solid', bgColor: isHex(d.solidColor) ? d.solidColor : '#0072BC' } : { bgMode: 'gradient', bgColor: makeGrad(gFrom, gTo, gAng) }); },
+      style: { padding: '5px 16px', borderRadius: 20, border: '1.5px solid ' + (bgMode === m ? 'var(--color-accent)' : 'var(--color-border)'), background: bgMode === m ? 'var(--color-accent-bg)' : 'var(--color-surface)', color: bgMode === m ? 'var(--color-accent)' : 'var(--color-text)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all .15s', fontFamily: 'inherit' } }, label);
+    const dirOptions = [
+      { value: '90', label: 'Trái → Phải' }, { value: '270', label: 'Phải → Trái' },
+      { value: '180', label: 'Trên → Dưới' }, { value: '0', label: 'Dưới → Trên' },
+      { value: '135', label: 'Chéo: Trên-trái → Dưới-phải' }, { value: '45', label: 'Chéo: Dưới-trái → Trên-phải' },
+      { value: '225', label: 'Chéo: Trên-phải → Dưới-trái' }, { value: '315', label: 'Chéo: Dưới-phải → Trên-trái' }
+    ];
+    const cap = t => h('div', { style: { fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6 } }, t);
+    const hexRow = (val, onVal, onPick, pickTitle) => h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+      h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { value: val, onChange: e => onVal(e && e.target ? e.target.value : e), style: { width: '100%', fontFamily: 'var(--font-dev)' }, placeholder: '#000000' })),
+      colorPick(val, onPick, pickTitle)
+    );
+    const bgPanel = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, padding: 16, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10 } },
+      h('div', { style: { display: 'flex', gap: 8 } }, modeBtn('solid', 'Màu đơn'), modeBtn('gradient', 'Gradient')),
+      h('div', null,
+        cap('Gợi ý'),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
+          bgMode === 'solid'
+            ? solidPresets.map(c => swatch(c, c, c.toUpperCase(), (d.bgColor || '').toLowerCase() === c.toLowerCase(), () => setSolid(c)))
+            : gradPresets.map((g, i) => { const val = makeGrad(g[0], g[1], g[2]); return swatch('g' + i, val, g[0].toUpperCase() + ' → ' + g[1].toUpperCase(), d.bgColor === val, () => setGrad({ gradFrom: g[0], gradTo: g[1], gradAngle: g[2] })); })
+        )
+      ),
+      h('div', null,
+        cap('Tùy chỉnh'),
+        bgMode === 'solid'
+          ? h('div', { style: { maxWidth: 260 } }, hexRow(d.bgColor, setSolid, setSolid, 'Chọn màu nền tùy chỉnh'))
+          : h('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 16 } },
+              h('div', { style: { width: 220 } }, h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginBottom: 4 } }, 'Màu bắt đầu'), hexRow(gFrom, v => setGrad({ gradFrom: v }), v => setGrad({ gradFrom: v }), 'Chọn màu bắt đầu')),
+              h('div', { style: { width: 220 } }, h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginBottom: 4 } }, 'Màu kết thúc'), hexRow(gTo, v => setGrad({ gradTo: v }), v => setGrad({ gradTo: v }), 'Chọn màu kết thúc')),
+              h('div', { style: { width: 280 } }, h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginBottom: 4 } }, 'Hướng chuyển màu'), h(DS.Select, { options: dirOptions, value: String(gAng), searchable: true, searchPlaceholder: 'Tìm hướng…', onChange: v => setGrad({ gradAngle: Number(v) }) }))
+            )
+      )
     );
     return this.editorShell(
       isNew ? 'Thêm quảng cáo' : 'Chỉnh sửa quảng cáo', 'Quản lý Quảng cáo', back,
@@ -6277,45 +6331,12 @@ class Component extends DCLogic {
           }))
         ),
         section(3, 'image-line', 'Hình ảnh & tài nguyên',
-          this.uploadBox('Ảnh / Icon', 'JPG, PNG, WEBP · ≤200KB'),
-          this.field('Màu nền', h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
-            h(DS.Input, { value: d.bgColor, onChange: e => setD({ bgColor: e && e.target ? e.target.value : e }), style: { width: 140, fontFamily: 'monospace' }, placeholder: '#000000' }),
-            h('label', { title: 'Chọn màu nền tùy chỉnh', style: { position: 'relative', width: 30, height: 30, borderRadius: 8, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: d.bgColor, flexShrink: 0 } },
-              h('input', { type: 'color', value: /^#[0-9a-fA-F]{6}$/.test(d.bgColor || '') ? d.bgColor : '#000000', onChange: e => setD({ bgColor: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
-            )
-          )),
-          this.uploadBox('Ảnh nền', 'JPG, PNG, WEBP · ≤200KB')
-        ),
-        section(4, 'marker-pin-01-line', 'Cấu hình trang hiển thị áp dụng',
-          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: -8 } }, 'Chọn các trang trên website FPT mà quảng cáo này sẽ được phép xuất hiện'),
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 } },
-            scopeCard('all', 'Hiển thị trên toàn bộ các trang (Tất cả trang)'),
-            scopeCard('specific', 'Tùy chọn danh sách trang cụ thể bên dưới')
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
+            this.field('Ảnh / Icon', this.uploadBox('Kéo thả hoặc chọn tệp để tải lên', 'JPG, PNG, WEBP · ≤200KB')),
+            this.field('Ảnh nền', this.uploadBox('Kéo thả hoặc chọn tệp để tải lên', 'JPG, PNG, WEBP · ≤200KB'))
           ),
-          d.pageScope === 'specific' && h('div', { key: 'pagePicker', style: { display: 'flex', flexDirection: 'column', gap: 10 } },
-            h(DS.Input, {
-              leadingIcon: 'search-medium-line', placeholder: 'Tìm kiếm trang theo tên hoặc slug...',
-              value: this.state.adPageSearchQ || '', onChange: e => this.setState({ adPageSearchQ: e && e.target ? e.target.value : e })
-            }),
-            (d.pages || []).length > 0 && h('div', { key: 'pageChips', style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
-              (d.pages || []).map(slug => {
-                const p = allPages.find(pp => pp.slug === slug);
-                return h(DS.Tag, {
-                  key: slug, size: 'sm',
-                  style: { background: 'var(--color-accent-bg)', border: '1px solid var(--color-accent)', color: 'var(--color-accent-text)', fontWeight: 600 },
-                  onClose: () => togglePage(slug)
-                }, p ? p.name : slug);
-              })
-            ),
-            h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end' } },
-              h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Đã chọn ' + (d.pages || []).length + ' / ' + allPages.length + ' trang')
-            ),
-            h('div', { className: 'fpt-scroll', style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', maxHeight: 260, overflowY: 'auto' } },
-              visiblePages.length === 0
-                ? h('div', { style: { padding: 14, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, 'Không tìm thấy trang phù hợp.')
-                : visiblePages.map(p => pageRow(p))
-            )
-          )
+          h(DS.Divider, { label: 'Màu nền' }),
+          bgPanel
         )
       ),
       () => {
@@ -6326,7 +6347,6 @@ class Component extends DCLogic {
         const rec = {
           catCode: d.catCode, title: d.title, img: r ? r.img : '', bgColor: d.bgColor, bgImg: r ? r.bgImg : '',
           content: contentHtml, url: d.url, target: d.target, order: Number(d.order) || 1,
-          pageScope: d.pageScope || 'all', pages: d.pageScope === 'specific' ? (d.pages || []) : [],
           status: d.active ? 'active' : 'inactive'
         };
         if (r) this.setState({ adsListData: list.map(a => a.id === r.id ? Object.assign({}, a, rec) : a) });
@@ -6343,8 +6363,14 @@ class Component extends DCLogic {
     this.openDrawer({ title: r.name, subtitle: 'Danh mục Quảng cáo', width: 440,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên nhóm quảng cáo', r.name),
-        this.detailRow('Mã nhóm (Định danh hệ thống)', h('span', { style: { fontFamily: 'monospace', color: 'var(--color-accent-text)' } }, r.code)),
+        this.detailRow('Mã nhóm (Định danh hệ thống)', h('span', { style: { fontFamily: 'var(--font-dev)', color: 'var(--color-accent-text)' } }, r.code)),
         this.detailRow('Mô tả nhóm', r.desc || '—'),
+        this.detailRow('Trang áp dụng', (r.pageScope === 'specific' && (r.pages || []).length)
+          ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } }, r.pages.map(slug => {
+              const p = this.AD_PAGES().find(pp => pp.slug === slug);
+              return h('span', { key: slug, style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 9px', borderRadius: 99, fontSize: 11.5, fontWeight: 600 } }, p ? p.name : slug);
+            }))
+          : 'Tất cả các trang'),
         this.detailRow('Quảng cáo con', catAds.length
           ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } }, catAds.map((a, i) => h('div', { key: a.id, style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5 } },
               h('span', { style: { width: 18, height: 18, borderRadius: 5, background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } }, i + 1),
@@ -6365,7 +6391,29 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.setState({ adCatEditor: undefined, adCatDraft: null });
     const setD = patch => this.setState(s => ({ adCatDraft: Object.assign({}, s.adCatDraft, patch) }));
-    const d = this.state.adCatDraft || (r ? { name: r.name, code: r.code, desc: r.desc || '', active: r.status === 'active' } : { name: '', code: '', desc: '', active: true });
+    const dBase = r ? { name: r.name, code: r.code, desc: r.desc || '', active: r.status === 'active', pageScope: r.pageScope || 'all', pages: r.pages || [] } : { name: '', code: '', desc: '', active: true, pageScope: 'all', pages: [] };
+    const d = Object.assign({}, dBase, this.state.adCatDraft);
+    const allPages = this.AD_PAGES();
+    const pageQ = (this.state.adPageSearchQ || '').toLowerCase();
+    const visiblePages = pageQ ? allPages.filter(p => (p.name + ' ' + p.slug).toLowerCase().includes(pageQ)) : allPages;
+    const scopeCard = (val, label) => h('div', {
+      key: val, onClick: () => setD({ pageScope: val }),
+      style: { padding: '12px 14px', border: '1.5px solid ' + (d.pageScope === val ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 10, cursor: 'pointer', background: d.pageScope === val ? 'var(--color-accent-bg)' : 'var(--color-surface)', transition: 'all .12s' }
+    }, h(DS.Radio, { name: 'adCatPageScope', label, checked: d.pageScope === val, onChange: () => setD({ pageScope: val }) }));
+    const togglePage = slug => setD({ pages: (d.pages || []).includes(slug) ? (d.pages || []).filter(s => s !== slug) : [...(d.pages || []), slug] });
+    const pageRow = p => {
+      const checked = (d.pages || []).includes(p.slug);
+      return h('div', {
+        key: p.slug, onClick: () => togglePage(p.slug),
+        style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--color-border-pale)', background: checked ? 'var(--color-accent-bg)' : 'transparent', transition: 'background .15s' }
+      },
+        h('div', { style: { width: 16, height: 16, borderRadius: 4, flexShrink: 0, border: '1.5px solid', borderColor: checked ? 'var(--color-accent)' : 'var(--color-border-strong)', background: checked ? 'var(--color-accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, checked && h(DS.Icon, { name: 'check-line', size: 11, color: '#fff' })),
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 } },
+          h('span', { style: { fontSize: 13, fontWeight: checked ? 600 : 400 } }, p.name),
+          h('span', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, p.slug)
+        )
+      );
+    };
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -6396,11 +6444,42 @@ class Component extends DCLogic {
         ),
         section(1, 'folder-line', 'Thông tin cơ bản',
           this.field('Tên nhóm quảng cáo', h(DS.Input, { value: d.name, onChange: e => setD({ name: e && e.target ? e.target.value : e }), placeholder: 'VD: Scrolling Announcement Bar' }), true),
-          this.field('Mã nhóm (Định danh hệ thống)', h(DS.Input, { value: d.code, onChange: e => setD({ code: e && e.target ? e.target.value : e }), placeholder: 'VD: scrolling_top_bar' }), true),
-          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: -8 } }, 'Mã duy nhất dùng để gán các quảng cáo con vào nhóm'),
+          this.field('Mã nhóm (Định danh hệ thống)', h(DS.Input, { value: d.code, onChange: e => setD({ code: e && e.target ? e.target.value : e }), disabled: !isNew, placeholder: 'VD: scrolling_top_bar' }), true),
+          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: -8 } }, isNew ? 'Mã duy nhất dùng để gán các quảng cáo con vào nhóm. Không thể thay đổi sau khi tạo.' : 'Mã định danh hệ thống không thể thay đổi sau khi đã tạo.'),
           this.field('Mô tả nhóm', h(DS.Textarea, { rows: 3, value: d.desc, onChange: e => setD({ desc: e && e.target ? e.target.value : e }), placeholder: 'Mô tả ngắn về mục đích của nhóm quảng cáo này…' }))
         ),
-        section(2, 'bell-01-line', 'Quảng cáo trong danh mục',
+        section(2, 'marker-pin-01-line', 'Cấu hình trang hiển thị áp dụng',
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: -8 } }, 'Chọn các trang trên website FPT mà các quảng cáo trong danh mục này sẽ được phép xuất hiện'),
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 } },
+            scopeCard('all', 'Hiển thị trên toàn bộ các trang (Tất cả trang)'),
+            scopeCard('specific', 'Tùy chọn danh sách trang cụ thể bên dưới')
+          ),
+          d.pageScope === 'specific' && h('div', { key: 'pagePicker', style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+            h(DS.Input, {
+              leadingIcon: 'search-medium-line', placeholder: 'Tìm kiếm trang theo tên hoặc slug...',
+              value: this.state.adPageSearchQ || '', onChange: e => this.setState({ adPageSearchQ: e && e.target ? e.target.value : e })
+            }),
+            (d.pages || []).length > 0 && h('div', { key: 'pageChips', style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
+              (d.pages || []).map(slug => {
+                const p = allPages.find(pp => pp.slug === slug);
+                return h(DS.Tag, {
+                  key: slug, size: 'sm',
+                  style: { background: 'var(--color-accent-bg)', border: '1px solid var(--color-accent)', color: 'var(--color-accent-text)', fontWeight: 600 },
+                  onClose: () => togglePage(slug)
+                }, p ? p.name : slug);
+              })
+            ),
+            h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end' } },
+              h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Đã chọn ' + (d.pages || []).length + ' / ' + allPages.length + ' trang')
+            ),
+            h('div', { className: 'fpt-scroll', style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', maxHeight: 260, overflowY: 'auto' } },
+              visiblePages.length === 0
+                ? h('div', { style: { padding: 14, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, 'Không tìm thấy trang phù hợp.')
+                : visiblePages.map(p => pageRow(p))
+            )
+          )
+        ),
+        section(3, 'bell-01-line', 'Quảng cáo trong danh mục',
           h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, isNew
             ? 'Bạn có thể gán quảng cáo vào danh mục này sau khi lưu.'
             : 'Kéo thả để sắp xếp lại thứ tự hiển thị của các quảng cáo con trong danh mục này.'),
@@ -6429,8 +6508,8 @@ class Component extends DCLogic {
       () => {
         const list = this.getAdCatsList();
         if (list.some(c => c.code === d.code && (!r || c.id !== r.id))) { this.toast('danger', 'Mã nhóm đã tồn tại', 'Vui lòng chọn mã nhóm khác.'); return; }
-        if (r) this.setState({ adCatsListData: list.map(c => c.id === r.id ? Object.assign({}, c, { name: d.name, code: d.code, desc: d.desc, status: d.active ? 'active' : 'inactive' }) : c) });
-        else { const newId = Math.max(0, ...list.map(c => c.id)) + 1; this.setState({ adCatsListData: list.concat([{ id: newId, name: d.name, code: d.code, desc: d.desc, status: d.active ? 'active' : 'inactive', createdAt: this.todayStr() }]) }); }
+        if (r) this.setState({ adCatsListData: list.map(c => c.id === r.id ? Object.assign({}, c, { name: d.name, code: d.code, desc: d.desc, pageScope: d.pageScope || 'all', pages: d.pageScope === 'specific' ? (d.pages || []) : [], status: d.active ? 'active' : 'inactive' }) : c) });
+        else { const newId = Math.max(0, ...list.map(c => c.id)) + 1; this.setState({ adCatsListData: list.concat([{ id: newId, name: d.name, code: d.code, desc: d.desc, pageScope: d.pageScope || 'all', pages: d.pageScope === 'specific' ? (d.pages || []) : [], status: d.active ? 'active' : 'inactive', createdAt: this.todayStr() }]) }); }
         back();
         this.toast('success', 'Đã lưu', 'Danh mục đã được lưu.');
       },
@@ -6471,7 +6550,7 @@ class Component extends DCLogic {
     const chip = (b) => h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 6, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.5px', background: b.bgColor, color: b.textColor, whiteSpace: 'nowrap' } }, ...this.badgeChipChildren(b));
     const colorCell = (hex) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
       h('span', { style: { width: 18, height: 18, borderRadius: 5, background: hex, border: '1px solid var(--color-border-strong)', flexShrink: 0 } }),
-      h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)', textTransform: 'uppercase' } }, hex)
+      h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, color: 'var(--color-text-muted)', textTransform: 'uppercase' } }, hex)
     );
     const categoryCell = (categories) => {
       const labels = this.badgeTagCategoryLabels(categories);
@@ -6639,7 +6718,7 @@ class Component extends DCLogic {
                     h('label', { title: 'Chọn màu nền tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: bg } },
                       h('input', { type: 'color', value: bg, onChange: e => this.setState({ badgeFormBg: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
                     ),
-                    h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)' } }, bg.toUpperCase())
+                    h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, color: 'var(--color-text-muted)' } }, bg.toUpperCase())
                   )
                 ),
                 h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
@@ -6648,7 +6727,7 @@ class Component extends DCLogic {
                     h('label', { title: 'Chọn màu chữ tùy chỉnh', style: { position: 'relative', width: 24, height: 24, borderRadius: 6, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: textColor } },
                       h('input', { type: 'color', value: textColor, onChange: e => this.setState({ badgeFormText: e.target.value }), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
                     ),
-                    h('span', { style: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)' } }, textColor.toUpperCase())
+                    h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, color: 'var(--color-text-muted)' } }, textColor.toUpperCase())
                   )
                 ),
                 h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
@@ -6984,7 +7063,7 @@ class Component extends DCLogic {
           h('div', { style: { fontWeight: 700, fontSize: 13.5, marginBottom: 3 } }, a.name),
           h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', padding: '1px 8px', borderRadius: 8, fontSize: 11, fontWeight: 600 } }, a.tplLabel)
         ) },
-      { key: 'url', header: 'Slug đề xuất', width: 220, render: (_, a) => h('span', { style: { fontFamily: 'monospace', fontSize: 12, whiteSpace: 'nowrap' } },
+      { key: 'url', header: 'Slug đề xuất', width: 220, render: (_, a) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, whiteSpace: 'nowrap' } },
           h('span', { style: { color: 'var(--color-text-subtle)' } }, 'fpt.vn/'),
           h('span', { style: { color: 'var(--color-accent)', fontWeight: 700, background: 'var(--color-accent-bg)', padding: '1px 4px', borderRadius: 4 } }, a.lv1),
           a.l2 ? h('span', { style: { color: 'var(--color-text-muted)' } }, '/' + a.l2) : null
@@ -7126,7 +7205,7 @@ class Component extends DCLogic {
         h(DS.Badge, { theme: stMap[rec.status][1], dot: true, style: { alignSelf: 'flex-start' } }, stMap[rec.status][0]),
         this.ldpPreviewTrigger(rec),
         card('Trang Landing Page đề xuất', 'globe-01-line', h('div', null,
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', padding: '16px 18px', background: 'var(--color-surface-sunken)', borderRadius: 12, fontFamily: 'monospace', fontSize: 15 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', padding: '16px 18px', background: 'var(--color-surface-sunken)', borderRadius: 12, fontFamily: 'var(--font-dev)', fontSize: 15 } },
             h('span', { style: { color: 'var(--color-text-subtle)' } }, 'fpt.vn/'),
             h('strong', { style: { color: 'var(--color-accent)', background: 'var(--color-accent-bg)', padding: '3px 8px', borderRadius: 6, fontSize: 17 } }, rec.lv1),
             rec.l2 ? h('span', { style: { color: 'var(--color-text-muted)' } }, '/' + rec.l2) : null
@@ -7139,7 +7218,7 @@ class Component extends DCLogic {
           )
         ), showNewFlag && h(DS.Tag, { size: 'sm', color: 'var(--color-danger)' }, 'Nhánh URL cấp 1 MỚI')),
         card('Slug Level 1 cần duyệt', 'marker-pin-01-line',
-          h('div', { style: { textAlign: 'center', fontFamily: 'monospace', fontSize: 22, fontWeight: 700, color: slugColor, padding: '20px 16px', background: 'var(--color-surface-sunken)', borderRadius: 12, wordBreak: 'break-all' } }, rec.lv1)
+          h('div', { style: { textAlign: 'center', fontFamily: 'var(--font-dev)', fontSize: 22, fontWeight: 700, color: slugColor, padding: '20px 16px', background: 'var(--color-surface-sunken)', borderRadius: 12, wordBreak: 'break-all' } }, rec.lv1)
         ),
         decided
           ? card('Kết quả duyệt', rec.status === 'approved' ? 'check-circle-line' : 'x-circle-line', h('div', null,
@@ -7238,7 +7317,7 @@ class Component extends DCLogic {
         h(DS.IconButton, { icon: 'x-circle-line', label: 'Đóng', level: 'tertiary', onClick: close }),
         h('div', { style: { display: 'flex', flexDirection: 'column', minWidth: 0 } },
           h('div', { style: { fontWeight: 700, fontSize: 14.5 } }, 'Xem trước: ' + rec.name),
-          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', fontFamily: 'monospace' } }, url)
+          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', fontFamily: 'var(--font-dev)' } }, url)
         ),
         h('div', { style: { flex: 1 } }),
         h('div', { style: { display: 'flex', gap: 8 } },
@@ -7276,7 +7355,7 @@ class Component extends DCLogic {
         a.status === 'rejected' && a.reason ? h(DS.Alert, { theme: 'danger', title: 'Bị Super Admin từ chối', style: { borderRadius: 10, margin: '4px 0 8px' } },
           h('div', { style: { fontSize: 12 } }, a.reason, h('div', { style: { marginTop: 4, color: 'var(--color-text-subtle)' } }, (a.reviewedBy || '') + (a.reviewedAt ? ' · ' + a.reviewedAt : '')))
         ) : null,
-        this.detailRow('Slug đề xuất', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5 } },
+        this.detailRow('Slug đề xuất', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5 } },
           h('span', { style: { color: 'var(--color-text-subtle)' } }, 'fpt.vn/'),
           h('span', { style: { color: 'var(--color-accent)', fontWeight: 700 } }, a.lv1),
           a.l2 ? h('span', { style: { color: 'var(--color-text-muted)' } }, '/' + a.l2) : null
@@ -7335,7 +7414,7 @@ class Component extends DCLogic {
       { key: 'tpl', header: 'Template', width: 150, render: (_, r) =>
           h('span', { style: { background: tplBg[r.tplId] || 'var(--color-surface-alt)', color: tplColors[r.tplId] || 'var(--color-text-muted)', padding: '2px 10px', borderRadius: 10, fontSize: 12, whiteSpace: 'nowrap', fontWeight: 600 } }, r.tplLabel) },
       { key: 'url', header: 'URL', width: 160, render: (_, r) =>
-          h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url) },
+          h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url) },
       { key: 'period', header: 'Thời gian hiệu lực', width: 150, render: (_, r) =>
           h('span', { style: { whiteSpace: 'nowrap', color: 'var(--color-text-muted)' } }, r.startDate + ' – ' + r.endDate) },
       { key: 'createdBy', header: 'Người tạo', width: 130, render: (_, r) =>
@@ -7448,8 +7527,8 @@ class Component extends DCLogic {
           h('div', { style: { fontSize: 12 } }, r.rejectReason, h('div', { style: { marginTop: 4, color: 'var(--color-text-subtle)' } }, (r.reviewedBy || '') + (r.reviewedAt ? ' · ' + r.reviewedAt : '')))
         ) : null,
         this.detailRow('Tên chiến dịch', h('strong', null, r.name)),
-        this.detailRow('URL', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url)),
-        this.detailRow('Nhánh Level 1', h('span', { style: { fontFamily: 'monospace', fontSize: 12.5 } }, r.lv1 || '—')),
+        this.detailRow('URL', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url)),
+        this.detailRow('Nhánh Level 1', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5 } }, r.lv1 || '—')),
         this.detailRow('Mục tiêu', r.goal),
         this.detailRow('Thời gian hiệu lực', r.startDate + ' – ' + r.endDate),
         this.detailRow('Người tạo', h('div', null, h('div', null, r.createdBy || '—'), r.createdAt ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, r.createdAt) : null)),
@@ -7796,7 +7875,7 @@ class Component extends DCLogic {
           h('label', { style: lbSt }, 'URL Slug', req),
           slugLocked
             ? h('div', null,
-                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13.5, fontFamily: 'monospace', color: 'var(--color-text-muted)' } },
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13.5, fontFamily: 'var(--font-dev)', color: 'var(--color-text-muted)' } },
                   h(DS.Icon, { name: 'lock-01-line', size: 15, color: 'var(--color-text-subtle)' }),
                   h('span', null, 'fpt.vn/'),
                   h('strong', { style: { color: 'var(--color-text)' } }, slug1 || '—'),
@@ -7872,7 +7951,7 @@ class Component extends DCLogic {
             h('label', { style: { position: 'relative', width: 40, height: 40, borderRadius: 8, border: '1.5px solid var(--color-border)', overflow: 'hidden', cursor: 'pointer', flexShrink: 0, background: bgColor } },
               h('input', { type: 'color', value: bgColor, onChange: e => set('bgColor', e.target.value), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
             ),
-            h(DS.Input, { value: bgColor, onChange: e => set('bgColor', e.target.value), placeholder: '#ffffff', style: { width: 140, flexShrink: 0, fontFamily: 'monospace' } }),
+            h(DS.Input, { value: bgColor, onChange: e => set('bgColor', e.target.value), placeholder: '#ffffff', style: { width: 140, flexShrink: 0, fontFamily: 'var(--font-dev)' } }),
             bgColor !== defaultBgColor && h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'rotate-ccw-line', onClick: () => set('bgColor', defaultBgColor) }, 'Khôi phục mặc định')
           )
         )
@@ -7953,7 +8032,7 @@ class Component extends DCLogic {
                 h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'upload-01-line' }, 'Import HTML'),
                 h(DS.Button, { level: 'tertiary', size: 'sm' }, 'Format HTML')
               ),
-              h('textarea', { rows: 14, placeholder: '<section>…</section>', style: { width: '100%', padding: '10px 14px', border: '1.5px solid var(--color-border)', borderRadius: 8, fontSize: 12, fontFamily: 'monospace', background: 'var(--color-surface-sunken)', color: 'var(--color-text)', resize: 'vertical', outline: 'none', boxSizing: 'border-box' } })
+              h('textarea', { rows: 14, placeholder: '<section>…</section>', style: { width: '100%', padding: '10px 14px', border: '1.5px solid var(--color-border)', borderRadius: 8, fontSize: 12, fontFamily: 'var(--font-dev)', background: 'var(--color-surface-sunken)', color: 'var(--color-text)', resize: 'vertical', outline: 'none', boxSizing: 'border-box' } })
             )
           : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
               sections.map((s, i) =>
@@ -8205,8 +8284,8 @@ class Component extends DCLogic {
           const self = this;
           const tab = st.tab; const sel = st.sel; const preview = st.preview;
           const tabs = h('div', { style: { display: 'flex', gap: 0, borderBottom: '1px solid var(--color-border)', marginBottom: 4 } },
-            h('button', { onClick: function() { self.setState({ tab: 'library', sel: null }); }, style: { padding: '8px 20px', border: 'none', borderBottom: tab==='library'?'2px solid var(--color-accent)':'2px solid transparent', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab==='library'?700:400, color: tab==='library'?'var(--color-accent)':'var(--color-text-subtle)', marginBottom: -1 } }, 'Thu vien media'),
-            h('button', { onClick: function() { self.setState({ tab: 'upload', sel: null }); }, style: { padding: '8px 20px', border: 'none', borderBottom: tab==='upload'?'2px solid var(--color-accent)':'2px solid transparent', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab==='upload'?700:400, color: tab==='upload'?'var(--color-accent)':'var(--color-text-subtle)', marginBottom: -1 } }, 'Tai len')
+            h('button', { onClick: function() { self.setState({ tab: 'library', sel: null }); }, style: { padding: '8px 20px', border: 'none', borderBottom: tab==='library'?'2px solid var(--color-accent)':'2px solid transparent', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab==='library'?700:400, color: tab==='library'?'var(--color-accent)':'var(--color-text-subtle)', marginBottom: -1 } }, 'Thư viện media'),
+            h('button', { onClick: function() { self.setState({ tab: 'upload', sel: null }); }, style: { padding: '8px 20px', border: 'none', borderBottom: tab==='upload'?'2px solid var(--color-accent)':'2px solid transparent', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab==='upload'?700:400, color: tab==='upload'?'var(--color-accent)':'var(--color-text-subtle)', marginBottom: -1 } }, 'Tải lên')
           );
           const library = h('div', null,
             h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 12 } },
@@ -8258,7 +8337,7 @@ class Component extends DCLogic {
         }
       }
       const mainThis = this;
-      mainThis.openModal({ title: 'Thu vien Media', description: 'Chon hoac tai len anh cho section nay', render: function() { return h(MediaPicker, { key: 'media-picker', onClose: function() { mainThis.closeModal(); } }); } });
+      mainThis.openModal({ title: 'Thư viện Media', description: 'Chọn hoặc tải lên ảnh cho section này', render: function() { return h(MediaPicker, { key: 'media-picker', onClose: function() { mainThis.closeModal(); } }); } });
     };
     const mFld = (lbl, ph) => {
       const capLabel = /mobile/i.test(lbl) ? '≤150KB' : '≤200KB';
@@ -8744,7 +8823,7 @@ class Component extends DCLogic {
                   ),
                   h2('div', { style:{ display:'flex', gap:8, alignItems:'center' } },
                     h2('input', { type:'color', value:color==='transparent'?'#ffffff':color, onChange:e=>self.save({color:e.target.value}), style:{ width:40, height:36, borderRadius:6, border:'1px solid var(--color-border)', cursor:'pointer', padding:2, flexShrink:0 } }),
-                    h2(DS2.Input, { value:color, size:'sm', style:{ fontFamily:'monospace', maxWidth:140 }, onChange:function(e){ const v=e.target?e.target.value:e; if(v==='transparent'||/^#[0-9a-fA-F]{0,6}$/.test(v))self.save({color:v}); } })
+                    h2(DS2.Input, { value:color, size:'sm', style:{ fontFamily:'var(--font-dev)', maxWidth:140 }, onChange:function(e){ const v=e.target?e.target.value:e; if(v==='transparent'||/^#[0-9a-fA-F]{0,6}$/.test(v))self.save({color:v}); } })
                   )
                 )
               : h2('div', null,
@@ -10530,7 +10609,7 @@ class Component extends DCLogic {
           h(DS.Icon, { name: 'info-circle-line', size: 14, color: 'var(--color-accent)' }),
           h('span', null, 'Dán mã HTML, CSS và JS tùy chỉnh vào ô bên dưới. Mã sẽ được nhúng trực tiếp vào trang.')
         ),
-        fld('Mã HTML tùy chỉnh', h(DS.Textarea, { rows: 10, placeholder: '<!-- Dán mã HTML của bạn vào đây -->', style: { fontFamily: 'monospace', fontSize: 12 } })),
+        fld('Mã HTML tùy chỉnh', h(DS.Textarea, { rows: 10, placeholder: '<!-- Dán mã HTML của bạn vào đây -->', style: { fontFamily: 'var(--font-dev)', fontSize: 12 } })),
       ],
       // ── COUNTDOWN (ĐỒNG HỒ ĐẾM NGƯỢC ĐỘC LẬP CASE 2) ──
       Countdown: [
@@ -11155,7 +11234,7 @@ class Component extends DCLogic {
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
-            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
             h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
           ),
           h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
@@ -11609,7 +11688,7 @@ class Component extends DCLogic {
       { key: 'title', header: 'Tiêu đề & Slug', width: 220,
         render: (_, r) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
           h('span', { style: { fontWeight: 600, fontSize: 13.5, lineHeight: 1.35 } }, r.title),
-          h('span', { style: { fontFamily: 'monospace', fontSize: 11, color: 'var(--color-text-subtle)' } }, '/tin-tuc/' + r.slug)
+          h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11, color: 'var(--color-text-subtle)' } }, '/tin-tuc/' + r.slug)
         ) },
       { key: 'featured', header: 'Nổi bật', width: 64, align: 'center',
         render: (_, r) => {
@@ -11703,7 +11782,7 @@ class Component extends DCLogic {
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
-            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
             h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
           ),
           h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
@@ -11908,7 +11987,7 @@ class Component extends DCLogic {
           h('span', { style: { fontWeight: 600 } }, r.name)
         );
       } },
-      { key: 'slug',   header: 'Slug', width: 140, render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
+      { key: 'slug',   header: 'Slug', width: 140, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
       { key: 'parent', header: 'Chuyên mục cha', width: 150, render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)' } }, r.parent || '—') },
       { key: 'layout', header: 'Kiểu giao diện', width: 120, render: (_, r) => h(DS.Badge, { theme: 'neutral' }, r.layout || 'default') },
       { key: 'level',  header: 'Cấp', width: 64, align: 'center', render: (_, r) => h('span', null, String(levelOf(r))) },
@@ -11955,7 +12034,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const columns = [
       { key: 'name', header: 'Tên Tag', render: (_, r) => h('span', { style: { fontWeight: 600 } }, '#' + r.name) },
-      { key: 'slug', header: 'Slug', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
+      { key: 'slug', header: 'Slug', render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
       { key: 'count', header: 'Số bài dùng', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
       { key: 'status', header: 'Trạng thái', render: (_, r) => {
           const isOn = (this.state.newsTagActiveMap || {})[r.id] !== undefined ? !!(this.state.newsTagActiveMap || {})[r.id] : r.status !== 'inactive';
@@ -12088,7 +12167,7 @@ class Component extends DCLogic {
             },
               h(DS.Checkbox, { checked, onChange: () => toggle(s.code), label: '' }),
               h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 } },
-                h('span', { style: { fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: 'var(--color-accent-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, s.code),
+                h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, fontWeight: 700, color: 'var(--color-accent-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, s.code),
                 h('span', { style: { fontSize: 12.5, fontWeight: 500, color: 'var(--color-text)', lineHeight: 1.35 } }, s.name),
                 h('span', { style: { fontSize: 11.5, color: 'var(--color-text-muted)' } }, 'Phân loại: ' + (s.group || s.kind || '—'))
               )
@@ -12193,7 +12272,7 @@ class Component extends DCLogic {
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
-            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'monospace', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
             h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
           ),
           h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
@@ -12355,7 +12434,7 @@ class Component extends DCLogic {
     const data = this.ROLES().filter(r => !q || (r.name + r.code).toLowerCase().includes(q));
     const columns = [
       { key: 'name', header: 'Tên vai trò', render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } }, h('span', { style: { fontWeight: 600 } }, r.name), r.system && h(DS.Badge, { theme: 'neutral' }, 'Hệ thống')) },
-      { key: 'code', header: 'Mã vai trò', render: (_, r) => h('span', { style: { fontFamily: 'monospace', fontSize: 12.5, color: 'var(--color-accent-text)' } }, r.code) },
+      { key: 'code', header: 'Mã vai trò', render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-accent-text)' } }, r.code) },
       { key: 'desc', header: 'Mô tả' },
       { key: 'accounts', header: 'Tài khoản', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.accounts) },
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
@@ -12437,7 +12516,7 @@ class Component extends DCLogic {
     this.openDrawer({ title: r.name, subtitle: 'Vai trò hệ thống', width: 440,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên vai trò', h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } }, r.name, r.system && h(DS.Badge, { theme: 'neutral' }, 'Hệ thống'))),
-        this.detailRow('Mã vai trò', h('span', { style: { fontFamily: 'monospace', color: 'var(--color-accent-text)' } }, r.code)),
+        this.detailRow('Mã vai trò', h('span', { style: { fontFamily: 'var(--font-dev)', color: 'var(--color-accent-text)' } }, r.code)),
         this.detailRow('Mô tả', r.desc), this.detailRow('Số tài khoản', String(r.accounts)),
         this.detailRow('Trạng thái', this.statusBadge(r.status)), this.detailRow('Ngày tạo', r.date)
       ),
