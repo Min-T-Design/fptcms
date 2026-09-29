@@ -3674,7 +3674,7 @@ class Component extends DCLogic {
       img: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7aedea66620_1786441194.png',
       bgColor: '#e6aa41', bgImg: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7ae92542251_1786439973.png',
       content: 'Combo Internet V.VIP chỉ từ 220K: Xem Ngoại Hạng Anh - Nhận ngay Camera AI & Cloud miễn phí <a href="#">TẠI ĐÂY</a>',
-      url: 'https://fpt.vn/shop/internet/register/combo-internet-sky-vvip-lite?utm_source=nha-header', target: '_self', order: 1, status: 'active', startAt: '11/08/2026 00:00', endAt: '30/09/2026 23:59', createdAt: '11/08/2026 09:15', updatedAt: '25/08/2026 14:30', updatedBy: 'Nguyễn Thị Thùy' },
+      url: 'https://fpt.vn/shop/internet/register/combo-internet-sky-vvip-lite?utm_source=nha-header', target: '_self', order: 1, status: 'active', startAt: '11/08/2026 00:00', endAt: '31/12/2026 23:59', createdAt: '11/08/2026 09:15', updatedAt: '25/08/2026 14:30', updatedBy: 'Nguyễn Thị Thùy' },
     { id: 2, catCode: 'scrolling_top_bar', title: 'Miễn phí lắp đặt Internet tốc độ cao — Ưu đãi cho khách hàng mới',
       img: '', bgColor: '#0072BC', bgImg: '',
       content: 'Miễn phí lắp đặt Internet tốc độ cao — Ưu đãi cho khách hàng mới trong tháng.',
@@ -3682,11 +3682,15 @@ class Component extends DCLogic {
     { id: 3, catCode: 'popup_promo', title: 'Camera AI thế hệ mới — Giảm ngay 30% khi đăng ký Internet',
       img: '', bgColor: '#22c55e', bgImg: '',
       content: 'Camera AI thế hệ mới — Giảm ngay 30% khi đăng ký kèm Internet.',
-      url: 'https://fpt.vn/shop/camera-an-ninh', target: '_blank', order: 1, status: 'active', startAt: '20/06/2026 08:00', endAt: '31/10/2026 23:59', createdAt: '20/06/2026 16:45', updatedAt: '15/08/2026 11:05', updatedBy: 'Admin User' },
+      url: 'https://fpt.vn/shop/camera-an-ninh', target: '_blank', order: 1, status: 'inactive', startAt: '20/06/2026 08:00', endAt: '31/10/2026 23:59', createdAt: '20/06/2026 16:45', updatedAt: '15/08/2026 11:05', updatedBy: 'Admin User' },
     { id: 4, catCode: 'corner_banner', title: 'FPT Play VIP tặng kèm — Xem trọn giải Ngoại Hạng Anh',
       img: '', bgColor: '#7c3aed', bgImg: '',
       content: 'FPT Play VIP tặng kèm khi đăng ký gói Internet + Truyền hình.',
       url: 'https://fpt.vn/shop/truyen-hinh-fpt-play', target: '_self', order: 1, status: 'inactive', startAt: '01/06/2026 00:00', endAt: '31/08/2026 23:59', createdAt: '28/05/2026 08:30', updatedAt: '10/07/2026 17:40', updatedBy: 'Admin User' },
+    { id: 5, catCode: 'popup_promo', title: 'Ưu đãi Black Friday — Giảm 50% cước Internet 6 tháng đầu',
+      img: '', bgColor: '#0f172a', bgImg: '',
+      content: 'Ưu đãi Black Friday — Giảm 50% cước Internet 6 tháng đầu cho khách hàng đăng ký mới.',
+      url: 'https://fpt.vn/shop/internet/black-friday', target: '_blank', order: 2, status: 'active', startAt: '20/11/2026 00:00', endAt: '30/11/2026 23:59', createdAt: '25/09/2026 10:20', updatedAt: '28/09/2026 16:45', updatedBy: 'Admin User' },
   ]; }
   FAQS() { return [
     { id: 1, cat: 'Thanh toán cước', q: 'Làm thế nào để thanh toán cước trực tuyến?', a: 'FPT Telecom hỗ trợ đa dạng hình thức thanh toán: ứng dụng Hi FPT, ví điện tử MoMo, VNPay, ZaloPay, chuyển khoản ngân hàng hoặc tại quầy giao dịch FPT.', lang: 'Tiếng Việt', order: 1, status: 'active', createdAt: '14/01/2026' },
@@ -6096,7 +6100,13 @@ class Component extends DCLogic {
     const e = this.adParseDate(r.endAt);
     return !!e && e.getTime() < Date.now();
   }
-  adEffStatus(r) { return this.adIsExpired(r) ? 'inactive' : r.status; }
+  // Bộ trạng thái giống module Popup: Hết hạn > Tạm ẩn (tắt tay) > Đặt lịch (chưa tới giờ bắt đầu) > Đang chạy.
+  adEffStatus(r) {
+    if (this.adIsExpired(r)) return 'expired';
+    if (r.status !== 'active') return 'hidden';
+    const st = this.adParseDate(r.startAt);
+    return st && st.getTime() > Date.now() ? 'scheduled' : 'running';
+  }
   adPeriodCell(r) {
     const h = React.createElement;
     if (!r.startAt && !r.endAt) return h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không giới hạn');
@@ -6139,7 +6149,7 @@ class Component extends DCLogic {
     const catF = this.state.adsCatFilter || 'all';
     const statusF = this.state.adsStatusFilter || 'all';
     const cats = this.getAdCatsList();
-    const statusLabel = { active: 'Hoạt động', inactive: 'Ngừng hoạt động' };
+    const statusLabel = { running: 'Đang chạy', scheduled: 'Đặt lịch', expired: 'Hết hạn', hidden: 'Tạm ẩn' };
     const data = this.getAdsList().filter(a => {
       if (q && !(a.title + ' ' + (a.url || '')).toLowerCase().includes(q)) return false;
       if (catF !== 'all' && a.catCode !== catF) return false;
@@ -6164,14 +6174,10 @@ class Component extends DCLogic {
       { key: 'period', header: 'Thời gian quảng cáo', width: 190, render: (_, r) => this.adPeriodCell(r) },
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(this.adEffStatus(r)) },
       { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
-          const isOn = this.adEffStatus(r) !== 'inactive';
+          if (this.adEffStatus(r) === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
+          const isOn = this.adEffStatus(r) !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
-            h(DS.Switch, { key: 'sw-ads-act-' + r.id + '-' + (isOn ? 1 : 0) + '-' + (this.state.adSwRev || 0), defaultChecked: isOn, size: 'sm', onChange: v => {
-              if (v && this.adIsExpired(r)) {
-                this.setState({ adSwRev: (this.state.adSwRev || 0) + 1 });
-                this.toast('danger', 'Quảng cáo đã hết hạn', 'Vui lòng chỉnh sửa và đặt lại thời gian quảng cáo để mở lại.');
-                return;
-              }
+            h(DS.Switch, { key: 'sw-ads-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', title: 'Bật/Tắt quảng cáo', onChange: v => {
               this.setState({ adsListData: this.getAdsList().map(x => x.id === r.id ? Object.assign({}, x, { status: v ? 'active' : 'inactive' }) : x) });
               this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Quảng cáo "' + r.title.slice(0, 60) + '".');
             } })
@@ -6193,7 +6199,8 @@ class Component extends DCLogic {
             searchable: true, searchPlaceholder: 'Tìm danh mục…', onChange: v => this.setState({ adsCatFilter: v, ads_pg: 1 })
           })),
           h('div', { style: { width: 180, flexShrink: 0 } }, h(DS.Select, {
-            value: statusF, options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }],
+            value: statusF, options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'running', label: 'Đang chạy' }, { value: 'scheduled', label: 'Đặt lịch' }, { value: 'expired', label: 'Hết hạn' }, { value: 'hidden', label: 'Tạm ẩn' }],
+            searchable: true, searchPlaceholder: 'Tìm trạng thái…',
             onChange: v => this.setState({ adsStatusFilter: v, ads_pg: 1 })
           }))
         ),
