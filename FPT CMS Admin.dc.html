@@ -1597,7 +1597,7 @@ class Component extends DCLogic {
                 h('span', { style: { fontWeight: 700 } }, val)
               ),
               h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-                h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Kiểm tra lại'),
+                h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy'),
                 h(DS.Button, { level: 'primary', onClick: () => this.setState(s => ({ modal: null, pkgRouteSaved: { ...(s.pkgRouteSaved || {}), [sku.code]: val } }), finishSave) }, 'Xác nhận & lưu')
               )
             )
