@@ -1290,7 +1290,7 @@ class Component extends DCLogic {
   }
   openSkuEditor(r) {
     const sku = r ? this.SKUS().find(s => s.code === r.skuCode) : null;
-    this.setState({ skuEditor: r, skuEditorTab: 'attrs', pkgForm: this.seedPkgForm(r), pkgTagEnabled: undefined, pkgTagBadgeId: undefined, pkgRouteInput: this.PKG_ROUTE_OF(sku) });
+    this.setState({ skuEditor: r, skuEditorTab: 'attrs', pkgForm: this.seedPkgForm(r), pkgTagEnabled: undefined, pkgTagBadgeId: undefined, pkgRouteErr: false, pkgRouteInput: this.PKG_ROUTE_OF(sku) });
   }
 
   renderSku() {
@@ -1577,7 +1577,12 @@ class Component extends DCLogic {
       // Route name chỉ được thêm/sửa 1 lần: chỉ xét khi chưa khóa, có nhập giá trị và khác giá trị đồng bộ ban đầu (FCP có sẵn / ECP trống).
       if (sku && !this.PKG_ROUTE_LOCKED(sku.code)) {
         const val = (this.state.pkgRouteInput || '').trim();
-        if (val && val !== this.PKG_ROUTE_DEFAULT(sku)) {
+        if (!val) {
+          this.setState({ skuEditorTab: 'attrs', pkgRouteErr: true });
+          this.toast('danger', 'Thiếu thông tin', 'Vui lòng nhập Route name.');
+          return;
+        }
+        if (val !== this.PKG_ROUTE_DEFAULT(sku)) {
           if (this.PKG_ROUTE_DUP(val, sku.code)) {
             this.setState({ skuEditorTab: 'attrs' });
             this.toast('danger', 'Route name bị trùng', 'Route name "' + val + '" đã tồn tại — vui lòng nhập route name khác.');
@@ -1675,15 +1680,15 @@ class Component extends DCLogic {
         const locked = !!sku && this.PKG_ROUTE_LOCKED(sku.code);
         const routeVal = this.state.pkgRouteInput !== undefined ? this.state.pkgRouteInput : this.PKG_ROUTE_OF(sku);
         const dup = !locked && !!sku && this.PKG_ROUTE_DUP(routeVal, sku.code);
+        const missing = !locked && !!sku && !!this.state.pkgRouteErr && !(routeVal || '').trim();
         return h('div', { style: { display: 'grid', gridTemplateColumns: '1fr', gap: 16 } },
           h('div', null,
             this.field('Route name', h(DS.Input, {
               value: routeVal, disabled: locked || !sku, placeholder: 'VD: internet-giga',
-              error: dup ? 'Route name đã tồn tại — vui lòng nhập route name khác.' : undefined,
-              onChange: e => this.setState({ pkgRouteInput: e && e.target ? e.target.value : e })
-            })),
-            h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 6 } },
-              locked ? 'Route name đã được thiết lập, không thể chỉnh sửa lại.' : 'Chỉ được thêm/chỉnh sửa 1 lần duy nhất. Sau khi xác nhận lưu, trường sẽ bị khóa.')
+              error: dup ? 'Route name đã tồn tại — vui lòng nhập route name khác.' : (missing ? 'Trường bắt buộc — vui lòng nhập route name.' : undefined),
+              onChange: e => { const v = e && e.target ? e.target.value : e; this.setState({ pkgRouteInput: v, pkgRouteErr: false }); }
+            }), true),
+            locked && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 6 } }, 'Route name đã được thiết lập, không thể chỉnh sửa lại.')
           )
         );
       })(),
