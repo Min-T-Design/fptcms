@@ -6444,6 +6444,9 @@ class Component extends DCLogic {
     const setD = patch => this.setState(s => ({ adCatDraft: Object.assign({}, s.adCatDraft, patch) }));
     const dBase = r ? { name: r.name, code: r.code, desc: r.desc || '', active: r.status === 'active', pageScope: r.pageScope || 'all', pages: r.pages || [] } : { name: '', code: '', desc: '', active: true, pageScope: 'all', pages: [] };
     const d = Object.assign({}, dBase, this.state.adCatDraft);
+    // Mã nhóm trùng: báo lỗi ngay trên ô khi đang nhập (không phân biệt hoa/thường), và chặn lưu.
+    const codeKey = (d.code || '').trim().toLowerCase();
+    const codeDup = !!codeKey && this.getAdCatsList().some(c => (c.code || '').trim().toLowerCase() === codeKey && (!r || c.id !== r.id));
     const allPages = this.AD_PAGES();
     const pageQ = (this.state.adPageSearchQ || '').toLowerCase();
     const visiblePages = pageQ ? allPages.filter(p => (p.name + ' ' + p.slug).toLowerCase().includes(pageQ)) : allPages;
@@ -6495,7 +6498,7 @@ class Component extends DCLogic {
         ),
         section(1, 'folder-line', 'Thông tin cơ bản',
           this.field('Tên nhóm quảng cáo', h(DS.Input, { value: d.name, onChange: e => setD({ name: e && e.target ? e.target.value : e }), placeholder: 'VD: Scrolling Announcement Bar' }), true),
-          this.field('Mã nhóm (Định danh hệ thống)', h(DS.Input, { value: d.code, onChange: e => setD({ code: e && e.target ? e.target.value : e }), disabled: !isNew, placeholder: 'VD: scrolling_top_bar' }), true),
+          this.field('Mã nhóm (Định danh hệ thống)', h(DS.Input, { value: d.code, onChange: e => setD({ code: e && e.target ? e.target.value : e }), disabled: !isNew, placeholder: 'VD: scrolling_top_bar', error: codeDup ? 'Mã nhóm đã tồn tại — vui lòng nhập mã khác.' : undefined }), true),
           h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: -8 } }, isNew ? 'Mã duy nhất dùng để gán các quảng cáo con vào nhóm. Không thể thay đổi sau khi tạo.' : 'Mã định danh hệ thống không thể thay đổi sau khi đã tạo.'),
           this.field('Mô tả nhóm', h(DS.Textarea, { rows: 3, value: d.desc, onChange: e => setD({ desc: e && e.target ? e.target.value : e }), placeholder: 'Mô tả ngắn về mục đích của nhóm quảng cáo này…' }))
         ),
@@ -6556,7 +6559,7 @@ class Component extends DCLogic {
       ),
       () => {
         const list = this.getAdCatsList();
-        if (list.some(c => c.code === d.code && (!r || c.id !== r.id))) { this.toast('danger', 'Mã nhóm đã tồn tại', 'Vui lòng chọn mã nhóm khác.'); return; }
+        if (codeDup) { this.toast('danger', 'Mã nhóm đã tồn tại', 'Vui lòng chọn mã nhóm khác.'); return; }
         if (r) this.setState({ adCatsListData: list.map(c => c.id === r.id ? Object.assign({}, c, { name: d.name, code: d.code, desc: d.desc, pageScope: d.pageScope || 'all', pages: d.pageScope === 'specific' ? (d.pages || []) : [], status: d.active ? 'active' : 'inactive', updatedAt: this.nowStr(), updatedBy: 'Admin User' }) : c) });
         else { const newId = Math.max(0, ...list.map(c => c.id)) + 1; this.setState({ adCatsListData: list.concat([{ id: newId, name: d.name, code: d.code, desc: d.desc, pageScope: d.pageScope || 'all', pages: d.pageScope === 'specific' ? (d.pages || []) : [], status: d.active ? 'active' : 'inactive', createdAt: this.nowStr(), createdBy: 'Admin User', updatedAt: this.nowStr(), updatedBy: 'Admin User' }]) }); }
         back();
