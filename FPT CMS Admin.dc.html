@@ -1970,16 +1970,16 @@ class Component extends DCLogic {
               h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Ảnh gói cước'),
               h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Tỉ lệ 4:3 · Desktop ≤200KB · Mobile ≤150KB'),
               h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-                this.uploadBox('Ảnh gói cước - Desktop (4:3)', '≤200KB'),
-                this.uploadBox('Ảnh gói cước - Mobile (4:3)', '≤150KB')
+                this.uploadBox('Ảnh gói cước - Desktop', '≤200KB'),
+                this.uploadBox('Ảnh gói cước - Mobile', '≤150KB')
               )
             ),
             h('div', null,
               h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Ảnh banner'),
               h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Tỉ lệ 3:1 · Desktop ≤200KB · Mobile ≤150KB'),
               h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-                this.uploadBox('Banner đầu trang - Desktop (3:1)', '≤200KB'),
-                this.uploadBox('Banner đầu trang - Mobile (3:1)', '≤150KB')
+                this.uploadBox('Banner đầu trang - Desktop', '≤200KB'),
+                this.uploadBox('Banner đầu trang - Mobile', '≤150KB')
               )
             )
           )
@@ -1995,11 +1995,11 @@ class Component extends DCLogic {
         h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Banner giữa trang (Mid-page banner)'),
         h(DS.Switch, { size: 'sm', checked: banner.active, onChange: toggleActive })
       ),
-      h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Ảnh Desktop và Mobile riêng · chèn giữa nội dung trang gói bán'),
+      h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Desktop tỉ lệ 32:9 · Mobile tỉ lệ 1:1 · Ảnh Desktop và Mobile riêng · chèn giữa nội dung trang gói bán'),
       h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14 } },
         h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-          this.uploadBox('Desktop (32:9)', '≤200KB'),
-          this.uploadBox('Mobile (1:1)', '≤150KB')
+          this.uploadBox('Desktop', '≤200KB'),
+          this.uploadBox('Mobile', '≤150KB')
         )
       )
     );
@@ -6531,9 +6531,7 @@ class Component extends DCLogic {
           )
         ),
         section(3, 'bell-01-line', 'Quảng cáo trong danh mục',
-          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, isNew
-            ? 'Bạn có thể gán quảng cáo vào danh mục này sau khi lưu.'
-            : 'Kéo thả để sắp xếp lại thứ tự hiển thị của các quảng cáo con trong danh mục này.'),
+          !isNew && h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Kéo thả để sắp xếp lại thứ tự hiển thị của các quảng cáo con trong danh mục này.'),
           isNew || catAds.length === 0
             ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, fontStyle: 'italic', border: '1px solid var(--color-border)', borderRadius: 10 } }, 'Danh mục này chưa có quảng cáo nào.')
             : h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
