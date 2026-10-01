@@ -1600,13 +1600,19 @@ class Component extends DCLogic {
             return;
           }
         }
-        this.setState(s => {
-          const m = { ...(s.pkgRouteSaved || {}) };
-          owners.forEach(o => { m[o.id] = ''; });
-          m[r.id] = val;
-          return { pkgRouteSaved: m };
-        });
-        if (owners.length) this.toast('info', 'Đã chuyển route name', 'Route name "' + val + '" đã được chuyển từ ' + owners.map(o => this.PKG_ROUTE_LABEL(o)).join(', ') + ' sang gói này.');
+        // Lưu: luôn hỏi xác nhận lại route name có dùng cho gói này không (Xác nhận trái, Hủy phải).
+        const commit = () => {
+          this.setState(s => {
+            const m = { ...(s.pkgRouteSaved || {}) };
+            owners.forEach(o => { m[o.id] = ''; });
+            m[r.id] = val;
+            return { pkgRouteSaved: m, modal: null };
+          });
+          if (owners.length) this.toast('info', 'Đã chuyển route name', 'Route name "' + val + '" đã được chuyển từ ' + owners.map(o => this.PKG_ROUTE_LABEL(o)).join(', ') + ' sang gói này.');
+          finishSave();
+        };
+        this.askRouteSave(r, val, commit);
+        return;
       }
       finishSave();
     };
@@ -1671,10 +1677,24 @@ class Component extends DCLogic {
       title: 'Đã tồn tại route name',
       description: h(React.Fragment, null,
         'Route name ', h('strong', { style: { fontWeight: 700, color: 'var(--color-text)' } }, '"' + val + '"'),
-        ' đang được sử dụng bởi ', h('strong', { style: { fontWeight: 700, color: 'var(--color-text)' } }, owners.map(o => this.PKG_ROUTE_LABEL(o)).join(', ')),
-        '. Nếu vẫn muốn sử dụng, route name sẽ được chuyển từ gói cũ sang gói mới.'),
+        ' hiện đang được sử dụng cho gói ', h('strong', { style: { fontWeight: 700, color: 'var(--color-text)' } }, owners.map(o => this.PKG_ROUTE_LABEL(o)).join(', ')),
+        '. Mỗi route name chỉ được dùng cho một gói — nếu tiếp tục, hệ thống sẽ xóa route name khỏi gói cũ và gán cho gói hiện tại.'),
       render: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 } },
         h(DS.Button, { level: 'primary', onClick: () => this.setState({ modal: null, pkgRouteConfirmed: val.toLowerCase() }) }, 'Xác nhận'),
+        h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy')
+      )
+    });
+  }
+  // Modal xác nhận khi Lưu: hỏi lại route name có đúng là dùng cho gói này không — "Xác nhận" (trái) lưu, "Hủy" (phải) quay lại chỉnh sửa.
+  askRouteSave(r, val, onConfirm) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const strong = t => h('strong', { style: { fontWeight: 700, color: 'var(--color-text)' } }, t);
+    this.openModal({
+      title: 'Xác nhận route name',
+      description: h(React.Fragment, null,
+        'Bạn có chắc chắn route name ', strong('"' + val + '"'), ' được sử dụng cho gói ', strong(this.PKG_ROUTE_LABEL(r)), ' không?'),
+      render: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 } },
+        h(DS.Button, { level: 'primary', onClick: onConfirm }, 'Xác nhận'),
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy')
       )
     });
@@ -1714,7 +1734,8 @@ class Component extends DCLogic {
               onChange: e => { const v = e && e.target ? e.target.value : e; this._routeAsked = undefined; this.setState({ pkgRouteInput: v, pkgRouteErr: false }); },
               onKeyDown: e => { if (e.key === 'Enter') ask(); },
               onBlur: () => ask()
-            }), true)
+            }), true),
+            h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', marginTop: 6 } }, 'Vui lòng kiểm tra kỹ route name trước khi lưu.')
           )
         );
       })(),
