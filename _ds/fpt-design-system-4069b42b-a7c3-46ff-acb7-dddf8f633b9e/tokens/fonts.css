@@ -1,17 +1,42 @@
 /* ZEN Kaizen — Webfonts
    Core system family is Inter (display, heading, sans, button per Figma type config).
-   Mono/dev faces: JetBrains Mono (dev), IBM Plex Mono (code specimens).
-   Loaded from Google Fonts CDN. Geist Mono (the "mono" theme face) and the marketing
-   display faces TASA Explorer / BT Solisiert are NOT on Google Fonts — see readme
-   "Iconography & fonts" caveats; they fall back to the stacks below. */
+   Mono/dev face: JetBrains Mono (dev + code specimens).
+   Self-hosted (./fonts/*.woff2, SIL OFL) instead of the Google Fonts CDN so that:
+   - the app still renders correctly on an intranet / offline,
+   - the FULL glyph set is available (≤ ≥ ✓ → and box-drawing └─ are missing from Google's
+     trimmed "latin" subsets and used to fall back to a system font),
+   - font-weight 800 is real (variable axis 100–900) rather than clamped to 700.
+   Geist Mono (the "mono" theme face) and the marketing display faces TASA Explorer /
+   BT Solisiert are NOT available — see readme "Iconography & fonts" caveats; they fall
+   back to the stacks below. */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./fonts/InterVariable.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./fonts/InterVariable-Italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url("./fonts/JetBrainsMono-VF.woff2") format("woff2");
+}
 
 :root {
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-heading: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-button: "Inter", system-ui, -apple-system, sans-serif;
-  --font-dev: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-dev: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }

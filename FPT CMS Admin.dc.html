@@ -995,12 +995,38 @@ class Component extends DCLogic {
   // FCP sync sẵn giá trị (mã SKU + kênh), ECP để trống; admin tự do chỉnh sửa. Trùng route name của dòng khác → hỏi chuyển route name từ gói cũ sang gói mới.
   PKG_ROUTE_DEFAULT(r) {
     const sku = r ? this.SKUS().find(s => s.code === r.skuCode) : null;
-    return sku && (sku.source || 'ECP') === 'FCP' ? (r.skuCode + '-' + r.channel).toLowerCase() : '';
+    if (sku && (sku.source || 'ECP') === 'FCP') return (r.skuCode + '-' + r.channel).toLowerCase();
+    // Demo: các dòng ECP đã được admin nhập sẵn route name (riêng AP-WIFI6 để trống).
+    return r && r.skuCode !== 'AP-WIFI6' ? (r.skuCode + '-' + r.channel).toLowerCase() : '';
+  }
+  // Demo: tên hiển thị + route name cho các SKU chưa có dòng nội dung sản phẩm (để picker chọn gói luôn có dữ liệu). Chỉ 2 SKU (INT-BIZ500, DEV-ONT10G) để trống route name.
+  PKG_SKU_DEMO_LABELS() {
+    return {
+      'INT-LUX800': { name: 'Internet LUX 800 - Tốc độ cao cho gia đình đông người', route: 'int-lux800-fptvn' },
+      'INT-LUX1000': { name: 'Internet LUX 1000 - Siêu tốc 1Gbps', route: 'int-lux1000-fptvn' },
+      'INT-COMBO200': { name: 'Combo Internet Gia Đình 200Mbps', route: 'int-combo200-fptvn' },
+      'INT-BIZ500': { name: 'Internet Doanh Nghiệp 500Mbps', route: '' },
+      'CAM-IQ4S': { name: 'FPT Camera IQ4S - AI nhận diện khuôn mặt', route: 'cam-iq4s-fptvn' },
+      'CAM-IQ5': { name: 'FPT Camera IQ5 - AI 4K sắc nét', route: 'cam-iq5-fptvn' },
+      'CAM-OUTDOOR': { name: 'FPT Camera Ngoài Trời IP66', route: 'cam-outdoor-fptvn' },
+      'SA-KPLUS': { name: 'FPT Play K+ - Kênh thể thao đỉnh cao', route: 'sa-kplus-fptvn' },
+      'SA-HBOMAX': { name: 'FPT Play HBO Max - Phim bom tấn', route: 'sa-hbomax-fptvn' },
+      'MODEM-AX1800GZ': { name: 'Modem Wi-Fi 6 AX1800', route: 'modem-ax1800gz-fptvn' },
+      'DEV-MESH': { name: 'Router Mesh Wi-Fi 6E (Bộ 2)', route: 'dev-mesh-fptvn' },
+      'DEV-ONT10G': { name: 'Thiết bị ONT 10G Fiber', route: '' },
+      'CLOUD-CAM7': { name: 'Gói Cloud Camera 7 ngày', route: 'cloud-cam7-fptvn' },
+    };
   }
   PKG_ROUTE_OF(r) {
     if (!r) return '';
     const m = this.state.pkgRouteSaved;
     return m && Object.prototype.hasOwnProperty.call(m, r.id) ? m[r.id] : this.PKG_ROUTE_DEFAULT(r);
+  }
+  // Tên hiển thị trên kênh: giá trị đã lưu từ editor (nếu có) → trường dữ liệu → mặc định theo tên hệ thống.
+  PKG_CHANNEL_NAME_OF(r) {
+    if (!r) return '';
+    const m = this.state.pkgChannelNameSaved;
+    return m && Object.prototype.hasOwnProperty.call(m, r.id) ? m[r.id] : (r.channelDisplayName || r.displayName || '');
   }
   // Các dòng khác (khác `id`) đang giữ route name `value` (không phân biệt hoa thường).
   PKG_ROUTE_OWNERS(value, id) {
@@ -1010,6 +1036,14 @@ class Component extends DCLogic {
   PKG_ROUTE_LABEL(x) {
     const ch = this.PKG_CHANNELS().find(c => c.id === x.channel);
     return (x.displayName || x.skuCode) + ' (' + x.skuCode + (ch ? ' · ' + ch.name : '') + ')';
+  }
+  // Nhãn hiển thị cho picker chọn gói: dòng chính = Tên hiển thị, dòng phụ = Route name — lấy từ dòng nội dung sản phẩm đầu tiên của SKU (thiếu → '—').
+  PKG_SKU_PICKER_LABELS() {
+    const map = new Map();
+    this.PKG_CONTENTS().forEach(r => { if (!map.has(r.skuCode)) map.set(r.skuCode, { name: this.PKG_CHANNEL_NAME_OF(r) || '', route: this.PKG_ROUTE_OF(r) || '' }); });
+    const demo = this.PKG_SKU_DEMO_LABELS();
+    const get = code => map.get(code) || demo[code] || { name: '', route: '' };
+    return { get, match: (sku, q) => { const l = get(sku.code); return (sku.code + ' ' + sku.name + ' ' + l.name + ' ' + l.route).toLowerCase().includes(q); } };
   }
   PROMO_ICONS() { return ['star-01-line', 'stars-01-line', 'zap-line', 'check-circle-line', 'heart-line']; }
   PKG_CONTENTS() {
@@ -1292,6 +1326,7 @@ class Component extends DCLogic {
       longDescTitle: r && r.longDescTitle ? r.longDescTitle : '',
       promoList: r && r.promoList ? [...r.promoList] : [],
       promoTitle: r && r.promoTitle ? r.promoTitle : '',
+      channelDisplayName: this.PKG_CHANNEL_NAME_OF(r),
       privTitle: r && r.privTitle ? r.privTitle : '',
       gallery: r && r.gallery ? r.gallery.map(x => ({ ...x })) : [],
       videos: r && r.videos ? r.videos.map(x => ({ ...x })) : [],
@@ -1301,7 +1336,7 @@ class Component extends DCLogic {
     };
   }
   openSkuEditor(r) {
-    this.setState({ skuEditor: r, skuEditorTab: 'attrs', pkgForm: this.seedPkgForm(r), pkgTagEnabled: undefined, pkgTagBadgeId: undefined, pkgRouteErr: false, pkgRouteConfirmed: undefined, pkgRouteInput: this.PKG_ROUTE_OF(r) });
+    this.setState({ skuEditor: r, skuEditorTab: 'attrs', pkgForm: this.seedPkgForm(r), pkgTagEnabled: undefined, pkgTagBadgeId: undefined, pkgRouteErr: false, pkgDisplayErr: false, pkgRouteConfirmed: undefined, pkgRouteInput: this.PKG_ROUTE_OF(r) });
   }
 
   renderSku() {
@@ -1315,7 +1350,7 @@ class Component extends DCLogic {
     const all = this.PKG_CONTENTS();
     const data = all.filter(r => {
       const sku = skuByCode.get(r.skuCode);
-      const matchQ = !q || (r.displayName + ' ' + r.skuCode + ' ' + (sku ? sku.name : '')).toLowerCase().includes(q);
+      const matchQ = !q || (r.displayName + ' ' + this.PKG_CHANNEL_NAME_OF(r) + ' ' + r.skuCode + ' ' + (sku ? sku.name : '')).toLowerCase().includes(q);
       const matchType = typeF === 'all' || (sku && this.PKG_TYPE_CATEGORY(sku) === typeF);
       const matchSource = sourceF === 'all' || (sku && (sku.source || 'ECP') === sourceF);
       const matchRoute = !routeQ || (this.PKG_ROUTE_OF(r) || '').toLowerCase().includes(routeQ);
@@ -1327,7 +1362,7 @@ class Component extends DCLogic {
     const columns = [
       { key: 'stt', header: 'STT', width: 56, align: 'center',
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (pkgPg - 1) * pkgSz + sliced.indexOf(r) + 1) },
-      { key: 'name', header: 'Tên hiển thị', width: 340,
+      { key: 'name', header: 'Tên hệ thống', width: 300,
         render: (_, r) => {
           const sku = skuByCode.get(r.skuCode);
           return h('div', null,
@@ -1336,6 +1371,8 @@ class Component extends DCLogic {
               r.skuCode)
           );
         } },
+      { key: 'channelName', header: 'Tên hiển thị', width: 300,
+        render: (_, r) => h('span', { style: { fontWeight: 600 } }, this.PKG_CHANNEL_NAME_OF(r) || '—') },
       { key: 'route', header: 'Route name', width: 180,
         render: (_, r) => { const rn = this.PKG_ROUTE_OF(r); return rn ? h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, fontWeight: 500 } }, rn) : h('span', { style: { color: 'var(--color-text-subtle)' } }, '—'); } },
       { key: 'type', header: 'Loại sản phẩm', width: 140,
@@ -1407,7 +1444,7 @@ class Component extends DCLogic {
         this.detailRow('Loại sản phẩm', r.packageType || '—'),
         this.detailRow('Giá Min', sku ? this.PKG_QLCS_META(sku).giaMin : '—'),
         this.detailRow('Giá Max', sku ? this.PKG_QLCS_META(sku).giaMax : '—'),
-        this.detailRow('Tên hiển thị trên kênh', r.displayName),
+        this.detailRow('Tên hiển thị trên kênh', this.PKG_CHANNEL_NAME_OF(r)),
         this.detailRow('Tag nổi bật', (r.tags || []).length ? r.tags.map(t => TAG_LABEL[t] || t).join(', ') : '—'),
         this.detailRow('Đặc tính nổi bật', (r.attributes || []).length ? r.attributes.length + ' đặc tính' : '—'),
         this.detailRow('Mô tả ngắn', r.shortDesc),
@@ -1579,11 +1616,17 @@ class Component extends DCLogic {
     else tabContent = this.renderSkuEditorFaq(r);
 
     const finishSave = () => {
+      if (r) this.setState(s => ({ pkgChannelNameSaved: { ...(s.pkgChannelNameSaved || {}), [r.id]: (s.pkgForm.channelDisplayName || '').trim() } }));
       const label = isNew ? 'Nội dung mới' : (r.displayName || r.skuCode);
       back();
       this.toast('success', isNew ? 'Đã tạo nội dung sản phẩm' : 'Đã lưu nội dung sản phẩm', label + ' đã được cập nhật.');
     };
     const onSave = () => {
+      if (!((this.state.pkgForm.channelDisplayName || '').trim())) {
+        this.setState({ skuEditorTab: 'content', pkgDisplayErr: true, pkgSecWebOpen: true });
+        this.toast('danger', 'Thiếu thông tin', 'Vui lòng nhập Tên hiển thị trên kênh.');
+        return;
+      }
       if (r) {
         const val = (this.state.pkgRouteInput || '').trim();
         if (!val) {
@@ -1983,7 +2026,14 @@ class Component extends DCLogic {
       label: h('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 5, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '.4px', background: b.bgColor, color: b.textColor } }, b.name)
     }));
     const goToBadgeModule = () => this.setState({ active: 'badge-tag', badgeTagEditor: null, badgeFormCategories: ['card'] });
+    const channelNameVal = this.state.pkgForm.channelDisplayName || '';
+    const channelNameMissing = !!this.state.pkgDisplayErr && !channelNameVal.trim();
     return this.collapsibleCard('pkgSecWebOpen', 'Cài đặt web', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+        this.field('Tên hiển thị trên kênh', h(DS.Input, {
+          value: channelNameVal, placeholder: 'VD: Internet Giga - Siêu tốc độ cho gia đình',
+          error: channelNameMissing ? 'Trường bắt buộc — vui lòng nhập tên hiển thị trên kênh.' : undefined,
+          onChange: e => { const v = e && e.target ? e.target.value : e; this.setState(st => ({ pkgDisplayErr: false, pkgForm: { ...st.pkgForm, channelDisplayName: v || '' } })); }
+        }), true),
         h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14 } },
           h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: tagEnabled ? 10 : 0, flexWrap: 'wrap', gap: 10 } },
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
@@ -2522,7 +2572,8 @@ class Component extends DCLogic {
       { id: 'fcp', label: 'FCP' },
     ];
     const sourceFilteredSkus = mainFilteredSkus.filter(s => (s.source || 'ECP').toLowerCase() === skuSource);
-    const filteredSkus = sourceFilteredSkus.filter(s => !q || (s.code + s.name).toLowerCase().includes(q));
+    const pkgLbl = this.PKG_SKU_PICKER_LABELS();
+    const filteredSkus = sourceFilteredSkus.filter(s => !q || pkgLbl.match(s, q));
     const channelSkus = ((this.state.checkoutChannelSkus || {})[cid]) || {};
     // Chỉ tính các gói thuộc đúng tab đang mở, tránh 1 gói được chọn ở tab khác bị cuốn theo khi chỉnh sửa tab này.
     const selectedSkus = mainFilteredSkus.filter(s => !!channelSkus[s.code]);
@@ -2730,10 +2781,10 @@ class Component extends DCLogic {
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
-            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, s.code),
+            h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(s.code).name || '—'),
             h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, s.group)
           ),
-          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, s.name),
+          h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(s.code).route || '—'),
           h('div', { style: { display: 'flex', gap: 3, flexWrap: 'wrap' } },
             withContent
               ? h('span', { style: { fontSize: 10.5, fontWeight: 600, color: 'var(--color-accent-text)', background: 'var(--color-accent-bg)', padding: '1px 6px', borderRadius: 4 } }, 'Đã có nội dung')
@@ -2948,7 +2999,7 @@ class Component extends DCLogic {
                 h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChecked, indeterminate: someChecked, onChange: toggleAll })
               ),
               h('div', { style: { marginBottom: 8 } },
-                h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.checkoutSkuSearch || '', onChange: e => this.setState({ checkoutSkuSearch: e && e.target ? e.target.value : e }) })
+                h(DS.Input, { placeholder: 'Lọc tên hiển thị/route name...', leadingIcon: 'search-medium-line', value: this.state.checkoutSkuSearch || '', onChange: e => this.setState({ checkoutSkuSearch: e && e.target ? e.target.value : e }) })
               ),
               h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 512, overflowY: 'auto', overflowX: 'hidden' } },
                 filteredSkus.length ? filteredSkus.map(s => renderSkuItem(s)) : h('div', { style: { padding: '16px 6px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy SKU phù hợp.')
@@ -3223,7 +3274,8 @@ class Component extends DCLogic {
     const skuGroupF = this.state.ruleSkuGroup || 'all';
     const activeFilterBtn = filterBtns.find(f => f.id === skuGroupF) || filterBtns[0];
     const skuQ = (this.state.ruleSkuQ || '').toLowerCase();
-    const filteredSkus = skus.filter(s => (s.source || 'ECP').toLowerCase() === skuSourceF && activeFilterBtn.test(s) && (!skuQ || s.code.toLowerCase().includes(skuQ) || s.name.toLowerCase().includes(skuQ)));
+    const pkgLbl = this.PKG_SKU_PICKER_LABELS();
+    const filteredSkus = skus.filter(s => (s.source || 'ECP').toLowerCase() === skuSourceF && activeFilterBtn.test(s) && (!skuQ || pkgLbl.match(s, skuQ)));
     const toggleSku = code => { const next = selectedSkus.includes(code) ? selectedSkus.filter(c => c !== code) : [...selectedSkus, code]; this.setState({ ruleSkuSelected: next }); };
     const bannerOptions = ['Banner Hero Hè 2026', 'Banner Wi-Fi 7', 'Banner Camera AI', 'Banner Thanh toán An Tâm', 'Banner Cảm ơn', 'Banner Tải App HiFPT'];
     const popupOptions = ['Popup Flash Sale', 'Popup Camera AI', 'Popup Ưu đãi Thanh toán', 'Popup Nhập mã KM', 'Popup Tri ân Khách hàng'];
@@ -3278,7 +3330,7 @@ class Component extends DCLogic {
                 h(DS.Checkbox, { label: 'Chọn tất cả', checked: !!this.state.ruleSkuCheckAll, onChange: v => this.setState({ ruleSkuCheckAll: v, ruleSkuSelected: v ? filteredSkus.map(s => s.code) : [] }) })
               ),
               h('div', { style: { marginBottom: 8 } },
-                h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.ruleSkuQ || '', onChange: e => this.setState({ ruleSkuQ: e.target ? e.target.value : e }) })
+                h(DS.Input, { placeholder: 'Lọc tên hiển thị/route name...', leadingIcon: 'search-medium-line', value: this.state.ruleSkuQ || '', onChange: e => this.setState({ ruleSkuQ: e.target ? e.target.value : e }) })
               ),
 
               // ── Bậc 2 (phụ): danh mục sản phẩm — chip nhỏ, thuộc phạm vi tab nguồn đang chọn ──
@@ -3289,9 +3341,10 @@ class Component extends DCLogic {
               h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 200, overflowY: 'auto', overflowX: 'hidden' } },
                 filteredSkus.length ? filteredSkus.map(s => { const isSel = selectedSkus.includes(s.code); return h('div', { key: s.code, onClick: () => toggleSku(s.code), style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2, background: isSel ? 'var(--color-accent-bg)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent' } },
                   h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(s.code), label: '' })),
-                  h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', fontWeight: 700 } }, s.code),
-                  h('span', { style: { fontSize: 12.5 } }, s.name),
-                  h('span', { style: { flex: 1 } }),
+                  h('div', { style: { flex: 1, minWidth: 0 } },
+                    h('div', { style: { fontSize: 12.5, fontWeight: 700, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(s.code).name || '—'),
+                    h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(s.code).route || '—')
+                  ),
                   h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface)', padding: '1px 6px', borderRadius: 4, fontWeight: 500 } }, s.group)
                 ); }) : h('div', { style: { padding: '16px 6px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy SKU phù hợp.')
               )
@@ -5123,11 +5176,12 @@ class Component extends DCLogic {
       const isSA = s.blkDataSource === 'goi-sa';
       const kindLabel = isSA ? 'gói SA' : 'gói Internet';
       const skuSource = s.blkSkuSource || 'ecp';
+      const pkgLbl = this.PKG_SKU_PICKER_LABELS();
       const q = (s.blkPickerSearch || '').toLowerCase();
       const flt = this.SKUS().filter(x => x.status === 'active' && x.kind === 'Dịch vụ'
         && (isSA ? x.group === 'Truyền hình' : x.group === 'Internet')
         && (x.source || 'ECP').toLowerCase() === skuSource
-        && (!q || x.code.toLowerCase().includes(q) || x.name.toLowerCase().includes(q)));
+        && (!q || pkgLbl.match(x, q)));
       const sel = s.blkPickerSelected || {};
       const selCount = Object.keys(sel).filter(c => sel[c]).length;
       const allChk = flt.length > 0 && flt.every(x => sel[x.code]);
@@ -5154,7 +5208,7 @@ class Component extends DCLogic {
               }, t.label);
             })
           ),
-          h(DS.Input, { placeholder: 'Tìm kiếm theo mã/tên gói...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch || '', onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) }),
+          h(DS.Input, { placeholder: 'Tìm theo tên hiển thị/route name...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch || '', onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) }),
           h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChk, onChange: v => this.setState(sv => {
             const ns = Object.assign({}, sv.blkPickerSelected);
             flt.forEach(x => { v ? (ns[x.code] = true) : delete ns[x.code]; });
@@ -5167,10 +5221,10 @@ class Component extends DCLogic {
                 h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggle(sku.code) })),
                 h('div', { style: { flex: 1, minWidth: 0 } },
                   h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 1 } },
-                    h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+                    h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(sku.code).name || '—'),
                     h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
                   ),
-                  h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name),
+                  h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(sku.code).route || '—'),
                   h('div', { style: { fontSize: 11.5, fontWeight: 600, color: 'var(--color-success-text, #10b981)' } }, sku.price)
                 )
               );
@@ -5202,9 +5256,10 @@ class Component extends DCLogic {
       const isInternetSku = x => x.group === 'Internet' && x.kind === 'Dịch vụ';
       const isSaSku = x => x.group === 'Truyền hình' && x.kind === 'Dịch vụ';
       const scopeMatch = s.blkDataSource === 'camera' ? isCameraSku : x => !isCameraSku(x) && !isInternetSku(x) && !isSaSku(x);
+      const pkgLbl = this.PKG_SKU_PICKER_LABELS();
       const q = (s.blkPickerSearch || '').toLowerCase();
       const flt = this.SKUS().filter(x => x.status === 'active' && (x.source || 'ECP').toLowerCase() === skuSource)
-        .filter(x => scopeMatch(x) && (!q || x.code.toLowerCase().includes(q) || x.name.toLowerCase().includes(q)));
+        .filter(x => scopeMatch(x) && (!q || pkgLbl.match(x, q)));
       const existingCodes = new Set(s.blkCards.map(c => c.pdh).filter(Boolean));
       const sel = s.blkPickerSelected;
       const selectable = flt.filter(x => !existingCodes.has(x.code));
@@ -5233,7 +5288,7 @@ class Component extends DCLogic {
               }, t.label);
             })
           ),
-          h(DS.Input, { placeholder: 'Tìm kiếm theo mã/tên gói...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch || '', onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) }),
+          h(DS.Input, { placeholder: 'Tìm theo tên hiển thị/route name...', leadingIcon: 'search-medium-line', value: s.blkPickerSearch || '', onChange: e => this.setState({ blkPickerSearch: e.target ? e.target.value : e }) }),
           h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChk, onChange: v => this.setState({ blkPickerSelected: v ? Object.fromEntries(selectable.map(x => [x.code, true])) : {} }) }),
           h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 320, overflowY: 'auto', overflowX: 'hidden', border: '1px solid var(--color-border)', borderRadius: 8, padding: 6 } },
             flt.length ? flt.map(sku => {
@@ -5244,11 +5299,11 @@ class Component extends DCLogic {
                 h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, disabled: already, onChange: toggle })),
                 h('div', { style: { flex: 1, minWidth: 0 } },
                   h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 1 } },
-                    h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+                    h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(sku.code).name || '—'),
                     h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group),
                     already && h('span', { style: { fontSize: 10, fontWeight: 600, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 6px', borderRadius: 4, marginLeft: 'auto' } }, 'Đã thêm')
                   ),
-                  h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name),
+                  h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(sku.code).route || '—'),
                   h('div', { style: { fontSize: 11.5, fontWeight: 600, color: 'var(--color-success-text, #10b981)' } }, sku.price)
                 )
               );
@@ -5303,7 +5358,7 @@ class Component extends DCLogic {
           boxShadow: '0px 1px 6px rgba(0,0,0,0.03), 0px 2px 12px rgba(16,24,40,0.06)',
           border: '1px solid #E7E7E7',
           overflow: 'hidden',
-          fontFamily: "'SF Pro Display',-apple-system,BlinkMacSystemFont,sans-serif",
+          fontFamily: 'var(--font-sans)',
           display: 'flex',
           flexDirection: 'column',
           boxSizing: 'border-box'
@@ -5439,7 +5494,7 @@ class Component extends DCLogic {
             h('line', { x1: '12', y1: '8', x2: '12', y2: '12', stroke: '#4564ED', strokeWidth: '1.5', strokeLinecap: 'round' }),
             h('line', { x1: '12', y1: '16', x2: '12.01', y2: '16', stroke: '#4564ED', strokeWidth: '2', strokeLinecap: 'round' })
           ),
-          h('span', { style: { fontSize: 11, color: '#4564ED', lineHeight: 1.55, fontFamily: "'SF Pro Display',-apple-system,sans-serif" } },
+          h('span', { style: { fontSize: 11, color: '#4564ED', lineHeight: 1.55, fontFamily: 'var(--font-sans)' } },
             'Chỉ hiển thị demo — giao diện thực tế có thể khác tùy theme và ảnh gói cước.'
           )
         )
@@ -11404,10 +11459,11 @@ class Component extends DCLogic {
       { id: 'other', label: 'Thiết bị khác', match: s => !isInternetSku(s) && !isCameraSku(s) && !isSaSku(s) },
     ];
     const activeCatDef = catDefs.find(c => c.id === filter) || catDefs[0];
+    const pkgLbl = this.PKG_SKU_PICKER_LABELS();
     const allSkus = this.SKUS().filter(s => s.status === 'active' && (s.source || 'ECP').toLowerCase() === skuSource);
     const filteredSkus = allSkus.filter(s => {
       if (!activeCatDef.match(s)) return false;
-      if (search && !s.code.toLowerCase().includes(search) && !s.name.toLowerCase().includes(search)) return false;
+      if (search && !pkgLbl.match(s, search)) return false;
       return true;
     });
     const toggleSku = code => {
@@ -11423,10 +11479,10 @@ class Component extends DCLogic {
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
-            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+            h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(sku.code).name || '—'),
             h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
           ),
-          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
+          h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(sku.code).route || '—')
         )
       );
     };
@@ -11454,7 +11510,7 @@ class Component extends DCLogic {
         })
       ),
       h('div', { style: { marginBottom: 8 } },
-        h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.payEdSkuSearch || '', onChange: e => this.setState({ payEdSkuSearch: e.target ? e.target.value : e }) })
+        h(DS.Input, { placeholder: 'Lọc tên hiển thị/route name...', leadingIcon: 'search-medium-line', value: this.state.payEdSkuSearch || '', onChange: e => this.setState({ payEdSkuSearch: e.target ? e.target.value : e }) })
       ),
       h('div', { style: { fontSize: 9.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 } }, 'Danh mục'),
       h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
@@ -11952,10 +12008,11 @@ class Component extends DCLogic {
       { id: 'other', label: 'Thiết bị khác', match: s => !isInternetSku(s) && !isCameraSku(s) && !isSaSku(s) },
     ];
     const activeCatDef = catDefs.find(c => c.id === filter) || catDefs[0];
+    const pkgLbl = this.PKG_SKU_PICKER_LABELS();
     const allSkus = this.SKUS().filter(s => s.status === 'active' && (s.source || 'ECP').toLowerCase() === skuSource);
     const filteredSkus = allSkus.filter(s => {
       if (!activeCatDef.match(s)) return false;
-      if (search && !s.code.toLowerCase().includes(search) && !s.name.toLowerCase().includes(search)) return false;
+      if (search && !pkgLbl.match(s, search)) return false;
       return true;
     });
     const toggleSku = code => {
@@ -11971,10 +12028,10 @@ class Component extends DCLogic {
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
-            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+            h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(sku.code).name || '—'),
             h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
           ),
-          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
+          h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(sku.code).route || '—')
         )
       );
     };
@@ -12002,7 +12059,7 @@ class Component extends DCLogic {
         })
       ),
       h('div', { style: { marginBottom: 8 } },
-        h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.newsSeoSkuSearch || '', onChange: e => this.setState({ newsSeoSkuSearch: e.target ? e.target.value : e }) })
+        h(DS.Input, { placeholder: 'Lọc tên hiển thị/route name...', leadingIcon: 'search-medium-line', value: this.state.newsSeoSkuSearch || '', onChange: e => this.setState({ newsSeoSkuSearch: e.target ? e.target.value : e }) })
       ),
       h('div', { style: { fontSize: 9.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 } }, 'Danh mục'),
       h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
@@ -12442,10 +12499,11 @@ class Component extends DCLogic {
       { id: 'other', label: 'Thiết bị khác', match: s => !isInternetSku(s) && !isCameraSku(s) && !isSaSku(s) },
     ];
     const activeCatDef = catDefs.find(c => c.id === filter) || catDefs[0];
+    const pkgLbl = this.PKG_SKU_PICKER_LABELS();
     const allSkus = this.SKUS().filter(s => s.status === 'active' && (s.source || 'ECP').toLowerCase() === skuSource);
     const filteredSkus = allSkus.filter(s => {
       if (!activeCatDef.match(s)) return false;
-      if (search && !s.code.toLowerCase().includes(search) && !s.name.toLowerCase().includes(search)) return false;
+      if (search && !pkgLbl.match(s, search)) return false;
       return true;
     });
     const toggleSku = code => {
@@ -12461,10 +12519,10 @@ class Component extends DCLogic {
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
-            h('span', { style: { fontWeight: 700, fontSize: 12.5, fontFamily: 'var(--font-dev)', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, sku.code),
+            h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(sku.code).name || '—'),
             h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
           ),
-          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, sku.name)
+          h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(sku.code).route || '—')
         )
       );
     };
@@ -12492,7 +12550,7 @@ class Component extends DCLogic {
         })
       ),
       h('div', { style: { marginBottom: 8 } },
-        h(DS.Input, { placeholder: 'Lọc mã/tên SKU...', leadingIcon: 'search-medium-line', value: this.state.newsCatSkuSearch || '', onChange: e => this.setState({ newsCatSkuSearch: e.target ? e.target.value : e }) })
+        h(DS.Input, { placeholder: 'Lọc tên hiển thị/route name...', leadingIcon: 'search-medium-line', value: this.state.newsCatSkuSearch || '', onChange: e => this.setState({ newsCatSkuSearch: e.target ? e.target.value : e }) })
       ),
       h('div', { style: { fontSize: 9.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 } }, 'Danh mục'),
       h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
@@ -13097,45 +13155,45 @@ class Component extends DCLogic {
   }
   SALES_REPORT_ONLINE_ORDERS_DEMO() {
     const rows = [
-      [1,"23/09/2026","23:58:59",null,"HCMPN0068WIR","0912345671","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [2,"23/09/2026","23:55:33",null,"NDHPN0068WIO","0987654321","NGUYỄN THỊ CHINH",null,"Nam","Nhà Phố",null,"Ninh Bình - Nam Định","12.Đông Bắc Bộ","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"NOT OK","","","","NDD020734","Hủy","FPT Play","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Play","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
-      [3,"23/09/2026","23:55:18",null,"HCMPN0068WIN","0932112233","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [4,"23/09/2026","23:53:51",null,"NDHPN0068WIM","0977889900","NGUYỄN THỊ CHINH",null,"Nam","Nhà Phố",null,"Ninh Bình - Nam Định","12.Đông Bắc Bộ","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"OK","","","","NDD020734","Hủy","FPT Play","","","",0,"","",null,"23/09/2026 17:10:08",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Play","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
-      [5,"23/09/2026","23:52:00",null,"HCMPN0068WII","0909123456","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Momo","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFU0764","Đã hoàn tất","Ultra Fast Stand Alone","","","",39900,"","",null,null,-7,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [6,"23/09/2026","23:51:32",null,"HUEPN0068WIG","0865123789","TRẦN THỊ BÍCH LIÊN",null,"Nam","Nhà Phố",null,"Huế","13.Tây Nguyên - Miền Trung","Thanh toán khi triển khai","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HUFD53189","Đã hoàn tất","Combo","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet,FPT Play","https://hifpt-api.fpt.net","Nâng cấp",null,null,null,null,null],
-      [7,"23/09/2026","23:50:40",null,"HCMPN0068WIE","0798456123","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Napas","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",39900,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [8,"23/09/2026","23:49:59",null,"HCMPN0068WID","0703214567","Liên chí nguyện",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Foxpay-Quoc te","HiFPT-Foxpay-Quoc te","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFU0731","Đã hoàn tất","Pay Wifi","","","",150000,"","",null,null,-6.97,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Pay Wifi","hifpt-wekit","Bán mới",null,null,null,null,null],
-      [9,"23/09/2026","23:49:52",null,"HCMPN0068WIC","0356789012","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Foxpay-Noi dia","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",39900,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [10,"23/09/2026","23:49:50",null,"HCMPN0068WIB","0583214569","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [11,"23/09/2026","23:46:16",null,"HNIPN0068WI9","0912908765","Do Thi Bich Nham",null,"Nam","Nhà Phố",null,"Hà Nội","01.Hà Nội","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","","HND355117","Đã cập nhật thông tin khách hàng","FPT Camera Combo","","","",0,"","",null,"23/09/2026 17:00:09",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
+      [1,"23/09/2026","23:58:59",null,"HCMPN0068WIR","0912345671","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [2,"23/09/2026","23:55:33",null,"NDHPN0068WIO","0987654321","NGUYỄN THỊ CHINH",null,"Nam","Nhà Phố",null,"Ninh Bình - Nam Định","12.Đông Bắc Bộ","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"NOT OK","","","","NDD020734","Hủy","FPT Play","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Play","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
+      [3,"23/09/2026","23:55:18",null,"HCMPN0068WIN","0932112233","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [4,"23/09/2026","23:53:51",null,"NDHPN0068WIM","0977889900","NGUYỄN THỊ CHINH",null,"Nam","Nhà Phố",null,"Ninh Bình - Nam Định","12.Đông Bắc Bộ","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"OK","","","","NDD020734","Hủy","FPT Play","","","",0,"","",null,"23/09/2026 17:10:08",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Play","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
+      [5,"23/09/2026","23:52:00",null,"HCMPN0068WII","0909123456","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Momo","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFU0764","Đã hoàn tất","Ultra Fast Stand Alone","","","",39900,"","",null,null,-7,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [6,"23/09/2026","23:51:32",null,"HUEPN0068WIG","0865123789","TRẦN THỊ BÍCH LIÊN",null,"Nam","Nhà Phố",null,"Huế","13.Tây Nguyên - Miền Trung","Thanh toán khi triển khai","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HUFD53189","Đã hoàn tất","Combo","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet,FPT Play","https://hifpt-api.fpt.net","Nâng cấp",null,null,null,null,null],
+      [7,"23/09/2026","23:50:40",null,"HCMPN0068WIE","0798456123","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Napas","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",39900,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [8,"23/09/2026","23:49:59",null,"HCMPN0068WID","0703214567","Liên chí nguyện",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Foxpay-Quoc te","HiFPT-Foxpay-Quoc te","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFU0731","Đã hoàn tất","Pay Wifi","","","",150000,"","",null,null,-6.97,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Pay Wifi","hifpt-wekit","Bán mới",null,null,null,null,null],
+      [9,"23/09/2026","23:49:52",null,"HCMPN0068WIC","0356789012","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Foxpay-Noi dia","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",39900,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [10,"23/09/2026","23:49:50",null,"HCMPN0068WIB","0583214569","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [11,"23/09/2026","23:46:16",null,"HNIPN0068WI9","0912908765","Do Thi Bich Nham",null,"Nam","Nhà Phố",null,"Hà Nội","01.Hà Nội","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","","HND355117","Đã cập nhật thông tin khách hàng","FPT Camera Combo","","","",0,"","",null,"23/09/2026 17:00:09",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
       [12,"23/09/2026","23:45:45",null,"BGGPN0068WI8","0834567891","Test",null,"Nam","Nhà Phố",null,"Bắc Ninh - Bắc Giang","11.Tây Bắc Bộ","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Internet","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [13,"23/09/2026","23:43:26",null,"HNIPN0068WI6","0967123456","NGUYỄN ANH TÚ",null,"Nam","Nhà chung cư","BCC Hoang Duong","Hà Nội","01.Hà Nội","Thanh toán khi triển khai","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HNAEY5975","Đã hoàn tất","FPT Play","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Play","https://hifpt-api.fpt.net","Nâng cấp",null,null,null,null,null],
-      [14,"23/09/2026","23:42:18",null,"HNIPN0068WI5","0781234569","Bui Thi Phuong Thanh",null,"Nam","Nhà Phố",null,"Hà Nội","01.Hà Nội","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","",null,"Đã cập nhật thông tin khách hàng","Sản phẩm khác","Khách hàng tự hủy","","",0,"","",null,"23/09/2026 17:00:10",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Sản phẩm khác","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [15,"23/09/2026","23:42:17",null,"TBHPN0068WI4","0327891456","NGUYỄN MINH VƯƠNG",null,"Nam","Nhà không địa chỉ",null,"Hưng Yên - Thái Bình","12.Đông Bắc Bộ","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","","TBAAE4646","Đã cập nhật thông tin khách hàng","FPT Camera Combo","","","",0,"","",null,"23/09/2026 17:00:09",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
-      [16,"23/09/2026","23:41:48",null,"HCMPN0068WI2","0946123789","dai",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","ĐKOL","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null,null,null,null],
-      [17,"23/09/2026","23:41:38",null,"HCMPN0068WI1","0812345690","Nguyễn văn hưng",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","DKOL-ZaloPay","","Chưa thanh toán","ĐKOL","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",50000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null,null,null,null],
-      [18,"23/09/2026","23:41:15",null,"HCMPN0068WI0","0898765432","Nguyễn Trọng Thái",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","ĐKOL","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","",null,"Đã cập nhật thông tin khách hàng","Internet","Khách hàng tự hủy","","",0,"","",null,"23/09/2026 17:00:09",null,null,null,null,null,null,"internet/goi-meta",null,null,"HCM.ECOM.fptvn","Internet","fpt.vn","Bán mới",null,null,null,null,null],
-      [19,"23/09/2026","23:40:14",null,"HCMPN0068WHY","0369874521","Mạc Quang Khải",null,"Nam","Nhà chung cư","BCC Tara Residence","Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","AM","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Combo","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,"accesstrade",null,null,"ngoai-hang-anh/",null,"893cae625e464d419fd358007d52858e","HNI.Ducdv14","Internet,FPT Play","fpt.vn","Bán mới",null,null,null,null,null],
-      [20,"23/09/2026","23:40:08",null,"HCMPN0068WHX","0912456378","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [21,"23/09/2026","23:31:09",null,"HNIPN0068WHS","0708912345","NGUYỄN HỮU HOÀN",null,"Nữ","Nhà chung cư","CC Học viện Quân y","Hà Nội","01.Hà Nội","","","Chưa thanh toán","ĐKOL","OK","OK","NOT OK","NOT OK",null,"OK","","","","HNACA5028","Đã cập nhật thông tin khách hàng","FPT Play","","","",0,"","",null,"23/09/2026 16:50:09",null,null,null,"ldp_epl",null,null,null,null,null,"HCM.ECOM.fptvn","FPT Play","fpt.vn","Nâng cấp",null,null,null,null,null],
-      [22,"23/09/2026","23:31:06",null,"BDGPN0068WHR","0947896321","Hồ Minh Nhật",null,"Nam","Nhà Phố",null,"Hồ Chí Minh - Bình Dương","09.Bình Dương","Thanh toán khi triển khai","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","BDABC8713","Đã hoàn tất","Internet","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet","https://hifpt-api.fpt.net","Nâng cấp",null,null,null,null,null],
-      [23,"23/09/2026","23:31:05",null,"HCMPN0068WHQ","0879123456","Gkfjg",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","ĐKOL","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null,null,null,null],
-      [24,"23/09/2026","23:29:43",null,"HCMPN0068WHM","0938123457","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [25,"23/09/2026","23:29:07",null,"KHAPN0068WHL","0356124789","Lê Khắc Vĩnh Thuỵ",null,"Nam","Nhà chung cư","BCC Tòa Nhà CT6","Khánh Hòa","06.Khánh Hòa","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"NOT OK","","","","NTAAL5257","Hủy","Internet","","","",471500,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet","https://hifpt-api.fpt.net","Nâng cấp",null,null,null,null,null],
-      [26,"23/09/2026","23:27:26",null,"HCMPN0068WHI","0912345690","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",39900,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [27,"23/09/2026","23:27:07",null,"HCMPN0068WHH","0967895412","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [28,"23/09/2026","23:25:55",null,"HNIPN0068WHG","0823456781","Lê Trung Dương",null,"Nam","Nhà Phố",null,"Hà Nội","01.Hà Nội","Thanh toán khi triển khai","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HNAAM6172","Đang xử lý","FPT Camera Combo","","","",200000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
-      [29,"23/09/2026","23:25:47",null,"HCMPN0068WHF","0791234568","Nguyễn văn hưng",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","DKOL-ZaloPay","","Chưa thanh toán","ĐKOL","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",50000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null,null,null,null],
-      [30,"23/09/2026","23:25:18",null,"HCMPN0068WHC","0367891234","Nguyễn Minh Đức",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","Thanh toán khi triển khai","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFQ7138","Đang xử lý","FPT Camera Combo","","","",200000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
-      [31,"23/09/2026","23:23:26",null,"HPGPN0068WH9","0918273645","Bùi Trung Thành","26/08/1991","Nam","Nhà Phố",null,"Hải Phòng","04.Hải Phòng","HiFPT-Napas","HiFPT-Napas","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HPAAU2440","Đang xử lý","Internet","","","",299000,"","",null,null,-6.98,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [32,"23/09/2026","23:22:16",null,"HCMPN0068WH7","0938576412","NGUYỄN ĐỨC QUÝ",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"OK","","","",null,"Đã cập nhật thông tin khách hàng","FPT Camera Combo","Khách hàng tự hủy","","",550000,"","",null,"23/09/2026 16:40:08",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [33,"23/09/2026","23:22:01",null,"HCMPN0068WH6","0774125836","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [34,"23/09/2026","23:21:55",null,"HCMPN0068WH5","0369258147","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [35,"23/09/2026","23:21:52",null,"HCMPN0068WH4","0912837465","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [36,"23/09/2026","23:20:50",null,"HCMPN0068WH1","0987123456","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [37,"23/09/2026","23:19:58",null,"HCMPN0068WGZ","0345678912","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Napas","HiFPT-Napas","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFU0729","Đã hoàn tất","Ultra Fast Stand Alone","","","",39900,"","",null,null,-6.97,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [38,"23/09/2026","23:19:36",null,"HCMPN0068WGX","0798654123","Phương",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Combo","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet,FPT Play","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
-      [39,"23/09/2026","23:19:02",null,"HCMPN0068WGW","0912765438","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null]
+      [13,"23/09/2026","23:43:26",null,"HNIPN0068WI6","0967123456","NGUYỄN ANH TÚ",null,"Nam","Nhà chung cư","BCC Hoang Duong","Hà Nội","01.Hà Nội","Thanh toán khi triển khai","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HNAEY5975","Đã hoàn tất","FPT Play","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Play","https://hifpt-api.fpt.net","Nâng cấp",null,null,null,null,null],
+      [14,"23/09/2026","23:42:18",null,"HNIPN0068WI5","0781234569","Bui Thi Phuong Thanh",null,"Nam","Nhà Phố",null,"Hà Nội","01.Hà Nội","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","",null,"Đã cập nhật thông tin khách hàng","Sản phẩm khác","Khách hàng tự hủy","","",0,"","",null,"23/09/2026 17:00:10",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Sản phẩm khác","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [15,"23/09/2026","23:42:17",null,"TBHPN0068WI4","0327891456","NGUYỄN MINH VƯƠNG",null,"Nam","Nhà không địa chỉ",null,"Hưng Yên - Thái Bình","12.Đông Bắc Bộ","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","","TBAAE4646","Đã cập nhật thông tin khách hàng","FPT Camera Combo","","","",0,"","",null,"23/09/2026 17:00:09",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
+      [16,"23/09/2026","23:41:48",null,"HCMPN0068WI2","0946123789","dai",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","ĐKOL","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null,null,null,null],
+      [17,"23/09/2026","23:41:38",null,"HCMPN0068WI1","0812345690","Nguyễn văn hưng",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","DKOL-ZaloPay","","Chưa thanh toán","ĐKOL","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",50000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null,null,null,null],
+      [18,"23/09/2026","23:41:15",null,"HCMPN0068WI0","0898765432","Nguyễn Trọng Thái",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","ĐKOL","OK","NOT OK","NOT OK","NOT OK",null,"OK","","","",null,"Đã cập nhật thông tin khách hàng","Internet","Khách hàng tự hủy","","",0,"","",null,"23/09/2026 17:00:09",null,null,null,null,null,null,"internet/goi-meta",null,null,"HCM.ECOM.fptvn","Internet","fpt.vn","Bán mới",null,null,null,null,null],
+      [19,"23/09/2026","23:40:14",null,"HCMPN0068WHY","0369874521","Mạc Quang Khải",null,"Nam","Nhà chung cư","BCC Tara Residence","Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","AM","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Combo","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,"accesstrade",null,null,"ngoai-hang-anh/",null,"893cae625e464d419fd358007d52858e","HNI.Ducdv14","Internet,FPT Play","fpt.vn","Bán mới",null,null,null,null,null],
+      [20,"23/09/2026","23:40:08",null,"HCMPN0068WHX","0912456378","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [21,"23/09/2026","23:31:09",null,"HNIPN0068WHS","0708912345","NGUYỄN HỮU HOÀN",null,"Nữ","Nhà chung cư","CC Học viện Quân y","Hà Nội","01.Hà Nội","","","Chưa thanh toán","ĐKOL","OK","OK","NOT OK","NOT OK",null,"OK","","","","HNACA5028","Đã cập nhật thông tin khách hàng","FPT Play","","","",0,"","",null,"23/09/2026 16:50:09",null,null,null,"ldp_epl",null,null,null,null,null,"HCM.ECOM.fptvn","FPT Play","fpt.vn","Nâng cấp",null,null,null,null,null],
+      [22,"23/09/2026","23:31:06",null,"BDGPN0068WHR","0947896321","Hồ Minh Nhật",null,"Nam","Nhà Phố",null,"Hồ Chí Minh - Bình Dương","09.Bình Dương","Thanh toán khi triển khai","","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","BDABC8713","Đã hoàn tất","Internet","","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet","https://hifpt-api.fpt.net","Nâng cấp",null,null,null,null,null],
+      [23,"23/09/2026","23:31:05",null,"HCMPN0068WHQ","0879123456","Gkfjg",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","ĐKOL","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null,null,null,null],
+      [24,"23/09/2026","23:29:43",null,"HCMPN0068WHM","0938123457","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [25,"23/09/2026","23:29:07",null,"KHAPN0068WHL","0356124789","Lê Khắc Vĩnh Thuỵ",null,"Nam","Nhà chung cư","BCC Tòa Nhà CT6","Khánh Hòa","06.Khánh Hòa","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"NOT OK","","","","NTAAL5257","Hủy","Internet","","","",471500,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet","https://hifpt-api.fpt.net","Nâng cấp",null,null,null,null,null],
+      [26,"23/09/2026","23:27:26",null,"HCMPN0068WHI","0912345690","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",39900,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [27,"23/09/2026","23:27:07",null,"HCMPN0068WHH","0967895412","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [28,"23/09/2026","23:25:55",null,"HNIPN0068WHG","0823456781","Lê Trung Dương",null,"Nam","Nhà Phố",null,"Hà Nội","01.Hà Nội","Thanh toán khi triển khai","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HNAAM6172","Đang xử lý","FPT Camera Combo","","","",200000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
+      [29,"23/09/2026","23:25:47",null,"HCMPN0068WHF","0791234568","Nguyễn văn hưng",null,"Nam","Nhà chung cư","PP Ky Tuc Xa Vin CG2","Hồ Chí Minh","07.Hồ Chí Minh","DKOL-ZaloPay","","Chưa thanh toán","ĐKOL","OK","OK","Chấp nhận TT","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Prepaid 3","Khách hàng tự hủy","","",50000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.fptvn","25","fpt.vn","Bán thêm",null,null,null,null,null],
+      [30,"23/09/2026","23:25:18",null,"HCMPN0068WHC","0367891234","Nguyễn Minh Đức",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","Thanh toán khi triển khai","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFQ7138","Đang xử lý","FPT Camera Combo","","","",200000,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán thêm",null,null,null,null,null],
+      [31,"23/09/2026","23:23:26",null,"HPGPN0068WH9","0918273645","Bùi Trung Thành","26/08/1991","Nam","Nhà Phố",null,"Hải Phòng","04.Hải Phòng","HiFPT-Napas","HiFPT-Napas","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","HPAAU2440","Đang xử lý","Internet","","","",299000,"","",null,null,-6.98,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [32,"23/09/2026","23:22:16",null,"HCMPN0068WH7","0938576412","NGUYỄN ĐỨC QUÝ",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","OK","NOT OK","NOT OK",null,"OK","","","",null,"Đã cập nhật thông tin khách hàng","FPT Camera Combo","Khách hàng tự hủy","","",550000,"","",null,"23/09/2026 16:40:08",null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","FPT Camera Combo","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [33,"23/09/2026","23:22:01",null,"HCMPN0068WH6","0774125836","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [34,"23/09/2026","23:21:55",null,"HCMPN0068WH5","0369258147","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [35,"23/09/2026","23:21:52",null,"HCMPN0068WH4","0912837465","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [36,"23/09/2026","23:20:50",null,"HCMPN0068WH1","0987123456","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [37,"23/09/2026","23:19:58",null,"HCMPN0068WGZ","0345678912","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","HiFPT-Napas","HiFPT-Napas","Đã thanh toán","Khách bình thường ở HIFPT","OK","OK","OK","OK",null,"Toàn trình","","","","SGAFU0729","Đã hoàn tất","Ultra Fast Stand Alone","","","",39900,"","",null,null,-6.97,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [38,"23/09/2026","23:19:36",null,"HCMPN0068WGX","0798654123","Phương",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Combo","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Internet,FPT Play","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null],
+      [39,"23/09/2026","23:19:02",null,"HCMPN0068WGW","0912765438","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null]
     ];
     const keys = this.salesReportOnlineOrderFieldDefs().map(d => d[0]);
     return rows.map((r, i) => {
