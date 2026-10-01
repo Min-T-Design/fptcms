@@ -1673,15 +1673,37 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const owners = this.PKG_ROUTE_OWNERS(val, r.id);
     if (!owners.length) return;
+    const chName = x => { const ch = this.PKG_CHANNELS().find(c => c.id === x.channel); return ch ? ch.name : ''; };
+    const pkgName = x => x.displayName || x.skuCode;
+    const pkgSub = x => x.skuCode + (chName(x) ? ' · ' + chName(x) : '');
+    const strong = t => h('strong', { style: { fontWeight: 700, color: 'var(--color-text)' } }, t);
+    // Hàng "nhãn — giá trị" trong khối thông tin: nhãn cố định bên trái, giá trị bên phải.
+    const row = (k, v) => h('div', { style: { display: 'flex', gap: 12, alignItems: 'baseline' } },
+      h('div', { style: { width: 100, flexShrink: 0, fontSize: 13, color: 'var(--color-text-subtle)' } }, k),
+      h('div', { style: { flex: 1, minWidth: 0 } }, v));
+    const step = (icon, color, content) => h('div', { style: { display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13.5, lineHeight: 1.5, color: 'var(--color-text-muted)' } },
+      h(DS.Icon, { name: icon, size: 16, color, style: { flexShrink: 0, marginTop: 2 } }), h('div', null, content));
     this.openModal({
-      title: 'Đã tồn tại route name',
-      description: h(React.Fragment, null,
-        'Route name ', h('strong', { style: { fontWeight: 700, color: 'var(--color-text)' } }, '"' + val + '"'),
-        ' hiện đang được sử dụng cho gói ', h('strong', { style: { fontWeight: 700, color: 'var(--color-text)' } }, owners.map(o => this.PKG_ROUTE_LABEL(o)).join(', ')),
-        '. Mỗi route name chỉ được dùng cho một gói — nếu tiếp tục, hệ thống sẽ xóa route name khỏi gói cũ và gán cho gói hiện tại.'),
-      render: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 } },
-        h(DS.Button, { level: 'primary', onClick: () => this.setState({ modal: null, pkgRouteConfirmed: val.toLowerCase() }) }, 'Xác nhận'),
-        h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy')
+      title: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8 } },
+        h(DS.Icon, { name: 'alert-triangle-line', size: 22, color: 'var(--color-warning-text)', style: { flexShrink: 0 } }), 'Đã tồn tại route name'),
+      description: 'Route name này đang được gán cho một gói khác.',
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', borderRadius: 10, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border-pale)' } },
+          row('Route name', h('span', { style: { fontSize: 15, fontWeight: 700, color: 'var(--color-danger-text)', wordBreak: 'break-all' } }, '"' + val + '"')),
+          row('Gói đang dùng', h('div', null,
+            owners.map((o, i) => h('div', { key: i, style: { marginTop: i ? 6 : 0 } },
+              h('div', { style: { fontSize: 14, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.4 } }, pkgName(o)),
+              h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, pkgSub(o))))))
+        ),
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+          h('div', { style: { fontSize: 13, fontWeight: 700, color: 'var(--color-text)' } }, 'Nếu tiếp tục:'),
+          step('x-circle-line', 'var(--color-danger-text)', ['Route name sẽ bị ', strong('xóa khỏi gói cũ'), ' (gói cũ để trống).']),
+          step('check-circle-line', 'var(--color-success-text)', ['Route name được ', strong('gán cho gói hiện tại'), ' — ', strong(pkgName(r)), '.'])
+        ),
+        h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 } },
+          h(DS.Button, { level: 'primary', onClick: () => this.setState({ modal: null, pkgRouteConfirmed: val.toLowerCase() }) }, 'Xác nhận'),
+          h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy')
+        )
       )
     });
   }
