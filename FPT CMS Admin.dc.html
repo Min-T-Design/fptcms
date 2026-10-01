@@ -991,13 +991,25 @@ class Component extends DCLogic {
       phi: 'PLĐ Net',
     };
   }
-  // ── Route name (QLCS) — FCP sync sẵn giá trị, ECP để trống; cả 2 trường hợp chỉ được thêm/sửa đúng 1 lần (sau khi xác nhận sẽ khóa) ──
-  PKG_ROUTE_DEFAULT(sku) { return sku && (sku.source || 'ECP') === 'FCP' ? sku.code.toLowerCase() : ''; }
-  PKG_ROUTE_LOCKED(code) { return !!(this.state.pkgRouteSaved && Object.prototype.hasOwnProperty.call(this.state.pkgRouteSaved, code)); }
-  PKG_ROUTE_OF(sku) { return sku ? (this.PKG_ROUTE_LOCKED(sku.code) ? this.state.pkgRouteSaved[sku.code] : this.PKG_ROUTE_DEFAULT(sku)) : ''; }
-  PKG_ROUTE_DUP(value, code) {
+  // ── Route name — gắn theo từng dòng nội dung sản phẩm (SKU × kênh bán), không gắn theo SKU: mỗi dòng 1 route name riêng, không được trùng nhau.
+  // FCP sync sẵn giá trị (mã SKU + kênh), ECP để trống; admin tự do chỉnh sửa. Trùng route name của dòng khác → hỏi chuyển route name từ gói cũ sang gói mới.
+  PKG_ROUTE_DEFAULT(r) {
+    const sku = r ? this.SKUS().find(s => s.code === r.skuCode) : null;
+    return sku && (sku.source || 'ECP') === 'FCP' ? (r.skuCode + '-' + r.channel).toLowerCase() : '';
+  }
+  PKG_ROUTE_OF(r) {
+    if (!r) return '';
+    const m = this.state.pkgRouteSaved;
+    return m && Object.prototype.hasOwnProperty.call(m, r.id) ? m[r.id] : this.PKG_ROUTE_DEFAULT(r);
+  }
+  // Các dòng khác (khác `id`) đang giữ route name `value` (không phân biệt hoa thường).
+  PKG_ROUTE_OWNERS(value, id) {
     const v = (value || '').trim().toLowerCase();
-    return !!v && this.SKUS().some(s => s.code !== code && (this.PKG_ROUTE_OF(s) || '').trim().toLowerCase() === v);
+    return v ? this.PKG_CONTENTS().filter(x => x.id !== id && (this.PKG_ROUTE_OF(x) || '').trim().toLowerCase() === v) : [];
+  }
+  PKG_ROUTE_LABEL(x) {
+    const ch = this.PKG_CHANNELS().find(c => c.id === x.channel);
+    return (x.displayName || x.skuCode) + ' (' + x.skuCode + (ch ? ' · ' + ch.name : '') + ')';
   }
   PROMO_ICONS() { return ['star-01-line', 'stars-01-line', 'zap-line', 'check-circle-line', 'heart-line']; }
   PKG_CONTENTS() {
@@ -1289,8 +1301,7 @@ class Component extends DCLogic {
     };
   }
   openSkuEditor(r) {
-    const sku = r ? this.SKUS().find(s => s.code === r.skuCode) : null;
-    this.setState({ skuEditor: r, skuEditorTab: 'attrs', pkgForm: this.seedPkgForm(r), pkgTagEnabled: undefined, pkgTagBadgeId: undefined, pkgRouteErr: false, pkgRouteInput: this.PKG_ROUTE_OF(sku) });
+    this.setState({ skuEditor: r, skuEditorTab: 'attrs', pkgForm: this.seedPkgForm(r), pkgTagEnabled: undefined, pkgTagBadgeId: undefined, pkgRouteErr: false, pkgRouteConfirmed: undefined, pkgRouteInput: this.PKG_ROUTE_OF(r) });
   }
 
   renderSku() {
@@ -1307,7 +1318,7 @@ class Component extends DCLogic {
       const matchQ = !q || (r.displayName + ' ' + r.skuCode + ' ' + (sku ? sku.name : '')).toLowerCase().includes(q);
       const matchType = typeF === 'all' || (sku && this.PKG_TYPE_CATEGORY(sku) === typeF);
       const matchSource = sourceF === 'all' || (sku && (sku.source || 'ECP') === sourceF);
-      const matchRoute = !routeQ || (this.PKG_ROUTE_OF(sku) || '').toLowerCase().includes(routeQ);
+      const matchRoute = !routeQ || (this.PKG_ROUTE_OF(r) || '').toLowerCase().includes(routeQ);
       return matchQ && matchType && matchSource && matchRoute;
     });
     const sliced = this.sliceData(data, 'pkg');
@@ -1326,7 +1337,7 @@ class Component extends DCLogic {
           );
         } },
       { key: 'route', header: 'Route name', width: 180,
-        render: (_, r) => { const rn = this.PKG_ROUTE_OF(skuByCode.get(r.skuCode)); return rn ? h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, fontWeight: 500 } }, rn) : h('span', { style: { color: 'var(--color-text-subtle)' } }, '—'); } },
+        render: (_, r) => { const rn = this.PKG_ROUTE_OF(r); return rn ? h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, fontWeight: 500 } }, rn) : h('span', { style: { color: 'var(--color-text-subtle)' } }, '—'); } },
       { key: 'type', header: 'Loại sản phẩm', width: 140,
         render: (_, r) => { const sku = skuByCode.get(r.skuCode); const cat = this.PKG_TYPE_CATEGORY(sku); return h(DS.Badge, { theme: this.PKG_TYPE_THEME(cat) }, cat || '—'); } },
       { key: 'source', header: 'Hệ thống', width: 100,
@@ -1392,7 +1403,7 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Gói bán từ PDH', sku ? (sku.name + ' (' + sku.code + ')') : r.skuCode),
         this.detailRow('Hệ thống', sku ? h(DS.Badge, { theme: this.PKG_SOURCE_THEME(sku.source || 'ECP') }, sku.source || 'ECP') : '—'),
-        this.detailRow('Route name', this.PKG_ROUTE_OF(sku) || '—'),
+        this.detailRow('Route name', this.PKG_ROUTE_OF(r) || '—'),
         this.detailRow('Loại sản phẩm', r.packageType || '—'),
         this.detailRow('Giá Min', sku ? this.PKG_QLCS_META(sku).giaMin : '—'),
         this.detailRow('Giá Max', sku ? this.PKG_QLCS_META(sku).giaMax : '—'),
@@ -1573,37 +1584,29 @@ class Component extends DCLogic {
       this.toast('success', isNew ? 'Đã tạo nội dung sản phẩm' : 'Đã lưu nội dung sản phẩm', label + ' đã được cập nhật.');
     };
     const onSave = () => {
-      const sku = r ? this.SKUS().find(s => s.code === r.skuCode) : null;
-      // Route name chỉ được thêm/sửa 1 lần: chỉ xét khi chưa khóa, có nhập giá trị và khác giá trị đồng bộ ban đầu (FCP có sẵn / ECP trống).
-      if (sku && !this.PKG_ROUTE_LOCKED(sku.code)) {
+      if (r) {
         const val = (this.state.pkgRouteInput || '').trim();
         if (!val) {
           this.setState({ skuEditorTab: 'attrs', pkgRouteErr: true });
           this.toast('danger', 'Thiếu thông tin', 'Vui lòng nhập Route name.');
           return;
         }
-        if (val !== this.PKG_ROUTE_DEFAULT(sku)) {
-          if (this.PKG_ROUTE_DUP(val, sku.code)) {
+        const owners = this.PKG_ROUTE_OWNERS(val, r.id);
+        if (owners.length) {
+          // Trùng route name: phải xác nhận chuyển từ gói cũ sang gói mới mới được lưu.
+          if (this.state.pkgRouteConfirmed !== val.toLowerCase()) {
             this.setState({ skuEditorTab: 'attrs' });
-            this.toast('danger', 'Route name bị trùng', 'Route name "' + val + '" đã tồn tại — vui lòng nhập route name khác.');
+            if (!this.state.modal) this.askRouteTransfer(r, val);
             return;
           }
-          this.openModal({
-            title: 'Xác nhận thiết lập Route name',
-            description: 'Route name chỉ được thêm/chỉnh sửa 1 lần duy nhất. Sau khi lưu, trường này sẽ bị khóa và không thể thay đổi lại.',
-            render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, marginTop: 4 } },
-              h('div', { style: { padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10, fontSize: 13.5 } },
-                h('span', { style: { color: 'var(--color-text-muted)' } }, 'Route name: '),
-                h('span', { style: { fontWeight: 700 } }, val)
-              ),
-              h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-                h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy'),
-                h(DS.Button, { level: 'primary', onClick: () => this.setState(s => ({ modal: null, pkgRouteSaved: { ...(s.pkgRouteSaved || {}), [sku.code]: val } }), finishSave) }, 'Xác nhận & lưu')
-              )
-            )
-          });
-          return;
         }
+        this.setState(s => {
+          const m = { ...(s.pkgRouteSaved || {}) };
+          owners.forEach(o => { m[o.id] = ''; });
+          m[r.id] = val;
+          return { pkgRouteSaved: m };
+        });
+        if (owners.length) this.toast('info', 'Đã chuyển route name', 'Route name "' + val + '" đã được chuyển từ ' + owners.map(o => this.PKG_ROUTE_LABEL(o)).join(', ') + ' sang gói này.');
       }
       finishSave();
     };
@@ -1659,6 +1662,23 @@ class Component extends DCLogic {
   }
 
   // ---------- Tab 1 helper: Thông tin sản phẩm (QLCS) subsection (part of "Đặc tính, Thiết bị") ----------
+  // Modal cảnh báo trùng route name — "Xác nhận" (trái) chuyển route name từ gói cũ sang gói mới, "Hủy" (phải) giữ nguyên trạng thái lỗi.
+  askRouteTransfer(r, val) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const owners = this.PKG_ROUTE_OWNERS(val, r.id);
+    if (!owners.length) return;
+    this.openModal({
+      title: 'Đã tồn tại route name',
+      description: h(React.Fragment, null,
+        'Route name ', h('strong', { style: { fontWeight: 700, color: 'var(--color-text)' } }, '"' + val + '"'),
+        ' đang được sử dụng bởi ', h('strong', { style: { fontWeight: 700, color: 'var(--color-text)' } }, owners.map(o => this.PKG_ROUTE_LABEL(o)).join(', ')),
+        '. Nếu vẫn muốn sử dụng, route name sẽ được chuyển từ gói cũ sang gói mới.'),
+      render: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 } },
+        h(DS.Button, { level: 'primary', onClick: () => this.setState({ modal: null, pkgRouteConfirmed: val.toLowerCase() }) }, 'Xác nhận'),
+        h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy')
+      )
+    });
+  }
   qlcsField(label, value) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     return this.field(label, h(DS.Input, { value: value || '—', disabled: true }));
@@ -1676,19 +1696,25 @@ class Component extends DCLogic {
       ),
       h(DS.Divider, null),
       (() => {
-        // Route name: chỉ được thêm/sửa 1 lần (FCP có sẵn data, ECP trống) — khóa sau khi xác nhận lưu. Trùng route name của SKU khác → báo lỗi.
-        const locked = !!sku && this.PKG_ROUTE_LOCKED(sku.code);
-        const routeVal = this.state.pkgRouteInput !== undefined ? this.state.pkgRouteInput : this.PKG_ROUTE_OF(sku);
-        const dup = !locked && !!sku && this.PKG_ROUTE_DUP(routeVal, sku.code);
-        const missing = !locked && !!sku && !!this.state.pkgRouteErr && !(routeVal || '').trim();
+        // Route name: trùng route name của gói khác → báo lỗi ngay; Enter / rời ô → modal hỏi chuyển route name từ gói cũ sang gói mới.
+        const routeVal = this.state.pkgRouteInput !== undefined ? this.state.pkgRouteInput : this.PKG_ROUTE_OF(r);
+        const dup = !!r && this.PKG_ROUTE_OWNERS(routeVal, r.id).length > 0 && this.state.pkgRouteConfirmed !== (routeVal || '').trim().toLowerCase();
+        const missing = !!r && !!this.state.pkgRouteErr && !(routeVal || '').trim();
+        const ask = () => {
+          const v = (routeVal || '').trim();
+          if (!r || !dup || this.state.modal || this._routeAsked === v.toLowerCase()) return;
+          this._routeAsked = v.toLowerCase();
+          this.askRouteTransfer(r, v);
+        };
         return h('div', { style: { display: 'grid', gridTemplateColumns: '1fr', gap: 16 } },
           h('div', null,
             this.field('Route name', h(DS.Input, {
-              value: routeVal, disabled: locked || !sku, placeholder: 'VD: internet-giga',
+              value: routeVal, disabled: !r, placeholder: 'VD: internet-giga',
               error: dup ? 'Route name đã tồn tại — vui lòng nhập route name khác.' : (missing ? 'Trường bắt buộc — vui lòng nhập route name.' : undefined),
-              onChange: e => { const v = e && e.target ? e.target.value : e; this.setState({ pkgRouteInput: v, pkgRouteErr: false }); }
-            }), true),
-            locked && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 6 } }, 'Route name đã được thiết lập, không thể chỉnh sửa lại.')
+              onChange: e => { const v = e && e.target ? e.target.value : e; this._routeAsked = undefined; this.setState({ pkgRouteInput: v, pkgRouteErr: false }); },
+              onKeyDown: e => { if (e.key === 'Enter') ask(); },
+              onBlur: () => ask()
+            }), true)
           )
         );
       })(),
