@@ -3525,11 +3525,22 @@ class Component extends DCLogic {
     const sz = this.state[key + '_sz'] || 10;
     return data.slice((pg - 1) * sz, pg * sz);
   }
+  // Cột ghim phải dùng chung mọi bảng (CLAUDE.md §9): "Thao tác" (key 'act') + cột bật/tắt "Hoạt động"/"Hiển thị"
+  // (key 'active' | 'visible') đứng sát bên trái nó. Hai cột có độ rộng cố định tối thiểu để header không rớt dòng.
+  stickyCols(columns) {
+    const TOGGLE_KEYS = ['active', 'visible'];
+    const hasAct = columns.some(c => c.key === 'act');
+    const cols = columns.map(c => c.key === 'act' ? { ...c, sticky: true, width: 96 }
+      : (hasAct && TOGGLE_KEYS.includes(c.key)) ? { ...c, sticky: true, width: 96 } : c);
+    // Cột bật/tắt luôn nằm liền trước cột Thao tác (nếu khai báo lệch chỗ thì tự dời lại)
+    const toggles = cols.filter(c => c.sticky && c.key !== 'act');
+    const act = cols.find(c => c.key === 'act');
+    return act ? [...cols.filter(c => !c.sticky), ...toggles, act] : cols;
+  }
   tbl(columns, data, rowKey, onRowClick) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const minW = columns.reduce((s, c) => s + (c.width || 150), 0);
-    // Cột "act" (Thao tác) luôn fix bên phải khi bảng phải cuộn ngang — quy ước dùng chung mọi module, xem CLAUDE.md §9.
-    const cols = columns.map(c => c.key === 'act' ? { ...c, sticky: true } : c);
+    const cols = this.stickyCols(columns);
+    const minW = cols.reduce((s, c) => s + (c.width || 150), 0);
     return h('div', {
       className: 'fpt-scroll fpt-drag-scroll',
       style: { overflowX: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' },
@@ -3544,8 +3555,8 @@ class Component extends DCLogic {
   zoomableTbl(columns, data, rowKey, onRowClick, zoomKey) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const zoom = this.state[zoomKey] || 100;
-    const minW = columns.reduce((s, c) => s + (c.width || 150), 0);
-    const cols = columns.map(c => c.key === 'act' ? { ...c, sticky: true } : c);
+    const cols = this.stickyCols(columns);
+    const minW = cols.reduce((s, c) => s + (c.width || 150), 0);
     return h('div', {
       className: 'fpt-scroll fpt-drag-scroll',
       style: { overflowX: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' },
@@ -3732,6 +3743,7 @@ class Component extends DCLogic {
     { name: 'Liên hệ', slug: 'lien-he', h1: 'Liên hệ FPT Telecom', status: 'hidden', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: 'Chính sách & Thủ tục', createdBy: 'Trần Thị Bích', createdAt: '01/01/2026 08:00', updatedAt: '05/06/2026 14:30' },
   ]; }
   SECTIONS() { return [
+    { id:17, name:'Khối ưu đãi chiến dịch mùa hè', title:'Ưu đãi chiến dịch mùa hè 2026', code:'khoi-uu-dai-chien-dich-mua-he', pages:['Landing page chiến dịch khuyến mãi Internet cáp quang FPT Telecom mùa hè 2026','Trang chủ'], type:'product_list', status:'active', order:3, blocks:['Block gói cước Internet Giga kèm Combo truyền hình và Camera An Ninh FPT Play Box','Ultrafast'], createdAt:'02/10/2026 08:45' },
     { id:16, name:'Bảng giá gói Internet cá nhân FPT | Nhận thêm camera kèm Cloud', title:'Bảng giá gói Internet cá nhân FPT', code:'bang-gia-goi-internet-ca-nhan-fpt-nhan-them-camera-kem-cloud', pages:['Internet detail sections2'], type:'product_list', status:'active', order:2, blocks:['Internet Fam Test'], createdAt:'01/10/2026 09:30' },
     { id:15, name:'Banner ưu đãi dùng chung', title:'Ưu đãi đặc biệt tháng 10',   code:'banner-uu-dai-chung',     pages:['Trang chủ','Internet detail sections2','Camera An Ninh FPT','SA detail','Tin tức'], type:'hero_banner', status:'active', order:1, blocks:['Ultrafast','FPL','Hyperfast','Camera Only','Internet Fam Test','Combo Internet Truyền hình','Block Gói cước Internet Giga'], createdAt:'30/09/2026 10:00' },
     { id:1,  name:'best but 2',            title:'Best But 2',                code:'best-but-2',              pages:['Thiết bị thông minh'],       type:'row_vat',      status:'active',   order:null, blocks:['Camera Only'],                                createdAt:'23/04/2026 15:26' },

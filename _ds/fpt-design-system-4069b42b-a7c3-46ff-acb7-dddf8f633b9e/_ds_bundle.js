@@ -284,7 +284,7 @@ Object.assign(__ds_scope, { Divider });
 // components/data/Table.jsx
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/** Table — lightweight data table. columns: [{key,header,align?,width?,render?,sticky?}]. `sticky: true|'right'` pins that column to the right edge (e.g. an actions column) so it stays reachable while other columns scroll underneath — pair with a horizontally scrolling ancestor whose overflow isn't clipped by this component's own wrapper (pass `overflow: 'visible'` via `style`). */
+/** Table — lightweight data table. columns: [{key,header,align?,width?,render?,sticky?}]. `sticky: true|'right'` pins that column to the right edge (e.g. an actions column; several adjacent sticky columns stack leftwards, e.g. a Hoạt động toggle + Thao tác — a sticky column's `width` is a fixed, non-shrinking, non-wrapping width) so it stays reachable while other columns scroll underneath — pair with a horizontally scrolling ancestor whose overflow isn't clipped by this component's own wrapper (pass `overflow: 'visible'` via `style`). */
 function Table({
   columns = [],
   data = [],
@@ -296,12 +296,43 @@ function Table({
 }) {
   const [hover, setHover] = React.useState(-1);
   const pad = dense ? "8px 12px" : "13px 16px";
-  const stickyRightStyle = bg => ({
+  // Nhiều cột sticky liền nhau (vd. "Hoạt động" + "Thao tác"): mỗi cột bám vào mép phải cộng dồn độ rộng thực đo được
+  // của các cột sticky nằm bên phải nó. Chỉ cột sticky ngoài cùng bên trái (stickyEdge) mới có bóng đổ khi cuộn.
+  const headRowRef = React.useRef(null);
+  const [stickyOffs, setStickyOffs] = React.useState({});
+  const stickyKeys = columns.filter(c => c.sticky).map(c => c.key);
+  const stickySig = stickyKeys.join("|");
+  React.useLayoutEffect(() => {
+    const tr = headRowRef.current;
+    if (!tr || stickyKeys.length < 2) { setStickyOffs(o => Object.keys(o).length ? {} : o); return; }
+    const measure = () => {
+      const next = {}; let acc = 0;
+      for (let i = stickyKeys.length - 1; i >= 0; i--) {
+        const th = tr.querySelector('th[data-col="' + stickyKeys[i] + '"]');
+        next[stickyKeys[i]] = acc;
+        acc += th ? th.getBoundingClientRect().width : 0;
+      }
+      setStickyOffs(o => stickyKeys.every(k => Math.abs((o[k] || 0) - next[k]) < 0.5) && Object.keys(o).length === stickyKeys.length ? o : next);
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    tr.querySelectorAll("th.fpt-table-sticky-col, th.fpt-table-sticky-inner").forEach(el => ro.observe(el));
+    return () => ro.disconnect();
+  }, [stickySig, data.length]);
+  const stickyEdgeKey = stickyKeys[0];
+  const stickyRightStyle = (bg, c) => ({
     position: "sticky",
-    right: 0,
+    right: stickyOffs[c.key] || 0,
     zIndex: 1,
-    background: bg
+    background: bg,
+    boxSizing: "border-box",
+    whiteSpace: "nowrap",
+    // Cột ghim phải gọn hơn cột thường: padding ngang 8px (cột căn phải chừa 12px phía mép bảng) để nhường chiều ngang cho cột nội dung
+    padding: dense ? (c.align === "right" ? "8px 12px 8px 8px" : "8px") : (c.align === "right" ? "13px 14px 13px 10px" : "13px 10px"),
+    ...(c.width ? { width: c.width, minWidth: c.width } : null)
   });
+  const stickyClass = c => c.sticky ? (c.key === stickyEdgeKey ? "fpt-table-sticky-col" : "fpt-table-sticky-inner") : undefined;
   return /*#__PURE__*/React.createElement("div", _extends({
     style: {
       border: "1px solid var(--color-border)",
@@ -317,12 +348,14 @@ function Table({
       fontFamily: "var(--font-sans)"
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+    ref: headRowRef,
     style: {
       background: "var(--color-surface-alt)"
     }
   }, columns.map(c => /*#__PURE__*/React.createElement("th", {
     key: c.key,
-    className: c.sticky ? "fpt-table-sticky-col" : undefined,
+    "data-col": c.key,
+    className: stickyClass(c),
     style: {
       textAlign: c.align || "left",
       padding: pad,
@@ -334,7 +367,7 @@ function Table({
       color: "var(--color-text-subtle)",
       borderBottom: "1px solid var(--color-border)",
       whiteSpace: "nowrap",
-      ...(c.sticky ? stickyRightStyle("var(--color-surface-alt)") : null)
+      ...(c.sticky ? stickyRightStyle("var(--color-surface-alt)", c) : null)
     }
   }, c.header)))), /*#__PURE__*/React.createElement("tbody", null, data.map((row, i) => /*#__PURE__*/React.createElement("tr", {
     key: rowKey ? row[rowKey] : i,
@@ -347,7 +380,7 @@ function Table({
     }
   }, columns.map(c => /*#__PURE__*/React.createElement("td", {
     key: c.key,
-    className: c.sticky ? "fpt-table-sticky-col" : undefined,
+    className: stickyClass(c),
     style: {
       textAlign: c.align || "left",
       padding: pad,
@@ -355,7 +388,7 @@ function Table({
       color: "var(--color-text)",
       borderBottom: i === data.length - 1 ? "none" : "1px solid var(--color-border-pale)",
       verticalAlign: "middle",
-      ...(c.sticky ? stickyRightStyle(hover === i && onRowClick ? "var(--color-surface-alt)" : "var(--color-surface)") : null)
+      ...(c.sticky ? stickyRightStyle(hover === i && onRowClick ? "var(--color-surface-alt)" : "var(--color-surface)", c) : null)
     }
   }, c.render ? c.render(row[c.key], row, i) : row[c.key])))))));
 }
@@ -1254,19 +1287,28 @@ function Badge({
       border: outline ? `1px solid ${t.fg}` : "1px solid transparent",
       borderRadius: "var(--radius-full)",
       whiteSpace: "nowrap",
+      maxWidth: 200,
       ...style
     }
-  }, rest), dot && /*#__PURE__*/React.createElement("span", {
+  }, typeof children === "string" && !rest.title ? { title: children } : null, rest), dot && /*#__PURE__*/React.createElement("span", {
     style: {
       width: 6,
       height: 6,
+      flexShrink: 0,
       borderRadius: "50%",
       background: solid ? "var(--white)" : t.solidBg
     }
   }), leadingIcon && /*#__PURE__*/React.createElement(__ds_scope.Icon, {
     name: leadingIcon,
     size: s.icon
-  }), children);
+  }), typeof children === "string" || typeof children === "number" ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      minWidth: 0,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }
+  }, children) : children);
 }
 Object.assign(__ds_scope, { Badge });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/Badge.jsx", error: String((e && e.message) || e) }); }
