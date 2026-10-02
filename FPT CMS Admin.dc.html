@@ -134,7 +134,7 @@ function FptRequiredField({ control }) {
 // the trigger's getBoundingClientRect() and kept anchored on scroll/resize, same mechanics as
 // DS.Select. Defined once at module scope (not per-render) so its own open/query hook state
 // survives parent re-renders instead of remounting on every keystroke elsewhere in the editor.
-function FptTagPicker({ options, selected, onChange, placeholder, searchPlaceholder }) {
+function FptTagPicker({ options, selected, onChange, placeholder, searchPlaceholder, hideSelectAll }) {
   const h = React.createElement;
   const DS = window.ZENKaizenDesignSystem_4069b4;
   const [open, setOpen] = React.useState(false);
@@ -216,7 +216,7 @@ function FptTagPicker({ options, selected, onChange, placeholder, searchPlacehol
               );
             })
       ),
-      h('div', { style: { display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border-pale)' } },
+      !hideSelectAll && h('div', { style: { display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border-pale)' } },
         h('button', { type: 'button', onClick: () => onChange(options.slice()), style: { background: 'none', border: 'none', padding: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--color-accent-text)', cursor: 'pointer' } }, 'Chọn tất cả'),
         h('button', { type: 'button', onClick: () => onChange([]), style: { background: 'none', border: 'none', padding: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--color-danger-text)', cursor: 'pointer' } }, 'Bỏ chọn tất cả')
       )
@@ -3687,7 +3687,7 @@ class Component extends DCLogic {
   tagPicker(options, selected, onChange, opts) {
     const h = React.createElement;
     opts = opts || {};
-    return h(FptTagPicker, { options, selected, onChange, placeholder: opts.placeholder, searchPlaceholder: opts.searchPlaceholder });
+    return h(FptTagPicker, { options, selected, onChange, placeholder: opts.placeholder, searchPlaceholder: opts.searchPlaceholder, hideSelectAll: opts.hideSelectAll });
   }
   editorShell(title, subtitle, onBack, content, onSave, saveLabel, headerExtra, shellKey) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -3732,6 +3732,8 @@ class Component extends DCLogic {
     { name: 'Liên hệ', slug: 'lien-he', h1: 'Liên hệ FPT Telecom', status: 'hidden', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: 'Chính sách & Thủ tục', createdBy: 'Trần Thị Bích', createdAt: '01/01/2026 08:00', updatedAt: '05/06/2026 14:30' },
   ]; }
   SECTIONS() { return [
+    { id:16, name:'Bảng giá gói Internet cá nhân FPT | Nhận thêm camera kèm Cloud', title:'Bảng giá gói Internet cá nhân FPT', code:'bang-gia-goi-internet-ca-nhan-fpt-nhan-them-camera-kem-cloud', pages:['Internet detail sections2'], type:'product_list', status:'active', order:2, blocks:['Internet Fam Test'], createdAt:'01/10/2026 09:30' },
+    { id:15, name:'Banner ưu đãi dùng chung', title:'Ưu đãi đặc biệt tháng 10',   code:'banner-uu-dai-chung',     pages:['Trang chủ','Internet detail sections2','Camera An Ninh FPT','SA detail','Tin tức'], type:'hero_banner', status:'active', order:1, blocks:['Ultrafast','FPL','Hyperfast','Camera Only','Internet Fam Test','Combo Internet Truyền hình','Block Gói cước Internet Giga'], createdAt:'30/09/2026 10:00' },
     { id:1,  name:'best but 2',            title:'Best But 2',                code:'best-but-2',              pages:['Thiết bị thông minh'],       type:'row_vat',      status:'active',   order:null, blocks:['Camera Only'],                                createdAt:'23/04/2026 15:26' },
     { id:2,  name:'best-dvi',              title:'Best DVI',                  code:'best-sellers-dvi',        pages:['Thiết bị thông minh'],       type:'row_vat',      status:'active',   order:null, blocks:['Ultrafast'],                                  createdAt:'23/04/2026 09:50' },
     { id:3,  name:'Article SA',            title:'Bài viết SA',               code:'article-sa',              pages:['SA detail'],                 type:'html_article', status:'active',   order:1,    blocks:[],                                             createdAt:'09/04/2026 11:09' },
@@ -4161,7 +4163,7 @@ class Component extends DCLogic {
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
       { key: 'updatedAt', header: 'Ngày chỉnh sửa', width: 148,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
-      { key: 'active', header: 'Hoạt động', width: 90, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.pageActiveMap || {})[r.slug] !== undefined ? !!(this.state.pageActiveMap || {})[r.slug] : r.status !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-page-act-' + r.slug + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
@@ -4337,7 +4339,7 @@ class Component extends DCLogic {
     const sliced = this.sliceData(data, 'secs');
     const idxMap = new Map(sliced.map((r, i) => [r.id, startIdx + i + 1]));
     // "+n" hover popover, viewport-clamped — same chipList/OverflowTip pattern as
-    // renderPaymentListTab (Phương thức thanh toán), reused here for the Block column.
+    // renderPaymentListTab (Phương thức thanh toán), reused here for the Thuộc trang + Block columns.
     const OverflowTip = ({ text, children }) => {
       const ref = React.useRef(null);
       const [rect, setRect] = React.useState(null);
@@ -4374,33 +4376,28 @@ class Component extends DCLogic {
     const columns = [
       { key: '_num', header: '#', width: 44, align: 'center',
         render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 12 } }, idxMap.get(r.id) || '') },
-      { key: 'page', header: 'Thuộc trang', width: 200,
-        render: (_, r) => {
-          const pgs = r.pages || [];
-          if (!pgs.length) return h('span', { style: { color: 'var(--color-text-subtle)' } }, '—');
-          const shown = pgs.slice(0, 1);
-          const more = pgs.length - 1;
-          return h('div', { style: { display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'nowrap', minWidth: 0 } },
-            h('span', { style: { fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, shown[0]),
-            more > 0 && h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-subtle)', padding: '2px 7px', borderRadius: 10, fontSize: 11, whiteSpace: 'nowrap', flexShrink: 0 } }, '+' + more)
-          );
-        } },
       { key: 'section', header: 'Section', width: 240,
         render: (_, r) => h('div', null,
           h('strong', null, r.name),
           h('div', { style: { color: '#f43f5e', fontSize: 11, marginTop: 2, fontWeight: 500, fontFamily: 'var(--font-dev)' } }, r.code)
         ) },
+      { key: 'page', header: 'Thuộc trang', width: 280,
+        render: (_, r) => {
+          const pgs = r.pages || [];
+          if (!pgs.length) return h('span', { style: { color: 'var(--color-text-subtle)' } }, '—');
+          return chipList('neutral', 2, pgs);
+        } },
       { key: 'blocks', header: 'Block', width: 240,
         render: (_, r) => {
           const bl = r.blocks || [];
           if (!bl.length) return h('span', { style: { color: 'var(--color-text-subtle)' } }, '—');
-          return chipList('brand', 3, bl);
+          return chipList('brand', 2, bl);
         } },
       { key: 'type', header: 'Loại', width: 110,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'var(--font-dev)' } }, r.type) },
       { key: 'createdAt', header: 'Ngày tạo', width: 148,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
-      { key: 'active', header: 'Hoạt động', width: 90, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.secActiveMap || {})[r.id] !== undefined ? !!(this.state.secActiveMap || {})[r.id] : r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-sec-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
@@ -4520,7 +4517,7 @@ class Component extends DCLogic {
           h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Thuộc trang', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
           selPages.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '(Đã chọn: ' + selPages.length + ' trang)')
         ),
-        this.tagPicker(PAGES, selPages, v => this.setState({ secEditorPages: v }), { placeholder: 'Chọn trang hiển thị...', searchPlaceholder: 'Tìm trang…' })
+        this.tagPicker(PAGES, selPages, v => this.setState({ secEditorPages: v }), { placeholder: 'Chọn trang hiển thị...', searchPlaceholder: 'Tìm trang…', hideSelectAll: true })
       ),
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
         h('div', null, this.field('Tên section', h(DS.Input, {
@@ -4644,7 +4641,7 @@ class Component extends DCLogic {
       { key: 'section', header: 'Tên section', render: (_, r) => h('span', { style: { fontSize: 13, color: r.section === '—' ? 'var(--color-text-subtle)' : 'inherit' }, title: r.section && r.section.length > 75 ? r.section : undefined }, r.section && r.section.length > 75 ? r.section.slice(0, 75) + '…' : r.section) },
       { key: 'loai', header: 'Loại', render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, r.layout + (r.datasource ? ' · ' + r.datasource : '')) },
       { key: 'createdAt', header: 'Ngày tạo', width: 145, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
-      { key: 'active', header: 'Hoạt động', width: 90, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.blkActiveMap || {})[r.id] !== undefined ? !!(this.state.blkActiveMap || {})[r.id] : true;
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-blk-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
@@ -5613,7 +5610,7 @@ class Component extends DCLogic {
       { key: 'url',    header: 'Link URL',             render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-text-subtle)' }, title: r.url }, r.url && r.url !== '—' ? (r.url.length > 38 ? r.url.slice(0, 38) + '…' : r.url) : '—') },
       { key: 'target', header: 'Target',   width: 90,  align: 'center', render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: r.target === '_blank' ? 'var(--color-warning-text)' : 'var(--color-text-muted)' } }, r.target) },
       { key: 'date',   header: 'Ngày tạo', width: 160, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.date || '—') },
-      { key: 'active', header: 'Hoạt động', width: 90,  align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64,  align: 'center', render: (_, r) => {
           const isOn = (this.state.menuActiveMap || {})[r.id] !== undefined ? !!(this.state.menuActiveMap || {})[r.id] : r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-menu-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
@@ -5943,7 +5940,7 @@ class Component extends DCLogic {
       { key: 'order', header: 'Thứ tự', width: 72, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
       { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
       { key: 'status', header: 'Trạng thái', width: 110, render: (_, r) => this.statusBadge(this.effStatus(this.state.bannerActiveMap, r, 'active')) },
-      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
           const isOn = this.effStatus(this.state.bannerActiveMap, r, 'active') !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -6038,7 +6035,7 @@ class Component extends DCLogic {
       { key: 'type', header: 'Trang áp dụng', width: 190, render: (_, r) => this.popupTypeCell(r) },
       { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.period) },
       { key: 'status', header: 'Trạng thái', width: 120, render: (_, r) => this.statusBadge(this.effStatus(this.state.popupActiveMap, r, 'running')) },
-      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
           const isOn = this.effStatus(this.state.popupActiveMap, r, 'running') !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -6365,7 +6362,7 @@ class Component extends DCLogic {
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
       { key: 'period', header: 'Thời gian quảng cáo', width: 190, render: (_, r) => this.adPeriodCell(r) },
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(this.adEffStatus(r)) },
-      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           if (this.adEffStatus(r) === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
           const isOn = this.adEffStatus(r) !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -6422,7 +6419,7 @@ class Component extends DCLogic {
       { key: 'desc', header: 'Mô tả nhóm', width: 260, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.desc || '—') },
       { key: 'count', header: 'Số quảng cáo', width: 110, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, adsAll.filter(a => a.catCode === r.code).length) },
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(r.status === 'inactive' ? 'hidden' : r.status) },
-      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-adcat-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
@@ -7036,7 +7033,7 @@ class Component extends DCLogic {
       { key: 'order', header: 'Thứ tự', width: 70, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
       { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
       { key: 'status', header: 'Trạng thái', width: 120, render: (_, r) => this.statusBadge(r.status) },
-      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-faq-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
@@ -7090,7 +7087,7 @@ class Component extends DCLogic {
           const isOn = (this.state.faqCatActiveMap || {})[r.id] !== undefined ? !!(this.state.faqCatActiveMap || {})[r.id] : r.status !== 'inactive';
           return this.statusBadge(isOn ? 'active' : 'inactive');
         } },
-      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.faqCatActiveMap || {})[r.id] !== undefined ? !!(this.state.faqCatActiveMap || {})[r.id] : r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-faqcat-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
@@ -7672,7 +7669,7 @@ class Component extends DCLogic {
             r.lastEdit ? h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, r.lastEdit) : null
           ) },
       { key: 'status', header: 'Trạng thái', width: 110, render: (_, r) => { const curSt = ldpSt(r.id) || r.status; return stBadge(curSt); } },
-      { key: 'visible', header: 'Hiển thị', width: 80, align: 'center', render: (_, r) => {
+      { key: 'visible', header: 'Hiển thị', width: 64, align: 'center', render: (_, r) => {
           const curSt = ldpSt(r.id) || r.status;
           const isOn = curSt === 'publish';
           const isDraft = ['draft', 'expired'].includes(curSt);
@@ -11951,7 +11948,7 @@ class Component extends DCLogic {
         render: (_, r) => h('span', { style: { fontWeight: 600, fontVariantNumeric: 'tabular-nums' } }, r.views.toLocaleString()) },
       { key: 'status', header: 'Trạng thái', width: 96,
         render: (_, r) => this.statusBadge(this.effStatus(this.state.newsArtActiveMap, r, 'published')) },
-      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
           const isOn = this.effStatus(this.state.newsArtActiveMap, r, 'published') !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -12243,7 +12240,7 @@ class Component extends DCLogic {
           const isOn = (this.state.newsCatActiveMap || {})[r.id] !== undefined ? !!(this.state.newsCatActiveMap || {})[r.id] : r.status !== 'inactive';
           return this.statusBadge(isOn ? 'active' : 'inactive');
         } },
-      { key: 'active', header: 'Hoạt động', width: 110, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.newsCatActiveMap || {})[r.id] !== undefined ? !!(this.state.newsCatActiveMap || {})[r.id] : r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-newscat-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
@@ -12286,7 +12283,7 @@ class Component extends DCLogic {
           const isOn = (this.state.newsTagActiveMap || {})[r.id] !== undefined ? !!(this.state.newsTagActiveMap || {})[r.id] : r.status !== 'inactive';
           return this.statusBadge(isOn ? 'active' : 'inactive');
         } },
-      { key: 'active', header: 'Hoạt động', width: 84, align: 'center', render: (_, r) => {
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.newsTagActiveMap || {})[r.id] !== undefined ? !!(this.state.newsTagActiveMap || {})[r.id] : r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-newstag-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
