@@ -4388,18 +4388,18 @@ class Component extends DCLogic {
     const columns = [
       { key: '_num', header: '#', width: 44, align: 'center',
         render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 12 } }, idxMap.get(r.id) || '') },
-      { key: 'section', header: 'Section', width: 240,
+      { key: 'section', header: 'Section', width: 260,
         render: (_, r) => h('div', null,
           h('strong', null, r.name),
           h('div', { style: { color: '#f43f5e', fontSize: 11, marginTop: 2, fontWeight: 500, fontFamily: 'var(--font-dev)' } }, r.code)
         ) },
-      { key: 'page', header: 'Thuộc trang', width: 280,
+      { key: 'page', header: 'Thuộc trang', width: 320,
         render: (_, r) => {
           const pgs = r.pages || [];
           if (!pgs.length) return h('span', { style: { color: 'var(--color-text-subtle)' } }, '—');
           return chipList('neutral', 2, pgs);
         } },
-      { key: 'blocks', header: 'Block', width: 240,
+      { key: 'blocks', header: 'Block', width: 280,
         render: (_, r) => {
           const bl = r.blocks || [];
           if (!bl.length) return h('span', { style: { color: 'var(--color-text-subtle)' } }, '—');
@@ -4407,7 +4407,7 @@ class Component extends DCLogic {
         } },
       { key: 'type', header: 'Loại', width: 110,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'var(--font-dev)' } }, r.type) },
-      { key: 'createdAt', header: 'Ngày tạo', width: 148,
+      { key: 'createdAt', header: 'Ngày tạo', width: 128,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.secActiveMap || {})[r.id] !== undefined ? !!(this.state.secActiveMap || {})[r.id] : r.status !== 'inactive';
