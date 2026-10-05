@@ -6588,11 +6588,13 @@ class Component extends DCLogic {
         ),
         section(2, 'share-01-line', 'Nội dung & Liên kết',
           this.field('Nội dung', this.richTextEditor(r ? (r.content || '') : '', 'ad')),
-          this.field('URL', h(DS.Input, { value: d.url, onChange: e => setD({ url: e && e.target ? e.target.value : e }), placeholder: 'https://...' })),
-          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: -8 } }, 'Liên kết khi click vào quảng cáo, phải đúng định dạng URL.'),
-          this.field('Target', h(DS.Select, {
-            options: this.AD_TARGETS(), value: d.target, placeholder: 'Chọn target…', onChange: v => setD({ target: v })
-          }))
+          // URL + Target cùng 1 hàng (URL rộng, Target hẹp); ghi chú URL chuyển vào hint dưới ô.
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 220px', gap: 12, alignItems: 'start' } },
+            this.field('URL', h(DS.Input, { value: d.url, onChange: e => setD({ url: e && e.target ? e.target.value : e }), placeholder: 'https://...', hint: 'Liên kết khi click vào quảng cáo, phải đúng định dạng URL.' })),
+            this.field('Target', h(DS.Select, {
+              options: this.AD_TARGETS(), value: d.target, placeholder: 'Chọn target…', onChange: v => setD({ target: v })
+            }))
+          )
         ),
         section(3, 'image-line', 'Hình ảnh & tài nguyên',
           // Ảnh / Icon (mặc định, luôn có) rồi tới Nền quảng cáo ở dòng riêng; nền chỉ chọn 1 trong 2: Màu nền HOẶC Ảnh nền.
