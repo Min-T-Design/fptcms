@@ -3867,10 +3867,10 @@ class Component extends DCLogic {
     { name: 'Trang Thanh toán & Hỗ trợ', slug: '/thanh-toan' },
     { name: 'Thiết bị Smart Home', slug: '/thiet-bi-smart-home' },
   ]; }
-  AD_TYPES() { return [{ value: 'scrolling_announcement_bar', label: 'Scrolling Announcement Bar' }]; }
+  AD_TYPES() { return [{ value: 'above_header', label: 'Trên header' }, { value: 'below_header', label: 'Dưới header' }]; }
   adTypeLabel(v) { const t = this.AD_TYPES().find(t => t.value === v); return t ? t.label : '—'; }
   AD_CATEGORIES() { return [
-    { id: 1, name: 'Scrolling Announcement Bar', code: 'scrolling_top_bar', type: 'scrolling_announcement_bar', desc: 'Thanh chạy chữ thông báo khuyến mãi cố định đầu website', status: 'active', createdAt: '01/06/2026 09:00', createdBy: 'Admin User', updatedAt: '12/08/2026 15:20', updatedBy: 'Nguyễn Thị Thùy' },
+    { id: 1, name: 'Scrolling Announcement Bar', code: 'scrolling_top_bar', type: 'above_header', desc: 'Thanh chạy chữ thông báo khuyến mãi cố định đầu website', status: 'active', createdAt: '01/06/2026 09:00', createdBy: 'Admin User', updatedAt: '12/08/2026 15:20', updatedBy: 'Nguyễn Thị Thùy' },
     { id: 2, name: 'Popup Khuyến mãi', code: 'popup_promo', desc: 'Nhóm quảng cáo dạng popup hiển thị khuyến mãi khi vào trang', status: 'active', createdAt: '05/06/2026 10:30', createdBy: 'Admin User', updatedAt: '20/07/2026 09:45', updatedBy: 'Trần Minh Khoa' },
     { id: 3, name: 'Banner Góc màn hình', code: 'corner_banner', desc: 'Quảng cáo nhỏ ghim góc màn hình, không che nội dung chính', status: 'active', createdAt: '10/06/2026 14:10', createdBy: 'Admin User', updatedAt: '10/06/2026 14:10', updatedBy: 'Admin User' },
     { id: 4, name: 'Quảng cáo chân trang', code: 'footer_ads', desc: 'Nhóm quảng cáo hiển thị cố định ở chân trang website', status: 'inactive', createdAt: '15/06/2026 11:00', createdBy: 'Admin User', updatedAt: '02/09/2026 16:00', updatedBy: 'Admin User' },
@@ -6428,7 +6428,7 @@ class Component extends DCLogic {
     const data = list.filter(c => (c.name + ' ' + this.adTypeLabel(c.type)).toLowerCase().includes(search) && (statusF === 'all' || c.status === statusF));
     const columns = [
       { key: 'name', header: 'Tên chiến dịch', width: 220, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
-      { key: 'type', header: 'Loại quảng cáo', width: 200, render: (_, r) => r.type ? h('span', { style: { background: 'var(--color-accent-bg)', color: 'var(--color-accent-text)', padding: '2px 8px', borderRadius: 6, fontSize: 12, fontWeight: 600 } }, this.adTypeLabel(r.type)) : '—' },
+      { key: 'type', header: 'Vị trí', width: 200, render: (_, r) => r.type ? h('span', { style: { background: 'var(--color-accent-bg)', color: 'var(--color-accent-text)', padding: '2px 8px', borderRadius: 6, fontSize: 12, fontWeight: 600 } }, this.adTypeLabel(r.type)) : '—' },
       { key: 'count', header: 'Số quảng cáo', width: 110, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, adsAll.filter(a => a.catCode === r.code).length) },
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(r.status === 'inactive' ? 'hidden' : r.status) },
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
@@ -6521,10 +6521,9 @@ class Component extends DCLogic {
         onChange: v => { setD({ catCode: v }); if (v && this.state.adCatErr) this.setState({ adCatErr: false }); }
       })
     );
-    // Nền loại trừ nhau: đã có Ảnh nền → khoá Màu nền; đã chọn Màu nền → khoá Ảnh nền. Mặc định tab Ảnh nền.
+    // Nền loại trừ nhau: đã có Ảnh nền → khoá Màu nền; đã chọn Màu nền → khoá Ảnh nền. Hai cột Ảnh nền | Màu nền.
     const bgImgSet = d.bgImgSet !== undefined ? d.bgImgSet : !!(r && r.bgImg);
     const bgColorSet = d.bgColorSet !== undefined ? d.bgColorSet : !!(r && r.bgColor && !r.bgImg);
-    const bgTab = d.bgTab || (bgColorSet ? 'color' : 'image');
     const isHex = v => /^#[0-9a-fA-F]{6}$/.test(v || '');
     const setSolid = v => setD({ bgColor: v, bgColorSet: !!v });
     const solidPresets = ['#0072BC', '#e6aa41', '#22c55e', '#7c3aed', '#ef4444', '#f97316', '#0891b2', '#111827'];
@@ -6533,9 +6532,16 @@ class Component extends DCLogic {
       h('input', { type: 'color', value: isHex(value) ? value : '#000000', onChange: e => onPick(e.target.value), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
     );
     const cap = t => h('div', { style: { fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6 } }, t);
-    const lockWrap = (locked, msg, child) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-      locked && h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' } }, h(DS.Icon, { name: 'info-circle-line', size: 14, color: 'var(--color-text-subtle)' }), msg),
-      h('div', { 'aria-disabled': locked || undefined, style: locked ? { opacity: 0.45, pointerEvents: 'none', filter: 'grayscale(.6)', userSelect: 'none' } : undefined }, child)
+    // flex:1 để cột (Ảnh nền | Màu nền) giãn đều cao bằng nhau; ô tải ảnh nền rỗng cao bằng khung Màu nền.
+    // Khi bị khoá: phần con bị làm mờ (disable), thông báo chữ đỏ kiểu validate (fpt-req-err-msg) nằm DƯỚI, không có khung đỏ.
+    const lockWrap = (locked, msg, child) => h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1 } },
+      h('div', { 'aria-disabled': locked || undefined, style: Object.assign({ flex: 1, display: 'flex', flexDirection: 'column' }, locked ? { opacity: 0.45, pointerEvents: 'none', filter: 'grayscale(.6)', userSelect: 'none' } : null) }, child),
+      locked && h('div', { className: 'fpt-req-err-msg' }, msg)
+    );
+    const bgUploadBox = h('div', { onClick: () => setD({ bgImgSet: true }), style: { flex: 1, minHeight: 100, boxSizing: 'border-box', border: '1.5px dashed var(--color-border-strong)', borderRadius: 10, padding: '20px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', cursor: 'pointer', background: 'var(--color-surface-alt)' } },
+      h(DS.Icon, { name: 'upload-cloud-line', size: 22, color: 'var(--color-text-subtle)' }),
+      h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 6 } }, 'Kéo thả hoặc chọn tệp để tải lên'),
+      h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, 'JPG, PNG, WEBP · ≤200KB')
     );
     const imgPreview = h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: 12, border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface-alt)' } },
       r && r.bgImg
@@ -6597,19 +6603,28 @@ class Component extends DCLogic {
           )
         ),
         section(3, 'image-line', 'Hình ảnh & tài nguyên',
-          // Ảnh / Icon (mặc định, luôn có) rồi tới Nền quảng cáo ở dòng riêng; nền chỉ chọn 1 trong 2: Màu nền HOẶC Ảnh nền.
-          this.field('Ảnh / Icon', this.uploadBox('Kéo thả hoặc chọn tệp để tải lên', 'JPG, PNG, WEBP · ≤200KB')),
-          this.field('Nền quảng cáo', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-            h(DS.Tabs, { variant: 'pill', style: { display: 'inline-flex', alignSelf: 'flex-start' }, value: bgTab, onChange: v => setD({ bgTab: v }), items: [
-              { value: 'image', label: 'Ảnh nền' },
-              { value: 'color', label: 'Màu nền' }
-            ] }),
-            bgTab === 'image' ? lockWrap(bgColorSet, 'Đang dùng Màu nền — bấm "Xóa màu nền" ở tab Màu nền để tải ảnh nền.', bgImgSet ? imgPreview : this.uploadBox('Kéo thả hoặc chọn tệp để tải lên', 'JPG, PNG, WEBP · ≤200KB', false, () => setD({ bgImgSet: true })))
-              : lockWrap(bgImgSet, 'Đang dùng Ảnh nền — bấm "Xóa ảnh nền" ở tab Ảnh nền để chọn màu.', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+          // Ảnh / Icon = ô vuông nhỏ (140px); Nền quảng cáo xuống dòng riêng, chia 2 cột Ảnh nền | Màu nền, loại trừ nhau: chỉ dùng 1 trong 2.
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+            this.field('Ảnh / Icon', h('div', { onClick: () => this.toast('info', 'Chọn tệp', 'Mở hộp thoại tải ảnh (demo).'), style: { width: 140, height: 140, boxSizing: 'border-box', border: '1.5px dashed var(--color-border-strong)', borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: 8, textAlign: 'center', cursor: 'pointer', background: 'var(--color-surface-alt)' } },
+              h(DS.Icon, { name: 'upload-cloud-line', size: 22, color: 'var(--color-text-subtle)' }),
+              h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 2 } }, 'Tải ảnh lên'),
+              h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'JPG, PNG, WEBP'),
+              h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, '≤200KB')
+            )),
+            this.field('Nền quảng cáo', h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 16, alignItems: 'stretch' } },
+              h('div', { style: { display: 'flex', flexDirection: 'column' } },
+                cap('Ảnh nền'),
+                lockWrap(bgColorSet, 'Đang dùng Màu nền — bấm "Xóa màu nền" để tải ảnh nền.', bgImgSet ? imgPreview : bgUploadBox)
+              ),
+              h('div', { style: { display: 'flex', flexDirection: 'column' } },
+                cap('Màu nền'),
+                lockWrap(bgImgSet, 'Đang dùng Ảnh nền — bấm "Xóa ảnh nền" để chọn màu.', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
                   bgPanel,
                   bgColorSet && h('div', null, h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => setD({ bgColor: '', bgColorSet: false }) }, 'Xóa màu nền'))
                 ))
-          ))
+              )
+            ))
+          )
         )
       ),
       () => {
@@ -6639,7 +6654,7 @@ class Component extends DCLogic {
     this.openDrawer({ title: r.name, subtitle: 'Danh mục Quảng cáo', width: 440,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên chiến dịch', r.name),
-        this.detailRow('Loại quảng cáo', this.adTypeLabel(r.type)),
+        this.detailRow('Vị trí', this.adTypeLabel(r.type)),
         this.detailRow('Trang áp dụng', (r.pageScope === 'specific' && (r.pages || []).length)
           ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } }, r.pages.map(slug => {
               const p = this.AD_PAGES().find(pp => pp.slug === slug);
@@ -6671,7 +6686,7 @@ class Component extends DCLogic {
     const setD = patch => this.setState(s => ({ adCatDraft: Object.assign({}, s.adCatDraft, patch) }));
     const dBase = r ? { name: r.name, type: r.type || '', active: r.status === 'active', pageScope: r.pageScope || 'all', pages: r.pages || [] } : { name: '', type: '', active: true, pageScope: 'all', pages: [] };
     const d = Object.assign({}, dBase, this.state.adCatDraft);
-    // Loại quảng cáo là Select bắt buộc (composite control, §14): lỗi hiện khi bấm Lưu mà chưa chọn, tự xoá khi đã chọn.
+    // Vị trí là Select bắt buộc (composite control, §14): lỗi hiện khi bấm Lưu mà chưa chọn, tự xoá khi đã chọn.
     const typeErr = !!d.typeErr && !d.type;
     const allPages = this.AD_PAGES();
     const pageQ = (this.state.adPageSearchQ || '').toLowerCase();
@@ -6763,14 +6778,14 @@ class Component extends DCLogic {
           h(DS.Switch, { checked: d.active, onChange: v => setD({ active: !!v }) })
         ),
         section(1, 'folder-line', 'Thông tin cơ bản',
-          // Tên nhóm + Loại quảng cáo cùng 1 hàng để giảm chiều cao.
+          // Tên chiến dịch + Vị trí cùng 1 hàng để giảm chiều cao.
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12, alignItems: 'start' } },
             this.field('Tên chiến dịch', h(DS.Input, { value: d.name, onChange: e => setD({ name: e && e.target ? e.target.value : e }), placeholder: 'VD: Khuyến mãi mùa hè 2026' }), true),
-            this.field('Loại quảng cáo', h('div', null,
+            this.field('Vị trí', h('div', null,
               h('div', { className: typeErr ? 'fpt-req-box-err' : undefined, style: typeErr ? { padding: 2 } : undefined },
-                h(DS.Select, { options: this.AD_TYPES(), value: d.type, placeholder: 'Chọn loại quảng cáo…', onChange: v => setD({ type: v, typeErr: false }) })
+                h(DS.Select, { options: this.AD_TYPES(), value: d.type, placeholder: 'Chọn vị trí…', onChange: v => setD({ type: v, typeErr: false }) })
               ),
-              typeErr && h('div', { className: 'fpt-req-err-msg', style: { marginTop: 4 } }, 'Trường bắt buộc — vui lòng chọn loại quảng cáo.')
+              typeErr && h('div', { className: 'fpt-req-err-msg', style: { marginTop: 4 } }, 'Trường bắt buộc — vui lòng chọn vị trí.')
             ), true)
           )
         ),
@@ -6833,7 +6848,7 @@ class Component extends DCLogic {
       ),
       () => {
         const list = this.getAdCatsList();
-        if (!d.type) { setD({ typeErr: true }); this.toast('danger', 'Thiếu thông tin', 'Vui lòng chọn loại quảng cáo.'); return; }
+        if (!d.type) { setD({ typeErr: true }); this.toast('danger', 'Thiếu thông tin', 'Vui lòng chọn vị trí.'); return; }
         if (r) this.setState({ adCatsListData: list.map(c => c.id === r.id ? Object.assign({}, c, { name: d.name, type: d.type, pageScope: (d.pages || []).length ? 'specific' : 'all', pages: d.pages || [], status: d.active ? 'active' : 'inactive', updatedAt: this.nowStr(), updatedBy: 'Admin User' }) : c) });
         else { const newId = Math.max(0, ...list.map(c => c.id)) + 1; this.setState({ adCatsListData: list.concat([{ id: newId, name: d.name, code: 'adcat_' + newId, type: d.type, pageScope: (d.pages || []).length ? 'specific' : 'all', pages: d.pages || [], status: d.active ? 'active' : 'inactive', createdAt: this.nowStr(), createdBy: 'Admin User', updatedAt: this.nowStr(), updatedBy: 'Admin User' }]) }); }
         back();
