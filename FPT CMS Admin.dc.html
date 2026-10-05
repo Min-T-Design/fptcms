@@ -6531,6 +6531,7 @@ class Component extends DCLogic {
     const colorPick = (value, onPick, title) => h('label', { title, style: { position: 'relative', width: 30, height: 30, borderRadius: 8, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: value, flexShrink: 0 } },
       h('input', { type: 'color', value: isHex(value) ? value : '#000000', onChange: e => onPick(e.target.value), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
     );
+    const colLabel = t => h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, t);
     const cap = t => h('div', { style: { fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6 } }, t);
     // flex:1 để cột (Ảnh nền | Màu nền) giãn đều cao bằng nhau; ô tải ảnh nền rỗng cao bằng khung Màu nền.
     // Khi bị khoá: phần con bị làm mờ (disable), thông báo chữ đỏ kiểu validate (fpt-req-err-msg) nằm DƯỚI, không có khung đỏ.
@@ -6553,7 +6554,7 @@ class Component extends DCLogic {
       ),
       h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => setD({ bgImgSet: false }) }, 'Xóa ảnh nền')
     );
-    const bgPanel = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, padding: 16, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10 } },
+    const bgPanel = h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 16, padding: 16, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10 } },
       h('div', null,
         cap('Gợi ý'),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
@@ -6603,27 +6604,28 @@ class Component extends DCLogic {
           )
         ),
         section(3, 'image-line', 'Hình ảnh & tài nguyên',
-          // Ảnh / Icon = ô vuông nhỏ (140px); Nền quảng cáo xuống dòng riêng, chia 2 cột Ảnh nền | Màu nền, loại trừ nhau: chỉ dùng 1 trong 2.
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-            this.field('Ảnh / Icon', h('div', { onClick: () => this.toast('info', 'Chọn tệp', 'Mở hộp thoại tải ảnh (demo).'), style: { width: 140, height: 140, boxSizing: 'border-box', border: '1.5px dashed var(--color-border-strong)', borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: 8, textAlign: 'center', cursor: 'pointer', background: 'var(--color-surface-alt)' } },
-              h(DS.Icon, { name: 'upload-cloud-line', size: 22, color: 'var(--color-text-subtle)' }),
-              h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 2 } }, 'Tải ảnh lên'),
-              h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'JPG, PNG, WEBP'),
-              h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, '≤200KB')
-            )),
-            this.field('Nền quảng cáo', h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 16, alignItems: 'stretch' } },
-              h('div', { style: { display: 'flex', flexDirection: 'column' } },
-                cap('Ảnh nền'),
-                lockWrap(bgColorSet, 'Đang dùng Màu nền — bấm "Xóa màu nền" để tải ảnh nền.', bgImgSet ? imgPreview : bgUploadBox)
-              ),
-              h('div', { style: { display: 'flex', flexDirection: 'column' } },
-                cap('Màu nền'),
-                lockWrap(bgImgSet, 'Đang dùng Ảnh nền — bấm "Xóa ảnh nền" để chọn màu.', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-                  bgPanel,
-                  bgColorSet && h('div', null, h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => setD({ bgColor: '', bgColorSet: false }) }, 'Xóa màu nền'))
-                ))
+          // 1 hàng 3 cột cao bằng nhau: Ảnh / Icon | Ảnh nền | Màu nền (Ảnh nền & Màu nền loại trừ nhau: chỉ dùng 1 trong 2).
+          h('div', { style: { display: 'grid', gridTemplateColumns: '200px minmax(0, 1fr) minmax(0, 1fr)', gap: 16, alignItems: 'stretch' } },
+            h('div', { style: { display: 'flex', flexDirection: 'column' } },
+              colLabel('Ảnh / Icon'),
+              h('div', { onClick: () => this.toast('info', 'Chọn tệp', 'Mở hộp thoại tải ảnh (demo).'), style: { flex: 1, minHeight: 140, boxSizing: 'border-box', border: '1.5px dashed var(--color-border-strong)', borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: 8, textAlign: 'center', cursor: 'pointer', background: 'var(--color-surface-alt)' } },
+                h(DS.Icon, { name: 'upload-cloud-line', size: 22, color: 'var(--color-text-subtle)' }),
+                h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 2 } }, 'Tải ảnh lên'),
+                h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'JPG, PNG, WEBP'),
+                h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, '≤200KB')
               )
-            ))
+            ),
+            h('div', { style: { display: 'flex', flexDirection: 'column' } },
+              colLabel('Ảnh nền'),
+              lockWrap(bgColorSet, 'Đang dùng Màu nền — bấm "Xóa màu nền" để tải ảnh nền.', bgImgSet ? imgPreview : bgUploadBox)
+            ),
+            h('div', { style: { display: 'flex', flexDirection: 'column' } },
+              colLabel('Màu nền'),
+              lockWrap(bgImgSet, 'Đang dùng Ảnh nền — bấm "Xóa ảnh nền" để chọn màu.', h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 8 } },
+                bgPanel,
+                bgColorSet && h('div', null, h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => setD({ bgColor: '', bgColorSet: false }) }, 'Xóa màu nền'))
+              ))
+            )
           )
         )
       ),
