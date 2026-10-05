@@ -728,14 +728,14 @@ class Component extends DCLogic {
       return h('div', {
         key: id, className: 'fpt-navitem fpt-sidebar-item', onClick: () => this.go(id),
         style: {
-          display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', userSelect: 'none',
-          padding: '10px 14px', margin: '1px 12px', borderRadius: 10,
-          fontSize: 14.5, fontWeight: on ? 700 : 600,
+          display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none',
+          padding: '9px 12px', margin: '1px 10px', borderRadius: 10,
+          fontSize: 14, fontWeight: on ? 700 : 600,
           color: on ? 'var(--color-accent-text)' : 'var(--color-text)',
           background: on ? 'var(--color-accent-bg)' : 'transparent',
         }
       },
-        h(DS.Icon, { name: icon, size: 22, color: on ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
+        h(DS.Icon, { name: icon, size: 20, color: on ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
         h('span', { style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, label)
       );
     };
@@ -747,8 +747,8 @@ class Component extends DCLogic {
         key: c.id, className: on ? 'fpt-child-item' : 'fpt-navitem fpt-child-item', onClick: () => this.go(c.id),
         style: {
           position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none',
-          padding: '9px 14px 9px 10px', borderRadius: 0,
-          fontSize: 14.5, fontWeight: on ? 700 : 500,
+          padding: '8px 12px 8px 10px', borderRadius: 0,
+          fontSize: 14, fontWeight: on ? 700 : 500,
           color: on ? 'var(--color-accent-text)' : 'var(--color-text-muted)',
           background: on ? 'var(--color-accent-bg)' : 'transparent',
         }
@@ -761,18 +761,18 @@ class Component extends DCLogic {
     };
     const nodes = [];
     this.NAV().forEach((n, i) => {
-      if (n.type === 'cat') nodes.push(h('div', { key: 'c' + i, style: { fontSize: 11.5, fontWeight: 700, letterSpacing: '.06em', color: 'var(--color-text-subtle)', padding: '18px 26px 8px' } }, n.label.toUpperCase()));
+      if (n.type === 'cat') nodes.push(h('div', { key: 'c' + i, style: { fontSize: 11.5, fontWeight: 700, letterSpacing: '.06em', color: 'var(--color-text-subtle)', padding: '16px 22px 8px' } }, n.label.toUpperCase()));
       else if (n.type === 'item') nodes.push(topItem(n.id, n.label, n.icon));
       else if (n.type === 'group') {
         const open = !!this.state.navOpen[n.id];
         const hasActive = n.children.some(c => c.id === this.state.active);
         nodes.push(h('div', { key: n.id, className: 'fpt-navitem fpt-sidebar-item', onClick: () => this.toggleGroup(n.id),
-          style: { display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', userSelect: 'none', padding: '10px 14px', margin: '1px 12px', borderRadius: 10, fontSize: 14.5, fontWeight: 700, color: 'var(--color-text)', background: 'transparent' } },
-          h(DS.Icon, { name: n.icon, size: 22, color: hasActive ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
+          style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none', padding: '9px 12px', margin: '1px 10px', borderRadius: 10, fontSize: 14, fontWeight: 700, color: 'var(--color-text)', background: 'transparent' } },
+          h(DS.Icon, { name: n.icon, size: 20, color: hasActive ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
           h('span', { style: { flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, n.label),
           h('span', { className: 'fpt-chevron' + (open ? ' fpt-chevron-open' : '') }, h(DS.Icon, { name: 'chevron-down-line', size: 18, color: 'var(--color-text-subtle)' }))
         ));
-        if (open) nodes.push(h('div', { key: n.id + '-kids', style: { position: 'relative', margin: '0 12px 4px 30px', paddingLeft: 0, borderLeft: '2px solid var(--color-border)', animation: 'fptNavGroup .2s cubic-bezier(.2,0,0,1)' } },
+        if (open) nodes.push(h('div', { key: n.id + '-kids', style: { position: 'relative', margin: '0 10px 4px 28px', paddingLeft: 0, borderLeft: '2px solid var(--color-border)', animation: 'fptNavGroup .2s cubic-bezier(.2,0,0,1)' } },
           n.children.map(c => childItem(c))
         ));
       }
@@ -796,8 +796,8 @@ class Component extends DCLogic {
       );
     }
     return h('div', { style: { position: 'relative', flexShrink: 0 }, onMouseEnter: () => this.setState({ sidebarHovered: true }), onMouseLeave: () => this.setState({ sidebarHovered: false }) },
-      h('div', { className: 'fpt-scroll', style: { width: 280, background: 'var(--color-surface)', borderRight: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', overflow: 'auto', height: '100%', animation: 'fptFade .2s cubic-bezier(.2,0,0,1)' } },
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '18px 22px 14px', position: 'sticky', top: 0, background: 'var(--color-surface)', zIndex: 2 } },
+      h('div', { className: 'fpt-scroll', style: { width: 248, background: 'var(--color-surface)', borderRight: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', overflow: 'auto', height: '100%', animation: 'fptFade .2s cubic-bezier(.2,0,0,1)' } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '16px 18px 12px', position: 'sticky', top: 0, background: 'var(--color-surface)', zIndex: 2 } },
           h('img', { src: 'assets/logo-fpt.webp', alt: 'FPT', style: { width: 52, height: 32, objectFit: 'contain', objectPosition: 'left center', flexShrink: 0 } }),
           h('div', { style: { flex: 1, minWidth: 0, overflow: 'hidden' } },
             h('div', { style: { fontWeight: 800, fontSize: 15, letterSpacing: '-.01em', whiteSpace: 'nowrap' } }, 'FPT CMS'),
