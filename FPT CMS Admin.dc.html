@@ -5735,7 +5735,6 @@ class Component extends DCLogic {
     const siblingList = this.MENU()
       .filter(m => m.pid === parentIdNum && m.pos === posVal && (!isEdit || m.id !== r.id))
       .sort((a, b) => a.order - b.order);
-    const orderNum = parseInt(orderVal, 10);
     // Thứ tự chỉ nhập tay được ở menu LV1 (không có Menu cha) — menu LV2/LV3 disable, thứ tự quản lý tự động + kéo thả ở "Menu con"
     const orderDisabled = !!parentVal;
     let orderNote = null;
@@ -5746,9 +5745,6 @@ class Component extends DCLogic {
       } else {
         orderNote = { type: 'info', text: 'Số thứ tự của menu con được quản lý tự động — vào menu cha và kéo thả trong mục "Menu con" để thay đổi vị trí.' };
       }
-    } else if (!isNaN(orderNum)) {
-      const clash = siblingList.find(s => s.order === orderNum);
-      if (clash) orderNote = { type: 'warn', text: 'Menu "' + clash.name + '" đang ở vị trí ' + orderNum + ' sẽ lùi xuống vị trí ' + (orderNum + 1) + ' — các mục sau đó lần lượt +1.' };
     }
 
     // ─ Menu con của bản ghi đang sửa (chỉ LV1/LV2 mới có thể có menu con), kéo thả để đổi thứ tự
