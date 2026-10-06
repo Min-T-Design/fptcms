@@ -3867,6 +3867,22 @@ class Component extends DCLogic {
     { name: 'Trang Thanh toán & Hỗ trợ', slug: '/thanh-toan' },
     { name: 'Thiết bị Smart Home', slug: '/thiet-bi-smart-home' },
   ]; }
+  // Landing Page áp dụng quảng cáo (tab thứ 2 trong modal "Chọn trang áp dụng"); slug có tiền tố /landing/ để không trùng slug trang nội dung.
+  AD_LDP_PAGES() { return [
+    { name: 'Bảng xếp hạng Ngoại hạng Anh', slug: '/landing/bang-xep-hang-ngoai-hang-anh' },
+    { name: 'Đối tác bán hàng', slug: '/landing/doi-tac-ban-hang' },
+    { name: 'ECOM Camera', slug: '/landing/ecom-camera' },
+    { name: 'F-Citizen', slug: '/landing/f-citizen' },
+    { name: 'Homepage', slug: '/landing/homepage' },
+    { name: 'Kết quả Ngoại Hạng Anh', slug: '/landing/ket-qua-ngoai-hang-anh' },
+    { name: 'Lắp đặt internet', slug: '/landing/lap-dat-internet' },
+    { name: 'Lắp mạng FPT', slug: '/landing/lap-mang-fpt' },
+    { name: 'Lịch thi đấu Ngoại hạng Anh', slug: '/landing/lich-thi-dau-ngoai-hang-anh' },
+    { name: 'Nâng cấp', slug: '/landing/nang-cap' },
+    { name: 'prepaid-internet (pwifi-plus)', slug: '/landing/prepaid-internet' },
+    { name: 'X3 Băng thông', slug: '/landing/x3-bang-thong' },
+  ]; }
+  AD_ALL_PAGES() { return this.AD_PAGES().concat(this.AD_LDP_PAGES()); }
   AD_TYPES() { return [{ value: 'above_header', label: 'Trên header' }, { value: 'below_header', label: 'Dưới header' }]; }
   adTypeLabel(v) { const t = this.AD_TYPES().find(t => t.value === v); return t ? t.label : '—'; }
   AD_CATEGORIES() { return [
@@ -6523,6 +6539,10 @@ class Component extends DCLogic {
     );
     // Nền loại trừ nhau: đã có Ảnh nền → khoá Màu nền; đã chọn Màu nền → khoá Ảnh nền. Hai cột Ảnh nền | Màu nền.
     const bgImgSet = d.bgImgSet !== undefined ? d.bgImgSet : !!(r && r.bgImg);
+    const iconSet = d.iconSet !== undefined ? d.iconSet : !!(r && r.img);
+    // Ảnh demo cho trạng thái đã tải lên (bản thật sẽ là tệp người dùng chọn).
+    const DEMO_ICON = 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7aedea66620_1786441194.png';
+    const DEMO_BG = 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7ae92542251_1786439973.png';
     const bgColorSet = d.bgColorSet !== undefined ? d.bgColorSet : !!(r && r.bgColor && !r.bgImg);
     const isHex = v => /^#[0-9a-fA-F]{6}$/.test(v || '');
     const setSolid = v => setD({ bgColor: v, bgColorSet: !!v });
@@ -6541,16 +6561,22 @@ class Component extends DCLogic {
       h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 6 } }, 'Kéo thả hoặc chọn tệp để tải lên'),
       h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, 'JPG, PNG, WEBP · ≤200KB')
     );
-    const imgPreview = h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: 12, border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface-alt)' } },
-      r && r.bgImg
-        ? h('img', { src: r.bgImg, style: { width: 56, height: 56, borderRadius: 8, objectFit: 'cover', flexShrink: 0 } })
-        : h('div', { style: { width: 56, height: 56, borderRadius: 8, background: 'var(--color-surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } }, h(DS.Icon, { name: 'image-line', size: 22, color: 'var(--color-text-subtle)' })),
-      h('div', { style: { flex: 1, minWidth: 0 } },
-        h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Ảnh nền đã tải lên'),
-        h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, 'JPG, PNG, WEBP · ≤200KB')
+    // Khung đã tải ảnh lên: preview ảnh chiếm toàn khung + thanh tên tệp/dung lượng + nút Thay / Xóa.
+    const uploadedBox = (src, name, size, minH, onReplace, onRemove) => h('div', { style: { flex: 1, minHeight: minH, display: 'flex', flexDirection: 'column', border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', background: 'var(--color-surface)' } },
+      h('div', { style: { flex: 1, position: 'relative', background: 'var(--color-surface-alt)', minHeight: 0 } },
+        h('img', { src, alt: name, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: 12, boxSizing: 'border-box' } })
       ),
-      h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => setD({ bgImgSet: false, bgMode: 'image' }) }, 'Xóa ảnh nền')
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px solid var(--color-border)' } },
+        h(DS.Icon, { name: 'image-line', size: 18, color: 'var(--color-text-subtle)' }),
+        h('div', { style: { flex: 1, minWidth: 0 } },
+          h('div', { style: { fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, name),
+          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, size + ' · Đã tải lên')
+        ),
+        h(DS.Button, { level: 'tertiary', size: 'sm', onClick: onReplace }, 'Thay'),
+        h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: onRemove }, 'Xóa')
+      )
     );
+    const imgPreview = uploadedBox((r && r.bgImg) || DEMO_BG, 'nen-quang-cao.png', '126KB', 190, () => this.toast('info', 'Chọn tệp', 'Mở hộp thoại tải ảnh (demo).'), () => setD({ bgImgSet: false, bgMode: 'image' }));
     const bgPanel = h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 16, padding: 16, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10 } },
       h('div', null,
         cap('Gợi ý'),
@@ -6605,12 +6631,14 @@ class Component extends DCLogic {
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 24, alignItems: 'stretch' } },
             h('div', { style: { display: 'flex', flexDirection: 'column' } },
               colLabel('Ảnh / Icon'),
-              h('div', { onClick: () => this.toast('info', 'Chọn tệp', 'Mở hộp thoại tải ảnh (demo).'), style: { flex: 1, minHeight: 160, boxSizing: 'border-box', border: '1.5px dashed var(--color-border-strong)', borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: 8, textAlign: 'center', cursor: 'pointer', background: 'var(--color-surface-alt)' } },
-                h(DS.Icon, { name: 'upload-cloud-line', size: 22, color: 'var(--color-text-subtle)' }),
-                h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 2 } }, 'Tải ảnh lên'),
-                h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'JPG, PNG, WEBP'),
-                h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, '≤200KB')
-              )
+              iconSet
+                ? uploadedBox((r && r.img) || DEMO_ICON, 'icon-khuyen-mai.png', '48KB', 160, () => this.toast('info', 'Chọn tệp', 'Mở hộp thoại tải ảnh (demo).'), () => setD({ iconSet: false }))
+                : h('div', { onClick: () => setD({ iconSet: true }), style: { flex: 1, minHeight: 160, boxSizing: 'border-box', border: '1.5px dashed var(--color-border-strong)', borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: 8, textAlign: 'center', cursor: 'pointer', background: 'var(--color-surface-alt)' } },
+                    h(DS.Icon, { name: 'upload-cloud-line', size: 22, color: 'var(--color-text-subtle)' }),
+                    h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 2 } }, 'Tải ảnh lên'),
+                    h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'JPG, PNG, WEBP'),
+                    h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, '≤200KB')
+                  )
             ),
             h('div', { style: { display: 'flex', flexDirection: 'column', minWidth: 0 } },
               colLabel('Nền quảng cáo'),
@@ -6637,7 +6665,7 @@ class Component extends DCLogic {
         const contentHtml = this._adHtmlRef && this._adHtmlRef.current ? this._adHtmlRef.current.innerHTML : (r ? (r.content || '') : '');
         const list = this.getAdsList();
         const rec = {
-          catCode: d.catCode, title: d.title, img: r ? r.img : '', bgColor: bgColorSet && !bgImgSet ? d.bgColor : '', bgImg: bgImgSet ? ((r && r.bgImg) || '') : '',
+          catCode: d.catCode, title: d.title, img: iconSet ? ((r && r.img) || DEMO_ICON) : '', bgColor: bgColorSet && !bgImgSet ? d.bgColor : '', bgImg: bgImgSet ? ((r && r.bgImg) || DEMO_BG) : '',
           content: contentHtml, url: d.url, target: d.target, order: r ? (r.order || 1) : Math.max(0, ...list.filter(a => a.catCode === d.catCode).map(a => a.order || 0)) + 1,
           status: d.active ? 'active' : 'inactive',
           startAt: this.adFmtDate(d.dateStart), endAt: this.adFmtDate(d.dateEnd),
@@ -6660,7 +6688,7 @@ class Component extends DCLogic {
         this.detailRow('Vị trí', this.adTypeLabel(r.type)),
         this.detailRow('Trang áp dụng', (r.pageScope === 'specific' && (r.pages || []).length)
           ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } }, r.pages.map(slug => {
-              const p = this.AD_PAGES().find(pp => pp.slug === slug);
+              const p = this.AD_ALL_PAGES().find(pp => pp.slug === slug);
               return h('span', { key: slug, style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 9px', borderRadius: 99, fontSize: 11.5, fontWeight: 600 } }, p ? p.name : slug);
             }))
           : 'Tất cả các trang'),
@@ -6685,22 +6713,28 @@ class Component extends DCLogic {
   }
   renderAdCatEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ adCatEditor: undefined, adCatDraft: null, adPagePickerOpen: false, adPageSearchQ: '' });
+    const isNew = !r; const back = () => this.setState({ adCatEditor: undefined, adCatDraft: null, adPagePickerOpen: false, adPageSearchQ: '', adPagePickerTab: 'content' });
     const setD = patch => this.setState(s => ({ adCatDraft: Object.assign({}, s.adCatDraft, patch) }));
     const dBase = r ? { name: r.name, type: r.type || '', active: r.status === 'active', pageScope: r.pageScope || 'all', pages: r.pages || [] } : { name: '', type: '', active: true, pageScope: 'all', pages: [] };
     const d = Object.assign({}, dBase, this.state.adCatDraft);
     // Vị trí là Select bắt buộc (composite control, §14): lỗi hiện khi bấm Lưu mà chưa chọn, tự xoá khi đã chọn.
     const typeErr = !!d.typeErr && !d.type;
-    const allPages = this.AD_PAGES();
+    // Modal có 2 tab: Trang nội dung / Landing Page. allPages = gộp cả hai (dùng cho "áp dụng tất cả", tra tên); tabPages = danh sách của tab đang mở.
+    const allPages = this.AD_ALL_PAGES();
+    const contentPages = this.AD_PAGES();
+    const ldpPages = this.AD_LDP_PAGES();
+    const pickerTab = this.state.adPagePickerTab === 'ldp' ? 'ldp' : 'content';
+    const tabPages = pickerTab === 'ldp' ? ldpPages : contentPages;
+    const isLdpSlug = slug => ldpPages.some(pp => pp.slug === slug);
     const pageQ = (this.state.adPageSearchQ || '').toLowerCase();
-    const visiblePages = pageQ ? allPages.filter(p => (p.name + ' ' + p.slug).toLowerCase().includes(pageQ)) : allPages;
+    const visiblePages = pageQ ? tabPages.filter(p => (p.name + ' ' + p.slug).toLowerCase().includes(pageQ)) : tabPages;
     // Không còn chọn phạm vi riêng: danh sách trống = áp dụng TẤT CẢ trang; có ≥1 trang = chỉ các trang đó (pageScope suy ra từ d.pages).
     const isSpecific = (d.pages || []).length > 0;
     // Trang đã áp dụng (d.pages) hiển thị dạng danh sách; chọn/sửa qua modal với bản nháp riêng (adPagePickerSel) — chỉ ghi vào d.pages khi bấm Xác nhận.
     const pickerOpen = !!this.state.adPagePickerOpen;
     const sel = this.state.adPagePickerSel || [];
-    const openPicker = () => this.setState({ adPagePickerOpen: true, adPagePickerSel: isSpecific ? d.pages.slice() : allPages.map(p => p.slug), adPageSearchQ: '' });
-    const closePicker = () => this.setState({ adPagePickerOpen: false, adPageSearchQ: '' });
+    const openPicker = () => this.setState({ adPagePickerOpen: true, adPagePickerSel: isSpecific ? d.pages.slice() : allPages.map(p => p.slug), adPageSearchQ: '', adPagePickerTab: 'content' });
+    const closePicker = () => this.setState({ adPagePickerOpen: false, adPageSearchQ: '', adPagePickerTab: 'content' });
     const toggleSel = slug => this.setState({ adPagePickerSel: sel.includes(slug) ? sel.filter(x => x !== slug) : sel.concat(slug) });
     const allVisibleChecked = visiblePages.length > 0 && visiblePages.every(p => sel.includes(p.slug));
     const toggleAllVisible = () => {
@@ -6738,15 +6772,22 @@ class Component extends DCLogic {
       )
     },
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
-        h(DS.Input, { leadingIcon: 'search-medium-line', placeholder: 'Tìm kiếm trang theo tên hoặc slug...', value: this.state.adPageSearchQ || '', onChange: e => this.setState({ adPageSearchQ: e && e.target ? e.target.value : e }) }),
+        h(DS.Tabs, {
+          value: pickerTab, onChange: v => this.setState({ adPagePickerTab: v, adPageSearchQ: '' }),
+          items: [
+            { value: 'content', label: 'Trang nội dung (' + contentPages.filter(p => sel.includes(p.slug)).length + '/' + contentPages.length + ')' },
+            { value: 'ldp', label: 'Landing Page (' + ldpPages.filter(p => sel.includes(p.slug)).length + '/' + ldpPages.length + ')' },
+          ]
+        }),
+        h(DS.Input, { leadingIcon: 'search-medium-line', placeholder: pickerTab === 'ldp' ? 'Tìm kiếm landing page theo tên hoặc slug...' : 'Tìm kiếm trang theo tên hoặc slug...', value: this.state.adPageSearchQ || '', onChange: e => this.setState({ adPageSearchQ: e && e.target ? e.target.value : e }) }),
         h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
           h('div', { onClick: toggleAllVisible, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '9px 14px', cursor: visiblePages.length ? 'pointer' : 'default', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)' } },
             h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: allVisibleChecked, onChange: toggleAllVisible, disabled: !visiblePages.length })),
-            h('span', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, pageQ ? 'Chọn tất cả kết quả tìm kiếm (' + visiblePages.length + ')' : 'Chọn tất cả (' + allPages.length + ')')
+            h('span', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, pageQ ? 'Chọn tất cả kết quả tìm kiếm (' + visiblePages.length + ')' : 'Chọn tất cả (' + tabPages.length + ')')
           ),
           h('div', { className: 'fpt-scroll', style: { maxHeight: 340, overflowY: 'auto' } },
             visiblePages.length === 0
-              ? h('div', { style: { padding: 20, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, 'Không tìm thấy trang phù hợp.')
+              ? h('div', { style: { padding: 20, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, (pickerTab === 'ldp' ? 'Không tìm thấy landing page phù hợp.' : 'Không tìm thấy trang phù hợp.'))
               : visiblePages.map(pickRow)
           )
         )
@@ -6817,6 +6858,7 @@ class Component extends DCLogic {
                         h('span', { style: { fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, p ? p.name : slug),
                         h('span', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', fontFamily: 'var(--font-dev)' } }, slug)
                       ),
+                      isLdpSlug(slug) && h(DS.Badge, { theme: 'info' }, 'Landing Page'),
                       // Giữ tối thiểu 1 trang; muốn áp dụng tất cả thì dùng nút "Áp dụng tất cả trang".
                       arr.length > 1 && h(DS.IconButton, { icon: 'trash-line', label: 'Bỏ trang này', level: 'tertiary', size: 'sm', onClick: () => removePage(slug) })
                     );
