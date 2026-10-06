@@ -6344,7 +6344,7 @@ class Component extends DCLogic {
   }
   openAdEditor(r) {
     this.setState({
-      adEditor: r, adCatErr: false,
+      adEditor: r, adCatErr: false, adTitleErr: false,
       adDraft: Object.assign(r
         ? { catCode: r.catCode, title: r.title, url: r.url || '', target: r.target || '_self', order: String(r.order || 1), bgColor: r.bgColor || '#0072BC', active: r.status === 'active', dateStart: this.adParseDate(r.startAt), dateEnd: this.adParseDate(r.endAt) }
         : { catCode: '', title: '', url: '', target: '_self', order: '1', bgColor: '#0072BC', active: true, dateStart: null, dateEnd: null },
@@ -6355,7 +6355,7 @@ class Component extends DCLogic {
     });
   }
   closeAdEditor() {
-    this.setState({ adEditor: undefined, adDraft: null, adCatErr: false });
+    this.setState({ adEditor: undefined, adDraft: null, adCatErr: false, adTitleErr: false });
   }
   renderAds() {
     if (this.state.adEditor !== undefined) return this.renderAdEditor(this.state.adEditor);
@@ -6529,6 +6529,12 @@ class Component extends DCLogic {
     const d = this.state.adDraft || { catCode: '', title: '', url: '', target: '_self', order: '1', bgColor: '#0072BC', active: true };
     const cats = this.getAdCatsList();
     const catErr = !!this.state.adCatErr;
+    // Tiêu đề: bắt buộc + tối đa 255 ký tự. Lỗi "để trống" chỉ hiện sau khi bấm Lưu (và tự tắt khi đã nhập); lỗi "vượt 255" hiện ngay khi gõ/dán quá giới hạn.
+    const TITLE_MAX = 255;
+    const titleLen = (d.title || '').length;
+    const titleOver = titleLen > TITLE_MAX;
+    const titleEmptyErr = !!this.state.adTitleErr && !(d.title || '').trim();
+    const titleError = titleOver ? 'Tiêu đề quảng cáo không được vượt quá ' + TITLE_MAX + ' ký tự.' : titleEmptyErr ? 'Vui lòng nhập tiêu đề quảng cáo.' : undefined;
     const expiredErr = !!d.active && !!d.dateEnd && d.dateEnd.getTime() < Date.now();
     const catOptions = cats.map(c => ({ value: c.code, label: c.name }));
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
@@ -6610,7 +6616,16 @@ class Component extends DCLogic {
           // Danh mục + Tiêu đề trên 1 hàng để giảm scroll.
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12, alignItems: 'start' } },
             this.field('Danh mục quảng cáo', catSelect, true),
-            this.field('Tiêu đề', h(DS.Input, { value: d.title, onChange: e => setD({ title: e && e.target ? e.target.value : e }), placeholder: 'VD: Combo Internet V.VIP chỉ từ 220K...' }), true)
+            // Không dùng this.field(..., true): validate chung sẽ báo "Trường bắt buộc" — ở đây cần thông báo riêng theo từng lỗi (để trống / vượt 255).
+            h('div', null,
+              h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Tiêu đề', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+              h(DS.Input, {
+                value: d.title, placeholder: 'VD: Combo Internet V.VIP chỉ từ 220K...',
+                onChange: e => { setD({ title: e && e.target ? e.target.value : e }); if (this.state.adTitleErr && String((e && e.target ? e.target.value : e) || '').trim()) this.setState({ adTitleErr: false }); },
+                error: titleError,
+                hint: 'Tối đa ' + TITLE_MAX + ' ký tự (' + titleLen + '/' + TITLE_MAX + ')'
+              })
+            )
           ),
           catErr && h('div', { className: 'fpt-req-err-msg', style: { marginTop: -6 } }, 'Trường bắt buộc — vui lòng chọn danh mục quảng cáo.'),
           // Thời gian quảng cáo rộng bằng đúng 1 cột (= Danh mục quảng cáo), không dàn full.
@@ -6666,9 +6681,15 @@ class Component extends DCLogic {
         )
       ),
       () => {
-        if (!d.catCode) { this.setState({ adCatErr: true }); this.toast('danger', 'Thiếu thông tin', 'Vui lòng chọn danh mục quảng cáo.'); return; }
+        const titleMissing = !(d.title || '').trim();
+        if (!d.catCode || titleMissing) {
+          this.setState({ adCatErr: !d.catCode, adTitleErr: titleMissing });
+          this.toast('danger', 'Thiếu thông tin', !d.catCode && titleMissing ? 'Vui lòng chọn danh mục và nhập tiêu đề quảng cáo.' : !d.catCode ? 'Vui lòng chọn danh mục quảng cáo.' : 'Vui lòng nhập tiêu đề quảng cáo.');
+          return;
+        }
+        if (titleOver) { this.toast('danger', 'Tiêu đề quá dài', 'Tiêu đề quảng cáo không được vượt quá ' + TITLE_MAX + ' ký tự.'); return; }
         if (expiredErr) { this.toast('danger', 'Quảng cáo đã hết hạn', 'Vui lòng chọn lại thời gian kết thúc để mở lại quảng cáo.'); return; }
-        if (this.state.adCatErr) this.setState({ adCatErr: false });
+        if (this.state.adCatErr || this.state.adTitleErr) this.setState({ adCatErr: false, adTitleErr: false });
         const contentHtml = this._adHtmlRef && this._adHtmlRef.current ? this._adHtmlRef.current.innerHTML : (r ? (r.content || '') : '');
         const list = this.getAdsList();
         const rec = {
