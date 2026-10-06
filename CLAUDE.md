@@ -316,3 +316,14 @@ A few flows don't render through `editorShell` — a multi-step wizard like Land
 ### Clearing errors as the user fixes them
 
 Whichever mechanism is in play, a field's error must disappear as soon as it's fixed — never require a second Save click just to confirm the fix landed. The centralized path does this via captured `onChange`/`onBlur` handlers in `FptRequiredField`; hand-rolled paths should clear the relevant flag inside that field's own `onChange`/`onBlur` once its value is non-empty (see the reference implementations above).
+
+---
+
+## 15. Target URL Fields Must Be Validated (Format + Anti-XSS)
+
+Every field that holds a **destination/link URL** (CTA URL, Link banner, Link điều hướng, URL Link của menu, Redirect URL, App Store/Google Play URL, YouTube link…) must use `FptUrlInput` (module-scope component in `FPT CMS Admin.dc.html`, same props as `DS.Input`) instead of a bare `h(DS.Input, …)`.
+
+* **Rule:** a value is valid only if it is empty, starts with `http://` / `https://` (with a real host), or is an internal relative path starting with a single `/` (e.g. `/shop/camera`; `//host` is rejected). Anything else — `javascript:`, `data:`, `<script>`, quotes/backticks/backslashes/whitespace — is rejected. Logic lives in `fptIsValidTargetUrl()`.
+* **UX:** red border + message under the field (`FPT_URL_ERROR`: "Đường dẫn URL đích không hợp lệ. Vui lòng nhập URL bắt đầu bằng http://, https://...") on blur, then live while editing. Empty is valid here — "required" is still handled separately by §14 (`this.field(..., true)` works with `FptUrlInput`).
+* **Save is blocked:** `this.editorShell()` Save calls `this.validateUrlFields(root)`; the LDP section editor's own `onSave` does the same via its form root; the LDP wizard Step 2 checks `redirect` in its Next handler. Never disable the button — validate in `onClick` (§14).
+* **Not covered:** image/media asset URLs, URL Slug, and `tel:` phone fields — those are not destination URLs.

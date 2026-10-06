@@ -94,6 +94,48 @@
 <div id="fpt-cms">{{ app }}</div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;}}">
+// Target URL hợp lệ & chống XSS: chỉ nhận http://, https:// (host hợp lệ) hoặc đường dẫn nội bộ bắt đầu bằng "/" (không phải "//").
+// Chặn javascript:, data:, <script>... vì mọi giá trị không bắt đầu bằng http(s):// hoặc "/" đều bị loại, và ký tự < > " ' ` \ / khoảng trắng / ký tự điều khiển bị cấm.
+// Trống = hợp lệ (bắt buộc hay không do cơ chế required riêng quyết định).
+const FPT_URL_ERROR = 'Đường dẫn URL đích không hợp lệ. Vui lòng nhập URL bắt đầu bằng http://, https://...';
+function fptIsValidTargetUrl(raw) {
+  const v = String(raw == null ? '' : raw).trim();
+  if (!v) return true;
+  if (/[\s<>"'`\\\u0000-\u001f\u007f]/.test(v)) return false;
+  if (v.charAt(0) === '/') return v.charAt(1) !== '/';
+  if (!/^https?:\/\//i.test(v)) return false;
+  try {
+    const u = new URL(v);
+    return (u.protocol === 'http:' || u.protocol === 'https:') && !!u.hostname && (u.hostname === 'localhost' || u.hostname.indexOf('.') > 0);
+  } catch (e) { return false; }
+}
+// Drop-in thay cho DS.Input ở mọi trường "URL đích": hiện viền đỏ + lỗi ngay dưới ô khi rời ô (và live khi sửa tiếp) nếu giá trị sai định dạng.
+// Gắn hook _fptValidateUrl lên wrapper để this.validateUrlFields() (editorShell) và Save của LDP section editor chặn lưu bằng DOM-read, giống FptRequiredField.
+function FptUrlInput(props) {
+  const h = React.createElement;
+  const DS = window.ZENKaizenDesignSystem_4069b4;
+  const { forceValidate, ...inputProps } = props;
+  const [touched, setTouched] = React.useState(false);
+  const [cur, setCur] = React.useState(() => String(props.value != null ? props.value : (props.defaultValue || '')));
+  const live = props.value != null ? String(props.value) : cur;
+  const invalid = (touched || !!forceValidate) && !fptIsValidTargetUrl(live);
+  const isInput = e => e && e.target && e.target.tagName === 'INPUT';
+  return h('div', {
+    className: 'fpt-url-field',
+    style: { display: 'contents' },
+    ref: node => {
+      if (node) node._fptValidateUrl = () => {
+        const inp = node.querySelector('input');
+        const v = inp ? inp.value : live;
+        setTouched(true); setCur(v);
+        return fptIsValidTargetUrl(v);
+      };
+    },
+    onBlurCapture: e => { if (isInput(e)) { setCur(e.target.value); setTouched(true); } },
+    onChangeCapture: e => { if (isInput(e)) setCur(e.target.value); }
+  }, h(DS.Input, Object.assign({}, inputProps, { error: invalid ? FPT_URL_ERROR : inputProps.error })));
+}
+
 // Required fields use the same native DS error state as the Landing Page module.
 // Keeping this as a small stateful wrapper lets the centralized DOM-at-submit
 // validator work with both controlled and uncontrolled fields without styling
@@ -106,7 +148,7 @@ function FptRequiredField({ control }) {
 
   const withError = node => {
     if (!React.isValidElement(node)) return node;
-    if (node.type === DS.Input || node.type === DS.Textarea) {
+    if (node.type === DS.Input || node.type === DS.Textarea || node.type === FptUrlInput) {
       return React.cloneElement(node, { error: invalid ? errorText : node.props.error });
     }
     if (!node.props || node.props.children == null) return node;
@@ -3685,6 +3727,15 @@ class Component extends DCLogic {
     });
     return { count, firstInvalid };
   }
+  // Target URL hợp lệ: đọc DOM tại thời điểm Lưu như validateReqFields — mọi FptUrlInput trong root tự bật lỗi nếu sai định dạng.
+  validateUrlFields(root) {
+    let count = 0, first = null;
+    if (!root) return { count, first };
+    root.querySelectorAll('.fpt-url-field').forEach(f => {
+      if (typeof f._fptValidateUrl === 'function' && !f._fptValidateUrl()) { count++; if (!first) first = f.querySelector('input'); }
+    });
+    return { count, first };
+  }
   detailRow(label, value) {
     const h = React.createElement;
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2, padding: '10px 0', borderBottom: '1px solid var(--color-border-pale)' } },
@@ -3706,9 +3757,12 @@ class Component extends DCLogic {
     // this.reqFieldWrap above) is filled; show the error on the field itself, not just a toast.
     const wrappedSave = onSave ? () => {
       const { count, firstInvalid } = this.validateReqFields(this._editorShellRoot);
-      if (count) {
-        this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng điền đầy đủ ' + count + ' trường bắt buộc trước khi lưu.');
-        if (firstInvalid && firstInvalid.scrollIntoView) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const urlCheck = this.validateUrlFields(this._editorShellRoot);
+      if (count || urlCheck.count) {
+        if (count) this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng điền đầy đủ ' + count + ' trường bắt buộc trước khi lưu.');
+        else this.toast('danger', 'URL không hợp lệ', FPT_URL_ERROR);
+        const target = firstInvalid || urlCheck.first;
+        if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
       onSave();
@@ -4582,7 +4636,7 @@ class Component extends DCLogic {
     if (CTA_TYPES.includes(secType) && !hideCtaForTabsRow) blocks.push({ icon: 'share-01-line', title: 'Nút CTA (Call-to-action)', content: [
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
         h('div', null, this.field('Text hiển thị', h(DS.Input, { defaultValue: r ? (r.ctaText || '') : '', placeholder: 'VD: Xem thêm' }))),
-        h('div', null, this.field('Link điều hướng', h(DS.Input, { defaultValue: r ? (r.ctaUrl || '') : '', placeholder: 'VD: /internet' })))
+        h('div', null, this.field('Link điều hướng', h(FptUrlInput, { defaultValue: r ? (r.ctaUrl || '') : '', placeholder: 'VD: /internet' })))
       )
     ] });
     if (MEDIA_ICON2_TYPES.includes(secType)) blocks.push({ icon: 'image-line', title: 'Media & Icon', content: [
@@ -4596,7 +4650,7 @@ class Component extends DCLogic {
         this.uploadBox('Hình ảnh - Desktop', 'JPG, PNG, WebP · ≤200KB'),
         this.uploadBox('Hình ảnh - Mobile', 'JPG, PNG, WebP · ≤150KB')
       ),
-      this.field('Link banner', h(DS.Input, { defaultValue: r ? (r.bannerLink || '') : '', placeholder: 'VD: /khuyen-mai' }))
+      this.field('Link banner', h(FptUrlInput, { defaultValue: r ? (r.bannerLink || '') : '', placeholder: 'VD: /khuyen-mai' }))
     ] });
     if (TEXT_EDITOR_TYPES.includes(secType)) blocks.push({ icon: 'edit-01-line', title: 'Nội dung section', content: [
       this.richTextEditor(r ? (r.html || '') : '')
@@ -5557,8 +5611,8 @@ class Component extends DCLogic {
             h('div', { style: { gridColumn: 'span 3' } }, this.field('Thiết bị đi kèm & Đặc tính (Mỗi dòng 1 ý)', h(DS.Textarea, { value: cf.devices || '', onChange: e => setF('devices', e.target ? e.target.value : e), placeholder: 'VD: Modem Wi-Fi 6\nKết nối lên đến 10 thiết bị', rows: 3 }))),
             h('div', { style: { gridColumn: 'span 3' } }, this.field('Mô tả bổ sung dưới thiết bị (Tùy chọn)', h(DS.Input, { value: cf.note || '', onChange: e => setF('note', e.target ? e.target.value : e), placeholder: 'VD: Phủ sóng ổn định cho nhà ít tầng' }))),
             this.field('Text nút Đăng ký ngay', h(DS.Input, { value: cf.btn1Text != null ? cf.btn1Text : 'Đăng ký ngay', onChange: e => setF('btn1Text', e.target ? e.target.value : e) })),
-            this.field('URL nút Đăng ký ngay', h(DS.Input, { value: cf.btn1Url || '', onChange: e => setF('btn1Url', e.target ? e.target.value : e), placeholder: 'VD: /checkout?pkg=giga' })),
-            this.field('URL nút Xem chi tiết', h(DS.Input, { value: cf.btn2Url || '', onChange: e => setF('btn2Url', e.target ? e.target.value : e), placeholder: 'VD: /internet-ca-nhan/giga' }))
+            this.field('URL nút Đăng ký ngay', h(FptUrlInput, { value: cf.btn1Url || '', onChange: e => setF('btn1Url', e.target ? e.target.value : e), placeholder: 'VD: /checkout?pkg=giga' })),
+            this.field('URL nút Xem chi tiết', h(FptUrlInput, { value: cf.btn2Url || '', onChange: e => setF('btn2Url', e.target ? e.target.value : e), placeholder: 'VD: /internet-ca-nhan/giga' }))
           ),
           // ── Divider ──
           h('div', { style: { width: 1, background: 'var(--color-border)', alignSelf: 'stretch', flexShrink: 0 } }),
@@ -5780,7 +5834,7 @@ class Component extends DCLogic {
     const showLinkSection = type === 'link' || type === 'page' || type === '';
     let linkContent;
     if (type === 'link') {
-      linkContent = this.field('URL Link', h(DS.Input, {
+      linkContent = this.field('URL Link', h(FptUrlInput, {
         value: this.state.menuEditorUrl || '',
         onChange: e => this.setState({ menuEditorUrl: e && e.target ? e.target.value : e }),
         placeholder: 'https://... hoặc /duong-dan'
@@ -6201,7 +6255,7 @@ class Component extends DCLogic {
               searchable: true, searchPlaceholder: 'Tìm target…',
               onChange: v => this.setState({ bannerEditorTarget: v })
             }), true)),
-            h('div', { style: { flex: 1 } }, this.field('Link URL đích', h(DS.Input, { defaultValue: r ? r.link : '', placeholder: 'VD: fpt.vn/khuyen-mai/thang-6' }), true))
+            h('div', { style: { flex: 1 } }, this.field('Link URL đích', h(FptUrlInput, { defaultValue: r ? r.link : '', placeholder: 'VD: https://fpt.vn/khuyen-mai/thang-6' }), true))
           )
         )
       ),
@@ -6642,7 +6696,7 @@ class Component extends DCLogic {
           this.field('Nội dung', this.richTextEditor(r ? (r.content || '') : '', 'ad')),
           // URL + Target cùng 1 hàng (URL rộng, Target hẹp); ghi chú URL chuyển vào hint dưới ô.
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 220px', gap: 12, alignItems: 'start' } },
-            this.field('URL', h(DS.Input, { value: d.url, onChange: e => setD({ url: e && e.target ? e.target.value : e }), placeholder: 'https://...', hint: 'Liên kết khi click vào quảng cáo, phải đúng định dạng URL.' })),
+            this.field('URL', h(FptUrlInput, { value: d.url, onChange: e => setD({ url: e && e.target ? e.target.value : e }), placeholder: 'https://...', hint: 'Liên kết khi click vào quảng cáo, phải đúng định dạng URL.' })),
             this.field('Target', h(DS.Select, {
               options: this.AD_TARGETS(), value: d.target, placeholder: 'Chọn target…', onChange: v => setD({ target: v })
             }))
@@ -8079,6 +8133,11 @@ class Component extends DCLogic {
             this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng điền đầy đủ ' + errCount + ' trường bắt buộc ở phần Thông tin cơ bản trước khi tiếp tục.');
             return;
           }
+          if (f2.redirect !== undefined && !fptIsValidTargetUrl(f2.redirect)) {
+            this.setState({ ldpStep2Err: { redirect: true } });
+            this.toast('danger', 'URL không hợp lệ', FPT_URL_ERROR);
+            return;
+          }
           this.setState({ ldpStep2Err: {}, ldpStep: 3 });
         }
       }, 'Tiếp theo: Nội dung'),
@@ -8351,7 +8410,7 @@ class Component extends DCLogic {
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Redirect khi hết hạn'),
-          h(DS.Input, { value: get('redirect', '/'), onChange: e => set('redirect', e.target.value), placeholder: '/ (Trang chủ)' })
+          h(FptUrlInput, { value: get('redirect', '/'), onChange: e => set('redirect', e.target.value), placeholder: '/ (Trang chủ)', forceValidate: !!step2Err.redirect })
         ),
         h('div', { style: { gridColumn: '1 / -1' } },
           h('label', { style: lbSt }, 'Màu nền toàn trang'),
@@ -9128,7 +9187,7 @@ class Component extends DCLogic {
                 
                 row2(
                   field('Nút CTA — Text', inp(item.ctaText, 'Đăng ký ngay', v => self.upd(item.id, { ctaText: v }))),
-                  field('Nút CTA — URL', inp(item.ctaUrl, '/dang-ky', v => self.upd(item.id, { ctaUrl: v })))
+                  field('Nút CTA — URL', h2(FptUrlInput, { defaultValue: item.ctaUrl, placeholder: '/dang-ky', onChange: e => self.upd(item.id, { ctaUrl: e.target.value }) }))
                 )
               )
             );
@@ -9256,17 +9315,17 @@ class Component extends DCLogic {
         mFld('Icon khuyến mãi', 'URL ảnh icon...'),
         fld('Nội dung khuyến mãi', h(DS.Textarea, { rows: 2, defaultValue: 'Tặng ngay Modem Wi-Fi 6 trị giá 2.000.000đ + Miễn phí lắp đặt' })),
         divr('NÚT HÀNH ĐỘNG (CTA)'),
-        g2(fld('CTA — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
+        g2(fld('CTA — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA — URL', h(FptUrlInput, { placeholder: '/dang-ky' }))),
       ],
       // ── HERO ──
       Hero: [
         divr('BACKGROUND & HÌNH ẢNH'),
         g2(mFld('Ảnh Desktop', 'URL ảnh desktop hero...'), mFld('Ảnh Mobile', 'URL ảnh mobile hero...')),
         h(CTABlock, {key:'cta-hero'},
-          g2(fld('CTA chính — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA chính — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
+          g2(fld('CTA chính — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA chính — URL', h(FptUrlInput, { placeholder: '/dang-ky' }))),
           g2(
             fld('CTA phụ — Text', h(DS.Input, { defaultValue: 'Nhận tư vấn' })),
-            fld('CTA phụ — URL', h(DS.Input, { placeholder: '#cac-goi-cuoc' }))
+            fld('CTA phụ — URL', h(FptUrlInput, { placeholder: '#cac-goi-cuoc' }))
           )
         ),
         divr('DẢI COUNTDOWN HẸN GIỜ (CASE 1 — DÍNH LIỀN HERO)'),
@@ -9284,17 +9343,17 @@ class Component extends DCLogic {
           fld('Thời gian kết thúc', h(LdpDateTimeTrigger)),
           fld('CTA Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' }))
         ),
-        fld('CTA URL', h(DS.Input, { placeholder: '#register' })),
+        fld('CTA URL', h(FptUrlInput, { placeholder: '#register' })),
       ],
       // ── LEAD HERO (no countdown) ──
       'lead-hero': [
         divr('BACKGROUND & HÌNH ẢNH'),
         g2(mFld('Ảnh Desktop', 'URL ảnh desktop hero...'), mFld('Ảnh Mobile', 'URL ảnh mobile hero...')),
         h(CTABlock, {key:'cta-lead-hero'},
-          g2(fld('CTA chính — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA chính — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
+          g2(fld('CTA chính — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA chính — URL', h(FptUrlInput, { placeholder: '/dang-ky' }))),
           g2(
             fld('CTA phụ — Text', h(DS.Input, { defaultValue: 'Nhận tư vấn' })),
-            fld('CTA phụ — URL', h(DS.Input, { placeholder: '#cac-goi-cuoc' }))
+            fld('CTA phụ — URL', h(FptUrlInput, { placeholder: '#cac-goi-cuoc' }))
           )
         ),
       ],
@@ -9303,10 +9362,10 @@ class Component extends DCLogic {
         divr('BACKGROUND & HÌNH ẢNH'),
         g2(mFld('Ảnh Desktop', 'URL ảnh desktop hero...'), mFld('Ảnh Mobile', 'URL ảnh mobile hero...')),
         h(CTABlock, {key:'cta-cam-hero'},
-          g2(fld('CTA chính — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA chính — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
+          g2(fld('CTA chính — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA chính — URL', h(FptUrlInput, { placeholder: '/dang-ky' }))),
           g2(
             fld('CTA phụ — Text', h(DS.Input, { defaultValue: 'Nhận tư vấn' })),
-            fld('CTA phụ — URL', h(DS.Input, { placeholder: '#cac-goi-cuoc' }))
+            fld('CTA phụ — URL', h(FptUrlInput, { placeholder: '#cac-goi-cuoc' }))
           )
         ),
       ],
@@ -9729,7 +9788,7 @@ class Component extends DCLogic {
                     ctaBox('CTA phụ', sel.ctaSecondaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaSecondaryOn:v}),
                       g2(
                         fld('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt,placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
-                        fld('CTA phụ — URL',  h(DS.Input,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
+                        fld('CTA phụ — URL',  h(FptUrlInput,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
                       )
                     ),
                     fld('Tính năng nổi bật (mỗi dòng 1 mục)', h('div',null, h(DS.Textarea,{key:'ft'+tab.id+selIdx,rows:3,defaultValue:sel.features,placeholder:'Router Wi-Fi miễn phí\nHỗ trợ 24/7\nLắp đặt trong ngày',onBlur:e=>this.updPkg(tab.id,selIdx,{features:e.target.value})}), h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4,display:'flex',alignItems:'center',gap:4}}, h(DS.Icon,{name:'info-circle-line',size:12,color:'var(--color-text-subtle)'}), 'Mỗi dòng là 1 tính năng — xuống dòng bằng Enter, không phải word-wrap')))
@@ -9994,7 +10053,7 @@ class Component extends DCLogic {
                     ctaBox('CTA phụ', sel.ctaSecondaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaSecondaryOn:v}),
                       g2(
                         fld('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt||'',placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
-                        fld('CTA phụ — URL',  h(DS.Input,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
+                        fld('CTA phụ — URL',  h(FptUrlInput,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
                       )
                     ),
                     fld('Tính năng nổi bật (mỗi dòng 1 mục)', h('div',null, h(DS.Textarea,{key:'ft'+tab.id+selIdx,rows:3,defaultValue:sel.features||'',placeholder:'Router Wi-Fi 7 BE9300 miễn phí\nHỗ trợ 24/7\nLắp đặt trong ngày',onBlur:e=>this.updPkg(tab.id,selIdx,{features:e.target.value})}), h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4,display:'flex',alignItems:'center',gap:4}}, h(DS.Icon,{name:'info-circle-line',size:12,color:'var(--color-text-subtle)'}), 'Mỗi dòng là 1 tính năng — xuống dòng bằng Enter, không phải word-wrap')))
@@ -10123,7 +10182,7 @@ class Component extends DCLogic {
           g2(fld('Tiêu đề ' + n, h(DS.Input, { placeholder: 'VD: Kho phim khổng lồ' })), fld('Mô tả', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả...' })))
         )),
         h(CTABlock, {key:'cta-fea'},
-          g2(fld('CTA Đăng ký — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA Đăng ký — URL', h(DS.Input, { placeholder: 'https://...' }))),
+          g2(fld('CTA Đăng ký — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA Đăng ký — URL', h(FptUrlInput, { placeholder: 'https://...' }))),
           g2(fld('CTA Tư vấn — Text', h(DS.Input, { defaultValue: 'Tư vấn miễn phí' })), fld('CTA Tư vấn — SĐT/Link', h(DS.Input, { placeholder: 'tel:19006600' })))
         ),
       ],
@@ -10148,7 +10207,7 @@ class Component extends DCLogic {
                   count > 1 && h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => this.setState(s => ({ count: s.count - 1 })) })
                 ),
                 mFldV('Thumbnail video ' + n, 'URL ảnh thumbnail...'),
-                fldV('Link YouTube', h(DS.Input, { placeholder: 'https://youtube.com/watch?v=...' })),
+                fldV('Link YouTube', h(FptUrlInput, { placeholder: 'https://youtube.com/watch?v=...' })),
 
               )),
               h(DS.Button, { key: 'add-vid', level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', marginTop: 4, borderRadius: 99 }, onClick: () => this.setState(s => ({ count: s.count + 1 })) }, 'Thêm video')
@@ -10251,7 +10310,7 @@ class Component extends DCLogic {
           mFld('Icon bước ' + n, 'URL icon...')
         )),
         h(CTABlock, {key:'cta-app'},
-          g2(fld('Nút chính — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('Nút chính — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
+          g2(fld('Nút chính — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('Nút chính — URL', h(FptUrlInput, { placeholder: '/dang-ky' }))),
           g2(fld('Nút phụ — Text', h(DS.Input, { defaultValue: 'Nhận tư vấn' })), fld('Nút phụ — SĐT/Link', h(DS.Input, { placeholder: 'tel:19006600' })))
         ),
       ],
@@ -10289,7 +10348,7 @@ class Component extends DCLogic {
                   ),
                   fldP('Tiêu đề khuyến mãi', h(DS.Input, { placeholder: 'Tiêu đề khuyến mãi...' })),
                   mFldP('Ảnh banner', 'URL ảnh banner...'),
-                  fldP('Link URL', h(DS.Input, { placeholder: '/uu-dai...' }))
+                  fldP('Link URL', h(FptUrlInput, { placeholder: '/uu-dai...' }))
                 )
               ),
               h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => this.setState(s => ({ items: [...s.items, { id: Date.now() }] })) }, 'Thêm block khuyến mãi')
@@ -10308,7 +10367,7 @@ class Component extends DCLogic {
         mFld('Icon minh họa (Hộp quà)', 'URL icon...'),
         fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Giảm thêm 50k khi thanh toán online!' })),
         fld('Mô tả ngắn', h(DS.Input, { placeholder: 'VD: Số lượng có hạn - Mua ngay để nhận ưu đãi' })),
-        g2(fld('CTA — Text', h(DS.Input, { defaultValue: 'Mua ngay' })), fld('CTA — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
+        g2(fld('CTA — Text', h(DS.Input, { defaultValue: 'Mua ngay' })), fld('CTA — URL', h(FptUrlInput, { placeholder: '/dang-ky' }))),
       ],
       // ── FAQ ──
       FAQ: [
@@ -10416,7 +10475,7 @@ class Component extends DCLogic {
         divr('BANNER MOBILE'),
         mFld('Ảnh Mobile', 'URL ảnh banner mobile...'),
         divr('LIÊN KẾT'),
-        fld('Link URL banner', h(DS.Input, { placeholder: 'VD: /dang-ky-internet' }), true),
+        fld('Link URL banner', h(FptUrlInput, { placeholder: 'VD: /dang-ky-internet' }), true),
       ],
       // ── PRICING ──
       Pricing: [
@@ -10437,7 +10496,7 @@ class Component extends DCLogic {
           fld('Thời gian kết thúc', h(DS.Input, { type: 'datetime-local', defaultValue: '2026-12-18T23:59' })),
           fld('Nút CTA — Text', h(DS.Input, { defaultValue: 'Nhận ưu đãi' }))
         ),
-        fld('Nút CTA — URL', h(DS.Input, { placeholder: '/dang-ky-sa' })),
+        fld('Nút CTA — URL', h(FptUrlInput, { placeholder: '/dang-ky-sa' })),
       ],
       // ── SPORTS (THỂ THAO) ──
       Sports: [
@@ -10479,12 +10538,12 @@ class Component extends DCLogic {
           g2(fld('Tiêu đề ' + f.n, h(DS.Input, { defaultValue: f.title })), fld('Mô tả ngắn', h(DS.Input, { defaultValue: f.desc })))
         ))),
         divr('NÚT HÀNH ĐỘNG (CTA) DƯỚI LƯỚI'),
-        g2(fld('CTA — Text', h(DS.Input, { defaultValue: 'FPT Wi-Fi 7 Vượt trội như thế nào?' })), fld('CTA — URL', h(DS.Input, { placeholder: '#chi-tiet-cong-nghe' }))),
+        g2(fld('CTA — Text', h(DS.Input, { defaultValue: 'FPT Wi-Fi 7 Vượt trội như thế nào?' })), fld('CTA — URL', h(FptUrlInput, { placeholder: '#chi-tiet-cong-nghe' }))),
       ],
       // ── CATEGORIES (SA) ──
       Categories: [
         g2(fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Giải trí toàn diện' })), fld('Mô tả section', h(DS.Input, { placeholder: 'Mô tả ngắn...' }))),
-        g2(fld('Nút Đăng ký — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('Nút Đăng ký — URL', h(DS.Input, { placeholder: '/dang-ky-sa' }))),
+        g2(fld('Nút Đăng ký — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('Nút Đăng ký — URL', h(FptUrlInput, { placeholder: '/dang-ky-sa' }))),
         divr('CÁC TAB DANH MỤC'),
         h(CategoriesList, { key: 'cat-list' }),
       ],
@@ -10558,7 +10617,7 @@ class Component extends DCLogic {
         mFld('Ảnh nền background', 'URL ảnh nền...'),
         fld('Tiêu đề CTA', h(DS.Input, { placeholder: 'VD: Đăng ký ngay hôm nay!' })),
         fld('Mô tả phụ', h(DS.Textarea, { rows: 2, placeholder: 'Mô tả...' })),
-        g2(fld('CTA — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
+        g2(fld('CTA — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })), fld('CTA — URL', h(FptUrlInput, { placeholder: '/dang-ky' }))),
       ],
       // ── DETAIL (THÔNG SỐ KỸ THUẬT) ──
       Detail: [
@@ -10566,14 +10625,14 @@ class Component extends DCLogic {
         g2(fld('Tên sản phẩm', h(DS.Input, { defaultValue: 'FPT Camera Play 4' })), fld('Mô tả phụ (Subtitle)', h(DS.Input, { placeholder: 'VD: Quan sát thông minh - Bảo vệ trọn vẹn' }))),
         mFld('Ảnh sản phẩm chính', 'URL ảnh sản phẩm...'),
         g2(fld('Giá bán lẻ', h(DS.Input, { placeholder: 'VD: 500.000đ' })), fld('Nhãn ưu đãi (Badge)', h(DS.Input, { placeholder: 'VD: Ưu đãi 1 TRIỆU 3 CAM' }))),
-        g2(fld('Text nút CTA', h(DS.Input, { defaultValue: 'Mua ngay' })), fld('URL nút CTA', h(DS.Input, { placeholder: '#products' }))),
+        g2(fld('Text nút CTA', h(DS.Input, { defaultValue: 'Mua ngay' })), fld('URL nút CTA', h(FptUrlInput, { placeholder: '#products' }))),
         h('div', { key: 'cam1t', style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-text-subtle)', margin: '12px 0 8px', borderTop: '1px dashed var(--color-border)', paddingTop: 10 } }, '4 Ảnh tính năng phụ'),
         ...[1,2,3,4].map(n => mFld('Ảnh tính năng ' + n, 'URL ảnh tính năng ' + n + '...')),
         divr('SẢN PHẨM 2 — CAMERA NGOÀI TRỜI'),
         g2(fld('Tên sản phẩm', h(DS.Input, { defaultValue: 'FPT Camera IQ4S' })), fld('Mô tả phụ (Subtitle)', h(DS.Input, { placeholder: 'VD: Vỏ hợp kim chắc chắn, chống thời tiết' }))),
         mFld('Ảnh sản phẩm chính', 'URL ảnh sản phẩm...'),
         g2(fld('Giá bán lẻ', h(DS.Input, { placeholder: 'VD: 500.000đ' })), fld('Nhãn ưu đãi (Badge)', h(DS.Input, { placeholder: 'VD: Ưu đãi 1 TRIỆU 3 CAM' }))),
-        g2(fld('Text nút CTA', h(DS.Input, { defaultValue: 'Mua ngay' })), fld('URL nút CTA', h(DS.Input, { placeholder: '#products' }))),
+        g2(fld('Text nút CTA', h(DS.Input, { defaultValue: 'Mua ngay' })), fld('URL nút CTA', h(FptUrlInput, { placeholder: '#products' }))),
         h('div', { key: 'cam2t', style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-text-subtle)', margin: '12px 0 8px', borderTop: '1px dashed var(--color-border)', paddingTop: 10 } }, '4 Ảnh tính năng phụ'),
         ...[1,2,3,4].map(n => mFld('Ảnh tính năng ' + n, 'URL ảnh tính năng ' + n + '...')),
       ],
@@ -10583,7 +10642,7 @@ class Component extends DCLogic {
         mFld('Hình background (Desktop)', 'URL hình desktop...'),
         mFld('Hình background (Mobile)', 'URL hình mobile...'),
         divr('ĐƯỜNG DẪN CỬA HÀNG'),
-        g2(fld('App Store URL', h(DS.Input, { placeholder: 'https://apps.apple.com/...' })), fld('Google Play URL', h(DS.Input, { placeholder: 'https://play.google.com/...' }))),
+        g2(fld('App Store URL', h(FptUrlInput, { placeholder: 'https://apps.apple.com/...' })), fld('Google Play URL', h(FptUrlInput, { placeholder: 'https://play.google.com/...' }))),
       ],
       // ── AWARDS (GIẢI THƯỞNG) ──
       Awards: (() => {
@@ -10727,8 +10786,8 @@ class Component extends DCLogic {
           divr('CẤU HÌNH CHI TIẾT BẢNG SO SÁNH'),
           h(ComparisonEd, { key: 'cmp-ed' }),
           h(CTABlock, { key: 'cta-cmp' },
-            g2(fld('Nút CTA chính — Text', h(DS.Input, { defaultValue: 'Đăng ký Wi-Fi 7 ngay' })), fld('Nút CTA chính — URL', h(DS.Input, { placeholder: '/dang-ky' }))),
-            g2(fld('Nút CTA phụ — Text', h(DS.Input, { defaultValue: 'Xem gói cước' })), fld('Nút CTA phụ — URL', h(DS.Input, { placeholder: '#goi-cuoc' })))
+            g2(fld('Nút CTA chính — Text', h(DS.Input, { defaultValue: 'Đăng ký Wi-Fi 7 ngay' })), fld('Nút CTA chính — URL', h(FptUrlInput, { placeholder: '/dang-ky' }))),
+            g2(fld('Nút CTA phụ — Text', h(DS.Input, { defaultValue: 'Xem gói cước' })), fld('Nút CTA phụ — URL', h(FptUrlInput, { placeholder: '#goi-cuoc' })))
           ),
         ];
       })(),
@@ -10807,7 +10866,7 @@ class Component extends DCLogic {
                   h('div', { style: { ...cell, fontSize: 13, fontWeight: 700, color: 'var(--color-text-subtle)' } }, 'Đăng ký'),
                   ...cols.map(c => h('div', { key: c.id, style: { ...cell, display: 'flex', flexDirection: 'column', gap: 6 } },
                     h(DS.Input, { defaultValue: ctaLabels[c.id].text, placeholder: 'VD: Mua ngay', style: { textAlign: 'center', fontWeight: 600 }, onBlur: e => this.updCta(c.id, { text: e.target.value }) }),
-                    h(DS.Input, { defaultValue: ctaLabels[c.id].url, placeholder: '/dang-ky?goi=...', leadingIcon: 'link-01-line', onBlur: e => this.updCta(c.id, { url: e.target.value }) })
+                    h(FptUrlInput, { defaultValue: ctaLabels[c.id].url, placeholder: '/dang-ky?goi=...', leadingIcon: 'link-01-line', onBlur: e => this.updCta(c.id, { url: e.target.value }) })
                   )),
                   h('span', null)
                 ),
@@ -10840,7 +10899,7 @@ class Component extends DCLogic {
         divr('BUTTON CTA'),
         g2(
           fld('Nút CTA — Text', h(DS.Input, { placeholder: 'VD: Đăng ký ngay' })),
-          fld('Nút CTA — URL', h(DS.Input, { placeholder: 'VD: #register-form' }))
+          fld('Nút CTA — URL', h(FptUrlInput, { placeholder: 'VD: #register-form' }))
         ),
       ],
       // ── SOCIAL PROOF ──
@@ -11033,7 +11092,7 @@ class Component extends DCLogic {
           fld('Thời gian kết thúc', h(LdpDateTimeTrigger)),
           fld('Nút CTA — Text', h(DS.Input, { defaultValue: 'Nhận ưu đãi' }))
         ),
-        fld('Nút CTA — URL', h(DS.Input, { placeholder: '#register-form' })),
+        fld('Nút CTA — URL', h(FptUrlInput, { placeholder: '#register-form' })),
       ],
       // ── EXPERIENCE (TRẢI NGHIỆM GIẢI TRÍ) ──
       Experience: [
@@ -11054,7 +11113,7 @@ class Component extends DCLogic {
         h(CTABlock, {key:'cta-sa'},
           g2(
             fld('Đăng ký — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })),
-            fld('Đăng ký — URL', h(DS.Input, { placeholder: '/dang-ky-sa' }))
+            fld('Đăng ký — URL', h(FptUrlInput, { placeholder: '/dang-ky-sa' }))
           )
         ),
       ],
@@ -11065,7 +11124,7 @@ class Component extends DCLogic {
         fld('Mô tả phụ (Subheadline)', h(DS.Input, { placeholder: 'VD: Đội ngũ tư vấn FPT sẽ liên hệ trong 5 phút' })),
         g2(
           fld('Text nút gửi (CTA)', h(DS.Input, { defaultValue: 'Đăng ký tư vấn' })),
-          fld('Đường dẫn sau submit (Redirect URL)', h(DS.Input, { placeholder: 'https://fpt.vn/vi/khach-hang-ca-nhan/thank-you' }))
+          fld('Đường dẫn sau submit (Redirect URL)', h(FptUrlInput, { placeholder: 'https://fpt.vn/vi/khach-hang-ca-nhan/thank-you' }))
         ),
       ],
       // ── SA-PRODUCTS (Gói dịch vụ SA — tabs + package editor, no speed) ──
@@ -11179,7 +11238,7 @@ class Component extends DCLogic {
                     ctaBox('CTA phụ', sel.ctaSecondaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaSecondaryOn:v}),
                       g2(
                         fld2('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt||'',placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
-                        fld2('CTA phụ — URL',  h(DS.Input,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
+                        fld2('CTA phụ — URL',  h(FptUrlInput,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
                       )
                     ),
                     fld2('Tính năng nổi bật (mỗi dòng 1 mục)', h('div',null, h(DS.Textarea,{key:'ft'+tab.id+selIdx,rows:3,defaultValue:sel.features,placeholder:'HBO, K+\nHỗ trợ 24/7\nXem trực tiếp thể thao',onBlur:e=>this.updPkg(tab.id,selIdx,{features:e.target.value})}), h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4,display:'flex',alignItems:'center',gap:4}}, h(DS.Icon,{name:'info-circle-line',size:12,color:'var(--color-text-subtle)'}), 'Mỗi dòng là 1 tính năng — xuống dòng bằng Enter, không phải word-wrap')))
@@ -11294,6 +11353,12 @@ class Component extends DCLogic {
     };
     const onSave = () => {
       const { errMap, firstInvalidEl } = validateLdpSecFields();
+      const urlCheck = this.validateUrlFields(document.getElementById(formId));
+      if (!Object.keys(errMap).length && urlCheck.count) {
+        this.toast('danger', 'URL không hợp lệ', FPT_URL_ERROR);
+        if (urlCheck.first && urlCheck.first.scrollIntoView) urlCheck.first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
       if (Object.keys(errMap).length) {
         this.setState({ ldpSecFieldErr: errMap });
         this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng điền đầy đủ ' + Object.keys(errMap).length + ' trường bắt buộc trước khi lưu.');
