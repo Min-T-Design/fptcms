@@ -4563,10 +4563,19 @@ class Component extends DCLogic {
           ref: secCodeRef, defaultValue: r ? r.code : '', placeholder: this.ldpSlugify(secTitlePlaceholder),
           style: { width: '100%', height: 'var(--control-h-md)', boxSizing: 'border-box', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', background: 'var(--color-surface)', color: 'var(--color-text)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit', cursor: 'text', outline: 'none' }
         }))),
-        h('div', null, this.field('Loại Section', h(DS.Select, {
-          options: SEC_TYPES, value: secType, placeholder: 'Chọn loại Section…', searchable: true, searchPlaceholder: 'Tìm loại Section…',
-          onChange: v => this.setState({ secEditorType: v })
-        }), true))
+        // Slider: hiện thêm công tắc Bộ lọc (Filter) bật/tắt ngay cạnh Loại Section, cùng hàng.
+        h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 16 } },
+          h('div', { style: { flex: 1, minWidth: 0 } }, this.field('Loại Section', h(DS.Select, {
+            options: SEC_TYPES, value: secType, placeholder: 'Chọn loại Section…', searchable: true, searchPlaceholder: 'Tìm loại Section…',
+            onChange: v => this.setState({ secEditorType: v })
+          }), true)),
+          secType === 'slider' && h('div', { key: 'sec-slider-filter', style: { flexShrink: 0 } },
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6, whiteSpace: 'nowrap' } }, 'Bộ lọc'),
+            h('div', { style: { height: 'var(--control-h-md)', display: 'flex', alignItems: 'center' } },
+              h(DS.Switch, { defaultChecked: r ? !!r.filterEnabled : false })
+            )
+          )
+        )
       ),
       this.field('Mô tả ngắn', h(DS.Textarea, { rows: 2, placeholder: 'Nhập mô tả cho Section này...' }))
     ] });
