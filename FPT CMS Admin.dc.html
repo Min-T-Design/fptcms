@@ -4525,7 +4525,7 @@ class Component extends DCLogic {
     // ── Loại Section → block nào hiển thị (theo yêu cầu nghiệp vụ) ──
     const CTA_TYPES = ['slider', 'tabs', 'row', 'row_vat'];
     const MEDIA_ICON2_TYPES = ['tabs'];              // 2 icon (default/active) ≤50KB
-    const MEDIA_SINGLE_TYPES = ['row', 'row_vat'];   // 1 hình ≤200KB
+    const MEDIA_SINGLE_TYPES = ['row', 'row_vat'];   // 2 hình: Desktop ≤200KB / Mobile ≤150KB
     const GAN_BLOCK_TYPES = ['slider', 'tabs', 'row', 'row_vat', 'question'];
     const TEXT_EDITOR_TYPES = ['html_category', 'html_experience', 'html_banner', 'html_article', 'html_video', 'html_gaming'];
     const COMING_SOON_TYPES = ['suggest_pkg', 'news', 'contact_form'];
@@ -4583,7 +4583,10 @@ class Component extends DCLogic {
       )
     ] });
     else if (MEDIA_SINGLE_TYPES.includes(secType)) blocks.push({ icon: 'image-line', title: 'Media & Icon', content: [
-      this.uploadBox('Hình ảnh', 'JPG, PNG, WebP · ≤200KB'),
+      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+        this.uploadBox('Hình ảnh - Desktop', 'JPG, PNG, WebP · ≤200KB'),
+        this.uploadBox('Hình ảnh - Mobile', 'JPG, PNG, WebP · ≤150KB')
+      ),
       this.field('Link banner', h(DS.Input, { defaultValue: r ? (r.bannerLink || '') : '', placeholder: 'VD: /khuyen-mai' }))
     ] });
     if (TEXT_EDITOR_TYPES.includes(secType)) blocks.push({ icon: 'edit-01-line', title: 'Nội dung section', content: [
