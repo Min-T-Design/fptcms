@@ -6679,7 +6679,7 @@ class Component extends DCLogic {
               })
             )
           ),
-          catErr && h('div', { className: 'fpt-req-err-msg', style: { marginTop: -6 } }, 'Trường bắt buộc — vui lòng chọn danh mục quảng cáo.'),
+          catErr && h('div', { className: 'fpt-req-err-msg', style: { marginTop: -6 } }, 'Vui lòng chọn danh mục quảng cáo.'),
           // Thời gian quảng cáo rộng bằng đúng 1 cột (= Danh mục quảng cáo), không dàn full.
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 } }, this.field('Thời gian quảng cáo', h(DS.DateRangePicker, {
             allowPast: true, placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' },
