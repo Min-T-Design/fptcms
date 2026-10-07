@@ -6417,7 +6417,7 @@ class Component extends DCLogic {
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       h(DS.Tabs, { value: tab, onChange: v => this.setState({ adsTab: v }), items: [
         { value: 'list', label: 'Danh sách quảng cáo', icon: 'bell-01-line' },
-        { value: 'cats', label: 'Danh mục', icon: 'folder-line' },
+        { value: 'cats', label: 'Chiến dịch', icon: 'folder-line' },
       ] }),
       tab === 'list' ? this.renderAdsList() : this.renderAdCats()
     );
@@ -6447,7 +6447,7 @@ class Component extends DCLogic {
             : h('div', { style: { width: 40, height: 40, borderRadius: 6, background: r.bgColor || 'var(--color-surface-alt)', flexShrink: 0 } }),
           h('span', { style: { fontWeight: 600, fontSize: 13, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } }, r.title)
         ) },
-      { key: 'cat', header: 'Danh mục', width: 170, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, this.adCatLabel(r.catCode)) },
+      { key: 'cat', header: 'Chiến dịch', width: 170, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, this.adCatLabel(r.catCode)) },
       { key: 'url', header: 'URL', width: 200, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: 190 } }, r.url || '—') },
       { key: 'period', header: 'Thời gian quảng cáo', width: 190, render: (_, r) => this.adPeriodCell(r) },
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(this.adEffStatus(r)) },
@@ -6474,8 +6474,8 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
           h('div', { style: { width: 360, flexShrink: 0 } }, h(DS.Input, { value: this.state.adsSearch || '', onChange: e => this.setState({ adsSearch: e && e.target ? e.target.value : e, ads_pg: 1 }), placeholder: 'Tìm tiêu đề, URL...', leadingIcon: 'search-medium-line' })),
           h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, {
-            value: catF, options: [{ value: 'all', label: 'Tất cả danh mục' }, ...cats.map(c => ({ value: c.code, label: c.name }))],
-            searchable: true, searchPlaceholder: 'Tìm danh mục…', onChange: v => this.setState({ adsCatFilter: v, ads_pg: 1 })
+            value: catF, options: [{ value: 'all', label: 'Tất cả chiến dịch' }, ...cats.map(c => ({ value: c.code, label: c.name }))],
+            searchable: true, searchPlaceholder: 'Tìm chiến dịch…', onChange: v => this.setState({ adsCatFilter: v, ads_pg: 1 })
           })),
           h('div', { style: { width: 180, flexShrink: 0 } }, h(DS.Select, {
             value: statusF, options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'running', label: 'Đang chạy' }, { value: 'scheduled', label: 'Đặt lịch' }, { value: 'expired', label: 'Hết hạn' }, { value: 'hidden', label: 'Tạm ẩn' }],
@@ -6488,7 +6488,7 @@ class Component extends DCLogic {
       ),
       this.filterChipsBar([
         this.state.adsSearch && this.filterChip('Tìm: ' + this.state.adsSearch, 'neutral', () => this.setState({ adsSearch: '', ads_pg: 1 })),
-        catF !== 'all' && this.filterChip('Danh mục: ' + this.adCatLabel(catF), 'brand', () => this.setState({ adsCatFilter: 'all', ads_pg: 1 })),
+        catF !== 'all' && this.filterChip('Chiến dịch: ' + this.adCatLabel(catF), 'brand', () => this.setState({ adsCatFilter: 'all', ads_pg: 1 })),
         statusF !== 'all' && this.filterChip('Trạng thái: ' + statusLabel[statusF], 'info', () => this.setState({ adsStatusFilter: 'all', ads_pg: 1 })),
       ]),
       data.length ? this.tbl(columns, sliced, 'id', r => this.openAdDetail(r)) : this.empty('Chưa có quảng cáo.'),
@@ -6512,7 +6512,7 @@ class Component extends DCLogic {
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-adcat-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', onChange: v => {
               this.setState({ adCatsListData: this.getAdCatsList().map(x => x.id === r.id ? Object.assign({}, x, { status: v ? 'active' : 'inactive' }) : x) });
-              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Danh mục "' + r.name + '".');
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Chiến dịch "' + r.name + '".');
             } })
           );
         } },
@@ -6528,22 +6528,22 @@ class Component extends DCLogic {
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
           h('div', { style: { width: 360, flexShrink: 0 } },
-            h(DS.Input, { value: this.state.adCatSearch || '', onChange: e => this.setState({ adCatSearch: e && e.target ? e.target.value : e, adCat_pg: 1 }), placeholder: 'Tìm danh mục quảng cáo...', leadingIcon: 'search-medium-line' })
+            h(DS.Input, { value: this.state.adCatSearch || '', onChange: e => this.setState({ adCatSearch: e && e.target ? e.target.value : e, adCat_pg: 1 }), placeholder: 'Tìm chiến dịch quảng cáo...', leadingIcon: 'search-medium-line' })
           ),
           h('div', { style: { width: 180, flexShrink: 0 } }, h(DS.Select, {
             value: statusF, options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Tạm ẩn' }],
             onChange: v => this.setState({ adCatStatusFilter: v, adCat_pg: 1 })
           }))
         ),
-        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ adCatEditor: null, adCatDraft: null }), style: { flexShrink: 0 } }, 'Thêm Danh Mục'),
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ adCatEditor: null, adCatDraft: null }), style: { flexShrink: 0 } }, 'Thêm chiến dịch'),
         true
       ),
       (search || statusF !== 'all') ? this.filterChipsBar([
         search && this.filterChip('Tìm: ' + search, 'neutral', () => this.setState({ adCatSearch: '', adCat_pg: 1 })),
         statusF !== 'all' && this.filterChip('Trạng thái: ' + (statusF === 'active' ? 'Hoạt động' : 'Tạm ẩn'), statusF === 'active' ? 'success' : 'warning', () => this.setState({ adCatStatusFilter: 'all', adCat_pg: 1 })),
       ]) : null,
-      data.length ? this.tbl(columns, this.sliceData(data, 'adCat'), 'id', r => this.openAdCatDetail(r)) : this.empty('Chưa có danh mục quảng cáo.'),
-      data.length ? this.renderPagBar(data.length, 'adCat', 'danh mục') : null
+      data.length ? this.tbl(columns, this.sliceData(data, 'adCat'), 'id', r => this.openAdCatDetail(r)) : this.empty('Chưa có chiến dịch quảng cáo.'),
+      data.length ? this.renderPagBar(data.length, 'adCat', 'chiến dịch') : null
     );
   }
   openAdDetail(r) {
@@ -6551,7 +6551,7 @@ class Component extends DCLogic {
     this.openDrawer({ title: r.title.length > 60 ? r.title.slice(0, 60) + '…' : r.title, subtitle: 'Chi tiết Quảng cáo · ' + this.adCatLabel(r.catCode), width: 480,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tiêu đề', r.title),
-        this.detailRow('Danh mục', this.adCatLabel(r.catCode)),
+        this.detailRow('Chiến dịch', this.adCatLabel(r.catCode)),
         this.detailRow('Ảnh', r.img ? h('img', { src: r.img, style: { maxWidth: 120, maxHeight: 80, borderRadius: 6, objectFit: 'contain', background: r.bgColor || 'transparent' } }) : '—'),
         this.detailRow('Màu nền', r.bgColor ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
           h('span', { style: { width: 18, height: 18, borderRadius: 5, background: r.bgColor, border: '1px solid var(--color-border-strong)', flexShrink: 0 } }),
@@ -6598,8 +6598,8 @@ class Component extends DCLogic {
     );
     const catSelect = h('div', { className: catErr ? 'fpt-req-box-err' : undefined, style: catErr ? { padding: 2 } : undefined },
       h(DS.Select, {
-        options: catOptions, value: d.catCode, placeholder: 'Chọn danh mục quảng cáo…',
-        searchable: true, searchPlaceholder: 'Tìm danh mục quảng cáo…',
+        options: catOptions, value: d.catCode, placeholder: 'Chọn chiến dịch quảng cáo…',
+        searchable: true, searchPlaceholder: 'Tìm chiến dịch quảng cáo…',
         onChange: v => { setD({ catCode: v }); if (v && this.state.adCatErr) this.setState({ adCatErr: false }); }
       })
     );
@@ -6665,9 +6665,9 @@ class Component extends DCLogic {
           h(DS.Switch, { checked: d.active, onChange: v => setD({ active: !!v }) })
         ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
-          // Danh mục + Tiêu đề trên 1 hàng để giảm scroll.
+          // Chiến dịch + Tiêu đề trên 1 hàng để giảm scroll.
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12, alignItems: 'start' } },
-            this.field('Danh mục quảng cáo', catSelect, true),
+            this.field('Chiến dịch quảng cáo', catSelect, true),
             // Không dùng this.field(..., true): validate chung sẽ báo "Trường bắt buộc" — ở đây cần thông báo riêng theo từng lỗi (để trống / vượt 255).
             h('div', null,
               h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Tiêu đề', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
@@ -6679,8 +6679,8 @@ class Component extends DCLogic {
               })
             )
           ),
-          catErr && h('div', { className: 'fpt-req-err-msg', style: { marginTop: -6 } }, 'Vui lòng chọn danh mục quảng cáo.'),
-          // Thời gian quảng cáo rộng bằng đúng 1 cột (= Danh mục quảng cáo), không dàn full.
+          catErr && h('div', { className: 'fpt-req-err-msg', style: { marginTop: -6 } }, 'Vui lòng chọn chiến dịch quảng cáo.'),
+          // Thời gian quảng cáo rộng bằng đúng 1 cột (= Chiến dịch quảng cáo), không dàn full.
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 } }, this.field('Thời gian quảng cáo', h(DS.DateRangePicker, {
             allowPast: true, placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' },
             startDate: d.dateStart || null, endDate: d.dateEnd || null,
@@ -6736,7 +6736,7 @@ class Component extends DCLogic {
         const titleMissing = !(d.title || '').trim();
         if (!d.catCode || titleMissing) {
           this.setState({ adCatErr: !d.catCode, adTitleErr: titleMissing });
-          this.toast('danger', 'Thiếu thông tin', !d.catCode && titleMissing ? 'Vui lòng chọn danh mục và nhập tiêu đề quảng cáo.' : !d.catCode ? 'Vui lòng chọn danh mục quảng cáo.' : 'Vui lòng nhập tiêu đề quảng cáo.');
+          this.toast('danger', 'Thiếu thông tin', !d.catCode && titleMissing ? 'Vui lòng chọn chiến dịch và nhập tiêu đề quảng cáo.' : !d.catCode ? 'Vui lòng chọn chiến dịch quảng cáo.' : 'Vui lòng nhập tiêu đề quảng cáo.');
           return;
         }
         if (titleOver) { this.toast('danger', 'Tiêu đề quá dài', 'Tiêu đề quảng cáo không được vượt quá ' + TITLE_MAX + ' ký tự.'); return; }
@@ -6762,7 +6762,7 @@ class Component extends DCLogic {
   openAdCatDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const catAds = this.getAdsList().filter(a => a.catCode === r.code).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
-    this.openDrawer({ title: r.name, subtitle: 'Danh mục Quảng cáo', width: 440,
+    this.openDrawer({ title: r.name, subtitle: 'Chiến dịch Quảng cáo', width: 440,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên chiến dịch', r.name),
         this.detailRow('Vị trí', this.adTypeLabel(r.type)),
@@ -6844,7 +6844,7 @@ class Component extends DCLogic {
     };
     const pickerModal = pickerOpen && h(DS.Modal, {
       open: true, onClose: closePicker, size: 'lg', style: { maxWidth: 600 },
-      title: 'Chọn trang áp dụng', description: 'Quảng cáo trong danh mục này chỉ hiển thị ở các trang được chọn.',
+      title: 'Chọn trang áp dụng', description: 'Quảng cáo trong chiến dịch này chỉ hiển thị ở các trang được chọn.',
       footer: h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
         h('span', { style: { flex: 1, fontSize: 12.5, color: 'var(--color-text-muted)' } }, 'Đã chọn ', h('strong', { style: { color: 'var(--color-accent-text)' } }, sel.length), ' / ' + allPages.length + ' trang'),
         h(DS.Button, { level: 'tertiary', onClick: closePicker }, 'Hủy'),
@@ -6881,7 +6881,7 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
     );
 
-    // Quảng cáo con của danh mục đang sửa, kéo thả để đổi thứ tự hiển thị (ghi thẳng vào adsListData khi thả).
+    // Quảng cáo con của chiến dịch đang sửa, kéo thả để đổi thứ tự hiển thị (ghi thẳng vào adsListData khi thả).
     const catAds = r ? this.getAdsList().filter(a => a.catCode === r.code).slice().sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
     const dragIdx = this.state.adCatChildDragIdx;
     const dragOverIdx = this.state.adCatChildDragOverIdx;
@@ -6895,7 +6895,7 @@ class Component extends DCLogic {
     };
 
     return this.editorShell(
-      isNew ? 'Thêm danh mục quảng cáo' : 'Chỉnh sửa: ' + r.name, '', back,
+      isNew ? 'Thêm chiến dịch quảng cáo' : 'Chỉnh sửa: ' + r.name, '', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
           h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
@@ -6914,7 +6914,7 @@ class Component extends DCLogic {
           )
         ),
         section(2, 'marker-pin-01-line', 'Cấu hình trang hiển thị áp dụng',
-          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: -8 } }, 'Chọn các trang trên website FPT mà các quảng cáo trong danh mục này sẽ được phép xuất hiện'),
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: -8 } }, 'Chọn các trang trên website FPT mà các quảng cáo trong chiến dịch này sẽ được phép xuất hiện'),
           h('div', { key: 'pageList', style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)' } },
               h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Trang áp dụng'),
@@ -6947,10 +6947,10 @@ class Component extends DCLogic {
           ),
           pickerModal
         ),
-        section(3, 'bell-01-line', 'Quảng cáo trong danh mục',
-          !isNew && h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Kéo thả để sắp xếp lại thứ tự hiển thị của các quảng cáo con trong danh mục này.'),
+        section(3, 'bell-01-line', 'Quảng cáo trong chiến dịch',
+          !isNew && h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Kéo thả để sắp xếp lại thứ tự hiển thị của các quảng cáo con trong chiến dịch này.'),
           isNew || catAds.length === 0
-            ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, fontStyle: 'italic', border: '1px solid var(--color-border)', borderRadius: 10 } }, 'Danh mục này chưa có quảng cáo nào.')
+            ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, fontStyle: 'italic', border: '1px solid var(--color-border)', borderRadius: 10 } }, 'Chiến dịch này chưa có quảng cáo nào.')
             : h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
                 catAds.map((a, i) => h('div', {
                     key: a.id, draggable: true,
@@ -6977,9 +6977,9 @@ class Component extends DCLogic {
         if (r) this.setState({ adCatsListData: list.map(c => c.id === r.id ? Object.assign({}, c, { name: d.name, type: d.type, pageScope: (d.pages || []).length ? 'specific' : 'all', pages: d.pages || [], status: d.active ? 'active' : 'inactive', updatedAt: this.nowStr(), updatedBy: 'Admin User' }) : c) });
         else { const newId = Math.max(0, ...list.map(c => c.id)) + 1; this.setState({ adCatsListData: list.concat([{ id: newId, name: d.name, code: 'adcat_' + newId, type: d.type, pageScope: (d.pages || []).length ? 'specific' : 'all', pages: d.pages || [], status: d.active ? 'active' : 'inactive', createdAt: this.nowStr(), createdBy: 'Admin User', updatedAt: this.nowStr(), updatedBy: 'Admin User' }]) }); }
         back();
-        this.toast('success', 'Đã lưu', 'Danh mục đã được lưu.');
+        this.toast('success', 'Đã lưu', 'Chiến dịch đã được lưu.');
       },
-      isNew ? 'Thêm danh mục' : 'Lưu danh mục'
+      isNew ? 'Thêm chiến dịch' : 'Lưu chiến dịch'
     );
   }
 
