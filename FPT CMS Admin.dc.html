@@ -1476,7 +1476,6 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const sku = this.SKUS().find(s => s.code === r.skuCode);
     const ch = this.PKG_CHANNELS().find(c => c.id === r.channel);
-    const TAG_LABEL = { bestseller: 'Bán chạy', new: 'Mới', recommended: 'Khuyên dùng' };
     this.openDrawer({
       title: r.displayName || r.skuCode, subtitle: 'Nội dung sản phẩm · ' + (ch ? ch.name : r.channel), width: 480,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
@@ -1487,13 +1486,12 @@ class Component extends DCLogic {
         this.detailRow('Giá Min', sku ? this.PKG_QLCS_META(sku).giaMin : '—'),
         this.detailRow('Giá Max', sku ? this.PKG_QLCS_META(sku).giaMax : '—'),
         this.detailRow('Tên hiển thị trên kênh', this.PKG_CHANNEL_NAME_OF(r)),
-        this.detailRow('Tag nổi bật', (r.tags || []).length ? r.tags.map(t => TAG_LABEL[t] || t).join(', ') : '—'),
+        this.detailRow('Tag nổi bật', r.tagText || '—'),
         this.detailRow('Đặc tính nổi bật', (r.attributes || []).length ? r.attributes.length + ' đặc tính' : '—'),
-        this.detailRow('Mô tả ngắn', r.shortDesc),
+        this.PKG_CONTENT_DEVICE_LAYOUT(r) && this.detailRow('Mô tả ngắn', r.shortDesc),
         this.detailRow('Đặc quyền', (r.privileges || []).length ? r.privileges.length + ' đặc quyền' : '—'),
         this.detailRow('Danh mục FAQ', r.faqCat || '—'),
         this.detailRow('FAQ đính kèm', (r.faqList || []).length ? r.faqList.length + ' câu hỏi (' + (r.faqList || []).filter(x => !x.hidden).length + ' đang hiển thị)' : '—'),
-        this.detailRow('Ngày tạo', r.createdAt + ' · ' + r.createdBy),
         this.detailRow('Cập nhật lần cuối', r.updatedAt + ' · ' + r.updatedBy)
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
@@ -4524,7 +4522,7 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Mã Section', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: '#f43f5e' } }, r.code)),
         this.detailRow('Tiêu đề hiển thị', r.title), this.detailRow('Thuộc trang', (r.pages || []).join(', ') || '—'),
-        this.detailRow('Loại', r.type), this.detailRow('Thứ tự', r.order != null ? String(r.order) : '—'),
+        this.detailRow('Loại', r.type),
         this.detailRow('Trạng thái', this.statusBadge(r.status)),
         this.detailRow('Blocks gắn', (r.blocks || []).join(', ') || '—'), this.detailRow('Ngày tạo', r.createdAt)
       ),
@@ -5648,7 +5646,7 @@ class Component extends DCLogic {
         this.detailRow('Mã Block', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: '#f43f5e' } }, r.code)),
         this.detailRow('Tên Block', r.name), this.detailRow('Section', r.section),
         this.detailRow('Loại / Layout', r.layout + ' · ' + r.datasource),
-        this.detailRow('Thứ tự', r.order != null ? String(r.order) : '—'), this.detailRow('Ngày tạo', r.createdAt)
+        this.detailRow('Ngày tạo', r.createdAt)
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -7074,9 +7072,7 @@ class Component extends DCLogic {
         this.detailRow('Mã màu chữ', r.textColor.toUpperCase()),
         this.detailRow('Icon', r.icon ? h('img', { src: r.icon, style: { width: 22, height: 22, objectFit: 'contain' } }) : '—'),
         this.detailRow('Vị trí icon', r.icon ? (r.iconPosition === 'right' ? 'Bên phải' : 'Bên trái') : '—'),
-        this.detailRow('Trạng thái', this.statusBadge(r.status)),
-        this.detailRow('Ngày tạo', r.createdAt + ' · ' + r.createdBy),
-        this.detailRow('Cập nhật lần cuối', r.updatedAt + ' · ' + r.updatedBy)
+        this.detailRow('Trạng thái', this.statusBadge(r.status))
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -7348,7 +7344,7 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Câu hỏi', r.q), this.detailRow('Câu trả lời', r.a || r.answer),
         this.detailRow('Danh mục', r.cat), this.detailRow('Ngôn ngữ', r.lang || 'Tiếng Việt'),
-        this.detailRow('Thứ tự', String(r.order || '—')), this.detailRow('Trạng thái', this.statusBadge(r.status))
+        this.detailRow('Trạng thái', this.statusBadge(r.status))
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -7400,7 +7396,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     this.openDrawer({ title: r.name, subtitle: 'Danh mục FAQ', width: 440,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
-        this.detailRow('Tên danh mục', r.name), this.detailRow('Thứ tự', String(r.order)),
+        this.detailRow('Tên danh mục', r.name),
         this.detailRow('Ngôn ngữ', r.lang || 'Tiếng Việt'), this.detailRow('Ngày tạo', r.createdAt || '—'),
         this.detailRow('Số câu hỏi', String(r.count)), this.detailRow('Trạng thái', this.statusBadge(r.status))
       ),
@@ -13024,13 +13020,12 @@ class Component extends DCLogic {
   }
   openUserDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    this.openDrawer({ title: r.name, subtitle: r.role + ' · ' + r.channel, width: 460,
+    this.openDrawer({ title: r.name, subtitle: r.role, width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         h('div', { style: { display: 'flex', justifyContent: 'center', padding: '12px 0' } }, h(DS.Avatar, { name: r.name, size: 'xl' })),
         this.detailRow('Họ và tên', r.name), this.detailRow('Email', r.email),
-        this.detailRow('Điện thoại', r.phone),
         this.detailRow('Vai trò', h(DS.Badge, { theme: 'brand' }, r.role)),
-        this.detailRow('Kênh vận hành', r.channel), this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        this.detailRow('Trạng thái', this.statusBadge(r.status)),
         this.detailRow('Đăng nhập gần nhất', r.last)
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },

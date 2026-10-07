@@ -42,7 +42,7 @@ When a user clicks a row inside any table:
 
 * Open a **Right Side Drawer**
 * Drawer slides in from the right.
-* Display all information of the selected record.
+* Display the selected record's information — only fields that exist in the table or the editor (see §16).
 * Content is **read-only**.
 * No editable fields.
 * No inline editing inside the drawer.
@@ -327,3 +327,25 @@ Every field that holds a **destination/link URL** (CTA URL, Link banner, Link đ
 * **UX:** red border + message under the field (`FPT_URL_ERROR`: "Đường dẫn URL đích không hợp lệ. Vui lòng nhập URL bắt đầu bằng http://, https://...") on blur, then live while editing. Empty is valid here — "required" is still handled separately by §14 (`this.field(..., true)` works with `FptUrlInput`).
 * **Save is blocked:** `this.editorShell()` Save calls `this.validateUrlFields(root)`; the LDP section editor's own `onSave` does the same via its form root; the LDP wizard Step 2 checks `redirect` in its Next handler. Never disable the button — validate in `onClick` (§14).
 * **Not covered:** image/media asset URLs, URL Slug, and `tel:` phone fields — those are not destination URLs.
+
+---
+
+## 16. Detail Drawer Must Not Show Fields Missing From the Table or the Editor
+
+The read-only Detail Drawer (§2) is a lightweight preview of what the user already sees in the list table and can change in the Inline Full-Page Editor — never a dump of the raw data object. A drawer row that has no counterpart in either place is dead weight: it usually renders as "—" and nobody can set or find the value (e.g. a "Thứ tự" row on Sections/Blocks after the order field was dropped from their editors).
+
+**Rule:** every `this.detailRow(label, …)` in an `open*Detail` / `open*Drawer` must map to **at least one** of:
+
+* a column of the module's list table (cell content counts — e.g. a slug under the name, a `└─` indent standing for "Cấp độ"), or
+* a field of the module's editor (`this.field` / `uploadBox` / switch / picker) for the same record type.
+
+A field that is in neither must not be in the drawer. This includes **audit metadata** (Ngày tạo / Người tạo / Cập nhật lần cuối): show it in the drawer only if the table has that column — editors never carry them, so the table is the only justification.
+
+Mandatory behavior going forward:
+
+* **Change the drawer in the same edit as the table/editor.** Dropping, renaming or type-gating a field in an editor or table column → update that module's drawer in the same change. Adding a new editor field does *not* oblige you to add it to the drawer (a drawer may show fewer fields than the editor), but never the other way round.
+* **Mirror editor gating.** If the editor only shows a field for certain record types (e.g. SKU "Mô tả ngắn" only for Thiết bị/SA via `PKG_CONTENT_DEVICE_LAYOUT`; Popup behaviour block hidden for Checkout), gate the drawer row with the same predicate instead of printing "—" for the other types.
+* **Read the same data source as the editor.** Don't render a legacy field the editor no longer writes (e.g. SKU `r.tags` bestseller/new/recommended — the editor now picks a Badge/Tag, so the drawer reads `r.tagText`).
+* **New modules:** when writing `open*Detail`, build the row list by walking the table `columns` first, then the editor's fields; stop there. Don't pad with "Thứ tự", "Ngày tạo", phone/channel or other fields just because the demo data has them.
+* A field that exists *only* as a search criterion (e.g. phone in the Users search box) is not a table column — it needs an editor field or a table column before it earns a drawer row.
+* Report drawers (Báo cáo bán hàng / đăng ký Online) have no editor: their drawer rows must come from the same field-defs / columns array as the table (`salesReportOnline*FieldDefs`), never a separate hand-written list.
