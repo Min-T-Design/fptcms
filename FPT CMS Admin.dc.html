@@ -266,6 +266,48 @@ function FptTagPicker({ options, selected, onChange, placeholder, searchPlacehol
   );
 }
 
+// Ô bảng chứa nhiều giá trị (Thuộc trang, Tên section…): hiện tối đa `max` chip, phần dư gộp vào
+// badge "+n" có tooltip (hover xem đầy đủ). Tooltip là position:fixed đo từ getBoundingClientRect()
+// của trigger, kẹp trong viewport — cùng nguyên tắc §8, không bị overflow của bảng cắt. Cùng hành vi với
+// OverflowTip/chipList dựng cục bộ trong renderSectionList (cột Thuộc trang), nhưng khai báo một lần ở
+// module scope để module khác dùng lại mà không phải sao chép thêm.
+function FptOverflowTip({ text, children }) {
+  const h = React.createElement;
+  const ref = React.useRef(null);
+  const [rect, setRect] = React.useState(null);
+  const show = () => { if (ref.current) setRect(ref.current.getBoundingClientRect()); };
+  const hide = () => setRect(null);
+  let tipStyle = null;
+  if (rect) {
+    const maxW = Math.min(420, window.innerWidth - 32);
+    const left = Math.max(8, Math.min(rect.left + rect.width / 2 - maxW / 2, window.innerWidth - maxW - 8));
+    const showBelow = rect.top < 70;
+    tipStyle = {
+      position: 'fixed', left, width: maxW, zIndex: 9999,
+      ...(showBelow ? { top: rect.bottom + 8 } : { bottom: window.innerHeight - rect.top + 8 }),
+      padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--gray-12)', color: 'var(--gray-1)',
+      fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 500, lineHeight: 1.4,
+      whiteSpace: 'normal', wordBreak: 'break-word', boxShadow: 'var(--shadow-md)', pointerEvents: 'none'
+    };
+  }
+  return h('span', { ref, style: { position: 'relative', display: 'inline-flex' }, onMouseEnter: show, onMouseLeave: hide, onFocus: show, onBlur: hide },
+    children,
+    rect && h('span', { role: 'tooltip', style: tipStyle }, text)
+  );
+}
+function FptChipList({ theme, max, list }) {
+  const h = React.createElement;
+  const DS = window.ZENKaizenDesignSystem_4069b4;
+  const visible = (list || []).slice(0, max);
+  const rest = (list || []).slice(max);
+  return h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' } },
+    ...visible.map(v => h(DS.Badge, { key: v, theme }, v)),
+    rest.length > 0 && h(FptOverflowTip, { key: '__more', text: rest.join(', ') },
+      h(DS.Badge, { theme: 'brand', style: { cursor: 'default' } }, '+' + rest.length)
+    )
+  );
+}
+
 // Vùng bảng dữ liệu có thể "Thu phóng" (phóng to/thu nhỏ như Excel) qua toolbar hoặc Ctrl + cuộn chuột.
 // Dùng CSS `zoom` (không phải transform:scale) vì zoom co giãn luôn kích thước layout của khối, nên
 // khung cuộn ngang bao ngoài (overflow:auto, không nằm trong khối zoom) tự nhận đúng kích thước đã
@@ -4717,6 +4759,15 @@ class Component extends DCLogic {
     return this.renderBlockList();
   }
 
+  // Editor của Block không có field "Section" — quan hệ do Section sở hữu (Section → "Gắn Blocks",
+  // SECTIONS().blocks), một block có thể được nhiều section gắn. Cột "Tên section" lấy ngược từ đó để
+  // khớp cột "Thuộc trang" bên Quản lý Section; block chưa section nào gắn thì dùng tên demo cũ b.section.
+  blockSections(b) {
+    const linked = [...new Set(this.SECTIONS().filter(s => (s.blocks || []).includes(b.name)).map(s => s.name))];
+    if (linked.length) return linked;
+    return b.section && b.section !== '—' ? [b.section] : [];
+  }
+
   renderBlockList() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.blkSearch || '').toLowerCase();
@@ -4735,7 +4786,11 @@ class Component extends DCLogic {
           h('strong', null, r.name),
           h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11, color: '#f43f5e', marginTop: 2, fontWeight: 500 } }, r.code)
         ) },
-      { key: 'section', header: 'Tên section', render: (_, r) => h('span', { style: { fontSize: 13, color: r.section === '—' ? 'var(--color-text-subtle)' : 'inherit' }, title: r.section && r.section.length > 75 ? r.section : undefined }, r.section && r.section.length > 75 ? r.section.slice(0, 75) + '…' : r.section) },
+      { key: 'section', header: 'Tên section', width: 320, render: (_, r) => {
+          const secs = this.blockSections(r);
+          if (!secs.length) return h('span', { style: { color: 'var(--color-text-subtle)' } }, '—');
+          return h(FptChipList, { theme: 'neutral', max: 2, list: secs });
+        } },
       { key: 'loai', header: 'Loại', render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, r.layout + (r.datasource ? ' · ' + r.datasource : '')) },
       { key: 'createdAt', header: 'Ngày tạo', width: 145, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
@@ -5657,7 +5712,7 @@ class Component extends DCLogic {
     this.openDrawer({ title: r.name, subtitle: 'Chi tiết Block', width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Mã Block', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: '#f43f5e' } }, r.code)),
-        this.detailRow('Tên Block', r.name), this.detailRow('Section', r.section),
+        this.detailRow('Tên Block', r.name), this.detailRow('Section', this.blockSections(r).join(', ') || '—'),
         this.detailRow('Loại / Layout', r.layout + ' · ' + r.datasource),
         this.detailRow('Ngày tạo', r.createdAt)
       ),
@@ -8478,13 +8533,26 @@ class Component extends DCLogic {
     const secKey = 'ldpSecs_' + tplId;
     const sections = this.state[secKey] || this.LDP_SECTION_DATA()[tplId] || [];
     const ldpDs = this.state;
+    // Thư viện Sections (như bước tạo "Trang tùy chỉnh"): thêm section vào cuối trang của template, section thêm mới có uid riêng để xóa/sửa độc lập.
+    const getCurSecs = () => this.state[secKey] || this.LDP_SECTION_DATA()[tplId] || [];
+    const addSec = (sec) => {
+      this.setState({ [secKey]: [...getCurSecs(), { ...sec, uid: sec.id + '_' + Date.now() + '_' + Math.random().toString(36).slice(2) }] });
+      this.toast('success', 'Đã thêm section', '"' + sec.name + '" đã được thêm vào cuối trang.');
+    };
+    const removeSec = (uid) => this.setState({ [secKey]: getCurSecs().filter(s => s.uid !== uid) });
+    const dropLib = () => {
+      const sec = this.ldpLibraryPool().find(s => s.id === this.state.ldpLibDragId);
+      if (sec) addSec(sec);
+      this.setState({ ldpLibDragId: null, ldpSecDragIdx: null, ldpSecDragOverIdx: null, ldpSecDragOverCanvas: false });
+    };
     const mkSecDrag = (i) => ({
       draggable: true,
-      onDragStart: e => { e.dataTransfer.effectAllowed = 'move'; this.setState({ ldpSecDragIdx: i }); },
-      onDragOver: e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.setState({ ldpSecDragOverIdx: i }); },
+      onDragStart: e => { e.dataTransfer.effectAllowed = 'move'; this.setState({ ldpSecDragIdx: i, ldpLibDragId: null }); },
+      onDragOver: e => { e.preventDefault(); e.dataTransfer.dropEffect = this.state.ldpLibDragId ? 'copy' : 'move'; this.setState({ ldpSecDragOverIdx: i }); },
       onDragLeave: () => this.setState({ ldpSecDragOverIdx: null }),
       onDrop: e => {
         e.preventDefault();
+        if (this.state.ldpLibDragId) { dropLib(); return; }
         const from = this.state.ldpSecDragIdx, to = i;
         if (from == null || from === to) { this.setState({ ldpSecDragIdx: null, ldpSecDragOverIdx: null }); return; }
         const na = sections.slice(); const [itm] = na.splice(from, 1); na.splice(to, 0, itm);
@@ -8492,18 +8560,19 @@ class Component extends DCLogic {
       },
       onDragEnd: () => this.setState({ ldpSecDragIdx: null, ldpSecDragOverIdx: null }),
     });
-    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-      h(DS.Card, { style: { padding: 20 } },
+    const hasLibrary = tplId !== 'customhtml';
+    const card = h(DS.Card, { style: { padding: 20, flex: 1, minWidth: 0 } },
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 } },
           h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
             h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Template:'),
-            h('span', { style: { fontWeight: 700, color: 'var(--color-accent)', fontSize: 14 } }, tpl.label + (tpl.sections ? ' (' + tpl.sections + ' sections)' : '')),
+            h('span', { style: { fontWeight: 700, color: 'var(--color-accent)', fontSize: 14 } }, tpl.label + (tpl.sections ? ' (' + sections.length + ' sections)' : '')),
             !this.state.ldpLockTemplate && h(DS.Button, { level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpStep: 2 }) }, 'Đổi template')
           ),
           
         ),
         h('p', { style: { margin: '0 0 16px', fontSize: 13, color: 'var(--color-text-subtle)' } },
-          'Nhấn ', h('strong', null, '✏ Sửa nội dung'), ' để chỉnh text/ảnh/link từng section. Toggle hiển thị để bật/tắt section trên trang.'
+          'Nhấn ', h('strong', null, '✏ Sửa nội dung'), ' để chỉnh text/ảnh/link từng section. Toggle hiển thị để bật/tắt section trên trang.',
+          hasLibrary && ' Thêm section mới từ Thư viện bên trái.'
         ),
         tplId === 'customhtml'
           ? h('div', null,
@@ -8515,7 +8584,7 @@ class Component extends DCLogic {
             )
           : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
               sections.map((s, i) =>
-                h('div', Object.assign({ key: s.id }, mkSecDrag(i), { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: ldpDs.ldpSecDragOverIdx === i ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', border: '1px solid ' + (ldpDs.ldpSecDragOverIdx === i ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 10, transition: 'background .12s, border-color .15s', opacity: ldpDs.ldpSecDragIdx === i ? 0.45 : 1 } }),
+                h('div', Object.assign({ key: s.uid || s.id }, mkSecDrag(i), { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: ldpDs.ldpSecDragOverIdx === i ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', border: '1px solid ' + (ldpDs.ldpSecDragOverIdx === i ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 10, transition: 'background .12s, border-color .15s', opacity: ldpDs.ldpSecDragIdx === i ? 0.45 : 1 } }),
                   h('div', { style: { cursor: 'grab', display: 'flex', alignItems: 'center', flexShrink: 0 } },
                     h(DS.Icon, { name: 'dots-grid-line', size: 20, color: 'var(--color-text-subtle)' })
                   ),
@@ -8526,13 +8595,20 @@ class Component extends DCLogic {
                   ),
                   h('span', { style: { background: s.ec, color: s.tc, padding: '2px 10px', borderRadius: 10, fontSize: 11, whiteSpace: 'nowrap', fontWeight: 600, flexShrink: 0 } }, s.type),
                   h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 'auto' } },
-                    h(DS.Switch, { size: 'sm', checked: this.state['ldpSecVis_' + s.id] !== false, onChange: v => this.setState({ ['ldpSecVis_' + s.id]: v }) }),
+                    h(DS.Switch, { size: 'sm', checked: this.state['ldpSecVis_' + (s.uid || s.id)] !== false, onChange: v => this.setState({ ['ldpSecVis_' + (s.uid || s.id)]: v }) }),
                     h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, 'Hiển thị'),
-                    h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: () => this.openLdpSectionDrawer(s, tpl) })
+                    h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: () => this.openLdpSectionDrawer(s, tpl) }),
+                    s.uid && h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => removeSec(s.uid) })
                   )
                 )
               )
             ),
+        hasLibrary && h('div', {
+          onDragOver: e => { e.preventDefault(); this.setState({ ldpSecDragOverCanvas: true }); },
+          onDragLeave: () => this.setState({ ldpSecDragOverCanvas: false }),
+          onDrop: e => { e.preventDefault(); dropLib(); },
+          style: { marginTop: 8, border: '2px dashed ' + (ldpDs.ldpSecDragOverCanvas ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 8, padding: 12, textAlign: 'center', background: ldpDs.ldpSecDragOverCanvas ? 'var(--color-accent-bg)' : 'transparent', fontSize: 12, color: 'var(--color-text-subtle)', transition: 'all .15s' }
+        }, '+ Kéo section từ Thư viện vào đây để thêm vào cuối'),
         h('div', { style: { marginTop: 12, padding: '12px 14px', background: 'var(--color-accent-bg)', border: '1px dashed var(--color-accent)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 } },
           h('div', { style: { flex: 1, minWidth: 0 } },
             h('div', { style: { fontWeight: 600, fontSize: 13, color: 'var(--color-accent)', display: 'flex', alignItems: 'center', gap: 6 } },
@@ -8544,22 +8620,16 @@ class Component extends DCLogic {
           ),
           h(DS.Button, { level: 'secondary', size: 'sm', style: { borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }, onClick: () => this.openLdpSectionDrawer({ id: tplId + '-popup-form', name: 'Popup Form tư vấn chung', desc: 'Cấu hình tiêu đề, dịch vụ và trường nhập liệu', type: 'PopupForm', emoji: '📝', ec: 'rgba(249,115,22,0.15)', tc: 'var(--color-accent)' }, tpl) }, 'Cấu hình Popup')
         ),
-      ),
+      );
+    return h('div', { style: { display: 'flex', gap: 16, alignItems: 'flex-start' } },
+      hasLibrary && this.renderLdpLibraryPanel(sections, addSec),
+      card
     );
   }
-  renderLdpCustomBuilder() {
-    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+  // Thư viện Sections dùng chung cho "Trang tùy chỉnh" (renderLdpCustomBuilder) và bước "Nội dung sections" của 5 template (renderLdpStep3).
+  // Gom mỗi loại section 1 lần từ dữ liệu 4 template, loại trừ các section trùng chức năng.
+  ldpLibraryPool() {
     const allSecData = this.LDP_SECTION_DATA();
-    const libTabDefs = [
-      { id: 'all', label: 'Tất cả' },
-      { id: 'internet', label: 'Internet' },
-      { id: 'camera', label: 'Camera AI' },
-      { id: 'campaign', label: 'Wi-Fi 7' },
-      { id: 'thulead', label: 'Thu Lead' },
-      { id: 'sa', label: 'SA / Play' },
-    ];
-    const libTab = this.state.ldpLibTab || 'all';
-    const libSearch = (this.state.ldpLibSearch || '').toLowerCase();
     const _EXCLUDE_IDS = new Set(['inet-playbox', 'cam-usp', 'cam-detail', 'cam-app', 'camp-compare', 'camp-usp']);
     const allSecs = [];
     const _seenTypes = new Set();
@@ -8577,11 +8647,58 @@ class Component extends DCLogic {
     // Explicitly add sa-products (Gói dịch vụ SA)
     const _saProd = { id: 'sa-products', name: 'Gói dịch vụ SA', desc: 'Tiêu đề section, card gói SA: tên, giá, tính năng, nút đăng ký', type: 'SaProducts', emoji: '📦', ec: 'rgba(109,40,217,0.15)', tc: '#6d28d9', source: 'sa' };
     allSecs.push(_saProd);
-    const libSecs = allSecs.filter(s => {
+    return allSecs.filter((s, i, a) => a.findIndex(x => x.id === s.id) === i);
+  }
+  // Panel "Thư viện Sections" (tìm kiếm + danh sách kéo/nhấn + để thêm). canvasSecs = các section đang có trên trang (để hiện badge xN); onAdd(sec) = thêm 1 section vào cuối trang.
+  renderLdpLibraryPanel(canvasSecs, onAdd) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const self = this;
+    const libTab = this.state.ldpLibTab || 'all';
+    const libSearch = (this.state.ldpLibSearch || '').toLowerCase();
+    const libSecs = this.ldpLibraryPool().filter(s => {
       if (libTab !== 'all' && s.source !== libTab) return false;
       if (libSearch && !s.name.toLowerCase().includes(libSearch) && !s.desc.toLowerCase().includes(libSearch) && !s.type.toLowerCase().includes(libSearch)) return false;
       return true;
     });
+    return h('div', { style: { width: 320, flexShrink: 0, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column' } },
+      h('div', { style: { padding: '14px 14px 0', borderBottom: '1px solid var(--color-border)' } },
+        h('div', { style: { fontWeight: 700, fontSize: 13, marginBottom: 10, color: 'var(--color-text)' } }, 'Thư viện Sections'),
+        h('div', { style: { marginBottom: 10 } },
+          h(DS.Input, { value: this.state.ldpLibSearch || '', onChange: e => this.setState({ ldpLibSearch: e && e.target ? e.target.value : e }), placeholder: 'Tìm theo tên, loại...', leadingIcon: 'search-medium-line' })
+        ),
+
+      ),
+      h('div', { className: 'fpt-scroll', style: { height: 560, overflowY: 'auto', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 } },
+        libSecs.length === 0
+          ? h('div', { style: { textAlign: 'center', padding: '40px 16px', color: 'var(--color-text-subtle)', fontSize: 13 } }, 'Không tìm thấy section nào.')
+          : libSecs.map(s => {
+              const addedCount = canvasSecs.filter(cs => cs.id === s.id).length;
+              return h('div', { key: s.id,
+                draggable: true,
+                onDragStart: e => { e.dataTransfer.effectAllowed = 'copy'; self.setState({ ldpLibDragId: s.id, ldpSecDragIdx: null }); },
+                onDragEnd: () => self.setState({ ldpLibDragId: null }),
+                style: { padding: '9px 10px', border: '1px solid ' + (addedCount > 0 ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 8, background: addedCount > 0 ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', cursor: 'grab', transition: 'all .12s' } },
+                h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 6 } },
+                  h('div', { style: { flex: 1, minWidth: 0 } },
+                    h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
+                      h('div', { style: { fontWeight: 600, fontSize: 12, color: 'var(--color-text)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' } }, s.name),
+                      addedCount > 0 && h('span', { style: { fontSize: 10, fontWeight: 700, background: 'var(--color-accent)', color: '#fff', borderRadius: 10, padding: '1px 6px', flexShrink: 0 } }, 'x' + addedCount)
+                    ),
+                    h('div', { style: { fontSize: 10.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, s.desc),
+                  ),
+                  h('button', { onClick: () => onAdd(s), title: 'Thêm section', style: { flexShrink: 0, width: 24, height: 24, borderRadius: '50%', border: '1.5px solid var(--color-accent)', background: 'var(--color-accent-bg)', color: 'var(--color-accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, padding: 0, fontFamily: 'inherit', lineHeight: 1 } }, '+')
+                )
+              );
+            })
+      ),
+      h('div', { style: { padding: '8px 14px', borderTop: '1px solid var(--color-border)', background: 'var(--color-surface-sunken)', fontSize: 11, color: 'var(--color-text-subtle)', textAlign: 'center' } },
+        libSecs.length + ' sections · Kéo hoặc nhấn + để thêm'
+      )
+    );
+  }
+  renderLdpCustomBuilder() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const allSecs = this.ldpLibraryPool();
     const canvasSecs = this.state.ldpCustomSecs || [];
     const srcLabel = { internet: 'Internet', camera: 'Camera AI', campaign: 'Wi-Fi 7', thulead: 'Thu Lead' };
     const srcColor = { internet: '#ff8c42', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981' };
@@ -8607,41 +8724,7 @@ class Component extends DCLogic {
         
       ),
       h('div', { style: { display: 'flex', gap: 16, alignItems: 'flex-start' } },
-        h('div', { style: { width: 320, flexShrink: 0, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column' } },
-          h('div', { style: { padding: '14px 14px 0', borderBottom: '1px solid var(--color-border)' } },
-            h('div', { style: { fontWeight: 700, fontSize: 13, marginBottom: 10, color: 'var(--color-text)' } }, 'Thư viện Sections'),
-            h('div', { style: { marginBottom: 10 } },
-              h(DS.Input, { value: this.state.ldpLibSearch || '', onChange: e => this.setState({ ldpLibSearch: e && e.target ? e.target.value : e }), placeholder: 'Tìm theo tên, loại...', leadingIcon: 'search-medium-line' })
-            ),
-
-          ),
-          h('div', { className: 'fpt-scroll', style: { height: 560, overflowY: 'auto', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 } },
-            libSecs.length === 0
-              ? h('div', { style: { textAlign: 'center', padding: '40px 16px', color: 'var(--color-text-subtle)', fontSize: 13 } }, 'Không tìm thấy section nào.')
-              : libSecs.map(s => {
-                  const addedCount = canvasSecs.filter(cs => cs.id === s.id).length;
-                  return h('div', { key: s.id,
-                    draggable: true,
-                    onDragStart: e => { e.dataTransfer.effectAllowed = 'copy'; self.setState({ ldpLibDragId: s.id, ldpSecDragIdx: null }); },
-                    onDragEnd: () => self.setState({ ldpLibDragId: null }),
-                    style: { padding: '9px 10px', border: '1px solid ' + (addedCount > 0 ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 8, background: addedCount > 0 ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', cursor: 'grab', transition: 'all .12s' } },
-                    h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 6 } },
-                      h('div', { style: { flex: 1, minWidth: 0 } },
-                        h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
-                          h('div', { style: { fontWeight: 600, fontSize: 12, color: 'var(--color-text)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' } }, s.name),
-                          addedCount > 0 && h('span', { style: { fontSize: 10, fontWeight: 700, background: 'var(--color-accent)', color: '#fff', borderRadius: 10, padding: '1px 6px', flexShrink: 0 } }, 'x' + addedCount)
-                        ),
-                        h('div', { style: { fontSize: 10.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, s.desc),
-                      ),
-                      h('button', { onClick: () => addSec(s), title: 'Thêm section', style: { flexShrink: 0, width: 24, height: 24, borderRadius: '50%', border: '1.5px solid var(--color-accent)', background: 'var(--color-accent-bg)', color: 'var(--color-accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, padding: 0, fontFamily: 'inherit', lineHeight: 1 } }, '+')
-                    )
-                  );
-                })
-          ),
-          h('div', { style: { padding: '8px 14px', borderTop: '1px solid var(--color-border)', background: 'var(--color-surface-sunken)', fontSize: 11, color: 'var(--color-text-subtle)', textAlign: 'center' } },
-            libSecs.length + ' sections · Kéo hoặc nhấn + để thêm'
-          )
-        ),
+        this.renderLdpLibraryPanel(canvasSecs, addSec),
         h('div', { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 } },
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10 } },
             h('div', { style: { fontWeight: 700, fontSize: 14 } }, 'Cấu trúc LDP'),
