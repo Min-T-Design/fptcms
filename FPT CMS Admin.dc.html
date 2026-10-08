@@ -4798,8 +4798,11 @@ class Component extends DCLogic {
     const selectedPackageDemo = this.SKUS().filter(sku => selectedPackageCodes.includes(sku.code)).map(sku => ({
       code: sku.code, name: sku.name
     }));
+    // Trạng thái hoạt động: đọc cùng nguồn với cột "Hoạt động" của bảng (blkActiveMap), mặc định bật
+    const curActiveMap = this.state.blkActiveMap || {};
     this.setState({
       blkView: 'form', blkEditRow: r,
+      blkActive: r && curActiveMap[r.id] !== undefined ? !!curActiveMap[r.id] : true,
       blkName: r ? r.name : '',
       blkCode: r ? r.code : '',
       blkShortName: r ? (r.shortName || '') : '',
@@ -5059,16 +5062,20 @@ class Component extends DCLogic {
       r ? 'Chỉnh sửa: ' + r.name : 'Tạo Block mới',
       r ? ('Mã: ' + r.code) : 'Thông tin Block', close,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
+          h(DS.Switch, { checked: s.blkActive !== false, onChange: v => this.setState({ blkActive: v }) })
+        ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
             limField('Tên block', 'blkName', 255, true, 'Block Gói Internet Cáp Quang Gia Đình', { after: onNameChange }),
             this.field('Mã block', h('div', null,
               h('input', {
                 value: s.blkCode || '', placeholder: this.ldpSlugify('Block Gói Internet Cáp Quang Gia Đình'),
-                onChange: e => this.setState({ blkCode: (e.target.value || '').slice(0, 100) }),
+                onChange: e => this.setState({ blkCode: (e.target.value || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 100) }),
                 style: { width: '100%', height: 'var(--control-h-md)', boxSizing: 'border-box', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', background: 'var(--color-surface)', color: 'var(--color-text)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit', cursor: 'text', outline: 'none' }
               }),
-              h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 4 } }, 'Tự động tạo từ Tên block · a-z, 0-9, gạch nối (-), gạch dưới (_)')
+              h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 4 } }, 'Tự động tạo từ Tên block · a-z, 0-9, gạch nối (-)')
             ), true)
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
@@ -5096,7 +5103,10 @@ class Component extends DCLogic {
         ),
         this.renderBlockPickerModal()
       ),
-      () => { close(); this.toast('success', 'Đã lưu', 'Block đã được lưu thành công.'); },
+      () => {
+        if (r) this.setState(sv => ({ blkActiveMap: { ...sv.blkActiveMap, [r.id]: s.blkActive !== false } }));
+        close(); this.toast('success', 'Đã lưu', 'Block đã được lưu thành công.');
+      },
       r ? 'Cập nhật Block' : 'Tạo Block'
     );
   }
