@@ -82,6 +82,16 @@
     .fpt-expand-btn{transition:transform .15s cubic-bezier(.2,0,0,1)}
     .fpt-expand-btn:hover{transform:scale(1.12)!important}
     .fpt-gallery-tile:hover .fpt-gallery-overlay{opacity:1!important}
+    /* Ô tải ảnh có trạng thái (FptUploadSlot): hàng ngang cao 64px — vùng thả ảnh nét đứt + thumbnail 64px; hover/focus theo ảnh mẫu (viền cam, nền cam nhạt). */
+    .fpt-upslot-drop:not(.is-err):hover{border-color:var(--color-accent)!important;background:var(--color-accent-bg)!important}
+    .fpt-upslot-drop:hover .fpt-upslot-ico{color:var(--color-accent)!important}
+    .fpt-upslot-drop:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+    .fpt-upslot-mini{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--color-text-subtle);cursor:pointer}
+    .fpt-upslot-mini:hover{background:var(--color-surface-alt);color:var(--color-accent-text)}
+    .fpt-upslot-del{box-shadow:0 1px 2px rgba(0,0,0,.12)}
+    .fpt-upslot-del:hover{background:var(--color-danger-bg)!important;color:var(--color-danger)!important}
+    .fpt-upslot-mini:focus-visible,.fpt-upslot-linkbtn:focus-visible{outline:none;box-shadow:var(--shadow-focus)!important}
+    .fpt-upslot-linkbtn{padding:0;border:0;background:none;font:inherit;color:var(--color-accent-text);text-decoration:underline;cursor:pointer;border-radius:4px}
     .fpt-table-sticky-col::before{content:'';position:absolute;top:0;bottom:0;left:-10px;width:10px;pointer-events:none;opacity:0;transition:opacity .15s cubic-bezier(.2,0,0,1);background:linear-gradient(to right, rgba(16,24,40,0), rgba(16,24,40,.22))}
     .fpt-table-scrolled .fpt-table-sticky-col::before{opacity:1}
     .fpt-richtext-canvas:empty:before{content:attr(data-placeholder);color:var(--color-text-subtle);pointer-events:none}
@@ -305,6 +315,180 @@ function FptChipList({ theme, max, list }) {
     rest.length > 0 && h(FptOverflowTip, { key: '__more', text: rest.join(', ') },
       h(DS.Badge, { theme: 'brand', style: { cursor: 'default' } }, '+' + rest.length)
     )
+  );
+}
+
+// Ô tải ảnh có trạng thái (module Nội dung sản phẩm). Khai báo một lần ở module scope để state cục bộ (kéo thả, lỗi) không bị
+// remount mỗi lần editor render lại. Giá trị `value` do cha giữ (pkgForm.images[slot]) nên không mất khi đổi tab trong editor:
+//   null | { id, name, sizeKB, src, w, h, status: 'uploading' | 'done' | 'error', progress, url, fail }
+// Tổng chiều cao luôn 160px ở cả ô trống lẫn ô có ảnh (không giật layout khi tải lên/xóa): khung ảnh co giãn + thanh thông tin 44px.
+// Ảnh luôn object-fit:contain nên nằm gọn khung với mọi tỉ lệ; ảnh sai tỉ lệ vẫn hiện đúng hình dạng thật (lộ dải trống); không có badge cảnh báo tỉ lệ.
+// Bản demo chưa có backend: "tải lên" được giả lập (thanh tiến trình ~1s rồi trả link S3). Tên tệp chứa "loi"/"fail" → giả lập tải thất bại.
+// Icon "sao chép" không có trong bộ icon DS (chỉ 77 icon) → đăng ký thêm 1 lần vào DS.ICONS; dùng chung cho LDP và ô tải ảnh.
+function fptEnsureCopyIcon(DS) {
+  if (DS && DS.ICONS && !DS.ICONS['copy-docs-line']) {
+    DS.ICONS['copy-docs-line'] = '<g transform="scale(1.575)"><path fill="currentColor" d="m4.6395104.5296835c-.567738 0-1.064328.331462-1.306897.809253-.151891.256082-.06259.586654.197404.731738.254716.142095.576471.05171.719336-.202571.04912-.168465.199665-.281637.390157-.281637h6.0662956c.23423 0 .406177.171946.406177.406177v6.068363c0 .183495-.105741.327565-.264067.381889-.254286.142864-.344667.465137-.202572.719853.145086.26.475656.349295.731739.197404.469608-.244931.79375-.737887.79375-1.299146v-6.068363c0-.802241-.662786-1.46296-1.465027-1.46296zm-2.645317 2.646867c-.802241 0-1.46502698.660202-1.46502698 1.462443v6.0683635c0 .802241.66278598 1.46296 1.46502698 1.46296h6.066296c.802241 0 1.465027-.660719 1.465027-1.46296v-6.0683635c0-.802241-.662786-1.462443-1.465027-1.462443zm0 1.056266h6.066296c.234231 0 .406177.171946.406177.406177v6.0683635c0 .234231-.171946.406694-.406177.406694h-6.066296c-.23423 0-.406177-.172463-.406177-.406694v-6.0683635c0-.234231.171947-.406177.406177-.406177z"/></g>';
+  }
+}
+
+// Bảng loại tệp ảnh cho ô tải ảnh; `fptUploadSpec` đọc giới hạn từ hint cũ ('JPG, PNG · ≤200KB') để các editor không cần truyền thêm tham số.
+const FPT_UPLOAD_TYPE_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'image/svg+xml': 'svg' };
+const FPT_UPLOAD_TYPE_LABEL = { 'image/jpeg': 'JPG', 'image/png': 'PNG', 'image/webp': 'WebP', 'image/gif': 'GIF', 'image/svg+xml': 'SVG' };
+function fptUploadSpec(hint) {
+  const t = String(hint || '');
+  const accept = [];
+  if (/JPE?G/i.test(t)) accept.push('image/jpeg');
+  if (/PNG/i.test(t)) accept.push('image/png');
+  if (/WEBP/i.test(t)) accept.push('image/webp');
+  if (/GIF/i.test(t)) accept.push('image/gif');
+  if (/SVG/i.test(t)) accept.push('image/svg+xml');
+  const m = t.match(/≤\s*(\d+(?:[.,]\d+)?)\s*(KB|MB)/i);
+  const n = m ? parseFloat(m[1].replace(',', '.')) : 0;
+  return { accept: accept.length ? accept : undefined, maxKB: m ? Math.round(/MB/i.test(m[2]) ? n * 1024 : n) : undefined };
+}
+
+// Ô tải ảnh có trạng thái nhưng tự giữ ảnh trong state cục bộ — cho các editor có form không điều khiển (defaultValue):
+// ảnh còn nguyên khi sửa các trường khác, mất khi đóng editor (giống các trường còn lại, chưa có backend lưu).
+function FptUploadSlotLocal(props) {
+  const [value, setValue] = React.useState(null);
+  return React.createElement(FptUploadSlot, Object.assign({}, props, {
+    value, onChange: v => setValue(prev => (typeof v === 'function' ? v(prev) : v))
+  }));
+}
+
+function FptUploadSlot({ label, hint, required, ratio, maxKB, accept, value, onChange, onCopy, onError }) {
+  const h = React.createElement;
+  const DS = window.ZENKaizenDesignSystem_4069b4;
+  fptEnsureCopyIcon(DS);
+  const inputRef = React.useRef(null);
+  const errTimer = React.useRef(null);
+  const [drag, setDrag] = React.useState(false);
+  const [err, setErr] = React.useState('');
+  const types = accept || ['image/jpeg', 'image/png', 'image/webp'];
+  const uuid = () => (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
+  const revoke = src => { if (src && String(src).indexOf('blob:') === 0) { try { URL.revokeObjectURL(src); } catch (e) {} } };
+  const flashErr = (title, msg) => {
+    setErr(msg); clearTimeout(errTimer.current); errTimer.current = setTimeout(() => setErr(''), 4500);
+    if (onError) onError(title, msg);
+  };
+  React.useEffect(() => () => clearTimeout(errTimer.current), []);
+  const status = value ? value.status : null;
+  const uploadId = value ? value.id : null;
+  // Giả lập tiến trình tải lên; mount lại giữa chừng (đổi tab rồi quay lại) thì tự chạy tiếp từ progress đã lưu.
+  React.useEffect(() => {
+    if (status !== 'uploading') return undefined;
+    const t = setInterval(() => {
+      onChange(prev => {
+        if (!prev || prev.status !== 'uploading') return prev;
+        const p = Math.min(100, (prev.progress || 0) + 9 + Math.random() * 13);
+        if (p < 100) return { ...prev, progress: p };
+        return prev.fail ? { ...prev, status: 'error', progress: 100 } : { ...prev, status: 'done', progress: 100 };
+      });
+    }, 130);
+    return () => clearInterval(t);
+  }, [status, uploadId]);
+
+  const openPicker = () => { if (inputRef.current) inputRef.current.click(); };
+  const pick = file => {
+    if (!file) return;
+    if (types.indexOf(file.type) < 0) { flashErr('Định dạng không hợp lệ', 'Chỉ nhận ảnh ' + types.map(t => FPT_UPLOAD_TYPE_LABEL[t]).join(', ') + '.'); return; }
+    if (maxKB && file.size > maxKB * 1024) { flashErr('Ảnh vượt dung lượng', 'Ảnh ' + Math.max(1, Math.round(file.size / 1024)) + 'KB vượt giới hạn ≤' + maxKB + 'KB.'); return; }
+    const src = URL.createObjectURL(file);
+    const probe = new Image();
+    probe.onload = () => {
+      if (value) revoke(value.src);
+      setErr('');
+      const ext = FPT_UPLOAD_TYPE_EXT[file.type] || 'jpg';
+      onChange({
+        id: Date.now() + Math.random(), name: file.name, sizeKB: Math.max(1, Math.round(file.size / 1024)), src,
+        w: probe.naturalWidth, h: probe.naturalHeight, status: 'uploading', progress: 0,
+        fail: /(^|[-_ .])(loi|fail)([-_ .]|$)/i.test(file.name),
+        url: 'https://s3-api.fpt.vn/fptvn-storage/uploads/' + uuid() + '.' + ext
+      });
+    };
+    probe.onerror = () => { revoke(src); flashErr('Không đọc được ảnh', 'Tệp ảnh bị lỗi hoặc không đúng định dạng.'); };
+    probe.src = src;
+  };
+  const remove = () => { if (value) revoke(value.src); setErr(''); onChange(null); };
+  const retry = () => onChange(prev => prev ? { ...prev, status: 'uploading', progress: 0, fail: false } : prev);
+  const dropProps = {
+    onDragOver: e => { e.preventDefault(); if (!drag) setDrag(true); },
+    onDragLeave: () => setDrag(false),
+    onDrop: e => { e.preventDefault(); setDrag(false); pick(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]); }
+  };
+  const fileInput = h('input', {
+    key: 'file', type: 'file', accept: types.join(','), style: { display: 'none' }, ref: inputRef,
+    onChange: e => { pick(e.target.files && e.target.files[0]); e.target.value = ''; }
+  });
+  const asterisk = required && h('span', { style: { color: 'var(--color-danger)' } }, ' *');
+
+  // ---- Hàng ngang cao 64px: vùng thả ảnh (nét đứt) + thumbnail 64px bên phải khi đã có ảnh ----
+  // Chiều cao không đổi giữa ô trống / đang tải / đã có ảnh / lỗi. Bấm hoặc kéo ảnh vào vùng nét đứt = chọn ảnh mới (thay ảnh), nên không có nút "Thay".
+  const busy = status === 'uploading';
+  const failed = status === 'error';
+  const subStyle = { fontSize: 11.5, lineHeight: '15px', maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--color-text-subtle)' };
+  const stop = fn => e => { e.stopPropagation(); fn(); };
+  let main, sub;
+  if (!value) {
+    main = h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis' } }, label, asterisk);
+    sub = h('div', { style: subStyle }, [hint, ratio && 'Tỉ lệ ' + ratio].filter(Boolean).join(' · '));
+  } else if (busy || failed) {
+    main = h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis' } }, value.name);
+    sub = busy
+      ? h('div', { style: subStyle }, 'Đang tải lên… ' + Math.round(value.progress || 0) + '%')
+      : h('div', { style: Object.assign({}, subStyle, { color: 'var(--color-danger-text)' }) }, 'Tải lên thất bại · ',
+          h('button', { type: 'button', className: 'fpt-upslot-linkbtn', onClick: stop(retry) }, 'Thử lại'));
+  } else {
+    // Link S3 rút gọn Ở GIỮA (giữ đuôi uuid + phần mở rộng) vì phần cuối mới là chỗ phân biệt các ảnh; chỉ nút icon bên cạnh mới sao chép.
+    const TAIL = 14;
+    main = h(React.Fragment, null,
+      h('span', { title: value.name + '\n' + value.url, style: { display: 'flex', minWidth: 0, fontFamily: 'var(--font-dev)', fontSize: 11, fontWeight: 600, color: 'var(--color-accent-text)' } },
+        h('span', { style: { flex: '0 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, value.url.slice(0, -TAIL)),
+        h('span', { style: { flex: 'none', whiteSpace: 'nowrap' } }, value.url.slice(-TAIL))
+      ),
+      h('button', { type: 'button', className: 'fpt-upslot-mini', title: 'Sao chép link ảnh', 'aria-label': 'Sao chép link ảnh', onClick: stop(() => onCopy && onCopy(value.url)), style: { marginLeft: 4 } },
+        h(DS.Icon, { name: 'copy-docs-line', size: 14, color: 'currentColor' }))
+    );
+    sub = h('div', { style: subStyle }, value.label || label, value.sizeKB ? ' · ' + value.sizeKB + 'KB' : '', value.w && value.h ? ' · ' + value.w + '×' + value.h + 'px' : '');
+  }
+  if (err) sub = h('div', { style: Object.assign({}, subStyle, { color: 'var(--color-danger-text)' }) }, err);
+  else if (drag && !busy) sub = h('div', { style: subStyle }, 'Thả ảnh để tải lên');
+  const dropZone = h('div', {
+    key: 'drop', className: 'fpt-upslot-drop' + (value ? ' is-filled' : ' fpt-upslot-empty') + (err || failed ? ' is-err' : ''), role: 'button', tabIndex: 0, onClick: openPicker,
+    title: value ? 'Bấm hoặc kéo ảnh mới vào đây để thay ảnh' : undefined,
+    onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(); } },
+    style: {
+      flex: 1, minWidth: 0, height: 64, boxSizing: 'border-box', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      textAlign: 'center', padding: '0 12px', cursor: 'pointer', borderRadius: 10, transition: 'border-color .15s, background .15s',
+      border: '1.5px dashed ' + (err || failed ? 'var(--color-danger)' : drag ? 'var(--color-accent)' : 'var(--color-border-strong)'),
+      background: err || failed ? 'var(--color-danger-bg)' : drag ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)'
+    }
+  },
+    !(value && !busy && !failed && !err) && h('span', { className: 'fpt-upslot-ico', style: { display: 'inline-flex', color: err || failed ? 'var(--color-danger)' : drag ? 'var(--color-accent)' : 'var(--color-text-subtle)' } },
+      h(DS.Icon, { name: err || failed ? 'alert-circle-line' : 'upload-cloud-line', size: 18, color: 'currentColor' })),
+    h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: '100%', minWidth: 0, fontSize: 13, fontWeight: 600, lineHeight: '18px', color: 'var(--color-text)' } }, main),
+    sub,
+    busy && h('div', { style: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: 'var(--color-border)' } },
+      h('div', { style: { width: Math.round(value.progress || 0) + '%', height: '100%', background: 'var(--color-accent)', transition: 'width .13s linear' } }))
+  );
+  const thumb = value && h('div', { key: 'thumb', style: { position: 'relative', flex: 'none', width: 64, height: 64 } },
+    h('div', {
+      title: 'Xem ảnh gốc' + (value.w && value.h ? ' · ' + value.w + '×' + value.h + 'px' : ''), onClick: () => { if (value.src) window.open(value.src, '_blank', 'noopener'); },
+      style: {
+        position: 'absolute', inset: 0, borderRadius: 8, overflow: 'hidden', border: '1px solid ' + (failed ? 'var(--color-danger)' : 'var(--color-border)'), cursor: 'zoom-in', boxSizing: 'border-box',
+        background: 'repeating-conic-gradient(var(--color-surface-alt) 0% 25%, var(--color-surface) 0% 50%) 50% / 12px 12px'
+      }
+    },
+      h('img', { src: value.src, alt: value.name, draggable: false, style: { width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: busy || failed ? 0.45 : 1, transition: 'opacity .2s' } }),
+      failed && h('div', { style: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(DS.Icon, { name: 'alert-circle-line', size: 22, color: 'var(--color-danger)' }))
+    ),
+    h('button', { type: 'button', className: 'fpt-upslot-mini fpt-upslot-del', title: busy ? 'Hủy tải lên' : 'Xóa ảnh', 'aria-label': busy ? 'Hủy tải lên' : 'Xóa ảnh', onClick: stop(remove),
+      style: { position: 'absolute', top: -7, right: -7, width: 22, height: 22, background: 'var(--color-surface)', border: '1px solid var(--color-border)' } },
+      h(DS.Icon, { name: busy ? 'x-circle-line' : 'trash-line', size: 13, color: 'currentColor' }))
+  );
+  return h(React.Fragment, null,
+    h('div', Object.assign({ key: 'box', className: 'fpt-upslot', style: { display: 'flex', alignItems: 'center', gap: 12, height: 64 } }, dropProps), dropZone, thumb),
+    fileInput
   );
 }
 
@@ -722,19 +906,22 @@ class Component extends DCLogic {
     this.setState({ active: id, userMenu: false, channelMenu: false, _contentKey: (this.state._contentKey || 0) + 1 });
     try { history.replaceState(null, '', '#module=' + id); } catch (e) {}
   }
-  copyModuleLink() {
-    const url = location.origin + location.pathname + '#module=' + this.state.active;
-    const done = () => this.toast('success', 'Đã sao chép liên kết', 'Dán vào tài liệu — khi bấm vào sẽ mở đúng mục này.');
+  // Sao chép văn bản vào clipboard (có fallback execCommand) + toast kết quả. Dùng chung cho link module và link ảnh đã tải lên.
+  copyText(text, title, message) {
+    const done = () => this.toast('success', title, message);
     const fallback = () => {
       try {
         const ta = document.createElement('textarea');
-        ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
         document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
         done();
-      } catch (e) { this.toast('danger', 'Không thể sao chép', 'Vui lòng sao chép thủ công: ' + url); }
+      } catch (e) { this.toast('danger', 'Không thể sao chép', 'Vui lòng sao chép thủ công: ' + text); }
     };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done).catch(fallback);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(fallback);
     else fallback();
+  }
+  copyModuleLink() {
+    this.copyText(location.origin + location.pathname + '#module=' + this.state.active, 'Đã sao chép liên kết', 'Dán vào tài liệu — khi bấm vào sẽ mở đúng mục này.');
   }
   toast(theme, title, message) {
     const id = ++this._tid;
@@ -1417,6 +1604,7 @@ class Component extends DCLogic {
       faqCat: r && r.faqCat ? r.faqCat : '',
       faqList: r && r.faqList ? r.faqList.map(x => ({ ...x })) : [],
       midBanners: r && r.midBanners ? r.midBanners.map(x => ({ ...x })) : [],
+      images: r && r.images ? { ...r.images } : {},
     };
   }
   openSkuEditor(r) {
@@ -2088,7 +2276,7 @@ class Component extends DCLogic {
         )
       ),
       this.PKG_SHOW_BUNDLED(r) && h(DS.Divider, null),
-      this.PKG_SHOW_BUNDLED(r) && this.uploadBox('Hình ảnh đặc quyền (tối đa 1 ảnh)', 'JPG / PNG / WebP · ≤200KB')
+      this.PKG_SHOW_BUNDLED(r) && h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } }, this.pkgImgBox('privImg', 'Hình ảnh đặc quyền (tối đa 1 ảnh)', 'JPG / PNG / WebP · ≤200KB', null, 200))
     );
   }
 
@@ -2150,6 +2338,22 @@ class Component extends DCLogic {
       )
     );
   }
+  // Ô tải ảnh có trạng thái của editor Nội dung sản phẩm: ảnh lưu trong pkgForm.images[slot] (không mất khi đổi tab trong editor).
+  // onChange nhận giá trị mới hoặc updater (prev) => next (FptUploadSlot dùng updater để cập nhật tiến trình tải lên); null/undefined = xóa ảnh.
+  pkgImgBox(slot, label, hint, ratio, maxKB) {
+    const images = this.state.pkgForm.images || {};
+    return this.uploadBox(label, hint, false, null, {
+      key: slot, ratio, maxKB, value: images[slot] || null,
+      onChange: v => this.setState(s => {
+        const imgs = { ...(s.pkgForm.images || {}) };
+        const next = typeof v === 'function' ? v(imgs[slot]) : v;
+        if (next) imgs[slot] = next; else delete imgs[slot];
+        return { pkgForm: { ...s.pkgForm, images: imgs } };
+      })
+    });
+  }
+  // Grid cặp Desktop/Mobile: 2 cột bằng nhau, tự xếp 1 cột khi mỗi ô hẹp hơn 260px.
+  PKG_IMG_PAIR_GRID() { return { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }; }
   // ---------- Tab 2 helper: Ảnh card gói (SKU thiết bị — hiển thị trên section Hình ảnh sản phẩm & Banner) ----------
   renderPkgCardImage(r) {
     const h = React.createElement;
@@ -2157,9 +2361,9 @@ class Component extends DCLogic {
     return h('div', null,
       h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Ảnh card gói'),
       h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Tỉ lệ ' + ratio + ' · Desktop ≤200KB · Mobile ≤150KB'),
-      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-        this.uploadBox('Ảnh card gói - Desktop (' + ratio + ')', '≤200KB'),
-        this.uploadBox('Ảnh card gói - Mobile (' + ratio + ')', '≤150KB')
+      h('div', { style: this.PKG_IMG_PAIR_GRID() },
+        this.pkgImgBox('cardDesktop', 'Ảnh card gói - Desktop', '≤200KB', ratio, 200),
+        this.pkgImgBox('cardMobile', 'Ảnh card gói - Mobile', '≤150KB', ratio, 150)
       )
     );
   }
@@ -2238,17 +2442,17 @@ class Component extends DCLogic {
             h('div', null,
               h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Ảnh gói cước'),
               h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Tỉ lệ 4:3 · Desktop ≤200KB · Mobile ≤150KB'),
-              h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-                this.uploadBox('Ảnh gói cước - Desktop', '≤200KB'),
-                this.uploadBox('Ảnh gói cước - Mobile', '≤150KB')
+              h('div', { style: this.PKG_IMG_PAIR_GRID() },
+                this.pkgImgBox('planDesktop', 'Ảnh gói cước - Desktop', '≤200KB', '4:3', 200),
+                this.pkgImgBox('planMobile', 'Ảnh gói cước - Mobile', '≤150KB', '4:3', 150)
               )
             ),
             h('div', null,
               h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 4 } }, 'Ảnh banner'),
               h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Tỉ lệ 3:1 · Desktop ≤200KB · Mobile ≤150KB'),
-              h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-                this.uploadBox('Banner đầu trang - Desktop', '≤200KB'),
-                this.uploadBox('Banner đầu trang - Mobile', '≤150KB')
+              h('div', { style: this.PKG_IMG_PAIR_GRID() },
+                this.pkgImgBox('bannerDesktop', 'Banner đầu trang - Desktop', '≤200KB', '3:1', 200),
+                this.pkgImgBox('bannerMobile', 'Banner đầu trang - Mobile', '≤150KB', '3:1', 150)
               )
             )
           )
@@ -2266,9 +2470,9 @@ class Component extends DCLogic {
       ),
       h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Desktop tỉ lệ 32:9 · Mobile tỉ lệ 1:1 · Ảnh Desktop và Mobile riêng · chèn giữa nội dung trang gói bán'),
       h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14 } },
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-          this.uploadBox('Desktop', '≤200KB'),
-          this.uploadBox('Mobile', '≤150KB')
+        h('div', { style: this.PKG_IMG_PAIR_GRID() },
+          this.pkgImgBox('midDesktop', 'Desktop', '≤200KB', '32:9', 200),
+          this.pkgImgBox('midMobile', 'Mobile', '≤150KB', '1:1', 150)
         )
       )
     );
@@ -2277,7 +2481,12 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const items = this.state.pkgForm.videos || [];
     const update = (i, key, val) => this.setState(s => ({ pkgForm: { ...s.pkgForm, videos: s.pkgForm.videos.map((it, j) => j === i ? { ...it, [key]: val } : it) } }));
-    const remove = (i) => this.setState(s => ({ pkgForm: { ...s.pkgForm, videos: s.pkgForm.videos.filter((_, j) => j !== i) } }));
+    // Xóa video thì xóa luôn ảnh thumbnail của nó khỏi pkgForm.images (tránh ảnh mồ côi).
+    const remove = (i) => this.setState(s => {
+      const imgs = { ...(s.pkgForm.images || {}) }; const gone = s.pkgForm.videos[i];
+      if (gone) delete imgs['videoThumb' + gone.id];
+      return { pkgForm: { ...s.pkgForm, images: imgs, videos: s.pkgForm.videos.filter((_, j) => j !== i) } };
+    });
     const add = () => {
       if (items.length >= 3) { this.toast('warning', 'Đã đạt giới hạn', 'Tối đa 3 video.'); return; }
       this.setState(s => ({ pkgForm: { ...s.pkgForm, videos: [...s.pkgForm.videos, { id: Date.now(), title: '', url: '' }] } }));
@@ -2292,7 +2501,7 @@ class Component extends DCLogic {
             h('div', { style: { flex: 1 } }, h(DS.Input, { value: it.url, placeholder: 'URL video (YouTube/Vimeo) hoặc tải .mp4…', onChange: e => update(i, 'url', e && e.target ? e.target.value : e) })),
             h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', onClick: () => remove(i) })
           ),
-          this.uploadBox('Thumbnail video (tuỳ chọn)', 'JPG / PNG / WebP · ≤200KB')
+          h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } }, this.pkgImgBox('videoThumb' + it.id, 'Thumbnail video (tuỳ chọn)', 'JPG / PNG / WebP · ≤200KB', null, 200))
         ))
       ),
       h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', size: 'sm', onClick: add, disabled: items.length >= 3 }, 'Thêm video')
@@ -3668,8 +3877,18 @@ class Component extends DCLogic {
       )
     );
   }
-  uploadBox(label, hint, required, onPick) {
+  // opts (tuỳ chọn) bật ô tải ảnh CÓ TRẠNG THÁI (FptUploadSlot: khung ảnh 160px, chip tỉ lệ/dung lượng, link ảnh sau khi lên web):
+  //   { value, onChange, ratio: '3:1', maxKB: 200 } — value/onChange do caller giữ (xem pkgImgBox). Không truyền opts = ô trống cũ (demo toast).
+  uploadBox(label, hint, required, onPick, opts) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    if (opts) return h(FptUploadSlot, Object.assign({ label, hint, required }, opts, {
+      onCopy: url => this.copyText(url, 'Đã sao chép link ảnh', url),
+      onError: (title, msg) => this.toast('danger', title, msg)
+    }));
+    if (!onPick) return h(FptUploadSlotLocal, Object.assign({ label, hint, required }, fptUploadSpec(hint), {
+      onCopy: url => this.copyText(url, 'Đã sao chép link ảnh', url),
+      onError: (title, msg) => this.toast('danger', title, msg)
+    }));
     return h('div', { onClick: onPick || (() => this.toast('info', 'Chọn tệp', 'Mở hộp thoại tải ảnh (demo).')), style: { border: '1.5px dashed var(--color-border-strong)', borderRadius: 10, padding: '20px 14px', textAlign: 'center', cursor: 'pointer', background: 'var(--color-surface-alt)' } },
       h(DS.Icon, { name: 'upload-cloud-line', size: 22, color: 'var(--color-text-subtle)' }),
       h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 6 } }, label, required && h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
@@ -3964,7 +4183,7 @@ class Component extends DCLogic {
     { name: 'Trang Thanh toán & Hỗ trợ', slug: '/thanh-toan' },
     { name: 'Thiết bị Smart Home', slug: '/thiet-bi-smart-home' },
   ]; }
-  // Landing Page áp dụng quảng cáo (tab thứ 2 trong modal "Chọn trang áp dụng"); slug có tiền tố /landing/ để không trùng slug trang nội dung.
+  // Landing Page áp dụng quảng cáo (gộp chung danh sách với trang nội dung trong modal "Chọn trang áp dụng"); slug có tiền tố /landing/ để không trùng slug trang nội dung.
   AD_LDP_PAGES() { return [
     { name: 'Bảng xếp hạng Ngoại hạng Anh', slug: '/landing/bang-xep-hang-ngoai-hang-anh' },
     { name: 'Đối tác bán hàng', slug: '/landing/doi-tac-ban-hang' },
@@ -4436,7 +4655,7 @@ class Component extends DCLogic {
           this.field('Meta mô tả', h(DS.Textarea, { defaultValue: r ? (r.metaDesc || '') : '', maxLength: 160, placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 }), true)
         ),
         section(3, 'image-line', 'Hình ảnh',
-          this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤200KB', true)
+          h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } }, this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤200KB', true))
         ),
         pageSectionsCard
       ),
@@ -4683,13 +4902,13 @@ class Component extends DCLogic {
       )
     ] });
     if (MEDIA_ICON2_TYPES.includes(secType)) blocks.push({ icon: 'image-line', title: 'Media & Icon', content: [
-      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
         this.uploadBox('Icon mặc định (Default)', 'PNG, SVG · ≤50KB'),
         this.uploadBox('Icon hoạt động (Active)', 'PNG, SVG · ≤50KB')
       )
     ] });
     else if (MEDIA_SINGLE_TYPES.includes(secType)) blocks.push({ icon: 'image-line', title: 'Media & Icon', content: [
-      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
         this.uploadBox('Hình ảnh - Desktop', 'JPG, PNG, WebP · ≤200KB'),
         this.uploadBox('Hình ảnh - Mobile', 'JPG, PNG, WebP · ≤150KB')
       ),
@@ -6011,7 +6230,7 @@ class Component extends DCLogic {
           )
         ),
         section(secN++, 'image-line', 'Icon',
-          this.uploadBox('Icon menu', 'JPG, PNG, GIF, WEBP, SVG · ≤200KB')
+          h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } }, this.uploadBox('Icon menu', 'JPG, PNG, GIF, WEBP, SVG · ≤200KB'))
         )
     );
     if (showChildren) {
@@ -6303,7 +6522,7 @@ class Component extends DCLogic {
             : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Banner Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.')
         ),
         section(2, 'image-line', 'Tài ảnh Banner (Drag & Drop)',
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
             this.uploadBox('Banner Desktop', 'JPG, PNG, WEBP · ≤200KB'),
             this.uploadBox('Banner Mobile', 'JPG, PNG, WEBP · ≤150KB')
           )
@@ -6398,7 +6617,7 @@ class Component extends DCLogic {
             : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Popup Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.')
         ),
         section(2, 'image-line', 'Hình ảnh',
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
             this.uploadBox('Popup Desktop', 'JPG, PNG, WEBP · ≤200KB'),
             this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · ≤150KB')
           )
@@ -6673,11 +6892,17 @@ class Component extends DCLogic {
       })
     );
     // Nền loại trừ nhau: đã có Ảnh nền → khoá Màu nền; đã chọn Màu nền → khoá Ảnh nền. Hai cột Ảnh nền | Màu nền.
-    const bgImgSet = d.bgImgSet !== undefined ? d.bgImgSet : !!(r && r.bgImg);
-    const iconSet = d.iconSet !== undefined ? d.iconSet : !!(r && r.img);
-    // Ảnh demo cho trạng thái đã tải lên (bản thật sẽ là tệp người dùng chọn).
-    const DEMO_ICON = 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7aedea66620_1786441194.png';
-    const DEMO_BG = 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7ae92542251_1786439973.png';
+    // Ảnh / Icon và Ảnh nền dùng ô tải ảnh chung (FptUploadSlot): giá trị nằm trong adDraft.iconImg / adDraft.bgImgFile (null = đã xóa).
+    // Bản ghi đã lưu có sẵn URL ảnh (r.img / r.bgImg) → dựng thành ảnh "đã tải lên"; imgLink / bgImgLink là link S3 hiển thị cho ảnh vừa tải.
+    const seedImg = (src, link, label) => src ? { id: 'seed:' + src, name: String(src).split('/').pop(), label, sizeKB: null, src, status: 'done', progress: 100, url: link || src } : null;
+    const iconVal = d.iconImg !== undefined ? d.iconImg : seedImg(r && r.img, r && r.imgLink);
+    const bgVal = d.bgImgFile !== undefined ? d.bgImgFile : seedImg(r && r.bgImg, r && r.bgImgLink);
+    const iconSet = !!iconVal, bgImgSet = !!bgVal;
+    const imgPatchBox = (field, seed) => v => this.setState(s => {
+      const dd = s.adDraft || {};
+      const prev = dd[field] !== undefined ? dd[field] : seed;
+      return { adDraft: Object.assign({}, dd, { [field]: typeof v === 'function' ? v(prev) : v }) };
+    });
     const bgColorSet = d.bgColorSet !== undefined ? d.bgColorSet : !!(r && r.bgColor && !r.bgImg);
     const isHex = v => /^#[0-9a-fA-F]{6}$/.test(v || '');
     const setSolid = v => setD({ bgColor: v, bgColorSet: !!v });
@@ -6689,28 +6914,8 @@ class Component extends DCLogic {
     const cap = t => h('div', { style: { fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6 } }, t);
     // Nền quảng cáo chọn 1 trong 2 bằng radio: Ảnh nền HOẶC Màu nền. Đổi radio = chuyển chế độ và xoá dữ liệu của chế độ còn lại (loại trừ nhau).
     const bgMode = bgImgSet ? 'image' : bgColorSet ? 'color' : (d.bgMode || 'image');
-    const pickBgMode = m => { if (m === bgMode) return; setD(m === 'image' ? { bgMode: 'image', bgColor: '', bgColorSet: false } : { bgMode: 'color', bgImgSet: false }); };
-    const bgUploadBox = h('div', { onClick: () => setD({ bgImgSet: true }), style: { flex: 1, minHeight: 120, boxSizing: 'border-box', border: '1.5px dashed var(--color-border-strong)', borderRadius: 10, padding: '20px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', cursor: 'pointer', background: 'var(--color-surface-alt)' } },
-      h(DS.Icon, { name: 'upload-cloud-line', size: 22, color: 'var(--color-text-subtle)' }),
-      h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 6 } }, 'Kéo thả hoặc chọn tệp để tải lên'),
-      h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, 'JPG, PNG, WEBP · ≤200KB')
-    );
-    // Khung đã tải ảnh lên: preview ảnh chiếm toàn khung + thanh tên tệp/dung lượng + nút Thay / Xóa.
-    const uploadedBox = (src, name, size, minH, onReplace, onRemove) => h('div', { style: { flex: 1, minHeight: minH, display: 'flex', flexDirection: 'column', border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', background: 'var(--color-surface)' } },
-      h('div', { style: { flex: 1, position: 'relative', background: 'var(--color-surface-alt)', minHeight: 0 } },
-        h('img', { src, alt: name, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', padding: 12, boxSizing: 'border-box' } })
-      ),
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: '1px solid var(--color-border)' } },
-        h(DS.Icon, { name: 'image-line', size: 18, color: 'var(--color-text-subtle)' }),
-        h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, name),
-          h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, size + ' · Đã tải lên')
-        ),
-        h(DS.Button, { level: 'tertiary', size: 'sm', onClick: onReplace }, 'Thay'),
-        h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: onRemove }, 'Xóa')
-      )
-    );
-    const imgPreview = uploadedBox((r && r.bgImg) || DEMO_BG, 'nen-quang-cao.png', '126KB', 190, () => this.toast('info', 'Chọn tệp', 'Mở hộp thoại tải ảnh (demo).'), () => setD({ bgImgSet: false, bgMode: 'image' }));
+    const pickBgMode = m => { if (m === bgMode) return; setD(m === 'image' ? { bgMode: 'image', bgColor: '', bgColorSet: false } : { bgMode: 'color', bgImgFile: null }); };
+    const bgImgBox = this.uploadBox('Ảnh nền', 'JPG, PNG, WEBP · ≤200KB', false, null, { key: 'adBgImg', maxKB: 200, value: bgVal, onChange: imgPatchBox('bgImgFile', seedImg(r && r.bgImg, r && r.bgImgLink)) });
     const bgPanel = h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 16, padding: 16, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10 } },
       h('div', null,
         cap('Gợi ý'),
@@ -6775,23 +6980,16 @@ class Component extends DCLogic {
             h('div', { style: { display: 'flex', flexDirection: 'column' } },
               // Hàng tiêu đề cao cố định 28px: trái = nhãn "Ảnh / Icon", phải = radio Ảnh nền | Màu nền → 2 khung bên dưới thẳng hàng đỉnh.
               h('div', { style: { height: 28, display: 'flex', alignItems: 'center', marginBottom: 8 } }, h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Ảnh / Icon')),
-              iconSet
-                ? uploadedBox((r && r.img) || DEMO_ICON, 'icon-khuyen-mai.png', '48KB', 190, () => this.toast('info', 'Chọn tệp', 'Mở hộp thoại tải ảnh (demo).'), () => setD({ iconSet: false }))
-                : h('div', { onClick: () => setD({ iconSet: true }), style: { flex: 1, minHeight: 190, boxSizing: 'border-box', border: '1.5px dashed var(--color-border-strong)', borderRadius: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: 8, textAlign: 'center', cursor: 'pointer', background: 'var(--color-surface-alt)' } },
-                    h(DS.Icon, { name: 'upload-cloud-line', size: 22, color: 'var(--color-text-subtle)' }),
-                    h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 2 } }, 'Tải ảnh lên'),
-                    h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'JPG, PNG, WEBP'),
-                    h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, '≤200KB')
-                  )
+              this.uploadBox('Ảnh / Icon', 'JPG, PNG, WEBP · ≤200KB', false, null, { key: 'adIcon', maxKB: 200, value: iconVal, onChange: imgPatchBox('iconImg', seedImg(r && r.img, r && r.imgLink)) })
             ),
             h('div', { style: { display: 'flex', flexDirection: 'column', minWidth: 0 } },
               h('div', { style: { height: 28, display: 'flex', alignItems: 'center', gap: 20, marginBottom: 8 } },
                 h(DS.Radio, { name: 'adBgMode', label: 'Ảnh nền', checked: bgMode === 'image', onChange: () => pickBgMode('image') }),
                 h(DS.Radio, { name: 'adBgMode', label: 'Màu nền', checked: bgMode === 'color', onChange: () => pickBgMode('color') })
               ),
-              h('div', { style: { flex: 1, minHeight: 190, display: 'flex', flexDirection: 'column', gap: 8 } },
+              h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 8 } },
                 bgMode === 'image'
-                  ? (bgImgSet ? imgPreview : bgUploadBox)
+                  ? bgImgBox
                   : h(React.Fragment, null,
                       bgPanel,
                       bgColorSet && h('div', null, h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => setD({ bgColor: '', bgColorSet: false, bgMode: 'color' }) }, 'Xóa màu nền'))
@@ -6808,13 +7006,14 @@ class Component extends DCLogic {
           this.toast('danger', 'Thiếu thông tin', !d.catCode && titleMissing ? 'Vui lòng chọn chiến dịch và nhập tiêu đề quảng cáo.' : !d.catCode ? 'Vui lòng chọn chiến dịch quảng cáo.' : 'Vui lòng nhập tiêu đề quảng cáo.');
           return;
         }
+        if ((iconVal && iconVal.status === 'uploading') || (bgVal && bgVal.status === 'uploading')) { this.toast('warning', 'Ảnh đang tải lên', 'Vui lòng đợi ảnh tải xong rồi lưu.'); return; }
         if (titleOver) { this.toast('danger', 'Tiêu đề quá dài', 'Tiêu đề quảng cáo không được vượt quá ' + TITLE_MAX + ' ký tự.'); return; }
         if (expiredErr) { this.toast('danger', 'Quảng cáo đã hết hạn', 'Vui lòng chọn lại thời gian kết thúc để mở lại quảng cáo.'); return; }
         if (this.state.adCatErr || this.state.adTitleErr) this.setState({ adCatErr: false, adTitleErr: false });
         const contentHtml = this._adHtmlRef && this._adHtmlRef.current ? this._adHtmlRef.current.innerHTML : (r ? (r.content || '') : '');
         const list = this.getAdsList();
         const rec = {
-          catCode: d.catCode, title: d.title, img: iconSet ? ((r && r.img) || DEMO_ICON) : '', bgColor: bgColorSet && !bgImgSet ? d.bgColor : '', bgImg: bgImgSet ? ((r && r.bgImg) || DEMO_BG) : '',
+          catCode: d.catCode, title: d.title, img: iconVal && iconVal.status === 'done' ? iconVal.src : '', imgLink: iconVal && iconVal.status === 'done' ? iconVal.url : '', bgColor: bgColorSet && !bgImgSet ? d.bgColor : '', bgImg: bgVal && bgVal.status === 'done' ? bgVal.src : '', bgImgLink: bgVal && bgVal.status === 'done' ? bgVal.url : '',
           content: contentHtml, url: d.url, target: d.target, order: r ? (r.order || 1) : Math.max(0, ...list.filter(a => a.catCode === d.catCode).map(a => a.order || 0)) + 1,
           status: d.active ? 'active' : 'inactive',
           startAt: this.adFmtDate(d.dateStart), endAt: this.adFmtDate(d.dateEnd),
@@ -6862,28 +7061,25 @@ class Component extends DCLogic {
   }
   renderAdCatEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ adCatEditor: undefined, adCatDraft: null, adPagePickerOpen: false, adPageSearchQ: '', adPagePickerTab: 'content' });
+    const isNew = !r; const back = () => this.setState({ adCatEditor: undefined, adCatDraft: null, adPagePickerOpen: false, adPageSearchQ: '' });
     const setD = patch => this.setState(s => ({ adCatDraft: Object.assign({}, s.adCatDraft, patch) }));
     const dBase = r ? { name: r.name, type: r.type || '', active: r.status === 'active', pageScope: r.pageScope || 'all', pages: r.pages || [] } : { name: '', type: '', active: true, pageScope: 'all', pages: [] };
     const d = Object.assign({}, dBase, this.state.adCatDraft);
     // Vị trí là Select bắt buộc (composite control, §14): lỗi hiện khi bấm Lưu mà chưa chọn, tự xoá khi đã chọn.
     const typeErr = !!d.typeErr && !d.type;
-    // Modal có 2 tab: Trang nội dung / Landing Page. allPages = gộp cả hai (dùng cho "áp dụng tất cả", tra tên); tabPages = danh sách của tab đang mở.
+    // Modal là 1 danh sách duy nhất gộp Trang nội dung + Landing Page (không tách tab); Landing Page được đánh dấu bằng badge.
     const allPages = this.AD_ALL_PAGES();
-    const contentPages = this.AD_PAGES();
     const ldpPages = this.AD_LDP_PAGES();
-    const pickerTab = this.state.adPagePickerTab === 'ldp' ? 'ldp' : 'content';
-    const tabPages = pickerTab === 'ldp' ? ldpPages : contentPages;
     const isLdpSlug = slug => ldpPages.some(pp => pp.slug === slug);
     const pageQ = (this.state.adPageSearchQ || '').toLowerCase();
-    const visiblePages = pageQ ? tabPages.filter(p => (p.name + ' ' + p.slug).toLowerCase().includes(pageQ)) : tabPages;
+    const visiblePages = pageQ ? allPages.filter(p => (p.name + ' ' + p.slug).toLowerCase().includes(pageQ)) : allPages;
     // Không còn chọn phạm vi riêng: danh sách trống = áp dụng TẤT CẢ trang; có ≥1 trang = chỉ các trang đó (pageScope suy ra từ d.pages).
     const isSpecific = (d.pages || []).length > 0;
     // Trang đã áp dụng (d.pages) hiển thị dạng danh sách; chọn/sửa qua modal với bản nháp riêng (adPagePickerSel) — chỉ ghi vào d.pages khi bấm Xác nhận.
     const pickerOpen = !!this.state.adPagePickerOpen;
     const sel = this.state.adPagePickerSel || [];
-    const openPicker = () => this.setState({ adPagePickerOpen: true, adPagePickerSel: isSpecific ? d.pages.slice() : allPages.map(p => p.slug), adPageSearchQ: '', adPagePickerTab: 'content' });
-    const closePicker = () => this.setState({ adPagePickerOpen: false, adPageSearchQ: '', adPagePickerTab: 'content' });
+    const openPicker = () => this.setState({ adPagePickerOpen: true, adPagePickerSel: isSpecific ? d.pages.slice() : allPages.map(p => p.slug), adPageSearchQ: '' });
+    const closePicker = () => this.setState({ adPagePickerOpen: false, adPageSearchQ: '' });
     const toggleSel = slug => this.setState({ adPagePickerSel: sel.includes(slug) ? sel.filter(x => x !== slug) : sel.concat(slug) });
     const allVisibleChecked = visiblePages.length > 0 && visiblePages.every(p => sel.includes(p.slug));
     const toggleAllVisible = () => {
@@ -6908,7 +7104,8 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 } },
           h('span', { style: { fontSize: 13, fontWeight: checked ? 600 : 500 } }, p.name),
           h('span', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', fontFamily: 'var(--font-dev)' } }, p.slug)
-        )
+        ),
+        isLdpSlug(p.slug) && h('div', { style: { marginLeft: 'auto', flexShrink: 0 } }, h(DS.Badge, { theme: 'info' }, 'Landing Page'))
       );
     };
     const pickerModal = pickerOpen && h(DS.Modal, {
@@ -6921,22 +7118,15 @@ class Component extends DCLogic {
       )
     },
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
-        h(DS.Tabs, {
-          value: pickerTab, onChange: v => this.setState({ adPagePickerTab: v, adPageSearchQ: '' }),
-          items: [
-            { value: 'content', label: 'Trang nội dung (' + contentPages.filter(p => sel.includes(p.slug)).length + '/' + contentPages.length + ')' },
-            { value: 'ldp', label: 'Landing Page (' + ldpPages.filter(p => sel.includes(p.slug)).length + '/' + ldpPages.length + ')' },
-          ]
-        }),
-        h(DS.Input, { leadingIcon: 'search-medium-line', placeholder: pickerTab === 'ldp' ? 'Tìm kiếm landing page theo tên hoặc slug...' : 'Tìm kiếm trang theo tên hoặc slug...', value: this.state.adPageSearchQ || '', onChange: e => this.setState({ adPageSearchQ: e && e.target ? e.target.value : e }) }),
+        h(DS.Input, { leadingIcon: 'search-medium-line', placeholder: 'Tìm kiếm trang theo tên hoặc slug...', value: this.state.adPageSearchQ || '', onChange: e => this.setState({ adPageSearchQ: e && e.target ? e.target.value : e }) }),
         h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
           h('div', { onClick: toggleAllVisible, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '9px 14px', cursor: visiblePages.length ? 'pointer' : 'default', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)' } },
             h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: allVisibleChecked, onChange: toggleAllVisible, disabled: !visiblePages.length })),
-            h('span', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, pageQ ? 'Chọn tất cả kết quả tìm kiếm (' + visiblePages.length + ')' : 'Chọn tất cả (' + tabPages.length + ')')
+            h('span', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, pageQ ? 'Chọn tất cả kết quả tìm kiếm (' + visiblePages.length + ')' : 'Chọn tất cả (' + allPages.length + ')')
           ),
           h('div', { className: 'fpt-scroll', style: { maxHeight: 340, overflowY: 'auto' } },
             visiblePages.length === 0
-              ? h('div', { style: { padding: 20, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, (pickerTab === 'ldp' ? 'Không tìm thấy landing page phù hợp.' : 'Không tìm thấy trang phù hợp.'))
+              ? h('div', { style: { padding: 20, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, 'Không tìm thấy trang phù hợp.')
               : visiblePages.map(pickRow)
           )
         )
@@ -7909,9 +8099,7 @@ class Component extends DCLogic {
   renderLdpListView() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     // Inject custom copy icon (not in DS 77-icon subset)
-    if (DS && DS.ICONS && !DS.ICONS['copy-docs-line']) {
-      DS.ICONS['copy-docs-line'] = '<g transform="scale(1.575)"><path fill="currentColor" d="m4.6395104.5296835c-.567738 0-1.064328.331462-1.306897.809253-.151891.256082-.06259.586654.197404.731738.254716.142095.576471.05171.719336-.202571.04912-.168465.199665-.281637.390157-.281637h6.0662956c.23423 0 .406177.171946.406177.406177v6.068363c0 .183495-.105741.327565-.264067.381889-.254286.142864-.344667.465137-.202572.719853.145086.26.475656.349295.731739.197404.469608-.244931.79375-.737887.79375-1.299146v-6.068363c0-.802241-.662786-1.46296-1.465027-1.46296zm-2.645317 2.646867c-.802241 0-1.46502698.660202-1.46502698 1.462443v6.0683635c0 .802241.66278598 1.46296 1.46502698 1.46296h6.066296c.802241 0 1.465027-.660719 1.465027-1.46296v-6.0683635c0-.802241-.662786-1.462443-1.465027-1.462443zm0 1.056266h6.066296c.234231 0 .406177.171946.406177.406177v6.0683635c0 .234231-.171946.406694-.406177.406694h-6.066296c-.23423 0-.406177-.172463-.406177-.406694v-6.0683635c0-.234231.171947-.406177.406177-.406177z"/></g>';
-    }
+    fptEnsureCopyIcon(DS);
     const search = this.state.ldpListSearch || '';
     const tplF = this.state.ldpListTpl || 'all';
     const statF = this.state.ldpListStatus || 'all';
@@ -12476,7 +12664,7 @@ class Component extends DCLogic {
         ),
         // 3. Hình ảnh đại diện — luôn có card riêng
         section(3, 'image-line', 'Hình ảnh đại diện',
-          this.uploadBox('Tải ảnh (tỷ lệ 16:9)', 'PNG / JPG / WebP · ≤200KB', true),
+          h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } }, this.uploadBox('Tải ảnh (tỷ lệ 16:9)', 'PNG / JPG / WebP · ≤200KB', true)),
           this.field('URL ảnh', h(DS.Input, { placeholder: 'https://… hoặc dán link' })),
           this.field('Alt text', h(DS.Input, { placeholder: 'Mô tả ảnh…' }), true),
           this.field('Caption', h(DS.Input, { placeholder: 'Chú thích…' })),
@@ -12929,11 +13117,11 @@ class Component extends DCLogic {
         ),
         // 3. Hình ảnh — luôn có card riêng
         section(3, 'image-line', 'Hình ảnh',
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 } },
             this.uploadBox('Biểu tượng', 'JPG, PNG, WEBP, SVG · ≤200KB'),
             this.uploadBox('Biểu tượng khi rê chuột', 'JPG, PNG, WEBP, SVG · ≤200KB')
           ),
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 } },
             this.uploadBox('Logo', 'JPG, PNG, WEBP, SVG · ≤200KB'),
             this.uploadBox('Hình đại diện', 'JPG, PNG, WEBP, SVG · ≤200KB')
           ),
