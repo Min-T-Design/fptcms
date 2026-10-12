@@ -2653,16 +2653,15 @@ class Component extends DCLogic {
       this.collapsibleCard('pkgSecSeoOpen', 'Meta SEO', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
         h('div', { style: this.PKG_IMG_PAIR_GRID() },
           h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 4 } }, 'Tiêu đề (Meta title)'),
-            h('div', { style: { fontSize: 12, color: metaTitleAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginBottom: 4 } }, `Tối đa ${META_TITLE_MAX} ký tự (${metaTitleVal.length}/${META_TITLE_MAX})${metaTitleAtMax ? ' — đã đạt giới hạn' : ''}.`),
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Tiêu đề (Meta title)'),
             h(DS.Input, {
               value: metaTitleVal, maxLength: META_TITLE_MAX, placeholder: 'VD: Đăng ký Combo Internet truyền hình GIGA V.VIP',
               onChange: setMetaTitle
-            })
+            }),
+            metaTitleAtMax && h('div', { style: { fontSize: 12, color: 'var(--color-danger-text)', marginTop: 4 } }, `Đã đạt giới hạn ${META_TITLE_MAX} ký tự.`)
           ),
           h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 4 } }, 'Từ khóa (Meta keywords)'),
-            h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Các từ khóa cách nhau bằng dấu phẩy.'),
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Từ khóa (Meta keywords)'),
             h(DS.Input, {
               value: this.state.pkgForm.metaKeywords || '', placeholder: 'VD: combo giga, internet fpt, truyền hình fpt',
               onChange: setMetaKeywords
@@ -2670,12 +2669,12 @@ class Component extends DCLogic {
           )
         ),
         h('div', null,
-          h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 4 } }, 'Mô tả (Meta description)'),
-          h('div', { style: { fontSize: 12, color: metaDescAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginBottom: 4 } }, `Tối đa ${META_DESC_MAX} ký tự (${metaDescVal.length}/${META_DESC_MAX})${metaDescAtMax ? ' — đã đạt giới hạn' : ''}.`),
+          h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Mô tả (Meta description)'),
           h(DS.Textarea, {
             value: metaDescVal, rows: 3, maxLength: META_DESC_MAX, placeholder: 'Mô tả ngắn hiển thị trên kết quả tìm kiếm Google…',
             onChange: setMetaDesc
-          })
+          }),
+          metaDescAtMax && h('div', { style: { fontSize: 12, color: 'var(--color-danger-text)', marginTop: 4 } }, `Đã đạt giới hạn ${META_DESC_MAX} ký tự.`)
         ),
         h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } }, this.pkgImgBox('metaThumb', 'Thumbnail', 'JPG / PNG / WebP · ≤200KB', null, 200))
       ))
