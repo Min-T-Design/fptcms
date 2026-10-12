@@ -1604,6 +1604,9 @@ class Component extends DCLogic {
       faqCat: r && r.faqCat ? r.faqCat : '',
       faqList: r && r.faqList ? r.faqList.map(x => ({ ...x })) : [],
       midBanners: r && r.midBanners ? r.midBanners.map(x => ({ ...x })) : [],
+      metaTitle: r && r.metaTitle ? r.metaTitle : '',
+      metaDesc: r && r.metaDesc ? r.metaDesc : '',
+      metaKeywords: r && r.metaKeywords ? r.metaKeywords : '',
       images: r && r.images ? { ...r.images } : {},
     };
   }
@@ -2551,6 +2554,24 @@ class Component extends DCLogic {
       const v = e && e.target ? e.target.value : e;
       this.setState(s => ({ pkgForm: { ...s.pkgForm, longDescTitle: (v || '').slice(0, LONG_DESC_TITLE_MAX) } }));
     };
+    const META_TITLE_MAX = 60;
+    const metaTitleVal = this.state.pkgForm.metaTitle || '';
+    const metaTitleAtMax = metaTitleVal.length >= META_TITLE_MAX;
+    const setMetaTitle = e => {
+      const v = e && e.target ? e.target.value : e;
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, metaTitle: (v || '').slice(0, META_TITLE_MAX) } }));
+    };
+    const META_DESC_MAX = 160;
+    const metaDescVal = this.state.pkgForm.metaDesc || '';
+    const metaDescAtMax = metaDescVal.length >= META_DESC_MAX;
+    const setMetaDesc = e => {
+      const v = e && e.target ? e.target.value : e;
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, metaDesc: (v || '').slice(0, META_DESC_MAX) } }));
+    };
+    const setMetaKeywords = e => {
+      const v = e && e.target ? e.target.value : e;
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, metaKeywords: v || '' } }));
+    };
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       this.renderPkgWebSettings(r),
       isDevice && this.renderPkgCardImage(r),
@@ -2628,6 +2649,35 @@ class Component extends DCLogic {
           h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Mỗi dòng hiển thị 1 mục checklist (✓) trên trang chi tiết gói bán.'),
           this.richTextBox(promoList.join('\n'), 5, 'Mỗi dòng 1 ưu đãi — VD:\nTặng modem Wi-Fi 6 trị giá 1.200.000đ\nMiễn phí lắp đặt toàn quốc')
         )
+      )),
+      this.collapsibleCard('pkgSecSeoOpen', 'Meta SEO', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+        h('div', { style: this.PKG_IMG_PAIR_GRID() },
+          h('div', null,
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 4 } }, 'Tiêu đề (Meta title)'),
+            h('div', { style: { fontSize: 12, color: metaTitleAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginBottom: 4 } }, `Tối đa ${META_TITLE_MAX} ký tự (${metaTitleVal.length}/${META_TITLE_MAX})${metaTitleAtMax ? ' — đã đạt giới hạn' : ''}.`),
+            h(DS.Input, {
+              value: metaTitleVal, maxLength: META_TITLE_MAX, placeholder: 'VD: Đăng ký Combo Internet truyền hình GIGA V.VIP',
+              onChange: setMetaTitle
+            })
+          ),
+          h('div', null,
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 4 } }, 'Từ khóa (Meta keywords)'),
+            h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 } }, 'Các từ khóa cách nhau bằng dấu phẩy.'),
+            h(DS.Input, {
+              value: this.state.pkgForm.metaKeywords || '', placeholder: 'VD: combo giga, internet fpt, truyền hình fpt',
+              onChange: setMetaKeywords
+            })
+          )
+        ),
+        h('div', null,
+          h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 4 } }, 'Mô tả (Meta description)'),
+          h('div', { style: { fontSize: 12, color: metaDescAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginBottom: 4 } }, `Tối đa ${META_DESC_MAX} ký tự (${metaDescVal.length}/${META_DESC_MAX})${metaDescAtMax ? ' — đã đạt giới hạn' : ''}.`),
+          h(DS.Textarea, {
+            value: metaDescVal, rows: 3, maxLength: META_DESC_MAX, placeholder: 'Mô tả ngắn hiển thị trên kết quả tìm kiếm Google…',
+            onChange: setMetaDesc
+          })
+        ),
+        h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } }, this.pkgImgBox('metaThumb', 'Thumbnail', 'JPG / PNG / WebP · ≤200KB', null, 200))
       ))
     );
   }
@@ -4282,7 +4332,8 @@ class Component extends DCLogic {
         { id: 'inet-hero',     name: 'Hero Banner Internet', desc: 'Background, Headline, Subheadline, CTA chính & phụ, dải Countdown dính liền (Case 1)', type: 'Hero',     emoji: '🖼',  ec: 'rgba(255,107,0,0.15)',   tc: 'var(--color-accent)' },
         { id: 'inet-countdown',name: 'Dải Countdown độc lập',       desc: 'Section độc lập · Ưu đãi theo thời gian, bộ đếm giờ ngược, CTA',                    type: 'Countdown', emoji: '⏰',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
         { id: 'inet-stats',    name: 'Ưu đãi, tiện ích',                     desc: '6 chỉ số: icon + text (tốc độ, số khách hàng, đánh giá sao…)',            type: 'Stats',    emoji: '📊',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
-        { id: 'inet-products', name: 'Danh sách gói Internet',               desc: 'Tiêu đề section, card gói: tên, giá, tốc độ, specs, nút đăng ký',         type: 'Products', emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
+        // Quy tắc đặt tên section card gói: "[Card_n] - Tên section" (n = loại card gói, làm lần lượt 1→7). Card_1 = tab gói cước + Tag nổi bật.
+        { id: 'inet-products', name: '[Card_1] - Danh sách gói internet',    desc: 'Tiêu đề section, card gói: tên, giá, tag nổi bật, ảnh, tính năng, nút đăng ký', type: 'Products', emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
         { id: 'inet-playbox',  name: 'FPT Play Box – Giải trí không giới hạn', desc: 'Ảnh sản phẩm, tính năng nổi bật, CTA đổi/mua Play Box',              type: 'PlayBox',  emoji: '📺',  ec: 'rgba(99,102,241,0.15)',  tc: '#818cf8' },
         { id: 'sa-products',   name: 'Gói dịch vụ SA',                       desc: 'Tiêu đề section, card gói SA: tên, giá, tính năng, nút đăng ký',           type: 'SaProducts', emoji: '📦', ec: 'rgba(109,40,217,0.15)', tc: '#6d28d9' },
         { id: 'inet-review',   name: 'Video Review FPT Internet',            desc: 'Tiêu đề section, danh sách video (thumbnail + link YouTube)',              type: 'Media',    emoji: '🎬',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
@@ -4317,7 +4368,7 @@ class Component extends DCLogic {
         { id: 'camp-countdown', name: 'Dải Countdown độc lập',       desc: 'Section độc lập · Ưu đãi theo thời gian, bộ đếm giờ ngược, CTA',                    type: 'Countdown', emoji: '⏰',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
         { id: 'camp-usp',      name: 'USP Công nghệ Wi-Fi 7',                 desc: 'Tốc độ băng thông, độ trễ cực thấp, Multi-Link Operation (MLO)',             type: 'Features',   emoji: '✨',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
         { id: 'camp-highlights', name: 'Công nghệ nổi bật của Wi-Fi 7',       desc: 'Tiêu đề section, lưới 6 thẻ công nghệ (icon cố định, tiêu đề, mô tả) và nút CTA', type: 'Highlights', emoji: '📶',  ec: 'rgba(59,130,246,0.15)',  tc: '#3b82f6' },
-        { id: 'camp-products', name: 'Các gói cước Wi-Fi 7',                  desc: 'Gói Lux 500, Lux 800 trang bị AP & Router thế hệ Wi-Fi 7',                   type: 'Products',   emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
+        { id: 'camp-products', name: '[Card_1] - Các gói cước Wi-Fi 7',      desc: 'Tiêu đề section, card gói Lux 500, Lux 800: tên, giá, tag nổi bật, ảnh, nội dung gói bán, nút đăng ký',                   type: 'Products',   emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
         { id: 'camp-compare',  name: 'Bảng so sánh thế hệ Wi-Fi',            desc: 'Bảng đối chiếu thông số giữa Wi-Fi 5, Wi-Fi 6 và Wi-Fi 7',                   type: 'Comparison', emoji: '📊',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
         { id: 'camp-targets',  name: 'Đối tượng mục tiêu',                   desc: 'Gợi ý sử dụng: Gamer/Streamer, Hộ gia đình đông người, Biệt thự',           type: 'Targets',    emoji: '🎯',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
         { id: 'camp-videos',   name: 'Video Review thực tế',                  desc: 'Các video trải nghiệm tốc độ và độ ổn định thực tế của Wi-Fi 7 FPT',         type: 'Media',      emoji: '🎬',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
@@ -4328,7 +4379,7 @@ class Component extends DCLogic {
         { id: 'lead-top-header', name: 'Top Header - Khuyến mãi',           desc: 'Dải thông báo trên cùng trang: icon, nội dung ưu đãi, nút CTA',              type: 'TopHeader', emoji: '🎁',  ec: 'rgba(30,42,92,0.15)',    tc: '#1e2a5c' },
         { id: 'lead-hero',      name: 'Hero Banner Thu Lead',                      desc: 'Title ưu đãi độc quyền, Subtitle, Form điền thông tin nhanh nhận quà',      type: 'Hero',      emoji: '📝',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
         { id: 'lead-proof',     name: 'Social Proof chạy chữ',                 desc: 'Chạy chữ ngang thông tin khách hàng vừa đăng ký thành công (ẩn SĐT)',       type: 'Social',    emoji: '📣',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
-        { id: 'lead-pricing',   name: 'Danh sách gói Internet',                desc: 'Hiển thị danh sách gói cước Internet theo tab, kéo sắp xếp',                type: 'Products',   emoji: '💰',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
+        { id: 'lead-pricing',   name: '[Card_1] - Danh sách gói internet',     desc: 'Hiển thị danh sách gói cước Internet theo tab, kéo sắp xếp',                type: 'Products',   emoji: '💰',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
         { id: 'lead-pkg-compare', name: 'So sánh các gói Internet',            desc: 'Bảng so sánh gói theo tiêu chí: tốc độ, thiết bị, ưu đãi, số thiết bị… + hàng nút đăng ký',  type: 'PkgCompare', emoji: '📊',  ec: 'rgba(59,130,246,0.15)',  tc: '#3b82f6' },
         { id: 'lead-steps',     name: 'Ưu đãi, tiện ích',                       desc: '6 chỉ số: icon + text (tốc độ, số khách hàng, đánh giá sao…)',               type: 'Stats',  emoji: '👣',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
         { id: 'lead-reviews',   name: 'Video Review FPT Internet',              desc: 'Tiêu đề section, danh sách video (thumbnail + link YouTube)',                 type: 'Media',   emoji: '⭐',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
@@ -4344,7 +4395,7 @@ class Component extends DCLogic {
   }
   // Sections thuộc họ "Danh sách gói Internet": gói Internet, gói Wi-Fi 7, bảng so sánh gói Internet
   LDP_LOCATION_TOGGLE_IDS() {
-    return new Set(['inet-products', 'lead-pricing', 'camp-products', 'lead-pkg-compare']);
+    return new Set(['inet-products', 'inet-card2', 'inet-card3', 'inet-card4', 'lead-pricing', 'camp-products', 'lead-pkg-compare']);
   }
   isLdpLocationSection(s) {
     return !!(s && this.LDP_LOCATION_TOGGLE_IDS().has(s.id));
@@ -8224,7 +8275,8 @@ class Component extends DCLogic {
       this.toast('info', 'Đang chờ duyệt', 'LDP "' + r.name + '" đang chờ Super Admin duyệt nên chưa thể chỉnh sửa.');
       return;
     }
-    const lockTpl = effStatus !== 'draft';
+    // LDP đã được tạo thì template đã cố định — mọi trạng thái (kể cả Nháp) đều bỏ bước "Chọn Template" khi chỉnh sửa.
+    const lockTpl = true;
     this.setState({ ldpView: 'form', ldpStep: lockTpl ? 2 : 1, ldpEditRow: r, ldpTpl: r.tplId, ldpForm2: {}, ldpStep2Err: {}, ldpLockTemplate: lockTpl });
   }
   openLdpDetailDrawer(r) {
@@ -8832,6 +8884,11 @@ class Component extends DCLogic {
     // Explicitly add cam-select (Danh mục & Chọn mua) after inet-products
     const _camSel = Object.assign({}, (allSecData.camera || []).find(s => s.id === 'cam-select'), { source: 'camera' });
     if (_camSel && _camSel.id) { const _pi = allSecs.findIndex(s => s.id === 'inet-products'); allSecs.splice(_pi >= 0 ? _pi + 1 : allSecs.length, 0, _camSel); }
+    // [Card_2] - card gói không ảnh, tag nổi bật nhập chữ: section chỉ có trong Thư viện (không nằm trong bộ section mặc định của template nào).
+    const _card2 = { id: 'inet-card2', name: '[Card_2] - Danh sách gói internet (tag chữ)', desc: 'Tiêu đề section, card gói theo tab: tên, giá, tag nổi bật nhập chữ, nội dung gói bán, nút đăng ký (không có ảnh card)', type: 'Card2', emoji: '📦', ec: 'rgba(245,158,11,0.15)', tc: '#d97706', source: 'internet' };
+    const _card3 = { id: 'inet-card3', name: '[Card_3] - Danh sách gói internet (nền card tùy chỉnh)', desc: 'Tiêu đề section, card gói theo tab: tên, nội dung phụ, giá, tag nổi bật, biến thể card Mặc định/Nổi bật (nổi bật chỉnh được nền solid/gradient), nội dung gói bán dạng text editor, 3 nút CTA (không có ảnh card)', type: 'Card3', emoji: '🎨', ec: 'rgba(168,85,247,0.15)', tc: '#9333ea', source: 'internet' };
+    const _card4 = { id: 'inet-card4', name: '[Card_4] - Danh sách gói internet', desc: 'Tiêu đề section, card gói theo tab: tên, giá, tag nổi bật, ảnh card, nội dung gói bán, nút đăng ký', type: 'Card4', emoji: '🗂️', ec: 'rgba(20,184,166,0.15)', tc: '#0d9488', source: 'internet' };
+    { const _ci = allSecs.findIndex(s => s.id === 'cam-select'); allSecs.splice(_ci >= 0 ? _ci + 1 : allSecs.length, 0, _card2, _card3, _card4); }
     // Explicitly add sa-products (Gói dịch vụ SA)
     const _saProd = { id: 'sa-products', name: 'Gói dịch vụ SA', desc: 'Tiêu đề section, card gói SA: tên, giá, tính năng, nút đăng ký', type: 'SaProducts', emoji: '📦', ec: 'rgba(109,40,217,0.15)', tc: '#6d28d9', source: 'sa' };
     allSecs.push(_saProd);
@@ -9480,7 +9537,7 @@ class Component extends DCLogic {
       }
     }
     // ── Section background panel (Camera sections 2,3,4,6) ─────────────────
-    const CAM_BG_IDS = ['lead-top-header','cam-usp','cam-detail','cam-select','cam-awards','camp-countdown','camp-usp','camp-highlights','camp-products','camp-compare','camp-targets','camp-videos','inet-countdown','inet-stats','inet-products','inet-playbox','inet-review','inet-steps','inet-promo','sa-countdown','sa-sports','sa-experience','sa-categories','sa-pricing','sa-commentators','lead-countdown','lead-proof','lead-pricing','lead-pkg-compare','lead-steps','lead-reviews','lead-feedback','lead-procedure','inet-faq','sa-faq-support','cam-faq','camp-faq','lead-faq','sa-products'];
+    const CAM_BG_IDS = ['lead-top-header','cam-usp','cam-detail','cam-select','cam-awards','camp-countdown','camp-usp','camp-highlights','camp-products','camp-compare','camp-targets','camp-videos','inet-countdown','inet-stats','inet-products','inet-card2','inet-card3','inet-card4','inet-playbox','inet-review','inet-steps','inet-promo','sa-countdown','sa-sports','sa-experience','sa-categories','sa-pricing','sa-commentators','lead-countdown','lead-proof','lead-pricing','lead-pkg-compare','lead-steps','lead-reviews','lead-feedback','lead-procedure','inet-faq','sa-faq-support','cam-faq','camp-faq','lead-faq','sa-products'];
     const CAM_BG_DEFAULTS = {
       'lead-top-header': { mode:'color', color:'#1e2a5c', image:'' },
       'cam-usp':        { mode:'color', color:'#ffffff', image:'' },
@@ -9497,6 +9554,9 @@ class Component extends DCLogic {
       'inet-countdown': { mode:'color', color:'#1e293b', image:'' },
       'inet-stats':     { mode:'color', color:'#f0fdf4', image:'' },
       'inet-products':  { mode:'color', color:'#fffbeb', image:'' },
+      'inet-card2':     { mode:'color', color:'#fffbeb', image:'' },
+      'inet-card3':     { mode:'color', color:'#faf5ff', image:'' },
+      'inet-card4':     { mode:'color', color:'#f0fdfa', image:'' },
       'inet-playbox':   { mode:'color', color:'#eef2ff', image:'' },
       'inet-review':    { mode:'color', color:'#ffffff', image:'' },
       'inet-steps':     { mode:'color', color:'#f0fdfa', image:'' },
@@ -9590,6 +9650,8 @@ class Component extends DCLogic {
         );
       }
     }
+    // Builder editor Card_1 (Danh sách gói) — dùng chung cho Products và camp-products (Wi-Fi 7), chỉ khác dữ liệu mẫu.
+    let buildCard1Editor = null;
     // ── per-type field sets ───────────────────────────────────────────────────
     const extraByType = {
       // ── TOP HEADER PROMO STRIP ──
@@ -9921,6 +9983,7 @@ class Component extends DCLogic {
       ],
       // ── PRODUCTS (Danh sách gói Internet — tabs + package editor) ──
       Products: (() => {
+       const build = (CFG) => {
         const INET_PKGS = [
           { code:'INT-LUX500', name:'Internet Lux 500',    speed:'500 Mbps',  price:'399.000đ/tháng', cat:'cao-cap',  active:true },
           { code:'INT-LUX800', name:'Internet Lux 800',    speed:'800 Mbps',  price:'499.000đ/tháng', cat:'cao-cap',  active:true },
@@ -9949,16 +10012,55 @@ class Component extends DCLogic {
           selIdx: -1, q: '', addOpen: false, addQ: '', addCat: 'all', addSel: new Set(),
           dragFrom: -1, dragOver: -1
         });
-        const DEF_TABS = [
-          mkTab('t1', 'Cá nhân', [
-            { id:'p1', code:'INT-GIGA', name:'Internet Giga', price:'165.000đ/tháng', badge:'',        dlSpeed:'150 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
-            { id:'p2', code:'INT-SKY',  name:'Internet Sky',  price:'249.000đ/tháng', badge:'Phổ biến', dlSpeed:'500 Mbps', ulSpeed:'200 Mbps', speedIcon:'80%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
-          ]),
-          mkTab('t2', 'Gia đình', [
-            { id:'p3', code:'INT-HOME', name:'Internet Home', price:'135.000đ/tháng', badge:'',        dlSpeed:'100 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
-          ]),
-          mkTab('t3', 'Combo Internet + Play Box', []),
-        ];
+        const DEF_TABS = CFG.makeTabs(mkTab);
+        // Tag nổi bật lấy từ module Quản lý Badge/Tag: chỉ Badge/Tag đang hoạt động thuộc phân loại "Card gói".
+        const CARD_BADGES = this.getBadgeTagList().filter(b => b.status === 'active' && (b.categories || []).includes('card'));
+        const uploadBox = (...a) => this.uploadBox(...a);
+        // Card_3 — màu nền đề xuất cho biến thể "Nổi bật" (theo thiết kế Figma): 4 màu Solid + 4 Gradient.
+        // Hướng gradient dùng chung: Linear gradient 135deg (từ trên-trái xuống dưới-phải), Màu 1 → Màu 2.
+        const CARD_BG_PRESETS = {
+          solid: [
+            { name:'Xanh dương', c:'#0099FF' },
+            { name:'Tím',        c:'#7B61FF' },
+            { name:'Xanh lá',    c:'#2AA528' },
+            { name:'Cam đỏ',     c:'#CC5429' },
+          ],
+          gradient: [
+            { name:'Tím → Hồng',             c1:'#9946F6', c2:'#F35AAA' },
+            { name:'Xanh dương → Xanh ngọc', c1:'#098DE5', c2:'#00E3F2' },
+            { name:'Xanh lá → Vàng chanh',   c1:'#079E30', c2:'#BEC407' },
+            { name:'Vàng cam → Hồng đậm',    c1:'#FFB000', c2:'#DE149A' },
+          ],
+        };
+        const cardGradCss = (c1, c2) => 'linear-gradient(135deg, ' + c1 + ', ' + c2 + ')';
+        // Card_3 (CFG.richFeatures): "Nội dung gói bán" là block text editor gọn (đậm/nghiêng/gạch chân/danh sách/liên kết), lưu HTML vào featuresHtml khi rời ô soạn thảo.
+        class PkgRichText extends React.Component {
+          constructor(p) { super(p); this.ref = React.createRef(); this.init = p.html || ''; }
+          exec(cmd, val) { if (this.ref.current) this.ref.current.focus(); document.execCommand(cmd, false, val); }
+          render() {
+            const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+            const tb = (content, tip, fn) => h('button', { key: tip, type: 'button', title: tip, className: 'fpt-icon-btn-anim', onMouseDown: e => e.preventDefault(), onClick: fn,
+              style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 28, height: 28, border: 'none', borderRadius: 6, background: 'transparent', cursor: 'pointer', color: 'var(--color-text)', fontSize: 13, fontWeight: 700, padding: '0 5px' } }, content);
+            const dv = k => h('div', { key: k, style: { width: 1, alignSelf: 'stretch', background: 'var(--color-border)', margin: '0 4px' } });
+            return h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', background: 'var(--color-surface)' } },
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', padding: '6px 8px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-alt)' } },
+                tb(h('span', { style: { fontWeight: 800 } }, 'B'), 'In đậm (Ctrl+B)', () => this.exec('bold')),
+                tb(h('span', { style: { fontStyle: 'italic', fontWeight: 700 } }, 'I'), 'In nghiêng (Ctrl+I)', () => this.exec('italic')),
+                tb(h('span', { style: { textDecoration: 'underline', fontWeight: 700 } }, 'U'), 'Gạch chân (Ctrl+U)', () => this.exec('underline')),
+                dv('d1'),
+                tb(h(DS.Icon, { name: 'menu-01-line', size: 15 }), 'Danh sách chấm đầu dòng', () => this.exec('insertUnorderedList')),
+                tb(h(DS.Icon, { name: 'filter-lines-line', size: 15 }), 'Danh sách đánh số', () => this.exec('insertOrderedList')),
+                dv('d2'),
+                tb(h(DS.Icon, { name: 'paperclip-line', size: 15 }), 'Chèn liên kết', () => { const url = window.prompt('Nhập URL liên kết:'); if (url) this.exec('createLink', url); }),
+                tb(h(DS.Icon, { name: 'x-circle-line', size: 15 }), 'Xóa định dạng', () => this.exec('removeFormat'))
+              ),
+              h('div', { ref: this.ref, contentEditable: true, suppressContentEditableWarning: true, className: 'fpt-richtext-canvas fpt-scroll', 'data-placeholder': 'Nhập nội dung gói bán...',
+                dangerouslySetInnerHTML: { __html: this.init },
+                onBlur: () => { if (this.ref.current) this.props.onChange(this.ref.current.innerHTML); },
+                style: { minHeight: 120, maxHeight: 280, overflowY: 'auto', padding: '12px 14px', fontSize: 13.5, lineHeight: 1.6, outline: 'none' } })
+            );
+          }
+        }
         class InetProductsEd extends React.Component {
           constructor(p) {
             super(p);
@@ -9970,28 +10072,33 @@ class Component extends DCLogic {
           updPkg(tid, pidx, patch) {
             this.setState(s => ({ tabs: s.tabs.map(t => t.id!==tid ? t : {...t, pkgs: t.pkgs.map((p,i) => i===pidx ? {...p,...patch} : p)}) }));
           }
+          // Ảnh card giữ trong state của gói; FptUploadSlot truyền giá trị mới hoặc updater (prev) => next (tiến trình tải lên).
+          setPkgImg(tid, pidx, field, v) {
+            this.setState(s => ({ tabs: s.tabs.map(t => t.id!==tid ? t : {...t, pkgs: t.pkgs.map((p,i) => i!==pidx ? p : {...p, [field]: typeof v === 'function' ? v(p[field]) : v})}) }));
+          }
           render() {
             const { tabs, defaultTab, tabDragFrom, tabDragOver } = this.state;
             const DS = window.ZENKaizenDesignSystem_4069b4;
             const h = React.createElement;
             const lb = { fontSize:12, fontWeight:600, color:'var(--color-text-subtle)', marginBottom:4, display:'block' };
             const fld = (l,c,r) => h('div',{style:{marginBottom:12}}, h('label',{style:lb},l,r&&h('span',{style:{color:'var(--color-danger-text)',marginLeft:2}},'*')), c);
-            const g2  = (...it) => h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}, ...it);
-            const ctaBox = (title, enabled, onChange, content) => h('div',{style:{marginBottom:12,padding:'10px 12px',border:'1px solid var(--color-border)',borderRadius:10,background:'var(--color-surface-alt)'}},
+            const g2  = (...it) => h('div',{style:{display:'grid',gridTemplateColumns:'minmax(0, 1fr) minmax(0, 1fr)',gap:'0 12px'}}, ...it);
+            const ctaBox = (title, enabled, onChange, content, grow) => h('div',{style:{flex:(grow||1)+' 1 300px',minWidth:0,padding:'10px 12px',border:'1px solid var(--color-border)',borderRadius:10,background:'var(--color-surface-alt)'}},
               h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:enabled?10:0}},
                 h('div',{style:{fontSize:12.5,fontWeight:700,color:'var(--color-text)'}},title),
                 h(DS.Switch,{size:'sm',label:enabled?'Bật':'Tắt',checked:enabled,onChange})
               ),
               enabled ? content : null
             );
-            const tabOptions = tabs.map(t => ({ value: t.id, label: t.name }));
-            return h('div',{style:{display:'flex',flexDirection:'column',gap:0}},
-              h('div',{style:{marginBottom:16}},
-                fld('Tiêu đề section', h(DS.Input,{defaultValue:'Chọn gói phù hợp với bạn'})),
-                fld('Mô tả phụ / Tagline', h(DS.Input,{placeholder:'Mô tả ngắn về section...'})),
-
+            // Nhóm thông tin trong panel gói — thứ tự theo đúng thứ tự thị giác của card: tag → giá → ảnh → tính năng → nút CTA.
+            const grp = (title, ...content) => h('div',{style:{marginBottom:18}},
+              h('div',{style:{marginBottom:10,paddingBottom:6,borderBottom:'1px solid var(--color-border)'}},
+                h('span',{style:{fontSize:10.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.7px',color:'var(--color-text-subtle)'}},title)
               ),
-              h('div',{style:{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.7px',color:'var(--color-text-subtle)',marginBottom:10,paddingBottom:8,borderBottom:'1px solid var(--color-border)'}},'Các tab gói cước'),
+              ...content
+            );
+            const tagChip = b => h('span',{style:{display:'inline-flex',alignItems:'center',padding:'5px 14px',borderRadius:6,fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:'.5px',background:b.bgColor,color:b.textColor}},b.name);
+            return h('div',{style:{display:'flex',flexDirection:'column',gap:0}},
 
               ...tabs.map((tab, ti) => {
                 const col = TAB_COLORS[ti % TAB_COLORS.length];
@@ -10052,29 +10159,150 @@ class Component extends DCLogic {
 
                 const rightPanel = h('div',{style:{flex:1,paddingLeft:14,minWidth:0,overflowY:'auto'}},
                   sel ? h('div',null,
-                    h('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:12,paddingBottom:10,borderBottom:'1px solid var(--color-border)'}},
-                      h('div',{style:{flex:1,fontWeight:700,fontSize:14}},sel.name),
+                    h('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:14,paddingBottom:10,borderBottom:'1px solid var(--color-border)'}},
+                      h('div',{style:{flex:1,minWidth:0}},
+                        h('div',{style:{fontWeight:700,fontSize:14}},sel.name),
+                        h('div',{style:{fontSize:11.5,color:'var(--color-text-subtle)',marginTop:2}},sel.code)
+                      ),
                       h(DS.Button,{level:'tertiary',size:'sm',leadingIcon:'trash-line',style:{color:'var(--color-danger-text)'},onClick:()=>{
                         const np=pkgs.filter((_,i)=>i!==selIdx);
                         this.updTab(tab.id,{pkgs:np,selIdx:Math.min(selIdx,np.length-1)});
                       }},'Xóa')
                     ),
-                    g2(
-                      fld('Ảnh Desktop', h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgDt'+tab.id+selIdx,defaultValue:sel.imgDesktop||'',placeholder:'URL ảnh desktop...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgDesktop:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload'))),
-                      fld('Ảnh Mobile',  h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgMt'+tab.id+selIdx,defaultValue:sel.imgMobile||'',placeholder:'URL ảnh mobile...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgMobile:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload')))
-                    ),
-                    fld('Giá cước', h('div',{style:{padding:'0 12px',height:48,background:'var(--color-surface-sunken)',borderRadius:12,fontSize:13,color:'var(--color-text-muted)',border:'1px solid var(--color-border)',display:'flex',alignItems:'center'}},sel.price)),
 
-                    ctaBox('CTA luồng toàn trình', sel.ctaPrimaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaPrimaryOn:v}),
-                      fld('CTA luồng toàn trình — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})}))
+                    grp('Thông tin hiển thị trên card',
+                      (() => {
+                        const priceF = fld('Giá cước', h('div',{style:{padding:'0 12px',height:48,background:'var(--color-surface-sunken)',borderRadius:12,fontSize:13,color:'var(--color-text-muted)',border:'1px solid var(--color-border)',display:'flex',alignItems:'center'}},sel.price));
+                        // Card_3 (CFG.subText): thêm "Nội dung phụ" cạnh giá cước.
+                        if (CFG.subText) return g2(
+                          fld('Nội dung phụ', h(DS.Input,{key:'sb'+tab.id+selIdx,defaultValue:sel.subText||'',placeholder:'VD: Phù hợp 1–2 người dùng',onBlur:e=>this.updPkg(tab.id,selIdx,{subText:e.target.value})})),
+                          priceF
+                        );
+                        return h('div',{style:{width:'calc(50% - 6px)',minWidth:220}}, priceF);
+                      })(),
+                      (() => {
+                        // Đồng bộ với "Cài đặt web → Tag nổi bật" của module Nội dung sản phẩm.
+                        const tagOn = !!sel.tagOn;
+                        // Card_2 (CFG.tagText): Tag nổi bật chỉ gồm công tắc + 1 ô nhập nội dung, không chọn từ module Quản lý Badge/Tag.
+                        if (CFG.tagText) {
+                          const tagTxt = sel.tagText || '';
+                          return h('div',{style:{border:'1px solid var(--color-border)',borderRadius:10,padding:14}},
+                            h('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:tagOn?10:0}},
+                              h(DS.Switch,{size:'sm',checked:tagOn,onChange:v=>this.updPkg(tab.id,selIdx,{tagOn:v})}),
+                              h('span',{style:{fontWeight:700,fontSize:13}},'Tag nổi bật')
+                            ),
+                            tagOn && fld('Nội dung tag', h(DS.Input,{key:'tt'+tab.id+selIdx,defaultValue:tagTxt,placeholder:'VD: Đề xuất, Bán chạy, Giảm 20%…',onBlur:e=>this.updPkg(tab.id,selIdx,{tagText:e.target.value})}))
+                          );
+                        }
+                        const picked = CARD_BADGES.find(b => b.id === sel.tagBadgeId);
+                        const badgeOpts = CARD_BADGES.map(b => ({ value:b.id, searchText:b.name, label:h('span',{style:{display:'inline-flex',alignItems:'center',padding:'3px 10px',borderRadius:5,fontWeight:700,fontSize:10.5,textTransform:'uppercase',letterSpacing:'.4px',background:b.bgColor,color:b.textColor}},b.name) }));
+                        return h('div',{style:{border:'1px solid var(--color-border)',borderRadius:10,padding:14}},
+                          h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:tagOn?10:0,flexWrap:'wrap',gap:10}},
+                            h('div',{style:{display:'flex',alignItems:'center',gap:10}},
+                              h(DS.Switch,{size:'sm',checked:tagOn,onChange:v=>this.updPkg(tab.id,selIdx,{tagOn:v})}),
+                              h('span',{style:{fontWeight:700,fontSize:13}},'Tag nổi bật ',h('span',{style:{fontWeight:400,color:'var(--color-text-muted)',fontSize:11.5}},'(gắn trên Banner/Card sản phẩm ngoài Web/App)'))
+                            ),
+                            tagOn && h('div',{style:{display:'flex',alignItems:'center',gap:8,fontSize:12,color:'var(--color-text-muted)'}},'Xem trước:',
+                              picked ? tagChip(picked) : h('span',{style:{display:'inline-flex',alignItems:'center',padding:'5px 14px',borderRadius:6,fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:'.5px',background:'var(--color-surface-sunken)',color:'var(--color-text-subtle)'}},'Chưa chọn Badge/Tag')
+                            )
+                          ),
+                          tagOn && h('div',{style:{display:'flex',flexDirection:'column',gap:8}},
+                            CARD_BADGES.length
+                              ? h('div',{style:{width:280}}, h(DS.Select,{key:'tg'+tab.id+selIdx,options:badgeOpts,value:sel.tagBadgeId||'',placeholder:'Chọn Badge/Tag…',searchable:true,searchPlaceholder:'Tìm Badge/Tag…',onChange:v=>this.updPkg(tab.id,selIdx,{tagBadgeId:v})}))
+                              : h('div',{style:{display:'flex',alignItems:'center',gap:8,padding:10,borderRadius:8,background:'var(--color-warning-bg)',color:'var(--color-warning-text)',fontSize:12.5}},
+                                  h(DS.Icon,{name:'alert-triangle-line',size:14,style:{flexShrink:0}}),
+                                  'Chưa có Badge/Tag nào thuộc phân loại "Card gói" đang hoạt động. Hãy tạo tại module Quản lý Badge/Tag.'
+                                ),
+                            h('div',{style:{fontSize:11.5,color:'var(--color-text-subtle)'}},'Tên hiển thị và màu sắc của Tag được quản lý tập trung tại module Quản lý Badge/Tag.')
+                          )
+                        );
+                      })()
                     ),
-                    ctaBox('CTA phụ', sel.ctaSecondaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaSecondaryOn:v}),
-                      g2(
-                        fld('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt,placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
-                        fld('CTA phụ — URL',  h(FptUrlInput,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
+
+                    !CFG.noImage && grp('Hình ảnh card',
+                      h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(260px, 1fr))',gap:12}},
+                        uploadBox('Ảnh Desktop','JPG, PNG, WEBP · ≤200KB',false,null,{key:'imgDt'+tab.id+selIdx,maxKB:200,value:sel.imgDesktop||null,onChange:v=>this.setPkgImg(tab.id,selIdx,'imgDesktop',v)}),
+                        uploadBox('Ảnh Mobile','JPG, PNG, WEBP · ≤150KB',false,null,{key:'imgMt'+tab.id+selIdx,maxKB:150,value:sel.imgMobile||null,onChange:v=>this.setPkgImg(tab.id,selIdx,'imgMobile',v)})
                       )
                     ),
-                    fld('Tính năng nổi bật (mỗi dòng 1 mục)', h('div',null, h(DS.Textarea,{key:'ft'+tab.id+selIdx,rows:3,defaultValue:sel.features,placeholder:'Router Wi-Fi miễn phí\nHỗ trợ 24/7\nLắp đặt trong ngày',onBlur:e=>this.updPkg(tab.id,selIdx,{features:e.target.value})}), h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4,display:'flex',alignItems:'center',gap:4}}, h(DS.Icon,{name:'info-circle-line',size:12,color:'var(--color-text-subtle)'}), 'Mỗi dòng là 1 tính năng — xuống dòng bằng Enter, không phải word-wrap')))
+
+                    // Card_3 (CFG.cardBg): "Biến thể card gói" Mặc định / Nổi bật — chỉ biến thể Nổi bật mới chỉnh được màu nền card.
+                    // Solid: chọn màu + 4 màu đề xuất · Gradient: Màu 1 → Màu 2 + 4 gradient đề xuất, hướng cố định 135deg.
+                    CFG.cardBg && grp('Biến thể card gói', (() => {
+                      const variant = sel.cardVariant === 'featured' ? 'featured' : 'default';
+                      const mode = sel.cardBgMode === 'gradient' ? 'gradient' : 'solid';
+                      const solid = sel.cardBgColor || CARD_BG_PRESETS.solid[0].c;
+                      const gFrom = sel.cardBgFrom || CARD_BG_PRESETS.gradient[0].c1, gTo = sel.cardBgTo || CARD_BG_PRESETS.gradient[0].c2;
+                      const setP = patch => this.updPkg(tab.id,selIdx,patch);
+                      const same = (x, y) => String(x||'').toLowerCase() === String(y||'').toLowerCase();
+                      const lumOf = hex => { const m = /^#([0-9a-f]{6})$/i.exec(hex||''); if (!m) return 255; const n = parseInt(m[1],16); return 0.299*(n>>16) + 0.587*((n>>8)&255) + 0.114*(n&255); };
+                      const colorRow = (label, val, key) => fld(label, h('div',{style:{display:'flex',gap:8,alignItems:'center'}},
+                        h('input',{type:'color',value:/^#[0-9a-fA-F]{6}$/.test(val)?val:'#ffffff',onChange:e=>setP({[key]:e.target.value.toUpperCase()}),style:{width:40,height:40,borderRadius:8,border:'1px solid var(--color-border)',cursor:'pointer',padding:2,flexShrink:0,background:'var(--color-surface)'}}),
+                        h(DS.Input,{value:val,placeholder:'#0099FF',style:{fontFamily:'var(--font-dev)'},onChange:e=>{const v=e.target?e.target.value:e; if(/^#[0-9a-fA-F]{0,6}$/.test(v)) setP({[key]:v.toUpperCase()});}})
+                      ));
+                      const swatch = (key, title, bg, active, onClick) => h('div',{key,title,onClick,style:{width:56,height:36,borderRadius:8,background:bg,cursor:'pointer',boxSizing:'border-box',border:active?'2.5px solid var(--color-accent)':'1.5px solid var(--color-border)',boxShadow:active?'0 0 0 3px rgba(243,101,35,0.2)':'none',transition:'box-shadow .1s'}});
+                      const css = mode==='gradient' ? cardGradCss(gFrom, gTo) : solid;
+                      const ink = (mode==='gradient' ? (lumOf(gFrom)+lumOf(gTo))/2 : lumOf(solid)) > 150 ? 'rgba(0,0,0,.55)' : 'rgba(255,255,255,.9)';
+                      return h('div',null,
+                        h('div',{style:{display:'flex',gap:20,marginBottom:variant==='featured'?14:10}},
+                          h(DS.Radio,{name:'cvr'+tab.id+selIdx,label:'Mặc định',checked:variant==='default',onChange:()=>setP({cardVariant:'default'})}),
+                          h(DS.Radio,{name:'cvr'+tab.id+selIdx,label:'Nổi bật',checked:variant==='featured',onChange:()=>setP({cardVariant:'featured'})})
+                        ),
+                        variant==='default'
+                          ? h('div',{style:{display:'flex',alignItems:'center',gap:8,padding:'10px 12px',borderRadius:8,background:'var(--color-surface-sunken)',color:'var(--color-text-muted)',fontSize:12.5}},
+                              h(DS.Icon,{name:'info-circle-line',size:14,style:{flexShrink:0}}),
+                              'Biến thể Mặc định dùng nền card theo giao diện chung — không chỉnh màu nền. Chọn "Nổi bật" để tùy chỉnh màu nền card.'
+                            )
+                          : h('div',{style:{border:'1px solid var(--color-border)',borderRadius:10,padding:14}},
+                              h('div',{style:{fontSize:12.5,fontWeight:700,marginBottom:10}},'Màu nền card gói'),
+                              h('div',{style:{display:'flex',gap:20,marginBottom:12}},
+                                h(DS.Radio,{name:'cbg'+tab.id+selIdx,label:'Solid (màu đơn)',checked:mode==='solid',onChange:()=>setP({cardBgMode:'solid'})}),
+                                h(DS.Radio,{name:'cbg'+tab.id+selIdx,label:'Gradient (chuyển màu)',checked:mode==='gradient',onChange:()=>setP({cardBgMode:'gradient'})})
+                              ),
+                              h('div',{style:{marginBottom:12}},
+                                h('label',{style:lb},'Màu đề xuất'),
+                                h('div',{style:{display:'flex',gap:8,flexWrap:'wrap'}},
+                                  mode==='solid'
+                                    ? CARD_BG_PRESETS.solid.map(pr => swatch('s'+pr.c, pr.name+' · '+pr.c, pr.c, same(solid,pr.c), () => setP({cardBgColor:pr.c})))
+                                    : CARD_BG_PRESETS.gradient.map(pr => swatch('g'+pr.c1+pr.c2, pr.name+' · '+pr.c1+' → '+pr.c2, cardGradCss(pr.c1,pr.c2), same(gFrom,pr.c1)&&same(gTo,pr.c2), () => setP({cardBgFrom:pr.c1,cardBgTo:pr.c2})))
+                                )
+                              ),
+                              mode==='solid'
+                                ? h('div',{style:{width:'calc(50% - 6px)',minWidth:220}}, colorRow('Hoặc chọn màu tùy chỉnh', solid, 'cardBgColor'))
+                                : g2(colorRow('Màu 1 (bắt đầu)', gFrom, 'cardBgFrom'), colorRow('Màu 2 (kết thúc)', gTo, 'cardBgTo')),
+                              h('div',{style:{height:56,borderRadius:10,border:'1px solid var(--color-border)',background:css,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:600,color:ink}},'Xem trước nền card')
+                            )
+                      );
+                    })()),
+
+                    grp('Nội dung gói bán',
+                      CFG.richFeatures ? h(PkgRichText,{key:'rt'+tab.id+selIdx,html:sel.featuresHtml||'',onChange:html=>this.updPkg(tab.id,selIdx,{featuresHtml:html})}) :
+                      h('div',null, h(DS.Textarea,{key:'ft'+tab.id+selIdx,rows:3,defaultValue:sel.features,placeholder:'Router Wi-Fi miễn phí\nHỗ trợ 24/7\nLắp đặt trong ngày',onBlur:e=>this.updPkg(tab.id,selIdx,{features:e.target.value})}), h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4,display:'flex',alignItems:'center',gap:4}}, h(DS.Icon,{name:'info-circle-line',size:12,color:'var(--color-text-subtle)'}), 'Mỗi dòng là 1 mục — xuống dòng bằng Enter, không phải word-wrap'))
+                    ),
+
+                    grp('Nút kêu gọi hành động (CTA)',
+                      h('div',{style:{display:'flex',flexWrap:'wrap',gap:12}},
+                        ctaBox('CTA luồng toàn trình', sel.ctaPrimaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaPrimaryOn:v}),
+                          fld('CTA luồng toàn trình — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})}))
+                        ),
+                        // Card_3 (CFG.cta2): block CTA chi tiết nằm cùng hàng với CTA luồng toàn trình; CTA phụ xuống hàng riêng (flexBasis 100%).
+                        CFG.cta2 && ctaBox('CTA chi tiết', sel.cta2On !== false, v=>this.updPkg(tab.id,selIdx,{cta2On:v}),
+                          g2(
+                            fld('CTA chi tiết — Text', h(DS.Input,{key:'c2t'+tab.id+selIdx,defaultValue:sel.cta2Text||'',placeholder:'VD: Chi tiết gói',onBlur:e=>this.updPkg(tab.id,selIdx,{cta2Text:e.target.value})})),
+                            fld('CTA chi tiết — URL',  h(FptUrlInput,{key:'c2u'+tab.id+selIdx,defaultValue:sel.cta2Url||'',placeholder:'/chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{cta2Url:e.target.value})}))
+                          ),
+                          1
+                        ),
+                        CFG.cta2 && h('div',{style:{flexBasis:'100%',height:0,marginTop:-12}}),
+                        ctaBox('CTA phụ', sel.ctaSecondaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaSecondaryOn:v}),
+                          g2(
+                            fld('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt,placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
+                            fld('CTA phụ — URL',  h(FptUrlInput,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
+                          ),
+                          1.6
+                        )
+                      )
+                    )
                   ) :
                   h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:240,gap:10,color:'var(--color-text-subtle)'}},
                     h(DS.Icon,{name:'wifi-line',size:32,color:'var(--color-text-subtle)'}),
@@ -10132,7 +10360,7 @@ class Component extends DCLogic {
                           const toAdd=INET_PKGS.filter(p=>addSel.has(p.code)&&!existingCodes.has(p.code));
                           const newPkgs=toAdd.map((p,i)=>({
                             id:'p'+Date.now()+i,code:p.code,name:p.name,price:p.price,
-                            badge:'',dlSpeed:p.speed,ulSpeed:'',speedIcon:'60%',
+                            tagOn:false,tagBadgeId:'',dlSpeed:p.speed,ulSpeed:'',speedIcon:'60%',
                             ctaPrimaryOn:true,ctaSecondaryOn:true,ctaText:'Đăng ký ngay',ctaUrl:'#',ctaAlt:'Xem chi tiết',ctaAltUrl:'',
                             features:'',tooltipOn:false,tooltipContent:''
                           }));
@@ -10189,272 +10417,101 @@ class Component extends DCLogic {
             );
           }
         }
-        return [h(InetProductsEd,{key:'inet-products-ed'})];
-      })(),
-      // ── CAMP-PRODUCTS (Các gói cước Wi-Fi 7 — tabs) ──
-      'camp-products': (() => {
-        const WIFI7_PKGS = [
-          { code:'INT-LUX500', name:'Internet Lux 500',    speed:'500 Mbps',  price:'399.000đ/tháng', cat:'cao-cap',  active:true },
-          { code:'INT-LUX800', name:'Internet Lux 800',    speed:'800 Mbps',  price:'499.000đ/tháng', cat:'cao-cap',  active:true },
-          { code:'INT-ULTRA',  name:'Internet Ultra Fast', speed:'1 Gbps',    price:'599.000đ/tháng', cat:'cao-cap',  active:true },
-          { code:'INT-GIGA',   name:'Internet Giga',       speed:'150 Mbps',  price:'165.000đ/tháng', cat:'ca-nhan',  active:true },
-          { code:'INT-SKY',    name:'Internet Sky',        speed:'500 Mbps',  price:'249.000đ/tháng', cat:'ca-nhan',  active:true },
-          { code:'INT-META',   name:'Internet Meta',       speed:'1 Gbps',    price:'349.000đ/tháng', cat:'gia-dinh', active:true },
-          { code:'INT-HOME',   name:'Internet Home',       speed:'100 Mbps',  price:'135.000đ/tháng', cat:'gia-dinh', active:true },
-          { code:'INT-PLUS',   name:'Internet Plus',       speed:'200 Mbps',  price:'195.000đ/tháng', cat:'gia-dinh', active:true },
+        // Card_1: 2 thẻ — (1) Thông tin cơ bản (tên section + tiêu đề hiển thị + tagline) · (2) Các tab gói cước.
+        return [
+          g2(
+            fld('Tiêu đề hiển thị trên trang', h(DS.Input,{defaultValue:CFG.title,placeholder:'VD: Chọn gói phù hợp với bạn'})),
+            fld('Mô tả phụ / Tagline', h(DS.Input,{defaultValue:CFG.tagline||'',placeholder:'Mô tả ngắn về section...'}), false)
+          ),
+          divr('Các tab gói cước'),
+          h(InetProductsEd,{key:CFG.key})
         ];
-        const PKG_CATS = [
-          { id:'all',      label:'Tất cả' },
-          { id:'cao-cap',  label:'Cao cấp' },
-          { id:'ca-nhan',  label:'Cá nhân' },
-          { id:'gia-dinh', label:'Gia đình' },
-        ];
-        const TAB_COLORS = [
-          { color:'#f36523', bg:'rgba(243,101,35,0.08)',  border:'rgba(243,101,35,0.28)'  },
-          { color:'#3b82f6', bg:'rgba(59,130,246,0.08)',  border:'rgba(59,130,246,0.28)'  },
-          { color:'#a855f7', bg:'rgba(168,85,247,0.08)',  border:'rgba(168,85,247,0.28)'  },
-          { color:'#22c55e', bg:'rgba(34,197,94,0.08)',   border:'rgba(34,197,94,0.28)'   },
-        ];
-        const mkTabW = (id, name, pkgs) => ({
-          id, name, expanded: true,
-          pkgs: pkgs || [],
-          selIdx: -1, q: '', addOpen: false, addQ: '', addCat: 'all', addSel: new Set(),
-          dragFrom: -1, dragOver: -1
-        });
-        const DEF_TABS_W = [
-          mkTabW('t1', 'Cao cấp', [
-            { id:'p1', code:'INT-LUX500', name:'Internet Lux 500', price:'399.000đ/tháng', badge:'Phổ biến', dlSpeed:'500 Mbps', ulSpeed:'200 Mbps', speedIcon:'80%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Router Wi-Fi 7 BE9300 miễn phí\nHỗ trợ 24/7\nLắp đặt trong ngày', tooltipOn:false, tooltipContent:'' },
-            { id:'p2', code:'INT-LUX800', name:'Internet Lux 800', price:'499.000đ/tháng', badge:'',         dlSpeed:'800 Mbps', ulSpeed:'400 Mbps', speedIcon:'100%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Router Wi-Fi 7 BE9300 miễn phí\nHỗ trợ 24/7\nLắp đặt trong ngày', tooltipOn:false, tooltipContent:'' },
+       };
+       buildCard1Editor = build;
+       return build({
+        key:'inet-products-ed',
+        title:'Chọn gói phù hợp với bạn',
+        tagline:'',
+        makeTabs: mkTab => [
+          mkTab('t1', 'Cá nhân', [
+            { id:'p1', code:'INT-GIGA', name:'Internet Giga', price:'165.000đ/tháng', tagOn:false, tagBadgeId:'', dlSpeed:'150 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+            { id:'p2', code:'INT-SKY',  name:'Internet Sky',  price:'249.000đ/tháng', tagOn:true, tagBadgeId:'bdg-suggest', dlSpeed:'500 Mbps', ulSpeed:'200 Mbps', speedIcon:'80%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
           ]),
-          mkTabW('t2', 'Cá nhân', [
-            { id:'p3', code:'INT-GIGA', name:'Internet Giga', price:'165.000đ/tháng', badge:'', dlSpeed:'150 Mbps', ulSpeed:'50 Mbps', speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Hỗ trợ 24/7\nLắp đặt trong ngày', tooltipOn:false, tooltipContent:'' },
+          mkTab('t2', 'Gia đình', [
+            { id:'p3', code:'INT-HOME', name:'Internet Home', price:'135.000đ/tháng', tagOn:false, tagBadgeId:'', dlSpeed:'100 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
           ]),
-          mkTabW('t3', 'Combo Wi-Fi 7 + Play Box', []),
-        ];
-        class CampProductsEd extends React.Component {
-          constructor(p) {
-            super(p);
-            this.state = { tabs: DEF_TABS_W.map(t => ({...t, addSel: new Set()})), defaultTab: DEF_TABS_W[0].id, tabDragFrom: -1, tabDragOver: -1 };
-          }
-          updTab(tid, patch) { this.setState(s => ({ tabs: s.tabs.map(t => t.id===tid ? {...t,...patch} : t) })); }
-          updPkg(tid, pidx, patch) { this.setState(s => ({ tabs: s.tabs.map(t => t.id!==tid ? t : {...t, pkgs: t.pkgs.map((p,i) => i===pidx ? {...p,...patch} : p)}) })); }
-          render() {
-            const { tabs, defaultTab, tabDragFrom, tabDragOver } = this.state;
-            const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-            const lb = { fontSize:12, fontWeight:600, color:'var(--color-text-subtle)', marginBottom:4, display:'block' };
-            const fld = (l,c,r) => h('div',{style:{marginBottom:12}}, h('label',{style:lb},l,r&&h('span',{style:{color:'var(--color-danger-text)',marginLeft:2}},'*')), c);
-            const g2  = (...it) => h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}, ...it);
-            const ctaBox = (title, enabled, onChange, content) => h('div',{style:{marginBottom:12,padding:'10px 12px',border:'1px solid var(--color-border)',borderRadius:10,background:'var(--color-surface-alt)'}},
-              h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:enabled?10:0}},
-                h('div',{style:{fontSize:12.5,fontWeight:700,color:'var(--color-text)'}},title),
-                h(DS.Switch,{size:'sm',label:enabled?'Bật':'Tắt',checked:enabled,onChange})
-              ),
-              enabled ? content : null
-            );
-            return h('div',{style:{display:'flex',flexDirection:'column',gap:0}},
-              h('div',{style:{marginBottom:16}},
-                fld('Tiêu đề section', h(DS.Input,{defaultValue:'Các gói cước Wi-Fi 7 của FPT'})),
-                fld('Mô tả phụ / Tagline', h(DS.Input,{defaultValue:'Trải nghiệm Wi-Fi thế hệ mới — tốc độ vượt trội, kết nối ổn định'}))
-              ),
-              h('div',{style:{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.7px',color:'var(--color-text-subtle)',marginBottom:10,paddingBottom:8,borderBottom:'1px solid var(--color-border)'}},'Các tab gói cước Wi-Fi 7'),
-
-              ...tabs.map((tab, ti) => {
-                const col = TAB_COLORS[ti % TAB_COLORS.length];
-                const { pkgs, selIdx, q, addOpen, addQ, addCat, addSel, dragFrom, dragOver, expanded } = tab;
-                const existingCodes = new Set(pkgs.map(p => p.code));
-                const filtered = q ? pkgs.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.code.toLowerCase().includes(q.toLowerCase())) : pkgs;
-                const sel = selIdx >= 0 && selIdx < pkgs.length ? pkgs[selIdx] : null;
-                const filtModal = WIFI7_PKGS.filter(p =>
-                  (addCat==='all' || p.cat===addCat) &&
-                  (!addQ || p.code.toLowerCase().includes(addQ.toLowerCase()) || p.name.toLowerCase().includes(addQ.toLowerCase()))
-                );
-                const isDragOver = tabDragFrom >= 0 && tabDragFrom !== ti && tabDragOver === ti;
-
-                const leftPanel = h('div',{style:{width:220,flexShrink:0,borderRight:'1px solid var(--color-border)',paddingRight:14,display:'flex',flexDirection:'column',gap:8}},
-                  h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}},
-                    h('div',{style:{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.7px',color:'var(--color-text-subtle)'}},'Gói hiển thị'),
-                    h(DS.Button,{level:'primary',size:'sm',leadingIcon:'plus-line',onClick:()=>this.updTab(tab.id,{addOpen:true,addSel:new Set(pkgs.map(p=>p.code))})},'Thêm')
-                  ),
-                  h(DS.Input,{placeholder:'Lọc gói...',value:q,onChange:e=>this.updTab(tab.id,{q:e.target.value}),leadingIcon:'search-medium-line',size:'sm'}),
-                  h('div',{style:{flex:1,overflowY:'auto',maxHeight:260}},
-                    filtered.length===0
-                      ? h('div',{style:{padding:'20px 0',textAlign:'center',fontSize:12,color:'var(--color-text-subtle)'}},'Chưa có gói nào · bấm Thêm')
-                      : filtered.map(pkg => {
-                        const ri = pkgs.indexOf(pkg);
-                        const isSel = ri===selIdx;
-                        const isDO = dragFrom>=0 && dragFrom!==ri && dragOver===ri;
-                        return h('div',{key:pkg.id,draggable:true,
-                          onDragStart:()=>this.updTab(tab.id,{dragFrom:ri}),
-                          onDragOver:e=>{e.preventDefault();this.updTab(tab.id,{dragOver:ri});},
-                          onDrop:e=>{
-                            e.preventDefault();
-                            if(dragFrom<0||dragFrom===ri)return;
-                            const np=[...pkgs];const[mv]=np.splice(dragFrom,1);np.splice(ri,0,mv);
-                            let ns=selIdx;
-                            if(selIdx===dragFrom)ns=ri;
-                            else if(selIdx>dragFrom&&selIdx<=ri)ns=selIdx-1;
-                            else if(selIdx<dragFrom&&selIdx>=ri)ns=selIdx+1;
-                            this.updTab(tab.id,{pkgs:np,selIdx:ns,dragFrom:-1,dragOver:-1});
-                          },
-                          onDragEnd:()=>this.updTab(tab.id,{dragFrom:-1,dragOver:-1}),
-                          onClick:()=>this.updTab(tab.id,{selIdx:ri}),
-                          style:{display:'flex',alignItems:'center',gap:6,padding:'7px 8px',borderRadius:8,cursor:'pointer',marginBottom:3,
-                            background:isSel?'var(--color-accent-bg)':isDO?'var(--color-surface-alt)':'transparent',
-                            border:isSel?'1.5px solid var(--color-accent)':'1.5px solid transparent',
-                            borderTop:isDO?'2px solid var(--color-accent)':undefined,
-                            opacity:dragFrom===ri?0.4:1,transition:'all .12s'}
-                        },
-                          h(DS.Icon,{name:'dots-grid-line',size:16,color:'var(--color-text-subtle)',style:{cursor:'grab',flexShrink:0}}),
-                          h('span',{style:{background:col.color,color:'#fff',fontSize:10,fontWeight:700,padding:'2px 5px',borderRadius:5,flexShrink:0,whiteSpace:'nowrap'}},'G'+(ri+1)),
-                          h('div',{style:{flex:1,minWidth:0}},
-                            h('div',{style:{fontSize:12,fontWeight:isSel?600:400,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:isSel?'var(--color-accent)':'var(--color-text)'}},pkg.name),
-                            h('div',{style:{fontSize:10,color:'var(--color-text-subtle)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},pkg.code)
-                          ),
-                        );
-                      })
-                  ),
-                  h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',fontStyle:'italic'}},pkgs.length+' gói · Kéo để sắp xếp')
-                );
-
-                const rightPanel = h('div',{style:{flex:1,paddingLeft:14,minWidth:0,overflowY:'auto'}},
-                  sel ? h('div',null,
-                    h('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:12,paddingBottom:10,borderBottom:'1px solid var(--color-border)'}},
-                      h('div',{style:{flex:1,fontWeight:700,fontSize:14}},sel.name),
-                      h(DS.Button,{level:'tertiary',size:'sm',leadingIcon:'trash-line',style:{color:'var(--color-danger-text)'},onClick:()=>{
-                        const np=pkgs.filter((_,i)=>i!==selIdx);
-                        this.updTab(tab.id,{pkgs:np,selIdx:Math.min(selIdx,np.length-1)});
-                      }},'Xóa')
-                    ),
-                    g2(
-                      fld('Ảnh Desktop', h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgDt'+tab.id+selIdx,defaultValue:sel.imgDesktop||'',placeholder:'URL ảnh desktop...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgDesktop:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload'))),
-                      fld('Ảnh Mobile',  h('div',{style:{display:'flex',gap:6}}, h(DS.Input,{key:'imgMt'+tab.id+selIdx,defaultValue:sel.imgMobile||'',placeholder:'URL ảnh mobile...',onBlur:e=>this.updPkg(tab.id,selIdx,{imgMobile:e.target.value})}), h(DS.Button,{level:'secondary',size:'sm'},'Upload')))
-                    ),
-                    fld('Giá cước', h('div',{style:{padding:'0 12px',height:48,background:'var(--color-surface-sunken)',borderRadius:12,fontSize:13,color:'var(--color-text-muted)',border:'1px solid var(--color-border)',display:'flex',alignItems:'center'}},sel.price||'')),
-                    ctaBox('CTA luồng toàn trình', sel.ctaPrimaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaPrimaryOn:v}),
-                      fld('CTA luồng toàn trình — Text', h(DS.Input,{key:'ct'+tab.id+selIdx,defaultValue:sel.ctaText,onBlur:e=>this.updPkg(tab.id,selIdx,{ctaText:e.target.value})}))
-                    ),
-                    ctaBox('CTA phụ', sel.ctaSecondaryOn !== false, v=>this.updPkg(tab.id,selIdx,{ctaSecondaryOn:v}),
-                      g2(
-                        fld('CTA phụ — Text', h(DS.Input,{key:'ca'+tab.id+selIdx,defaultValue:sel.ctaAlt||'',placeholder:'VD: Xem chi tiết',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAlt:e.target.value})})),
-                        fld('CTA phụ — URL',  h(FptUrlInput,{key:'cau'+tab.id+selIdx,defaultValue:sel.ctaAltUrl||'',placeholder:'/xem-chi-tiet?goi=...',onBlur:e=>this.updPkg(tab.id,selIdx,{ctaAltUrl:e.target.value})}))
-                      )
-                    ),
-                    fld('Tính năng nổi bật (mỗi dòng 1 mục)', h('div',null, h(DS.Textarea,{key:'ft'+tab.id+selIdx,rows:3,defaultValue:sel.features||'',placeholder:'Router Wi-Fi 7 BE9300 miễn phí\nHỗ trợ 24/7\nLắp đặt trong ngày',onBlur:e=>this.updPkg(tab.id,selIdx,{features:e.target.value})}), h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4,display:'flex',alignItems:'center',gap:4}}, h(DS.Icon,{name:'info-circle-line',size:12,color:'var(--color-text-subtle)'}), 'Mỗi dòng là 1 tính năng — xuống dòng bằng Enter, không phải word-wrap')))
-                  ) :
-                  h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:240,gap:10,color:'var(--color-text-subtle)'}},
-                    h(DS.Icon,{name:'wifi-line',size:32,color:'var(--color-text-subtle)'}),
-                    h('div',{style:{fontSize:14,fontWeight:600}},'Chưa chọn gói'),
-                    h('div',{style:{fontSize:12,textAlign:'center',lineHeight:1.6}},'Bấm vào gói bên trái để chỉnh sửa')
-                  )
-                );
-
-                const addModal = h(DS.Modal,{
-                  open: addOpen,
-                  onClose: ()=>this.updTab(tab.id,{addOpen:false}),
-                  title: 'Gói trong tab "'+tab.name+'"',
-                  description: 'Tích để thêm, bỏ tích để gỡ gói khỏi tab này'
-                },
-                  h('div',{style:{display:'flex',flexDirection:'column',gap:12}},
-                    h(DS.Input,{placeholder:'Tìm gói theo tên hoặc mã...',value:addQ,onChange:e=>this.updTab(tab.id,{addQ:e.target.value}),leadingIcon:'search-medium-line',size:'sm'}),
-                    (() => {
-                      const selectable = filtModal;
-                      const allSel = selectable.length>0 && selectable.every(p=>addSel.has(p.code));
-                      return h('div',{style:{display:'flex',alignItems:'center',paddingLeft:2}},
-                        h(DS.Checkbox,{label:'Chọn tất cả',checked:allSel,onChange:v=>{
-                          const ns=new Set(addSel); selectable.forEach(p=>v?ns.add(p.code):ns.delete(p.code)); this.updTab(tab.id,{addSel:ns});
-                        }})
-                      );
-                    })(),
-                    h('div',{style:{maxHeight:300,overflowY:'auto',borderRadius:8,border:'1px solid var(--color-border)'}},
-                      filtModal.length===0
-                        ? h('div',{style:{padding:'24px',textAlign:'center',fontSize:12,color:'var(--color-text-subtle)'}},'Không tìm thấy gói phù hợp')
-                        : filtModal.map(pkg => {
-                          const chk=addSel.has(pkg.code), already=existingCodes.has(pkg.code);
-                          return h('div',{key:pkg.code,onClick:()=>{
-                            const ns=new Set(addSel); chk?ns.delete(pkg.code):ns.add(pkg.code); this.updTab(tab.id,{addSel:ns});
-                          },style:{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderBottom:'1px solid var(--color-border-pale)',cursor:'pointer',
-                            background:chk?'var(--color-accent-bg)':already?'var(--color-surface-sunken)':'transparent',
-                            transition:'background .1s'}
-                          },
-                            h('div',{style:{width:18,height:18,borderRadius:4,flexShrink:0,border:'1.5px solid',borderColor:chk?'var(--color-accent)':'var(--color-border-strong)',background:chk?'var(--color-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .1s'}},
-                              chk&&h(DS.Icon,{name:'check-line',size:11,color:'#fff'})
-                            ),
-                            h('div',{style:{flex:1,minWidth:0}},
-                              h('div',{style:{display:'flex',alignItems:'center',gap:6}},
-                                h('div',{style:{fontWeight:700,fontSize:13}},pkg.name)
-                              ),
-                              h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},pkg.code+' · '+pkg.speed+' · '+pkg.price)
-                            )
-                          );
-                        })
-                    ),
-                    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',paddingTop:4}},
-                      h('div',{style:{fontSize:12,color:'var(--color-text-subtle)'}},addSel.size+' gói được chọn'),
-                      h('div',{style:{display:'flex',gap:8}},
-                        h(DS.Button,{level:'secondary',onClick:()=>this.updTab(tab.id,{addOpen:false})},'Hủy'),
-                        h(DS.Button,{level:'primary',onClick:()=>{
-                          const kept=pkgs.filter(p=>addSel.has(p.code));
-                          const toAdd=WIFI7_PKGS.filter(p=>addSel.has(p.code)&&!existingCodes.has(p.code));
-                          const newPkgs=toAdd.map((p,i)=>({
-                            id:'p'+Date.now()+i,code:p.code,name:p.name,price:p.price,
-                            badge:'',dlSpeed:p.speed,ulSpeed:'',speedIcon:'60%',
-                            ctaPrimaryOn:true,ctaSecondaryOn:true,ctaText:'Đăng ký ngay',ctaUrl:'#',ctaAlt:'Xem chi tiết',ctaAltUrl:'',
-                            features:'',tooltipOn:false,tooltipContent:''
-                          }));
-                          const nc=[...kept,...newPkgs];
-                          this.updTab(tab.id,{pkgs:nc,selIdx:nc.length?Math.min(selIdx<0?0:selIdx,nc.length-1):-1,addOpen:false,addSel:new Set()});
-                        }},'Lưu ('+addSel.size+' gói)')
-                      )
-                    )
-                  )
-                );
-
-                return h('div',{key:tab.id,draggable:true,
-                  onDragStart:e=>{e.dataTransfer.effectAllowed='move';this.setState({tabDragFrom:ti,tabDragOver:-1});},
-                  onDragOver:e=>{e.preventDefault();if(tabDragFrom!==ti)this.setState({tabDragOver:ti});},
-                  onDrop:e=>{e.preventDefault();if(tabDragFrom<0||tabDragFrom===ti)return;const nt=[...tabs];const[mv]=nt.splice(tabDragFrom,1);nt.splice(ti,0,mv);this.setState({tabs:nt,tabDragFrom:-1,tabDragOver:-1});},
-                  onDragEnd:()=>this.setState({tabDragFrom:-1,tabDragOver:-1}),
-                  style:{border:isDragOver?'2px dashed var(--color-accent)':expanded?'1.5px solid var(--color-accent)':'1px solid var(--color-border)',borderRadius:12,marginBottom:12,overflow:'hidden',transition:'border-color .15s',opacity:tabDragFrom===ti?0.45:1}},
-                  h('div',{
-                    onClick:()=>this.updTab(tab.id,{expanded:!expanded}),
-                    style:{background:expanded?'var(--color-accent-bg)':'var(--color-surface-alt)',padding:'10px 14px',display:'flex',alignItems:'center',gap:8,cursor:'pointer',transition:'background .15s',userSelect:'none'}
-                  },
-                    h(DS.Icon,{name:'dots-grid-line',size:16,color:'var(--color-text-subtle)',style:{cursor:'grab',flexShrink:0,lineHeight:1}}),
-                    h(DS.Icon,{name:expanded?'chevron-down-line':'chevron-right-line',size:16,color:expanded?'var(--color-accent)':'var(--color-text-subtle)'}),
-                    h('span',{style:{fontWeight:700,fontSize:13,color:expanded?'var(--color-accent)':'var(--color-text)',flex:1}},'Tab: '+tab.name),
-                    h('div',{style:{display:'flex',gap:8,alignItems:'center',marginLeft:'auto',flexShrink:0},onClick:e=>e.stopPropagation()},
-                      h(DS.Switch,{size:'sm',label:'Mặc định',checked:defaultTab===tab.id,onChange:v=>{if(v)this.setState({defaultTab:tab.id});}}),
-                      tabs.length>1 && h(DS.Button,{level:'tertiary',size:'sm',leadingIcon:'trash-line',style:{color:'var(--color-danger-text)',fontSize:11},
-                        onClick:e=>{e.stopPropagation();this.setState(s=>({tabs:s.tabs.filter(t=>t.id!==tab.id)}));}
-                      },'Xóa tab')
-                    )
-                  ),
-                  expanded && h('div',{style:{padding:14}},
-                    fld('Tên tab', h(DS.Input,{key:'tabname'+tab.id,defaultValue:tab.name,placeholder:'Nhập tên tab...',onBlur:e=>{const v=e.target.value.trim();if(v)this.updTab(tab.id,{name:v});}})),
-                    h('div',{style:{display:'flex',gap:0,border:'1px solid var(--color-border)',borderRadius:10,padding:12,background:'var(--color-surface)',minHeight:280}},
-                      leftPanel,
-                      rightPanel
-                    )
-                  ),
-                  addModal
-                );
-              }),
-
-              h(DS.Button,{
-                level:'secondary',
-                size:'sm',
-                leadingIcon:'plus-line',
-                style:{width:'100%',borderStyle:'dashed',marginTop:4},
-                onClick:()=>{
-                  const id='t'+Date.now();
-                  this.setState(s=>({tabs:[...s.tabs,mkTabW(id,'Tab mới '+(s.tabs.length+1))]}));
-                }
-              },'Thêm tab mới')
-            );
-          }
-        }
-        return [h(CampProductsEd,{key:'camp-products-ed'})];
+          mkTab('t3', 'Combo Internet + Play Box', []),
+        ]
+       });
       })(),
+      // ── CAMP-PRODUCTS ([Card_1] - Các gói cước Wi-Fi 7): dùng chung editor Card_1, khác dữ liệu mẫu ──
+      'camp-products': buildCard1Editor({
+        key:'camp-products-ed',
+        title:'Các gói cước Wi-Fi 7 của FPT',
+        tagline:'Trải nghiệm Wi-Fi thế hệ mới — tốc độ vượt trội, kết nối ổn định',
+        makeTabs: mkTab => [
+          mkTab('t1', 'Cao cấp', [
+            { id:'p1', code:'INT-LUX500', name:'Internet Lux 500', price:'399.000đ/tháng', tagOn:true, tagBadgeId:'bdg-suggest', dlSpeed:'500 Mbps', ulSpeed:'200 Mbps', speedIcon:'80%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Router Wi-Fi 7 BE9300 miễn phí\nHỗ trợ 24/7\nLắp đặt trong ngày', tooltipOn:false, tooltipContent:'' },
+            { id:'p2', code:'INT-LUX800', name:'Internet Lux 800', price:'499.000đ/tháng', tagOn:false, tagBadgeId:'', dlSpeed:'800 Mbps', ulSpeed:'400 Mbps', speedIcon:'100%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Router Wi-Fi 7 BE9300 miễn phí\nHỗ trợ 24/7\nLắp đặt trong ngày', tooltipOn:false, tooltipContent:'' },
+          ]),
+          mkTab('t2', 'Cá nhân', [
+            { id:'p3', code:'INT-GIGA', name:'Internet Giga', price:'165.000đ/tháng', tagOn:false, tagBadgeId:'', dlSpeed:'150 Mbps', ulSpeed:'50 Mbps', speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Hỗ trợ 24/7\nLắp đặt trong ngày', tooltipOn:false, tooltipContent:'' },
+          ]),
+          mkTab('t3', 'Combo Wi-Fi 7 + Play Box', []),
+        ]
+      }),
+      // ── CARD2 ([Card_2] - Danh sách gói internet, tag chữ): dùng chung editor Card_1 nhưng không có ảnh card, Tag nổi bật = bật/tắt + nhập chữ ──
+      Card2: buildCard1Editor({
+        key:'inet-card2-ed',
+        title:'Chọn gói phù hợp với bạn',
+        tagline:'',
+        noImage:true,
+        tagText:true,
+        makeTabs: mkTab => [
+          mkTab('t1', 'Cá nhân', [
+            { id:'p1', code:'INT-GIGA', name:'Internet Giga', price:'165.000đ/tháng', tagOn:false, tagText:'', dlSpeed:'150 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Router Wi-Fi miễn phí\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+            { id:'p2', code:'INT-SKY',  name:'Internet Sky',  price:'249.000đ/tháng', tagOn:true,  tagText:'Bán chạy', dlSpeed:'500 Mbps', ulSpeed:'200 Mbps', speedIcon:'80%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Router Wi-Fi 6\nLắp đặt trong ngày', tooltipOn:false, tooltipContent:'' },
+          ]),
+          mkTab('t2', 'Gia đình', [
+            { id:'p3', code:'INT-HOME', name:'Internet Home', price:'135.000đ/tháng', tagOn:false, tagText:'', dlSpeed:'100 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'', tooltipOn:false, tooltipContent:'' },
+          ]),
+        ]
+      }),
+      // ── CARD3 ([Card_3] - Danh sách gói internet, nền card tùy chỉnh): dùng chung editor Card_1; không ảnh card, thêm nội dung phụ, nền card solid/gradient, CTA chi tiết, nội dung gói bán dạng text editor ──
+      Card3: buildCard1Editor({
+        key:'inet-card3-ed',
+        title:'Chọn gói phù hợp với bạn',
+        tagline:'',
+        noImage:true,
+        subText:true,
+        cardBg:true,
+        cta2:true,
+        richFeatures:true,
+        makeTabs: mkTab => [
+          mkTab('t1', 'Cá nhân', [
+            { id:'p1', code:'INT-GIGA', name:'Internet Giga', price:'165.000đ/tháng', subText:'Phù hợp 1–2 người dùng', cardVariant:'default', tagOn:false, tagBadgeId:'', dlSpeed:'150 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', cta2On:true, cta2Text:'Chi tiết gói', cta2Url:'/chi-tiet', ctaAlt:'Xem chi tiết', ctaAltUrl:'', featuresHtml:'<ul><li>Router Wi-Fi miễn phí</li><li>Hỗ trợ 24/7</li></ul>', tooltipOn:false, tooltipContent:'' },
+            { id:'p2', code:'INT-SKY',  name:'Internet Sky',  price:'249.000đ/tháng', subText:'Phù hợp hộ gia đình 3–5 thiết bị', cardVariant:'featured', cardBgMode:'gradient', cardBgFrom:'#9946F6', cardBgTo:'#F35AAA', tagOn:true, tagBadgeId:'bdg-suggest', dlSpeed:'500 Mbps', ulSpeed:'200 Mbps', speedIcon:'80%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', cta2On:true, cta2Text:'Chi tiết gói', cta2Url:'/chi-tiet', ctaAlt:'Xem chi tiết', ctaAltUrl:'', featuresHtml:'<ul><li><b>Router Wi-Fi 6</b> miễn phí</li><li>Lắp đặt trong ngày</li></ul>', tooltipOn:false, tooltipContent:'' },
+          ]),
+          mkTab('t2', 'Gia đình', [
+            { id:'p3', code:'INT-HOME', name:'Internet Home', price:'135.000đ/tháng', subText:'', cardVariant:'default', tagOn:false, tagBadgeId:'', dlSpeed:'100 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', cta2On:false, cta2Text:'', cta2Url:'', ctaAlt:'Xem chi tiết', ctaAltUrl:'', featuresHtml:'', tooltipOn:false, tooltipContent:'' },
+          ]),
+        ]
+      }),
+      // ── CARD4 ([Card_4] - Danh sách gói internet): dùng chung editor Card_1 (chưa có cờ CFG riêng — khi người dùng mô tả điểm khác thì thêm cờ vào buildCard1Editor) ──
+      Card4: buildCard1Editor({
+        key:'inet-card4-ed',
+        title:'Chọn gói phù hợp với bạn',
+        tagline:'',
+        makeTabs: mkTab => [
+          mkTab('t1', 'Cá nhân', [
+            { id:'p1', code:'INT-GIGA', name:'Internet Giga', price:'165.000đ/tháng', tagOn:false, tagBadgeId:'', dlSpeed:'150 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+            { id:'p2', code:'INT-SKY',  name:'Internet Sky',  price:'249.000đ/tháng', tagOn:true, tagBadgeId:'bdg-suggest', dlSpeed:'500 Mbps', ulSpeed:'200 Mbps', speedIcon:'80%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+          ]),
+          mkTab('t2', 'Gia đình', [
+            { id:'p3', code:'INT-HOME', name:'Internet Home', price:'135.000đ/tháng', tagOn:false, tagBadgeId:'', dlSpeed:'100 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Miễn phí lắp đặt\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+          ]),
+        ]
+      }),
       // ── PLAYBOX ──
       PlayBox: [
         g2(fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: FPT Play Box — Giải trí không giới hạn' })), fld('Tiêu đề highlight', h(DS.Input, { placeholder: 'VD: Giải trí không giới hạn' }))),

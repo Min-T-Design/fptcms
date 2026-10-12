@@ -2480,7 +2480,7 @@ function Select({
   const s = SIZES[size] || SIZES.md;
   const invalid = !!error;
   const selected = norm.find(o => o.value === current);
-  const visible = searchable && query ? norm.filter(o => o.label.toLowerCase().includes(query.toLowerCase())) : norm;
+  const visible = searchable && query ? norm.filter(o => (typeof o.label === "string" ? o.label : String(o.searchText || "")).toLowerCase().includes(query.toLowerCase())) : norm;
   React.useEffect(() => {
     const close = e => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
