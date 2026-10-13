@@ -4402,7 +4402,7 @@ class Component extends DCLogic {
   }
   // Sections thuộc họ "Danh sách gói Internet": gói Internet, gói Wi-Fi 7, bảng so sánh gói Internet
   LDP_LOCATION_TOGGLE_IDS() {
-    return new Set(['inet-products', 'inet-card2', 'inet-card3', 'inet-card4', 'inet-card5', 'inet-card6', 'lead-pricing', 'camp-products', 'lead-pkg-compare']);
+    return new Set(['inet-products', 'inet-card2', 'inet-card3', 'inet-card4', 'inet-card5', 'inet-card6', 'inet-card7', 'lead-pricing', 'camp-products', 'lead-pkg-compare']);
   }
   isLdpLocationSection(s) {
     return !!(s && this.LDP_LOCATION_TOGGLE_IDS().has(s.id));
@@ -8897,7 +8897,8 @@ class Component extends DCLogic {
     const _card4 = { id: 'inet-card4', name: '[Card_4] - Danh sách gói internet', desc: 'Tiêu đề section, card gói theo tab: tên, giá, tag nổi bật, ảnh card, nội dung gói bán, nút đăng ký', type: 'Card4', emoji: '🗂️', ec: 'rgba(20,184,166,0.15)', tc: '#0d9488', source: 'internet' };
     const _card5 = { id: 'inet-card5', name: '[Card_5] - Danh sách gói internet', desc: 'Tiêu đề section, card gói theo tab: tên, giá, tag nổi bật, nội dung gói bán, nút đăng ký (không có ảnh card)', type: 'Card5', emoji: '🧩', ec: 'rgba(244,63,94,0.15)', tc: '#e11d48', source: 'internet' };
     const _card6 = { id: 'inet-card6', name: '[Card_6] - Danh sách gói internet', desc: 'Tiêu đề section, card gói theo tab: tên, giá, tag nổi bật, ảnh card, nội dung gói bán, nút đăng ký (giao diện Dark mode)', type: 'Card6', emoji: '🌙', ec: 'rgba(71,85,105,0.18)', tc: '#475569', source: 'internet' };
-    { const _ci = allSecs.findIndex(s => s.id === 'cam-select'); allSecs.splice(_ci >= 0 ? _ci + 1 : allSecs.length, 0, _card2, _card3, _card4, _card5, _card6); }
+    const _card7 = { id: 'inet-card7', name: '[Card_7] - Bảng giá & đăng ký gói internet', desc: 'Tiêu đề section, quản lý tiêu chí, danh sách gói: chọn gói, giá bán, tốc độ download/upload, hình ảnh & mô tả ngắn, bảng thông tin gói cước, nút đăng ký', type: 'Card7', emoji: '📊', ec: 'rgba(14,165,233,0.15)', tc: '#0284c7', source: 'internet' };
+    { const _ci = allSecs.findIndex(s => s.id === 'cam-select'); allSecs.splice(_ci >= 0 ? _ci + 1 : allSecs.length, 0, _card2, _card3, _card4, _card5, _card6, _card7); }
     // Explicitly add sa-products (Gói dịch vụ SA)
     const _saProd = { id: 'sa-products', name: 'Gói dịch vụ SA', desc: 'Tiêu đề section, card gói SA: tên, giá, tính năng, nút đăng ký', type: 'SaProducts', emoji: '📦', ec: 'rgba(109,40,217,0.15)', tc: '#6d28d9', source: 'sa' };
     allSecs.push(_saProd);
@@ -9549,7 +9550,7 @@ class Component extends DCLogic {
       }
     }
     // ── Section background panel (Camera sections 2,3,4,6) ─────────────────
-    const CAM_BG_IDS = ['lead-top-header','cam-usp','cam-detail','cam-select','cam-awards','camp-countdown','camp-usp','camp-highlights','camp-products','camp-compare','camp-targets','camp-videos','inet-countdown','inet-stats','inet-products','inet-card2','inet-card3','inet-card4','inet-card5','inet-card6','inet-playbox','inet-review','inet-steps','inet-promo','sa-countdown','sa-sports','sa-experience','sa-categories','sa-pricing','sa-commentators','lead-countdown','lead-proof','lead-pricing','lead-pkg-compare','lead-steps','lead-reviews','lead-feedback','lead-procedure','inet-faq','sa-faq-support','cam-faq','camp-faq','lead-faq','sa-products'];
+    const CAM_BG_IDS = ['lead-top-header','cam-usp','cam-detail','cam-select','cam-awards','camp-countdown','camp-usp','camp-highlights','camp-products','camp-compare','camp-targets','camp-videos','inet-countdown','inet-stats','inet-products','inet-card2','inet-card3','inet-card4','inet-card5','inet-card6','inet-card7','inet-playbox','inet-review','inet-steps','inet-promo','sa-countdown','sa-sports','sa-experience','sa-categories','sa-pricing','sa-commentators','lead-countdown','lead-proof','lead-pricing','lead-pkg-compare','lead-steps','lead-reviews','lead-feedback','lead-procedure','inet-faq','sa-faq-support','cam-faq','camp-faq','lead-faq','sa-products'];
     const CAM_BG_DEFAULTS = {
       'lead-top-header': { mode:'color', color:'#1e2a5c', image:'' },
       'cam-usp':        { mode:'color', color:'#ffffff', image:'' },
@@ -9571,6 +9572,7 @@ class Component extends DCLogic {
       'inet-card4':     { mode:'color', color:'#f0fdfa', image:'' },
       'inet-card5':     { mode:'color', color:'#eff6ff', image:'' },
       'inet-card6':     { mode:'color', color:'#0f172a', image:'' },
+      'inet-card7':     { mode:'color', color:'#f8fafc', image:'' },
       'inet-playbox':   { mode:'color', color:'#eef2ff', image:'' },
       'inet-review':    { mode:'color', color:'#ffffff', image:'' },
       'inet-steps':     { mode:'color', color:'#f0fdfa', image:'' },
@@ -10557,6 +10559,220 @@ class Component extends DCLogic {
           ]),
         ]
       }),
+      // ── CARD7 ([Card_7] - Bảng giá & đăng ký gói internet): thông tin cơ bản như Card_1 + "Quản lý tiêu chí" và "Danh sách gói cước" theo section Bảng giá & Đăng ký của LDP SA ──
+      // Lớp editor được cache trên instance (this._ldpCard7): nếu tạo lại mỗi lần render thì toast / báo lỗi bắt buộc ở trang cha sẽ remount và làm mất dữ liệu đang nhập.
+      // Tiêu chí dùng chung cho 2 thẻ (Quản lý tiêu chí ↔ bảng "Thông tin gói cước" của từng gói) nên dữ liệu nằm trong store theo từng section.
+      Card7: (() => {
+        const mainThis = this;
+        if (!this._ldpCard7) {
+          // Gói bán đồng bộ từ module Quản lý sản phẩm: giá, tốc độ download / upload chỉ đọc.
+          const C7_PKGS = [
+            { code:'INT-LUX500', name:'Internet Lux 500',    price:'399.000đ/tháng', dl:'500 Mbps', ul:'200 Mbps' },
+            { code:'INT-LUX800', name:'Internet Lux 800',    price:'499.000đ/tháng', dl:'800 Mbps', ul:'400 Mbps' },
+            { code:'INT-ULTRA',  name:'Internet Ultra Fast', price:'599.000đ/tháng', dl:'1 Gbps',   ul:'1 Gbps'   },
+            { code:'INT-GIGA',   name:'Internet Giga',       price:'165.000đ/tháng', dl:'150 Mbps', ul:'50 Mbps'  },
+            { code:'INT-SKY',    name:'Internet Sky',        price:'249.000đ/tháng', dl:'500 Mbps', ul:'200 Mbps' },
+            { code:'INT-META',   name:'Internet Meta',       price:'349.000đ/tháng', dl:'1 Gbps',   ul:'500 Mbps' },
+            { code:'INT-HOME',   name:'Internet Home',       price:'135.000đ/tháng', dl:'100 Mbps', ul:'50 Mbps'  },
+            { code:'INT-PLUS',   name:'Internet Plus',       price:'195.000đ/tháng', dl:'200 Mbps', ul:'100 Mbps' },
+          ];
+          const C7_TYPES = [{ value:'text', label:'Text' }, { value:'yesno', label:'Yes / No' }];
+          const C7_DESC_MAX = 150;
+          const fromPkg = code => { const p = C7_PKGS.find(x => x.code === code); return p ? { code:p.code, name:p.name, price:p.price, dl:p.dl, ul:p.ul } : { code:'', name:'', price:'', dl:'', ul:'' }; };
+          const mkStore = () => ({
+            criteria: [
+              { id:'c1', label:'Router Wi-Fi miễn phí',       type:'yesno' },
+              { id:'c2', label:'Lắp đặt miễn phí',            type:'yesno' },
+              { id:'c3', label:'Số thiết bị kết nối tối đa',  type:'text'  },
+              { id:'c4', label:'Hỗ trợ kỹ thuật 24/7',        type:'yesno' },
+              { id:'c5', label:'Thời gian cam kết',           type:'text'  },
+            ],
+            nextCId: 6,
+            items: [
+              Object.assign(fromPkg('INT-GIGA'), { id:'p1', image:null, desc:'Phù hợp gia đình 3–5 thiết bị, lướt web và xem phim mượt mà.',    criteriaValues:{ c1:true, c2:true, c3:'10 thiết bị', c4:true, c5:'12 tháng' }, ctaText:'Đăng ký ngay', ctaUrl:'/dang-ky-internet?goi=giga', visible:true, expanded:true  }),
+              Object.assign(fromPkg('INT-SKY'),  { id:'p2', image:null, desc:'Tốc độ cao cho nhu cầu giải trí, làm việc và học trực tuyến.',     criteriaValues:{ c1:true, c2:true, c3:'20 thiết bị', c4:true, c5:'12 tháng' }, ctaText:'Đăng ký ngay', ctaUrl:'/dang-ky-internet?goi=sky',  visible:true, expanded:false }),
+              Object.assign(fromPkg('INT-HOME'), { id:'p3', image:null, desc:'',                                                                  criteriaValues:{ c1:false, c2:true, c3:'8 thiết bị',  c4:true, c5:'6 tháng'  }, ctaText:'Đăng ký ngay', ctaUrl:'/dang-ky-internet?goi=home', visible:true, expanded:false }),
+            ],
+            nextPId: 4,
+            subs: new Set(),
+            set(patch) { Object.assign(this, patch); this.subs.forEach(c => c.forceUpdate()); },
+          });
+          class C7Base extends React.Component {
+            componentDidMount()    { this.props.store.subs.add(this); }
+            componentWillUnmount() { this.props.store.subs.delete(this); }
+          }
+          // Thẻ 2 — Quản lý tiêu chí: danh sách tiêu chí (tên + phân loại nhập Text / Yes-No), kéo ≡ để sắp xếp.
+          class C7Criteria extends C7Base {
+            constructor(p) { super(p); this.state = { dragFrom: -1, dragOver: -1 }; }
+            render() {
+              const { store } = this.props; const { criteria } = store; const { dragFrom, dragOver } = this.state;
+              const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+              const cols = '16px minmax(0, 1fr) 148px 28px';
+              const hdr = t => h('span', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, t);
+              const patchC = (id, patch) => store.set({ criteria: store.criteria.map(x => x.id === id ? { ...x, ...patch } : x) });
+              return h('div', null,
+                criteria.length > 0 && h('div', { style: { display: 'grid', gridTemplateColumns: cols, gap: '0 8px', marginBottom: 6, padding: '0 2px' } },
+                  h('span', null), hdr('Tên tiêu chí'), hdr('Phân loại nhập'), h('span', null)
+                ),
+                criteria.length === 0 && h('div', { style: { padding: '12px 16px', marginBottom: 8, border: '1px dashed var(--color-border)', borderRadius: 8, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, 'Chưa có tiêu chí nào.'),
+                criteria.map((c, i) => h('div', { key: c.id, 'data-c7-row': '1',
+                  onDragOver: e => { if (dragFrom >= 0) { e.preventDefault(); if (dragOver !== i) this.setState({ dragOver: i }); } },
+                  onDrop: e => {
+                    e.preventDefault();
+                    if (dragFrom < 0 || dragFrom === i) { this.setState({ dragFrom: -1, dragOver: -1 }); return; }
+                    const arr = [...criteria]; const [mv] = arr.splice(dragFrom, 1); arr.splice(i, 0, mv);
+                    this.setState({ dragFrom: -1, dragOver: -1 }); store.set({ criteria: arr });
+                  },
+                  style: { display: 'grid', gridTemplateColumns: cols, gap: '0 8px', alignItems: 'center', marginBottom: 6, borderTop: dragFrom >= 0 && dragFrom !== i && dragOver === i ? '2px solid var(--color-accent)' : '2px solid transparent', opacity: dragFrom === i ? 0.4 : 1 } },
+                  h('span', { draggable: true, title: 'Kéo để sắp xếp',
+                    onDragStart: e => { e.dataTransfer.effectAllowed = 'move'; const row = e.currentTarget.closest('[data-c7-row]'); if (row && e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(row, 12, 12); this.setState({ dragFrom: i }); },
+                    onDragEnd: () => this.setState({ dragFrom: -1, dragOver: -1 }),
+                    style: { display: 'inline-flex', cursor: 'grab' } }, h(DS.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)' })),
+                  h(DS.Input, { defaultValue: c.label, placeholder: 'Tên tiêu chí...', onChange: e => patchC(c.id, { label: e.target.value }) }),
+                  h(DS.Select, { value: c.type, options: C7_TYPES, onChange: v => patchC(c.id, { type: v }) }),
+                  h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => store.set({ criteria: store.criteria.filter(x => x.id !== c.id) }) })
+                )),
+                h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 },
+                  onClick: () => store.set({ criteria: [...store.criteria, { id: 'c' + store.nextCId, label: '', type: 'text' }], nextCId: store.nextCId + 1 }) }, 'Thêm tiêu chí')
+              );
+            }
+          }
+          // Thẻ 3 — Danh sách gói cước: mỗi gói là 1 hàng thu gọn được; thân gói xếp theo thứ tự thị giác của card:
+          // Gói cước (chọn gói + giá/tốc độ chỉ đọc) → Hình ảnh & mô tả → Thông tin gói cước (theo tiêu chí) → Nút CTA.
+          class C7Packages extends C7Base {
+            constructor(p) { super(p); this.state = { dragFrom: -1, dragOver: -1 }; }
+            // Gói chưa chọn bị báo lỗi bắt buộc khi Lưu → tự mở các gói đang thu gọn để người dùng thấy ô cần chọn.
+            componentDidUpdate() {
+              const { store } = this.props; const err = mainThis.state.ldpSecFieldErr || {};
+              const need = store.items.filter(it => !it.code && !it.expanded && err['c7-' + it.id]);
+              if (need.length) store.set({ items: store.items.map(it => need.includes(it) ? { ...it, expanded: true } : it) });
+            }
+            render() {
+              const { store } = this.props; const { items, criteria } = store; const { dragFrom, dragOver } = this.state;
+              const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+              const errMap = mainThis.state.ldpSecFieldErr || {};
+              const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+              const fld = (l, c, r) => h('div', { style: { marginBottom: 12 } }, h('label', { style: lb }, l, r && h('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+              const g2 = (...it) => h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '0 12px' } }, ...it);
+              const grp = (title, ...content) => h('div', { style: { marginBottom: 18 } },
+                h('div', { style: { marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid var(--color-border)' } },
+                  h('span', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'var(--color-text-subtle)' } }, title)),
+                ...content);
+              const upd = (id, patch) => store.set({ items: store.items.map(x => x.id === id ? { ...x, ...patch } : x) });
+              // Công tắc kèm chữ: chữ bên TRÁI trong khung rộng cố định (căn phải), công tắc bên PHẢI — đổi Bật/Tắt không làm công tắc hay các nút bên cạnh xê dịch.
+              const swText = (text, checked, onChange, w, strong) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
+                h('span', { onClick: () => onChange(!checked), style: { width: w, textAlign: 'right', whiteSpace: 'nowrap', userSelect: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: strong ? 14 : 12, fontWeight: strong ? 500 : 400, color: strong ? 'var(--color-text)' : 'var(--color-text-subtle)' } }, text),
+                h(DS.Switch, { size: 'sm', checked, onChange }));
+              const setCV = (id, cid, val) => { const cur = store.items.find(x => x.id === id); upd(id, { criteriaValues: { ...((cur && cur.criteriaValues) || {}), [cid]: val } }); };
+              const taken = new Set(items.map(x => x.code).filter(Boolean));
+              return h('div', null,
+                items.map((it, idx) => {
+                  const err = !it.code && !!errMap['c7-' + it.id];
+                  const isOver = dragFrom >= 0 && dragFrom !== idx && dragOver === idx;
+                  const opts = C7_PKGS.filter(p => p.code === it.code || !taken.has(p.code)).map(p => ({ value: p.code, label: p.name + ' · ' + p.code }));
+                  const desc = it.desc || ''; const descAtMax = desc.length >= C7_DESC_MAX;
+                  const roField = (label, val, k) => fld(label, h(DS.Input, { key: k + it.id, value: val || '', disabled: true, placeholder: 'Tự động theo gói' }));
+                  return h('div', { key: it.id, 'data-c7-row': '1', 'data-ldp-req-empty': it.code ? undefined : 'true', 'data-ldp-req-key': 'c7-' + it.id,
+                    onDragOver: e => { if (dragFrom >= 0) { e.preventDefault(); if (dragOver !== idx) this.setState({ dragOver: idx }); } },
+                    onDrop: e => {
+                      e.preventDefault();
+                      if (dragFrom < 0 || dragFrom === idx) { this.setState({ dragFrom: -1, dragOver: -1 }); return; }
+                      const arr = [...items]; const [mv] = arr.splice(dragFrom, 1); arr.splice(idx, 0, mv);
+                      this.setState({ dragFrom: -1, dragOver: -1 }); store.set({ items: arr });
+                    },
+                    style: { border: err ? '1.5px solid var(--color-danger)' : isOver ? '2px dashed var(--color-accent)' : it.expanded ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)', borderRadius: 12, marginBottom: 10, overflow: 'hidden', transition: 'border-color .15s', opacity: dragFrom === idx ? 0.45 : 1 } },
+                    // ── thanh tiêu đề gói ──
+                    h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: it.expanded ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', userSelect: 'none' } },
+                      h('span', { draggable: true, title: 'Kéo để sắp xếp',
+                        onDragStart: e => { e.dataTransfer.effectAllowed = 'move'; const row = e.currentTarget.closest('[data-c7-row]'); if (row && e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(row, 16, 16); this.setState({ dragFrom: idx }); },
+                        onDragEnd: () => this.setState({ dragFrom: -1, dragOver: -1 }),
+                        style: { display: 'inline-flex', cursor: 'grab', flexShrink: 0 } }, h(DS.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)' })),
+                      h('div', { onClick: () => upd(it.id, { expanded: !it.expanded }), style: { display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, cursor: 'pointer' } },
+                        h(DS.Icon, { name: it.expanded ? 'chevron-down-line' : 'chevron-right-line', size: 16, color: it.expanded ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
+                        h('span', { style: { fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: err ? 'var(--color-danger-text)' : it.expanded ? 'var(--color-accent)' : it.code ? 'var(--color-text)' : 'var(--color-text-subtle)' } }, it.code ? it.name : 'Gói ' + (idx + 1) + ' · Chưa chọn gói'),
+                        it.code && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, it.price + ' · ' + it.dl + ' / ' + it.ul)
+                      ),
+                      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
+                        swText(it.visible ? 'Hiển thị' : 'Ẩn', it.visible, v => upd(it.id, { visible: v }), 56, true),
+                        h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)' }, onClick: () => store.set({ items: store.items.filter(x => x.id !== it.id) }) }, 'Xóa')
+                      )
+                    ),
+                    // ── thân gói ──
+                    it.expanded && h('div', { style: { padding: '16px 14px 0', background: 'var(--color-surface)' } },
+                      grp('Gói cước',
+                        fld('Chọn gói', h('div', null,
+                          h('div', { className: err ? 'fpt-req-box-err' : undefined, style: err ? { padding: 2 } : undefined },
+                            h(DS.Select, { options: opts, value: it.code || '', placeholder: 'Chọn gói cước…', searchable: true, searchPlaceholder: 'Tìm gói cước…', onChange: v => upd(it.id, fromPkg(v)) })),
+                          err && h('div', { className: 'fpt-req-err-msg' }, 'Trường bắt buộc — vui lòng chọn gói.')
+                        ), true),
+                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0 12px' } },
+                          roField('Giá bán', it.price, 'pr'), roField('Tốc độ download', it.dl, 'dl'), roField('Tốc độ upload', it.ul, 'ul'))
+                      ),
+                      grp('Hình ảnh & mô tả',
+                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, alignItems: 'start' } },
+                          // Nhãn trường nằm trên ô; chữ trong vùng thả là "Tải ảnh lên", còn dòng thông tin khi đã có ảnh vẫn đọc "Hình ảnh gói · …KB" nhờ value.label.
+                          h('div', null,
+                            h('label', { style: lb }, 'Hình ảnh gói'),
+                            mainThis.uploadBox('Tải ảnh lên', 'JPG, PNG, WEBP · ≤200KB', false, null, { key: 'img' + it.id, maxKB: 200, value: it.image || null,
+                              onChange: v => upd(it.id, { image: typeof v === 'function' ? v((store.items.find(x => x.id === it.id) || {}).image || null) : (v ? { ...v, label: 'Hình ảnh gói' } : v) }) })
+                          ),
+                          h('div', null,
+                            h('label', { style: lb }, 'Mô tả ngắn'),
+                            // Cao đúng 64px = chiều cao ô upload ảnh (FptUploadSlot) để hai ô ngang hàng.
+                            h(DS.Textarea, { maxLength: C7_DESC_MAX, value: desc, placeholder: 'VD: Phù hợp gia đình 3–5 thiết bị...', style: { height: 64, minHeight: 64, resize: 'none', padding: '8px 14px' },
+                              onChange: e => upd(it.id, { desc: String(e && e.target ? e.target.value : e || '').slice(0, C7_DESC_MAX) }) }),
+                            h('div', { style: { fontSize: 11.5, marginTop: 4, color: descAtMax ? 'var(--color-danger-text)' : 'var(--color-text-subtle)' } }, `Tối đa ${C7_DESC_MAX} ký tự (${desc.length}/${C7_DESC_MAX})${descAtMax ? ' — đã đạt giới hạn' : ''}`)
+                          )
+                        )
+                      ),
+                      grp('Thông tin gói cước',
+                        criteria.length === 0
+                          ? h('div', { style: { padding: '12px 16px', border: '1px dashed var(--color-border)', borderRadius: 8, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, 'Chưa có tiêu chí nào.')
+                          : h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+                              h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 240px', gap: 12, padding: '8px 12px', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)' } },
+                                ['Tiêu chí', 'Giá trị'].map((t, ti) => h('span', { key: t, style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em', textAlign: ti ? 'right' : 'left' } }, t))),
+                              criteria.map((c, ri) => {
+                                const val = (it.criteriaValues || {})[c.id];
+                                return h('div', { key: c.id, style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 240px', gap: 12, alignItems: 'center', padding: '6px 12px', minHeight: 48, borderTop: ri > 0 ? '1px solid var(--color-border)' : 'none' } },
+                                  h('span', { style: { fontSize: 13, color: 'var(--color-text)' } }, c.label || h('em', { style: { color: 'var(--color-text-subtle)' } }, '(Chưa đặt tên)')),
+                                  c.type === 'text'
+                                    ? h(DS.Input, { key: 'cv' + it.id + c.id, size: 'sm', defaultValue: val || '', placeholder: '—', onChange: e => setCV(it.id, c.id, e.target.value) })
+                                    : h('div', { style: { display: 'flex', justifyContent: 'flex-end' } }, swText(val ? 'Có' : 'Không', !!val, v => setCV(it.id, c.id, v), 40))
+                                );
+                              })
+                            )
+                      ),
+                      grp('Nút kêu gọi hành động (CTA)',
+                        g2(
+                          fld('Nút CTA — Text', h(DS.Input, { key: 'ct' + it.id, defaultValue: it.ctaText || '', placeholder: 'Đăng ký ngay', onChange: e => upd(it.id, { ctaText: e.target.value }) })),
+                          fld('Nút CTA — URL', h(FptUrlInput, { key: 'cu' + it.id, defaultValue: it.ctaUrl || '', placeholder: '/dang-ky-internet?goi=...', onChange: e => upd(it.id, { ctaUrl: e.target.value }) }))
+                        )
+                      )
+                    )
+                  );
+                }),
+                h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 },
+                  onClick: () => store.set({ items: [...store.items, Object.assign(fromPkg(''), { id: 'p' + store.nextPId, image: null, desc: '', criteriaValues: {}, ctaText: 'Đăng ký ngay', ctaUrl: '', visible: true, expanded: true })], nextPId: store.nextPId + 1 }) }, 'Thêm gói cước')
+              );
+            }
+          }
+          this._ldpCard7 = { C7Criteria, C7Packages, mkStore };
+        }
+        const { C7Criteria, C7Packages, mkStore } = this._ldpCard7;
+        this._ldpCard7Stores = this._ldpCard7Stores || {};
+        const sk = section.uid || section.id;
+        const store = this._ldpCard7Stores[sk] || (this._ldpCard7Stores[sk] = mkStore());
+        return [
+          g2(
+            fld('Tiêu đề hiển thị trên trang', h(DS.Input, { defaultValue: 'Chọn gói Internet phù hợp với bạn', placeholder: 'VD: Bảng giá & đăng ký gói Internet' })),
+            fld('Mô tả phụ / Tagline', h(DS.Input, { defaultValue: '', placeholder: 'Mô tả ngắn về section...' }), false)
+          ),
+          divr('Quản lý tiêu chí'),
+          h(C7Criteria, { key: 'c7-crit', store }),
+          divr('Danh sách gói cước'),
+          h(C7Packages, { key: 'c7-pkgs', store }),
+        ];
+      })(),
       // ── PLAYBOX ──
       PlayBox: [
         g2(fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: FPT Play Box — Giải trí không giới hạn' })), fld('Tiêu đề highlight', h(DS.Input, { placeholder: 'VD: Giải trí không giới hạn' }))),
@@ -11724,6 +11940,11 @@ class Component extends DCLogic {
             errMap[el.getAttribute('data-ldp-field')] = true;
             if (!firstInvalidEl) firstInvalidEl = el;
           }
+        });
+        // Trường composite tự đánh dấu bằng data-ldp-req-empty="true" khi còn trống (vd. "Chọn gói" của Card_7) — lỗi hiển thị do chính component đó đọc ldpSecFieldErr[key].
+        root.querySelectorAll('[data-ldp-req-empty="true"]').forEach(el => {
+          errMap[el.getAttribute('data-ldp-req-key')] = true;
+          if (!firstInvalidEl) firstInvalidEl = el;
         });
       }
       return { errMap, firstInvalidEl };
