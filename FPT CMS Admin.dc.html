@@ -4304,10 +4304,10 @@ class Component extends DCLogic {
   AD_TYPES() { return [{ value: 'above_header', label: 'Trên header' }, { value: 'below_header', label: 'Dưới header' }]; }
   adTypeLabel(v) { const t = this.AD_TYPES().find(t => t.value === v); return t ? t.label : '—'; }
   AD_CATEGORIES() { return [
-    { id: 1, name: 'Scrolling Announcement Bar', code: 'scrolling_top_bar', type: 'above_header', desc: 'Thanh chạy chữ thông báo khuyến mãi cố định đầu website', status: 'active', createdAt: '01/06/2026 09:00', createdBy: 'Admin User', updatedAt: '12/08/2026 15:20', updatedBy: 'Nguyễn Thị Thùy' },
-    { id: 2, name: 'Popup Khuyến mãi', code: 'popup_promo', desc: 'Nhóm quảng cáo dạng popup hiển thị khuyến mãi khi vào trang', status: 'active', createdAt: '05/06/2026 10:30', createdBy: 'Admin User', updatedAt: '20/07/2026 09:45', updatedBy: 'Trần Minh Khoa' },
-    { id: 3, name: 'Banner Góc màn hình', code: 'corner_banner', desc: 'Quảng cáo nhỏ ghim góc màn hình, không che nội dung chính', status: 'active', createdAt: '10/06/2026 14:10', createdBy: 'Admin User', updatedAt: '10/06/2026 14:10', updatedBy: 'Admin User' },
-    { id: 4, name: 'Quảng cáo chân trang', code: 'footer_ads', desc: 'Nhóm quảng cáo hiển thị cố định ở chân trang website', status: 'inactive', createdAt: '15/06/2026 11:00', createdBy: 'Admin User', updatedAt: '02/09/2026 16:00', updatedBy: 'Admin User' },
+    { id: 1, name: 'Combo Internet Ngoại Hạng Anh', code: 'scrolling_top_bar', type: 'above_header', desc: 'Thanh chạy chữ thông báo ưu đãi Internet, Camera AI & Cloud đầu website', status: 'active', createdAt: '01/06/2026 09:00', createdBy: 'Admin User', updatedAt: '12/08/2026 15:20', updatedBy: 'Nguyễn Thị Thùy' },
+    { id: 2, name: 'Black Friday 2026', code: 'popup_promo', desc: 'Các quảng cáo popup khuyến mãi Black Friday và Camera AI khi vào trang', status: 'active', createdAt: '05/06/2026 10:30', createdBy: 'Admin User', updatedAt: '20/07/2026 09:45', updatedBy: 'Trần Minh Khoa' },
+    { id: 3, name: 'Hè rực rỡ – FPT Play VIP', code: 'corner_banner', desc: 'Quảng cáo nhỏ ghim góc màn hình giới thiệu ưu đãi tặng FPT Play VIP mùa hè', status: 'active', createdAt: '10/06/2026 14:10', createdBy: 'Admin User', updatedAt: '10/06/2026 14:10', updatedBy: 'Admin User' },
+    { id: 4, name: 'Tri ân khách hàng 2026', code: 'footer_ads', desc: 'Quảng cáo tri ân khách hàng thân thiết hiển thị cố định ở chân trang website', status: 'inactive', createdAt: '15/06/2026 11:00', createdBy: 'Admin User', updatedAt: '02/09/2026 16:00', updatedBy: 'Admin User' },
   ]; }
   ADS() { return [
     { id: 1, catCode: 'scrolling_top_bar', title: 'Combo Internet V.VIP chỉ từ 220K: Xem Ngoại Hạng Anh - Nhận ngay Camera AI & Cloud miễn phí',
