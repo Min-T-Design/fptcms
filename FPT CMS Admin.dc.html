@@ -146,6 +146,21 @@ function FptUrlInput(props) {
   }, h(DS.Input, Object.assign({}, inputProps, { error: invalid ? FPT_URL_ERROR : inputProps.error })));
 }
 
+// Chip đường dẫn URL 2 cấp trong 1 pill (dựng trên DS.Badge — không phải biến thể có sẵn của DS): cấp 1 đậm + màu chữ chính,
+// cấp 2 thường + màu chữ phụ, ngăn bằng dấu "/". Không icon, không in chữ "Cấp 1/Cấp 2/đã có/tạo mới" — cấp thể hiện bằng độ đậm nhạt, trạng thái có sẵn/tạo mới nằm ở tooltip.
+function FptUrlPathChip({ l1, l2, l1Exists, l2Exists }) {
+  const h = React.createElement;
+  const DS = window.ZENKaizenDesignSystem_4069b4;
+  const seg = (lv, text, exists) => h('span', {
+    title: 'URL cấp ' + lv + (exists ? ' · đã có trong Quản lý URL' : ' · sẽ được tạo mới trong Quản lý URL'),
+    style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-dev)', fontWeight: lv === 1 ? 700 : 500, color: lv === 1 ? 'var(--color-text)' : 'var(--color-text-muted)' }
+  }, text);
+  return h(DS.Badge, { theme: 'neutral', size: 'md', style: { gap: 6, maxWidth: '100%' } },
+    seg(1, l1, l1Exists),
+    l2 ? h('span', { 'aria-hidden': true, style: { fontFamily: 'var(--font-dev)', color: 'var(--color-text-subtle)', fontWeight: 500 } }, '/') : null,
+    l2 ? seg(2, l2, l2Exists) : null);
+}
+
 // Required fields use the same native DS error state as the Landing Page module.
 // Keeping this as a small stateful wrapper lets the centralized DOM-at-submit
 // validator work with both controlled and uncontrolled fields without styling
@@ -758,6 +773,12 @@ class Component extends DCLogic {
     // ── Duyệt LDP module ──
     ldpApprTab: 'pending', ldpApprSearch: '', ldpApprStatusF: 'all', ldpApprSubmitter: 'all', ldpApprReviewer: 'all', ldpAppr_pg: 1, ldpAppr_sz: 10,
     ldpReviewId: null, ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false, ldpApprovals: null, ldpExtraApprovedLv1: [],
+    // ── Quản lý URL module ──
+    // urlEditor: undefined = đang ở danh sách · null = tạo mới · {node} = sửa. urlData/pagesData = null → dùng dữ liệu mẫu (URL_SEED / PAGES_SEED).
+    urlEditor: undefined, urlDraft: undefined, urlTried: false, urlSearch: '', urlTypeFilter: 'all', urlStatusFilter: 'all', urlCreatorFilter: 'all', urls_pg: 1, urls_sz: 10,
+    urlData: null, pagesData: null, pageRenames: null, pageDraft: undefined,
+    // Vai trò của tài khoản đang đăng nhập (demo) — quyết định hiện/ẩn nút thay đổi theo ma trận "Phân quyền tính năng" (xem rbacPerm).
+    currentRole: 'Super Admin',
   };
 
   componentDidMount() {
@@ -820,6 +841,10 @@ class Component extends DCLogic {
     };
     const initModule = readModuleFromUrl();
     if (initModule && this.TITLES()[initModule]) this.setState({ active: initModule });
+    // Xem thử giao diện theo vai trò (demo phân quyền): thêm "&role=Viewer" vào hash, VD …#module=urls&role=Viewer.
+    // Vai trò hợp lệ: Super Admin · Admin CMS · Biên tập viên · Viewer (xem ma trận ở "Phân quyền tính năng").
+    const initRole = new URLSearchParams(location.hash.replace(/^#/, '')).get('role');
+    if (initRole && ['Super Admin', 'Admin CMS', 'Biên tập viên', 'Viewer'].includes(initRole)) this.setState({ currentRole: initRole });
     this._onHashChange = () => {
       const m = readModuleFromUrl();
       if (m && m !== this.state.active && this.TITLES()[m]) this.setState({ active: m });
@@ -908,6 +933,7 @@ class Component extends DCLogic {
       { type: 'item', id: 'badge-tag', label: 'Quản lý Badge/Tag', icon: 'stars-01-line' },
       { type: 'cat', label: 'QUẢN LÝ NỘI DUNG (CMS)' },
       { type: 'group', id: 'g-structure', label: 'Cấu trúc Trang', icon: 'file-doc-line', children: [
+        { id: 'urls', label: 'Quản lý URL' },
         { id: 'pages', label: 'Quản lý Trang (Pages)' },
         { id: 'sections', label: 'Quản lý Sections' },
         { id: 'blocks', label: 'Quản lý Blocks' },
@@ -937,7 +963,7 @@ class Component extends DCLogic {
   TITLES() {
     return {
       'dashboards': 'Dashboards', 'pdh-sku': 'Nội dung sản phẩm', 'badge-tag': 'Quản lý Badge/Tag', 'cms-display': 'Thông tin checkout',
-      'cms-payment': 'Phương thức Thanh toán', 'pages': 'Quản lý Trang (Pages)', 'sections': 'Quản lý Sections',
+      'cms-payment': 'Phương thức Thanh toán', 'urls': 'Quản lý URL', 'pages': 'Quản lý Trang (Pages)', 'sections': 'Quản lý Sections',
       'blocks': 'Quản lý Blocks', 'landing': 'Landing Page (LDP)', 'ldp-approval': 'Duyệt LDP', 'cms-menu': 'Quản lý Menu',
       'banner': 'Quản lý Banner', 'cms-popup': 'Quản lý Popup', 'ads': 'Quản lý Quảng cáo', 'news': 'Quản lý Tin tức', 'faq': 'Quản lý FAQ',
       'sys-roles': 'Quản lý Vai trò', 'sys-users': 'Quản lý Người dùng', 'sys-permissions': 'Phân quyền tính năng',
@@ -1206,6 +1232,7 @@ class Component extends DCLogic {
       case 'badge-tag': return this.renderBadgeTag();
       case 'cms-display': return this.renderCheckout();
       case 'cms-payment': return this.renderPayment();
+      case 'urls': return this.renderUrls();
       case 'pages': return this.renderPages();
       case 'sections': return this.renderSections();
       case 'blocks': return this.renderBlocks();
@@ -4149,7 +4176,9 @@ class Component extends DCLogic {
   }
 
   // ===== data =====
-  PAGES() { return [
+  // Danh sách trang: state.pagesData (sau khi lưu ở Quản lý Trang hoặc khi đổi slug ở Quản lý URL) hoặc dữ liệu mẫu PAGES_SEED.
+  PAGES() { return this.state.pagesData || this.PAGES_SEED(); }
+  PAGES_SEED() { return [
     { name: 'FPT Play detail', slug: 'truyen-hinh-fpt-play/detail', h1: 'FPT Play detail', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
     { name: 'SA detail', slug: 'dich-vu-so/detail', h1: 'SA detail', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
     { name: 'Internet detail sections2', slug: 'internet-detail/sections2', h1: 'Internet detail sections2', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
@@ -4160,7 +4189,14 @@ class Component extends DCLogic {
     { name: 'Tin tức', slug: 'tin-tuc', h1: 'Tin tức & Sự kiện FPT', status: 'active', newsTag: 'khuyen-mai', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Admin User', createdAt: '01/01/2026 08:00', updatedAt: '10/06/2026 08:00' },
     { name: 'Liên hệ', slug: 'lien-he', h1: 'Liên hệ FPT Telecom', status: 'hidden', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: 'Chính sách & Thủ tục', createdBy: 'Trần Thị Bích', createdAt: '01/01/2026 08:00', updatedAt: '05/06/2026 14:30' },
   ]; }
-  SECTIONS() { return [
+  // Section gắn với trang theo TÊN trang (pages[]). Khi đổi tên trang ở Quản lý Trang, state.pageRenames { tênGốc: tênMới } giúp
+  // các Section vẫn bám đúng trang đó (không bị mất liên kết chỉ vì sửa tên).
+  SECTIONS() {
+    const ren = this.state.pageRenames;
+    const base = this.SECTIONS_SEED();
+    return ren ? base.map(s => ({ ...s, pages: (s.pages || []).map(n => ren[n] || n) })) : base;
+  }
+  SECTIONS_SEED() { return [
     { id:17, name:'Khối ưu đãi chiến dịch mùa hè', title:'Ưu đãi chiến dịch mùa hè 2026', code:'khoi-uu-dai-chien-dich-mua-he', pages:['Landing page chiến dịch khuyến mãi Internet cáp quang FPT Telecom mùa hè 2026','Trang chủ','Internet detail sections2','Camera An Ninh FPT','SA detail','Tin tức','FPT Play detail','Thiết bị thông minh'], type:'product_list', status:'active', order:3, blocks:['Block gói cước Internet Giga kèm Combo truyền hình và Camera An Ninh FPT Play Box','Ultrafast'], createdAt:'02/10/2026 08:45' },
     { id:16, name:'Bảng giá gói Internet cá nhân FPT | Nhận thêm camera kèm Cloud', title:'Bảng giá gói Internet cá nhân FPT', code:'bang-gia-goi-internet-ca-nhan-fpt-nhan-them-camera-kem-cloud', pages:['Landing page chiến dịch khuyến mãi Internet cáp quang FPT Telecom mùa hè 2026','Trang chi tiết gói cước Internet Giga kèm Combo truyền hình và Camera An Ninh'], type:'product_list', status:'active', order:2, blocks:['Internet Fam Test'], createdAt:'01/10/2026 09:30' },
     { id:15, name:'Banner ưu đãi dùng chung', title:'Ưu đãi đặc biệt tháng 10',   code:'banner-uu-dai-chung',     pages:['Trang chủ','Internet detail sections2','Camera An Ninh FPT','SA detail','Tin tức'], type:'hero_banner', status:'active', order:1, blocks:['Ultrafast','FPL','Hyperfast','Camera Only','Internet Fam Test','Combo Internet Truyền hình','Block Gói cước Internet Giga'], createdAt:'30/09/2026 10:00' },
@@ -4455,10 +4491,105 @@ class Component extends DCLogic {
   LDP_LIST() {
     return this.state.ldpListData || [
       { id: 1, name: 'Khuyến mãi Internet Tháng 5', tplId: 'internet', tplLabel: 'LDP Internet',         goal: 'Lead Gen',           lv1: 'khuyen-mai',           l2: 'internet-thang-5', url: '/khuyen-mai/internet-thang-5',           startDate: '01/05/26', endDate: '31/05/26', createdBy: 'Hà Linh', createdAt: '28/04/26', lastEdit: '18/05/26', lastEditBy: 'Hà Linh', status: 'publish' },
-      { id: 2, name: 'Sự kiện FPT Play 2026',       tplId: 'sa',       tplLabel: 'LDP SA',               goal: 'Sự kiện / Branding', lv1: 'truyen-hinh-fpt-play',  l2: 'su-kien-2026',     url: '/truyen-hinh-fpt-play/su-kien-2026',     startDate: '01/01/26', endDate: '31/01/26', createdBy: 'Minh Tú', createdAt: '18/12/25', lastEdit: '28/01/26', lastEditBy: 'Minh Tú', status: 'expired' },
+      { id: 2, name: 'Sự kiện FPT Play 2026',       tplId: 'sa',       tplLabel: 'LDP SA',               goal: 'Sự kiện / Branding', lv1: 'su-kien',               l2: 'fpt-play-2026',    url: '/su-kien/fpt-play-2026',                  startDate: '01/01/26', endDate: '31/01/26', createdBy: 'Minh Tú', createdAt: '18/12/25', lastEdit: '28/01/26', lastEditBy: 'Minh Tú', status: 'expired' },
       { id: 3, name: 'Camera AI Tháng 6',           tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-thang-6', url: '/thiet-bi-thong-minh/camera-ai-thang-6', startDate: '01/06/26', endDate: '30/06/26', createdBy: 'Admin User', createdAt: '19/05/26', lastEdit: '02/06/26', lastEditBy: 'Admin',   status: 'publish' },
-      { id: 4, name: 'Wi-Fi 7 Launch',              tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Lead Gen',           lv1: 'internet',              l2: 'wifi-7-launch',    url: '/internet/wifi-7-launch',               startDate: '15/06/26', endDate: '15/07/26', createdBy: 'Minh Tú', createdAt: '30/05/26', lastEdit: '14/06/26', lastEditBy: 'Minh Tú', status: 'draft' },
+      { id: 4, name: 'Wi-Fi 7 Launch',              tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Lead Gen',           lv1: 'khuyen-mai',            l2: 'wifi-7-launch',    url: '/khuyen-mai/wifi-7-launch',               startDate: '15/06/26', endDate: '15/07/26', createdBy: 'Minh Tú', createdAt: '30/05/26', lastEdit: '14/06/26', lastEditBy: 'Minh Tú', status: 'draft' },
+      // LDP Khu vực (ldpType: 'region'): chỉ áp dụng cho khách hàng thuộc Tỉnh/Thành phố + Phường/Xã đã chọn. Bản ghi không có ldpType = LDP thường.
+      { id: 5, name: 'Ưu đãi Internet Phường Bến Thành', tplId: 'internet', tplLabel: 'LDP Internet',     goal: 'Lead Gen',           lv1: 'khuyen-mai',            l2: 'internet-ben-thanh', url: '/khuyen-mai/internet-ben-thanh',        startDate: '01/10/26', endDate: '31/10/26', createdBy: 'Hà Linh', createdAt: '28/09/26', lastEdit: '15/10/26', lastEditBy: 'Hà Linh', status: 'publish', ldpType: 'region', province: 'TP. Hồ Chí Minh', ward: 'Phường Bến Thành' },
+      { id: 6, name: 'Camera AI Phường Hoàn Kiếm',  tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-hoan-kiem', url: '/thiet-bi-thong-minh/camera-ai-hoan-kiem', startDate: '15/11/26', endDate: '15/12/26', createdBy: 'Minh Tú', createdAt: '12/10/26', lastEdit: '16/10/26', lastEditBy: 'Minh Tú', status: 'draft', ldpType: 'region', province: 'Hà Nội', ward: 'Phường Hoàn Kiếm' },
+      { id: 7, name: 'Wi-Fi 7 Phường Hải Châu',     tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Lead Gen',           lv1: 'khuyen-mai',            l2: 'wifi-7-hai-chau',  url: '/khuyen-mai/wifi-7-hai-chau',             startDate: '01/09/26', endDate: '30/11/26', createdBy: 'Hà Linh', createdAt: '25/08/26', lastEdit: '30/09/26', lastEditBy: 'Hà Linh', status: 'hidden', ldpType: 'region', province: 'TP. Đà Nẵng', ward: 'Phường Hải Châu' },
     ];
+  }
+  // Nội dung demo cho phần SEO + chuyển hướng khi mở sửa một LDP có sẵn (bản ghi chưa có thì dùng giá trị suy ra từ tên chiến dịch).
+  LDP_DEMO_CONTENT() {
+    return {
+      1: { metaTitle: 'Khuyến mãi Internet Tháng 5 - FPT Telecom', metaDesc: 'Đăng ký Internet FPT Tháng 5: ưu đãi lắp đặt, tặng tháng cước, miễn phí modem Wi-Fi 6. Nhận tư vấn trong 15 phút.' },
+      2: { metaTitle: 'Sự kiện FPT Play 2026 - Giải trí đỉnh cao', metaDesc: 'Tham gia sự kiện FPT Play 2026: xem trực tiếp, nhận quà độc quyền và ưu đãi gói FPT Play dành riêng cho khách hàng FPT.' },
+      3: { metaTitle: 'Camera AI Tháng 6 - Ưu đãi FPT Camera', metaDesc: 'Trang bị Camera AI nhận diện thông minh, ưu đãi tháng 6: giảm đến 30% thiết bị, miễn phí lắp đặt toàn quốc.' },
+      4: { metaTitle: 'Wi-Fi 7 Launch - Internet siêu tốc FPT Telecom', metaDesc: 'Trải nghiệm Wi-Fi 7 tốc độ vượt trội, độ trễ thấp cùng FPT Telecom. Đăng ký sớm nhận ưu đãi ra mắt.' },
+      5: { metaTitle: 'Internet FPT tại Phường Bến Thành - Ưu đãi tháng 10', metaDesc: 'Khách hàng khu vực Phường Bến Thành, TP. Hồ Chí Minh: lắp Internet FPT tháng 10 nhận ưu đãi cước và lắp đặt trong 24 giờ.' },
+      6: { metaTitle: 'Camera AI tại Phường Hoàn Kiếm - FPT Camera', metaDesc: 'Lắp Camera AI FPT tại Phường Hoàn Kiếm, Hà Nội: giám sát 24/7, cảnh báo thông minh, kỹ thuật viên đến tận nơi.' },
+      7: { metaTitle: 'Wi-Fi 7 tại Phường Hải Châu - FPT Telecom', metaDesc: 'Wi-Fi 7 đã có tại Phường Hải Châu, TP. Đà Nẵng. Đăng ký ngay để nhận ưu đãi dành riêng cho khách hàng khu vực.' },
+    };
+  }
+  // Danh mục demo Tỉnh/Thành phố → Phường/Xã cho "LDP Khu vực" (34 đơn vị cấp tỉnh). Đây là dữ liệu minh hoạ cho prototype, không phải danh mục hành chính chính thức.
+  LDP_REGION_DATA() {
+    return {
+      'Hà Nội': ['Phường Hoàn Kiếm', 'Phường Cửa Nam', 'Phường Ba Đình', 'Phường Ngọc Hà', 'Phường Giảng Võ', 'Phường Hai Bà Trưng', 'Phường Đống Đa', 'Phường Láng', 'Phường Cầu Giấy', 'Phường Yên Hòa', 'Phường Thanh Xuân', 'Phường Hà Đông', 'Xã Đông Anh', 'Xã Sóc Sơn', 'Xã Thanh Trì'],
+      'TP. Hồ Chí Minh': ['Phường Sài Gòn', 'Phường Tân Định', 'Phường Bến Thành', 'Phường Cầu Ông Lãnh', 'Phường Bàn Cờ', 'Phường Xuân Hòa', 'Phường Nhiêu Lộc', 'Phường Chợ Lớn', 'Phường Thủ Đức', 'Phường Tân Sơn Nhất', 'Phường Gia Định', 'Phường Phú Nhuận', 'Phường Bình Thạnh', 'Xã Bình Chánh', 'Xã Củ Chi', 'Xã Hóc Môn', 'Xã Nhà Bè'],
+      'TP. Hải Phòng': ['Phường Hồng Bàng', 'Phường Ngô Quyền', 'Phường Lê Chân', 'Phường Hải An', 'Phường Kiến An', 'Phường Đồ Sơn', 'Phường Thủy Nguyên', 'Xã An Hải'],
+      'TP. Đà Nẵng': ['Phường Hải Châu', 'Phường Hòa Cường', 'Phường Thanh Khê', 'Phường An Khê', 'Phường Sơn Trà', 'Phường Ngũ Hành Sơn', 'Phường Liên Chiểu', 'Phường Cẩm Lệ', 'Phường Hội An', 'Xã Hòa Vang'],
+      'TP. Cần Thơ': ['Phường Ninh Kiều', 'Phường Cái Khế', 'Phường Tân An', 'Phường Bình Thủy', 'Phường Cái Răng', 'Phường Ô Môn', 'Phường Thốt Nốt', 'Xã Phong Điền'],
+      'TP. Huế': ['Phường Thuận Hóa', 'Phường Phú Xuân', 'Phường Hương Thủy', 'Phường Hương Trà', 'Phường Thuận An', 'Xã Phong Điền'],
+      'Tuyên Quang': ['Phường Minh Xuân', 'Phường Nông Tiến', 'Phường An Tường', 'Phường Mỹ Lâm', 'Xã Yên Sơn'],
+      'Lào Cai': ['Phường Lào Cai', 'Phường Cam Đường', 'Phường Yên Bái', 'Phường Nam Cường', 'Phường Sa Pa', 'Xã Bát Xát'],
+      'Thái Nguyên': ['Phường Phan Đình Phùng', 'Phường Gia Sàng', 'Phường Quyết Thắng', 'Phường Phổ Yên', 'Phường Bách Quang', 'Xã Đại Từ'],
+      'Phú Thọ': ['Phường Việt Trì', 'Phường Nông Trang', 'Phường Thanh Miếu', 'Phường Vĩnh Phúc', 'Phường Phúc Yên', 'Phường Hòa Bình'],
+      'Bắc Ninh': ['Phường Bắc Giang', 'Phường Kinh Bắc', 'Phường Võ Cường', 'Phường Từ Sơn', 'Phường Tiên Du', 'Phường Hạp Lĩnh'],
+      'Hưng Yên': ['Phường Phố Hiến', 'Phường Sơn Nam', 'Phường Hồng Châu', 'Phường Thái Bình', 'Phường Trần Lãm', 'Phường Trà Lý'],
+      'Ninh Bình': ['Phường Hoa Lư', 'Phường Nam Hoa Lư', 'Phường Đông Hoa Lư', 'Phường Tam Điệp', 'Phường Phủ Lý', 'Phường Nam Định'],
+      'Quảng Trị': ['Phường Đồng Hới', 'Phường Đồng Sơn', 'Phường Đông Hà', 'Phường Nam Đông Hà', 'Phường Quảng Trị'],
+      'Quảng Ngãi': ['Phường Cẩm Thành', 'Phường Nghĩa Lộ', 'Phường Trương Quang Trọng', 'Phường Tam Kỳ', 'Phường Quảng Phú'],
+      'Gia Lai': ['Phường Quy Nhơn', 'Phường Quy Nhơn Đông', 'Phường Quy Nhơn Nam', 'Phường Pleiku', 'Phường Hội Phú', 'Phường An Khê'],
+      'Khánh Hòa': ['Phường Nha Trang', 'Phường Bắc Nha Trang', 'Phường Tây Nha Trang', 'Phường Nam Nha Trang', 'Phường Cam Ranh', 'Phường Phan Rang'],
+      'Lâm Đồng': ['Phường Xuân Hương - Đà Lạt', 'Phường Cam Ly - Đà Lạt', 'Phường Lâm Viên - Đà Lạt', 'Phường Lang Biang - Đà Lạt', 'Phường 1 Bảo Lộc', 'Phường Phan Thiết'],
+      'Đắk Lắk': ['Phường Buôn Ma Thuột', 'Phường Tân An', 'Phường Tân Lập', 'Phường Thành Nhất', 'Phường Tuy Hòa', 'Phường Phú Yên'],
+      'Đồng Nai': ['Phường Biên Hòa', 'Phường Trấn Biên', 'Phường Tam Hiệp', 'Phường Long Bình', 'Phường Long Khánh', 'Phường Bình Phước'],
+      'Tây Ninh': ['Phường Tân Ninh', 'Phường Bình Minh', 'Phường Ninh Thạnh', 'Phường Long An', 'Phường Tân An', 'Phường Kiến Tường'],
+      'Vĩnh Long': ['Phường Long Châu', 'Phường Phước Hậu', 'Phường Tân Hạnh', 'Phường Bến Tre', 'Phường Phú Khương', 'Phường Trà Vinh'],
+      'Đồng Tháp': ['Phường Cao Lãnh', 'Phường Mỹ Trà', 'Phường Sa Đéc', 'Phường Mỹ Tho', 'Phường Đạo Thạnh', 'Phường Gò Công'],
+      'Cà Mau': ['Phường An Xuyên', 'Phường Tân Thành', 'Phường Lý Văn Lâm', 'Phường Bạc Liêu', 'Phường Vĩnh Trạch', 'Phường Giá Rai'],
+      'An Giang': ['Phường Long Xuyên', 'Phường Mỹ Thới', 'Phường Bình Đức', 'Phường Châu Đốc', 'Phường Rạch Giá', 'Phường Vĩnh Thanh'],
+      'Cao Bằng': ['Phường Thục Phán', 'Phường Nùng Trí Cao', 'Phường Tân Giang', 'Xã Hòa An', 'Xã Trùng Khánh'],
+      'Lạng Sơn': ['Phường Lương Văn Tri', 'Phường Tam Thanh', 'Phường Đông Kinh', 'Phường Kỳ Lừa', 'Xã Cao Lộc'],
+      'Lai Châu': ['Phường Tân Phong', 'Phường Đoàn Kết', 'Xã Phong Thổ', 'Xã Sìn Hồ', 'Xã Tam Đường'],
+      'Điện Biên': ['Phường Điện Biên Phủ', 'Phường Mường Thanh', 'Phường Mường Lay', 'Xã Mường Ảng', 'Xã Tuần Giáo'],
+      'Sơn La': ['Phường Tô Hiệu', 'Phường Chiềng An', 'Phường Chiềng Cơi', 'Phường Mộc Châu', 'Xã Mai Sơn'],
+      'Quảng Ninh': ['Phường Hạ Long', 'Phường Hồng Gai', 'Phường Hà Tu', 'Phường Cẩm Phả', 'Phường Uông Bí', 'Phường Móng Cái 1'],
+      'Thanh Hóa': ['Phường Hạc Thành', 'Phường Đông Quang', 'Phường Đông Sơn', 'Phường Nam Sầm Sơn', 'Phường Bỉm Sơn', 'Xã Hậu Lộc'],
+      'Nghệ An': ['Phường Thành Vinh', 'Phường Trường Vinh', 'Phường Vinh Hưng', 'Phường Vinh Lộc', 'Phường Hoàng Mai', 'Phường Thái Hòa'],
+      'Hà Tĩnh': ['Phường Thành Sen', 'Phường Trần Phú', 'Phường Hà Huy Tập', 'Phường Hồng Lĩnh', 'Phường Sông Trí', 'Xã Cẩm Xuyên'],
+    };
+  }
+  LDP_PROVINCES() { return Object.keys(this.LDP_REGION_DATA()); }
+  // Chuỗi "Phường/Xã, Tỉnh/TP" của một LDP Khu vực (rỗng nếu là LDP thường).
+  ldpRegionLabel(r) {
+    return (r && r.ldpType === 'region') ? [r.ward, r.province].filter(Boolean).join(', ') : '';
+  }
+  // 'dd/mm/yy' (định dạng ngày ở danh sách LDP) → Date; '—'/rỗng → null.
+  ldpParseShortDate(s) {
+    const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(String(s || '').trim());
+    if (!m) return null;
+    const y = +m[3] < 100 ? 2000 + +m[3] : +m[3];
+    return new Date(y, +m[2] - 1, +m[1]);
+  }
+  ldpEffRangeOf(r) {
+    const start = this.ldpParseShortDate(r && r.startDate), end = this.ldpParseShortDate(r && r.endDate);
+    return (start && end) ? { start, end } : null;
+  }
+  // Nhóm "Loại LDP & khu vực áp dụng" bị khoá khi LDP đang chạy (trạng thái publish) — trùng điều kiện khoá URL Slug.
+  ldpTypeLocked() {
+    const r = this.state.ldpEditRow;
+    if (!r) return false;
+    const st = (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
+    return this.ldpSlugLocked(st);
+  }
+  // Giá trị hiện hành của form "Thông tin trang" (bước 2): ô đã sửa trong ldpForm2, chưa sửa thì lấy từ bản ghi đang chỉnh sửa.
+  // Dùng chung cho renderLdpStep2 (hiển thị) và nút "Tiếp theo" (kiểm tra bắt buộc) để hai nơi không lệch nhau.
+  ldpStep2Values() {
+    const f2 = this.state.ldpForm2 || {}, r = this.state.ldpEditRow;
+    const pick = (k, fb) => f2[k] !== undefined ? f2[k] : fb;
+    const demo = (r && this.LDP_DEMO_CONTENT()[r.id]) || {};
+    return {
+      ldpType: pick('ldpType', (r && r.ldpType) || 'normal'),
+      province: pick('province', (r && r.province) || ''),
+      ward: pick('ward', (r && r.ward) || ''),
+      campaignName: pick('campaignName', r ? (r.name || '') : ''),
+      goal: pick('goal', r ? (r.goal || '') : ''),
+      effRange: pick('effRange', r ? this.ldpEffRangeOf(r) : null) || {},
+      metaTitle: pick('metaTitle', r ? (r.metaTitle || demo.metaTitle || ((r.name || '') + ' - FPT Telecom')) : ''),
+      metaDesc: pick('metaDesc', r ? (r.metaDesc || demo.metaDesc || '') : ''),
+    };
   }
   // ── Duyệt LDP: dữ liệu & tiện ích chung ──
   ldpSlugify(s) {
@@ -4473,8 +4604,9 @@ class Component extends DCLogic {
   ldpNormalizePath(path) {
     return (path || '').replace(/\/+/g, '/').replace(/^\/+|\/+$/g, '');
   }
+  // Nhánh Level 1 có sẵn cho LDP = các URL cấp 1 loại "Landing Page" đã tạo ở module Quản lý URL (không còn là danh sách cố định 7 nhánh).
   LDP_FIXED_LV1() {
-    return ['khuyen-mai', 'internet', 'truyen-hinh-fpt-play', 'thiet-bi-thong-minh', 'dich-vu-so', 'tin-tuc', 'lien-he'];
+    return this.URLS().filter(u => u.level === 1 && u.type === 'ldp').map(u => u.slug);
   }
   // Tập slug Level 1 đã hợp lệ = 7 nhánh cố định + các nhánh đã được Super Admin duyệt.
   ldpApprovedLv1Set() {
@@ -4505,7 +4637,7 @@ class Component extends DCLogic {
   //  Cấu trúc 1 cấp (fpt.vn/{slug}) — chỉ áp dụng khi Level 1 là nhánh đã được ISC duyệt (ldpApprovedLv1Set(),
   //           trừ 7 nhánh cố định) → Level 2 tuỳ chọn. Module Duyệt LDP đang tạm ẩn phase này nên nhánh loại
   //           này chưa xuất hiện trong danh sách chọn — logic vẫn giữ để dùng lại khi mở lại module.
-  //  Cấu trúc 2 cấp (fpt.vn/{lv1}/{lv2}) — tuỳ chọn với 1 trong 7 trang danh mục hiện hữu (LDP_FIXED_LV1):
+  //  Cấu trúc 2 cấp (fpt.vn/{lv1}/{lv2}) — tuỳ chọn với 1 URL cấp 1 loại Landing Page ở Quản lý URL (LDP_FIXED_LV1); Level 2 chọn từ các URL cấp 2 đã tạo dưới nhánh đó:
   //           Level 2 KHÔNG bắt buộc nếu nhánh Cấp 1 đó hiện chưa có LDP nào "Đang chạy" (case 1A) — chỉ bắt
   //           buộc nhập thêm khi nhánh đang bị 1 LDP khác chiếm dụng (case 1B, xem needL2 bên dưới).
   //  Chặn xung đột routing — một slug 1 cấp chỉ được gán cho duy nhất 1 LDP "Đang chạy" tại 1 thời điểm:
@@ -4526,7 +4658,7 @@ class Component extends DCLogic {
       const liveAtLv1 = this.ldpLv1LiveLdp(slug1, currentId);
       if (liveAtLv1) {
         return { ok: false, block: true, kind: 'needL2', bad1: true, bad2: false,
-          msg: 'Nhánh Cấp 1 fpt.vn/' + slug1 + ' hiện đang có chiến dịch [' + liveAtLv1.name + '] đang chạy. Vui lòng nhập thêm Slug Cấp 2 (tên trang con) hoặc chọn nhánh khác để không ghi đè lên trang đang chạy.' };
+          msg: 'Nhánh Cấp 1 fpt.vn/' + slug1 + ' hiện đang có chiến dịch [' + liveAtLv1.name + '] đang chạy. Vui lòng chọn thêm Slug Cấp 2 (URL cấp 2 đã tạo ở Quản lý URL) hoặc chọn nhánh khác để không ghi đè lên trang đang chạy.' };
       }
       // Trường hợp 1A: nhánh Cấp 1 hiện không có LDP nào đang chạy → URL 1 cấp (fpt.vn/{slug1}) hợp lệ luôn,
       // không còn bắt buộc nhập thêm Slug Cấp 2 — rơi xuống các bước kiểm tra dùng chung bên dưới (portal/clash)
@@ -4577,6 +4709,537 @@ class Component extends DCLogic {
       { id: 'REQ-0022', ldpId: null, name: 'FPT Play Đỉnh Cao Bóng Đá',    tplId: 'sa',       tplLabel: 'LDP SA',               lv1: 'xem-bong-da',      l2: 'goi-the-thao',  goal: 'Bán gói cước', channel: 'FPT Play',    sections: 9,  submittedBy: 'Minh Tú',    submittedAt: '12/08/26 09:30', attempt: 1, status: 'approved', reviewedBy: 'Super Admin', reviewedAt: '12/08/26 10:05', history: [] },
       { id: 'REQ-0021', ldpId: null, name: 'Camera Gia Đình An Tâm',       tplId: 'camera',   tplLabel: 'LDP Camera AI',        lv1: 'camera-gia-dinh',  l2: 'lap-dat',       goal: 'Lead Gen',     channel: 'FPT Camera',  sections: 8,  submittedBy: 'Admin User', submittedAt: '05/08/26 14:20', attempt: 1, status: 'rejected', reviewedBy: 'Super Admin', reviewedAt: '06/08/26 09:00', reason: 'Đã có nhánh "thiet-bi-thong-minh" bao phủ nhóm camera. Vui lòng đặt trang dưới thiet-bi-thong-minh/camera-gia-dinh.', history: [] },
     ];
+  }
+
+  // ===== URLs (Quản lý URL: URL cấp 1 / cấp 2) =====
+  // Danh mục URL gốc của website fpt.vn, chia 2 cấp:
+  //  • URL cấp 1 (Lv1) — nhánh gốc fpt.vn/{slug}. Có "Loại": 'page' = Trang thường, 'ldp' = Landing Page.
+  //  • URL cấp 2 (Lv2) — nhánh con fpt.vn/{slug cấp 1}/{slug}. KHÔNG có loại riêng, luôn kế thừa loại của URL cấp 1 (pid).
+  // Liên kết với các module khác:
+  //  • Trang thường ⇄ "Mã code (Slug)" của Quản lý Trang, nhập theo định dạng lv1/lv2 (VD truyen-hinh-fpt-play/detail → cấp 1 + cấp 2).
+  //    Đồng bộ 2 chiều: lưu trang → tự tạo/đổi tên URL (urlSyncFromPage); sửa URL → tự cập nhật slug các trang đang dùng (urlCommit).
+  //  • Landing Page → ô "URL Slug" nhánh Level 1 / Level 2 của Quản lý LDP chỉ cho chọn các URL loại Landing Page (LDP_FIXED_LV1, renderLdpStep2).
+  // Dữ liệu ở state.urlData (null = dùng URL_SEED). Cấp 2 lưu pid = id của URL cấp 1. Chỉnh sửa cần quyền "Thay đổi" (urlCanEdit → rbacPerm).
+  // Mỗi URL có cờ active (thiếu = bật). URL ngừng hoạt động không còn hiện trong ô chọn URL Slug Level 1/2 khi tạo Landing Page mới (renderLdpStep2).
+  URL_SEED() { return [
+    // ── Trang thường (đồng bộ từ "Mã code (Slug)" của Quản lý Trang) ──
+    { id: 'u1',  level: 1, slug: 'truyen-hinh-fpt-play', type: 'page', pid: null, createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
+    { id: 'u2',  level: 2, slug: 'detail',               pid: 'u1',                createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
+    { id: 'u3',  level: 1, slug: 'dich-vu-so',           type: 'page', pid: null, createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
+    { id: 'u4',  level: 2, slug: 'detail',               pid: 'u3',                createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
+    { id: 'u5',  level: 1, slug: 'internet-detail',      type: 'page', pid: null, createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
+    { id: 'u6',  level: 2, slug: 'sections2',            pid: 'u5',                createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
+    { id: 'u7',  level: 1, slug: 'internet',             type: 'page', pid: null, createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:25', updatedAt: '20/04/2026 09:40' },
+    { id: 'u8',  level: 2, slug: 'detail2',              pid: 'u7',                createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:25', updatedAt: '26/03/2026 08:26' },
+    { id: 'u9',  level: 1, slug: 'dich-vu-f-safe',       type: 'page', pid: null, createdBy: 'Phạm Thu Hà',   createdAt: '03/02/2026 16:40', updatedAt: '03/02/2026 16:40' },
+    { id: 'u10', level: 1, slug: 'camera-an-ninh',       type: 'page', pid: null, createdBy: 'Phạm Thu Hà',   createdAt: '03/02/2026 16:33', updatedAt: '03/02/2026 16:33' },
+    { id: 'u11', level: 1, slug: 'home',                 type: 'page', pid: null, createdBy: 'Admin User',    createdAt: '01/01/2026 08:00', updatedAt: '01/01/2026 08:00' },
+    { id: 'u12', level: 1, slug: 'tin-tuc',              type: 'page', pid: null, createdBy: 'Admin User',    createdAt: '01/01/2026 08:00', updatedAt: '01/01/2026 08:00' },
+    { id: 'u13', level: 1, slug: 'lien-he',              type: 'page', pid: null, createdBy: 'Trần Thị Bích', createdAt: '01/01/2026 08:00', updatedAt: '01/01/2026 08:00' },
+    // URL đã tạo sẵn cho Trang thường nhưng chưa có trang nào dùng (hiện ở ô gợi ý của "Mã code (Slug)")
+    { id: 'u21', level: 2, slug: 'ca-nhan',              pid: 'u7',                createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:10', updatedAt: '20/04/2026 09:10' },
+    { id: 'u22', level: 2, slug: 'gia-dinh',             pid: 'u7',                createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:20', updatedAt: '20/04/2026 09:20' },
+    { id: 'u23', level: 2, slug: 'game-thu',             pid: 'u7',                createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:30', updatedAt: '20/04/2026 09:30' },
+    { id: 'u24', level: 2, slug: 'doanh-nghiep',         pid: 'u7',                active: false, createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:40', updatedAt: '20/04/2026 09:40' },
+    { id: 'u25', level: 1, slug: 'fpt-camera',           type: 'page', pid: null, createdBy: 'Phạm Thu Hà',   createdAt: '12/04/2026 10:00', updatedAt: '12/04/2026 10:00' },
+    { id: 'u26', level: 1, slug: 'fpt-smart-home',       type: 'page', pid: null, active: false, createdBy: 'Phạm Thu Hà',   createdAt: '12/04/2026 10:05', updatedAt: '12/04/2026 10:05' },
+    // ── Landing Page (chọn ở ô "URL Slug" nhánh Level 1 / Level 2 của Quản lý LDP) ──
+    { id: 'u14', level: 1, slug: 'khuyen-mai',           type: 'ldp', pid: null,  createdBy: 'Hà Linh',       createdAt: '28/04/2026 09:00', updatedAt: '12/06/2026 11:20' },
+    { id: 'u15', level: 2, slug: 'internet-thang-5',     pid: 'u14',               createdBy: 'Hà Linh',       createdAt: '28/04/2026 09:05', updatedAt: '28/04/2026 09:05' },
+    { id: 'u16', level: 2, slug: 'wifi-7-launch',        pid: 'u14',               createdBy: 'Minh Tú',       createdAt: '30/05/2026 14:10', updatedAt: '30/05/2026 14:10' },
+    { id: 'u27', level: 2, slug: 'uu-dai-sinh-vien',     pid: 'u14',               active: false, createdBy: 'Hà Linh',       createdAt: '12/06/2026 11:00', updatedAt: '12/06/2026 11:00' },
+    { id: 'u28', level: 2, slug: 'combo-gia-dinh',       pid: 'u14',               createdBy: 'Hà Linh',       createdAt: '12/06/2026 11:20', updatedAt: '12/06/2026 11:20' },
+    { id: 'u17', level: 1, slug: 'thiet-bi-thong-minh',  type: 'ldp', pid: null,  createdBy: 'Admin User',    createdAt: '19/05/2026 10:30', updatedAt: '19/05/2026 10:35' },
+    { id: 'u18', level: 2, slug: 'camera-ai-thang-6',    pid: 'u17',               createdBy: 'Admin User',    createdAt: '19/05/2026 10:35', updatedAt: '19/05/2026 10:35' },
+    { id: 'u19', level: 1, slug: 'su-kien',              type: 'ldp', pid: null,  createdBy: 'Minh Tú',       createdAt: '18/12/2025 15:00', updatedAt: '18/12/2025 15:05' },
+    { id: 'u20', level: 2, slug: 'fpt-play-2026',        pid: 'u19',               createdBy: 'Minh Tú',       createdAt: '18/12/2025 15:05', updatedAt: '18/12/2025 15:05' },
+    // URL cấp 2 của các LDP Khu vực demo
+    { id: 'u29', level: 2, slug: 'internet-ben-thanh',   pid: 'u14',               createdBy: 'Hà Linh',       createdAt: '28/09/2026 09:00', updatedAt: '28/09/2026 09:00' },
+    { id: 'u30', level: 2, slug: 'camera-ai-hoan-kiem',  pid: 'u17',               createdBy: 'Minh Tú',       createdAt: '12/10/2026 14:30', updatedAt: '12/10/2026 14:30' },
+    { id: 'u31', level: 2, slug: 'wifi-7-hai-chau',      pid: 'u14',               createdBy: 'Hà Linh',       createdAt: '25/08/2026 10:15', updatedAt: '25/08/2026 10:15' },
+  ]; }
+  URLS() { return this.state.urlData || this.URL_SEED(); }
+  URL_TYPES() { return [{ value: 'page', label: 'Trang thường' }, { value: 'ldp', label: 'Landing Page' }]; }
+  URL_SLUG_RE() { return /^[a-z0-9]+(?:-[a-z0-9]+)*$/; }
+  // Quyền "Thay đổi" module Quản lý URL của vai trò đang đăng nhập (ma trận Phân quyền tính năng). Không có quyền → chỉ xem: ẩn Tạo/Sửa.
+  urlCanEdit() { return this.rbacPerm('Quản lý URL', this.state.currentRole || 'Super Admin').edit; }
+  urlNode(id, all) { return (all || this.URLS()).find(n => n.id === id) || null; }
+  urlIsActive(n) { return !!n && n.active !== false; }
+  // Đường dẫn đầy đủ (không có "fpt.vn/"): cấp 1 = slug, cấp 2 = slug cha + "/" + slug.
+  urlFull(n, all) {
+    if (!n) return '';
+    if (n.level === 1) return n.slug;
+    const p = this.urlNode(n.pid, all);
+    return (p ? p.slug : '?') + '/' + n.slug;
+  }
+  // Cấp 2 không lưu loại — lấy theo URL cấp 1 cha.
+  urlTypeOf(n, all) {
+    if (!n) return 'page';
+    if (n.level === 1) return n.type || 'page';
+    const p = this.urlNode(n.pid, all);
+    return (p && p.type) || 'page';
+  }
+  // Các nhóm hiển thị dạng cây: URL cấp 1 mới chỉnh sửa nhất lên đầu (thêm/đổi URL cấp 2 cũng làm mới ngày chỉnh sửa của cấp 1 cha),
+  // URL cấp 2 trong nhóm xếp theo ngày tạo.
+  urlGroups(all) {
+    const ts = s => { const d = this.adParseDate(s); return d ? d.getTime() : 0; };
+    return all.filter(n => n.level === 1)
+      .sort((a, b) => ts(b.updatedAt) - ts(a.updatedAt) || ts(b.createdAt) - ts(a.createdAt))
+      .map(p => ({ p, kids: all.filter(n => n.level === 2 && n.pid === p.id).sort((a, b) => ts(a.createdAt) - ts(b.createdAt) || a.slug.localeCompare(b.slug)) }));
+  }
+  // Bản ghi đang dùng đúng URL này: Landing Page → LDP có lv1/l2 khớp; Trang thường → trang có Mã code (Slug) = đường dẫn.
+  urlUsage(n, all) {
+    all = all || this.URLS();
+    const full = this.urlFull(n, all);
+    if (this.urlTypeOf(n, all) === 'ldp') {
+      const stOf = r => (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
+      return this.LDP_LIST().filter(r => this.ldpNormalizePath((r.lv1 || '') + (r.l2 ? '/' + r.l2 : '')) === full).map(r => ({ kind: 'ldp', name: r.name, status: stOf(r) }));
+    }
+    return this.PAGES().filter(p => this.ldpNormalizePath(p.slug) === full).map(p => ({ kind: 'page', name: p.name }));
+  }
+  // Như urlUsage nhưng URL cấp 1 cộng thêm mọi URL cấp 2 con (đổi loại / đổi slug cấp 1 sẽ kéo theo cả nhánh).
+  urlUsageDeep(n, all) {
+    all = all || this.URLS();
+    const self = this.urlUsage(n, all);
+    if (n.level !== 1) return self;
+    return all.filter(c => c.level === 2 && c.pid === n.id).reduce((acc, c) => acc.concat(this.urlUsage(c, all)), self);
+  }
+  urlUsageLabel(u) { return (u.kind === 'ldp' ? 'LDP · ' : 'Trang · ') + u.name; }
+  // Chuẩn hoá khi gõ "Mã code (Slug)" của trang: cho phép "/" ngăn cấp, mỗi cấp tự bỏ dấu / chữ hoa / khoảng trắng → gạch ngang.
+  urlSlugifyPath(raw) {
+    return String(raw || '').split('/').map(s => this.ldpSlugify(s)).join('/').replace(/\/{2,}/g, '/').replace(/^\//, '');
+  }
+  // Kiểm tra "Mã code (Slug)" của trang theo định dạng lv1/lv2 (tối đa 2 cấp). selfSlug = slug hiện tại của trang đang sửa (bỏ qua khi tìm trùng).
+  // Trả về { ok, msg } hoặc, khi hợp lệ, thêm path / l1 / l2 / lv1Exists / lv2Exists để hiện bản xem trước đồng bộ sang Quản lý URL.
+  urlCheckPageSlug(raw, selfSlug) {
+    const segs = String(raw || '').split('/').map(s => s.replace(/-+$/, '')).filter(Boolean);
+    if (!segs.length) return { ok: false, empty: true };
+    if (segs.length > 2) return { ok: false, msg: 'Chỉ hỗ trợ tối đa 2 cấp theo định dạng lv1/lv2 (VD: truyen-hinh-fpt-play/detail).' };
+    if (segs.some(s => !this.URL_SLUG_RE().test(s))) return { ok: false, msg: 'Mỗi cấp chỉ gồm chữ thường không dấu, số và dấu gạch ngang (VD: truyen-hinh-fpt-play).' };
+    const path = segs.join('/');
+    const self = selfSlug ? this.ldpNormalizePath(selfSlug) : null;
+    const dup = this.PAGES().find(p => { const pp = this.ldpNormalizePath(p.slug); return pp === path && pp !== self; });
+    if (dup) return { ok: false, msg: 'Mã code (Slug) "' + path + '" đã được dùng bởi trang "' + dup.name + '".' };
+    const all = this.URLS();
+    const lv1 = all.find(n => n.level === 1 && n.slug === segs[0]);
+    if (lv1 && lv1.type === 'ldp') return { ok: false, msg: 'Nhánh cấp 1 "' + segs[0] + '" thuộc loại Landing Page nên không dùng được cho Trang thường. Vui lòng nhập slug cấp 1 khác.' };
+    const lv2 = (lv1 && segs[1]) ? all.find(n => n.level === 2 && n.pid === lv1.id && n.slug === segs[1]) : null;
+    return { ok: true, path, l1: segs[0], l2: segs[1] || '', lv1Exists: !!lv1, lv2Exists: !!lv2 };
+  }
+  // Quản lý Trang → Quản lý URL: trả về danh sách URL mới sau khi lưu trang có Mã code (Slug) đổi từ oldPath ('' nếu trang mới) sang newPath.
+  //  • URL đích đã có → dùng lại, không tạo thêm. Chưa có → tạo mới (cấp 1 loại Trang thường + cấp 2 nếu có).
+  //  • Đang sửa slug 1 trang: nếu URL cũ của riêng trang đó (cấp 2, hoặc cấp 1 không có URL con) chưa bị URL khác chiếm chỗ thì đổi tên / chuyển nhánh
+  //    chính URL cũ thay vì để lại bản cũ và tạo thêm bản mới — đúng nghĩa "sửa Mã code (Slug) → URL tự cập nhật theo".
+  urlSyncFromPage(all, oldPath, newPath, by, now) {
+    const list = all.map(n => ({ ...n }));
+    const lv1Of = slug => list.find(n => n.level === 1 && n.slug === slug);
+    const lv2Of = (pid, slug) => list.find(n => n.level === 2 && n.pid === pid && n.slug === slug);
+    const nextId = () => 'u' + (list.reduce((m, n) => Math.max(m, parseInt(String(n.id).slice(1), 10) || 0), 0) + 1);
+    const [n1, n2] = newPath.split('/');
+    const [o1, o2] = oldPath ? oldPath.split('/') : [];
+    const oldL1 = o1 ? lv1Of(o1) : null;
+    const oldNode = oldL1 ? (o2 ? lv2Of(oldL1.id, o2) : oldL1) : null;
+    let L1 = lv1Of(n1);
+    if (n2 === undefined) {                                   // đích là URL cấp 1
+      if (L1) return list;
+      if (oldNode && oldNode.level === 1 && !list.some(c => c.level === 2 && c.pid === oldNode.id)) { oldNode.slug = n1; oldNode.updatedAt = now; return list; }
+      list.push({ id: nextId(), level: 1, slug: n1, type: 'page', pid: null, active: true, createdBy: by, createdAt: now, updatedAt: now });
+      return list;
+    }
+    if (!L1) { L1 = { id: nextId(), level: 1, slug: n1, type: 'page', pid: null, active: true, createdBy: by, createdAt: now, updatedAt: now }; list.push(L1); }
+    if (lv2Of(L1.id, n2)) return list;                        // đích là URL cấp 2 đã có
+    if (oldNode && oldNode.level === 2) {                     // chuyển / đổi tên URL cấp 2 cũ
+      const oldParent = list.find(n => n.id === oldNode.pid);
+      oldNode.slug = n2; oldNode.pid = L1.id; oldNode.updatedAt = now; L1.updatedAt = now;
+      if (oldParent) oldParent.updatedAt = now;
+      return list;
+    }
+    list.push({ id: nextId(), level: 2, slug: n2, pid: L1.id, active: true, createdBy: by, createdAt: now, updatedAt: now });
+    L1.updatedAt = now;
+    return list;
+  }
+  // Quản lý URL → Quản lý Trang / Quản lý LDP: ghi danh sách URL mới rồi đẩy thay đổi slug sang mọi trang / LDP đang dùng URL đó.
+  // Mỗi trang / LDP được nhận diện bằng đường dẫn CŨ → tìm nút URL tương ứng ở danh sách cũ → lấy đường dẫn MỚI của đúng nút đó ở danh sách mới
+  // (nên đổi tên URL cấp 1 kéo theo toàn bộ URL cấp 2 con, chuyển URL cấp 2 sang cha khác cũng đi theo). extra = state khác cần ghi cùng lúc.
+  urlCommit(prev, next, extra) {
+    const nodeAt = (list, a, b) => {
+      const l1 = list.find(n => n.level === 1 && n.slug === a);
+      if (!l1) return null;
+      return b ? (list.find(n => n.level === 2 && n.pid === l1.id && n.slug === b) || null) : l1;
+    };
+    const now = this.nowStr();
+    const renamed = {};
+    let pagesChanged = 0, ldpChanged = 0;
+    const pages = this.PAGES().map(p => {
+      const cur = this.ldpNormalizePath(p.slug);
+      const [a, b] = cur.split('/');
+      const node = nodeAt(prev, a, b);
+      if (!node || this.urlTypeOf(node, prev) !== 'page') return p;
+      const np = this.urlFull(next.find(n => n.id === node.id), next);
+      if (!np || np === cur) return p;
+      pagesChanged++; renamed[p.slug] = np;
+      return { ...p, slug: np, updatedAt: now };
+    });
+    const ldps = this.LDP_LIST().map(r => {
+      const node = nodeAt(prev, r.lv1 || '', r.l2 || '');
+      if (!node || this.urlTypeOf(node, prev) !== 'ldp') return r;
+      const full = this.urlFull(next.find(n => n.id === node.id), next);
+      const [a, b] = full.split('/');
+      if (a === (r.lv1 || '') && (b || '') === (r.l2 || '')) return r;
+      ldpChanged++;
+      return { ...r, lv1: a, l2: b || '', url: '/' + full, lastEdit: this.ldpNow(), lastEditBy: 'Admin User' };
+    });
+    const patch = { urlData: next, ...(extra || {}) };
+    if (pagesChanged) {
+      patch.pagesData = pages;
+      const m = { ...(this.state.pageActiveMap || {}) };
+      Object.keys(renamed).forEach(o => { if (m[o] !== undefined) { m[renamed[o]] = m[o]; delete m[o]; } });
+      patch.pageActiveMap = m;
+    }
+    if (ldpChanged) patch.ldpListData = ldps;
+    this.setState(patch);
+    return { pages: pagesChanged, ldps: ldpChanged };
+  }
+  openUrlEditor(r) {
+    if (!this.urlCanEdit()) { this.toast('warning', 'Không có quyền chỉnh sửa', 'Tài khoản của bạn chỉ được xem Quản lý URL. Liên hệ Super Admin để được cấp quyền "Thay đổi".'); return; }
+    this.setState({
+      urlEditor: r || null, urlTried: false,
+      urlDraft: r ? { level: r.level, slug: r.slug, type: r.type || '', pid: r.pid || '', active: this.urlIsActive(r) } : { level: 0, slug: '', type: '', pid: '', active: true },
+    });
+  }
+  // Bật/tắt nhanh ở cột "Hoạt động" của bảng. Không đổi ngày chỉnh sửa (tránh nhóm cấp 1 tự nhảy lên đầu bảng khi bấm công tắc).
+  urlSetActive(id, v) {
+    if (!this.urlCanEdit()) return;
+    const n = this.urlNode(id);
+    if (!n) return;
+    this.setState({ urlData: this.URLS().map(x => x.id === id ? { ...x, active: v } : x) });
+    this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'URL "' + this.urlFull(n) + '".');
+  }
+  closeUrlEditor() { this.setState({ urlEditor: undefined, urlDraft: undefined, urlTried: false }); }
+  saveUrl(r, d, slug) {
+    const all = this.URLS();
+    const now = this.nowStr(); const by = 'Admin User';
+    const next = all.map(n => ({ ...n }));
+    const touch = id => { const n = next.find(x => x.id === id); if (n) n.updatedAt = now; };
+    const level = r ? r.level : d.level;
+    let saved;
+    if (!r) {
+      const id = 'u' + (next.reduce((m, n) => Math.max(m, parseInt(String(n.id).slice(1), 10) || 0), 0) + 1);
+      saved = level === 1
+        ? { id, level: 1, slug, type: d.type, pid: null, active: d.active !== false, createdBy: by, createdAt: now, updatedAt: now }
+        : { id, level: 2, slug, pid: d.pid, active: d.active !== false, createdBy: by, createdAt: now, updatedAt: now };
+      next.push(saved);
+      if (level === 2) touch(d.pid);
+    } else {
+      saved = next.find(x => x.id === r.id);
+      const oldPid = saved.pid;
+      saved.slug = slug; saved.updatedAt = now; saved.active = d.active !== false;
+      if (level === 1) saved.type = d.type;
+      else { saved.pid = d.pid; touch(d.pid); if (oldPid) touch(oldPid); }
+    }
+    const res = this.urlCommit(all, next, { urlEditor: undefined, urlDraft: undefined, urlTried: false });
+    const synced = [res.pages ? res.pages + ' trang' : '', res.ldps ? res.ldps + ' Landing Page' : ''].filter(Boolean).join(' và ');
+    this.toast('success', r ? 'Đã cập nhật' : 'Đã tạo',
+      (r ? 'URL "' : 'URL cấp ' + level + ' "') + this.urlFull(saved, next) + (r ? '" đã được cập nhật.' : '" đã được tạo.') + (synced ? ' Đã đồng bộ ' + synced + ' đang dùng URL này.' : ''));
+  }
+
+  renderUrls() {
+    if (this.state.urlEditor !== undefined && this.urlCanEdit()) return this.renderUrlEditor(this.state.urlEditor);
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const canEdit = this.urlCanEdit();
+    const all = this.URLS();
+    const q = (this.state.urlSearch || '').toLowerCase().trim();
+    const typeF = this.state.urlTypeFilter || 'all';
+    const statusF = this.state.urlStatusFilter || 'all';
+    const creatorF = this.state.urlCreatorFilter || 'all';
+    // Lọc theo cây. Từ khóa: URL cấp 1 khớp → giữ cả nhánh con; chỉ URL cấp 2 khớp → giữ thêm URL cấp 1 cha để không mất ngữ cảnh phân cấp.
+    // Trạng thái / Người tạo lọc theo đúng từng dòng (URL cấp 2 không kế thừa của cấp 1): dòng cha chỉ hiện làm ngữ cảnh khi có con khớp.
+    const attrOk = n => (statusF === 'all' || (statusF === 'active') === this.urlIsActive(n)) && (creatorF === 'all' || n.createdBy === creatorF);
+    const qOk = n => !q || this.urlFull(n, all).toLowerCase().includes(q);
+    const data = [];
+    this.urlGroups(all).forEach(({ p, kids }) => {
+      if (typeF !== 'all' && p.type !== typeF) return;
+      const pHit = qOk(p);
+      const keepKids = kids.filter(k => attrOk(k) && (pHit || qOk(k)));
+      if ((pHit && attrOk(p)) || keepKids.length) data.push(p, ...keepKids);
+    });
+    const creatorOptions = [{ value: 'all', label: 'Tất cả người tạo' },
+      ...[...new Set(all.map(n => n.createdBy).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi')).map(v => ({ value: v, label: v }))];
+    const statusOptions = [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }];
+    const pg = this.state.urls_pg || 1;
+    const sz = this.state.urls_sz || 10;
+    const startIdx = (pg - 1) * sz;
+    const sliced = this.sliceData(data, 'urls');
+    const idxMap = new Map(sliced.map((r, i) => [r.id, startIdx + i + 1]));
+    const kidCount = id => all.filter(n => n.level === 2 && n.pid === id).length;
+    const muted = { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' };
+    const typeBadge = t => h(DS.Badge, { theme: t === 'ldp' ? 'brand' : 'info' }, t === 'ldp' ? 'Landing Page' : 'Trang thường');
+    const treeCell = r => h('div', { style: { display: 'flex', alignItems: 'center' } },
+      r.level === 2 && h('span', { style: { color: 'var(--color-text-subtle)', marginRight: 6, fontFamily: 'var(--font-dev)', fontSize: 13 } }, '└─'),
+      h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 13, fontWeight: r.level === 1 ? 700 : 500 } }, r.slug)
+    );
+    const usageCell = r => {
+      const u = this.urlUsage(r, all);
+      if (!u.length) return h('span', { style: { ...muted, fontStyle: 'italic' } }, (r.level === 1 && kidCount(r.id)) ? '—' : 'Chưa sử dụng');
+      return h(FptChipList, { theme: 'neutral', max: 2, list: u.map(x => this.urlUsageLabel(x)) });
+    };
+    const columns = [
+      { key: 'idx', header: '#', width: 44, render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)' } }, idxMap.get(r.id)) },
+      { key: 'slug', header: 'Slug URL', width: 230, render: (_, r) => treeCell(r) },
+      { key: 'type', header: 'Loại', width: 130, render: (_, r) => r.level === 1 ? typeBadge(r.type) : null },
+      { key: 'path', header: 'Đường dẫn', width: 300, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, 'fpt.vn/' + this.urlFull(r, all)) },
+      { key: 'kids', header: 'URL con', width: 90, align: 'center', render: (_, r) => r.level === 1
+          ? (kidCount(r.id) ? h(DS.Badge, { theme: 'neutral' }, String(kidCount(r.id))) : h('span', { style: { ...muted, fontStyle: 'italic' } }, 'Trống'))
+          : null },
+      { key: 'usage', header: 'Đang dùng bởi', width: 250, render: (_, r) => usageCell(r) },
+      { key: 'createdBy', header: 'Người tạo', width: 150, render: (_, r) => h('div', { style: { fontSize: 12, whiteSpace: 'nowrap' } },
+          h('div', { style: { fontWeight: 600 } }, r.createdBy || '—'),
+          r.createdAt ? h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, r.createdAt) : null) },
+      { key: 'updatedAt', header: 'Ngày chỉnh sửa', width: 148, render: (_, r) => h('span', { style: muted }, r.updatedAt || '—') },
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
+          const isOn = this.urlIsActive(r);
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-url-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', disabled: !canEdit,
+              onChange: v => this.urlSetActive(r.id, v) }));
+        } },
+      { key: 'act', header: 'Thao tác', width: 60, align: 'right', render: (_, r) => canEdit
+          ? this.rowActions([{ icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openUrlEditor(r) }])
+          : h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
+              h(DS.IconButton, { icon: 'lock-01-line', label: 'Bạn không có quyền chỉnh sửa', title: 'Bạn không có quyền chỉnh sửa', level: 'tertiary', size: 'sm', disabled: true })) },
+    ];
+    const typeLabel = { page: 'Trang thường', ldp: 'Landing Page' };
+    return this.listCard(
+      this.toolbar(
+        h('div', { style: { display: 'flex', gap: 8, flex: '1 1 auto', alignItems: 'center', flexWrap: 'wrap' } },
+          h('div', { style: { flex: '1 1 260px', maxWidth: 320 } }, h(DS.Input, { placeholder: 'Tìm theo slug / đường dẫn…', leadingIcon: 'search-medium-line', value: this.state.urlSearch || '', onChange: e => this.setState({ urlSearch: e && e.target ? e.target.value : e, urls_pg: 1 }) })),
+          h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
+            options: [{ value: 'all', label: 'Tất cả loại' }, ...this.URL_TYPES()],
+            value: typeF,
+            onChange: v => this.setState({ urlTypeFilter: v, urls_pg: 1 })
+          })),
+          h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, {
+            options: statusOptions,
+            value: statusF,
+            onChange: v => this.setState({ urlStatusFilter: v, urls_pg: 1 })
+          })),
+          h('div', { style: { width: 190, flexShrink: 0 } }, h(DS.Select, {
+            options: creatorOptions,
+            value: creatorF,
+            searchable: true, searchPlaceholder: 'Tìm người tạo…',
+            onChange: v => this.setState({ urlCreatorFilter: v, urls_pg: 1 })
+          }))
+        ),
+        canEdit ? h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openUrlEditor(null) }, 'Tạo URL') : null
+      ),
+      canEdit ? null : h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)', fontSize: 12.5, color: 'var(--color-text-muted)' } },
+        h(DS.Icon, { name: 'lock-01-line', size: 15, color: 'var(--color-text-subtle)' }),
+        h('span', null, 'Bạn đang ở chế độ chỉ xem — vai trò ', h('strong', null, this.state.currentRole || 'Super Admin'), ' chưa được cấp quyền "Thay đổi" cho Quản lý URL. Liên hệ Super Admin để được cấp quyền trong mục Phân quyền tính năng.')
+      ),
+      this.filterChipsBar([
+        (this.state.urlSearch || '') && this.filterChip('Tìm: ' + this.state.urlSearch, 'neutral', () => this.setState({ urlSearch: '', urls_pg: 1 })),
+        typeF !== 'all' && this.filterChip('Loại: ' + (typeLabel[typeF] || typeF), 'brand', () => this.setState({ urlTypeFilter: 'all', urls_pg: 1 })),
+        statusF !== 'all' && this.filterChip('Trạng thái: ' + (statusOptions.find(o => o.value === statusF) || {}).label, 'brand', () => this.setState({ urlStatusFilter: 'all', urls_pg: 1 })),
+        creatorF !== 'all' && this.filterChip('Người tạo: ' + creatorF, 'brand', () => this.setState({ urlCreatorFilter: 'all', urls_pg: 1 })),
+      ]),
+      data.length ? this.tbl(columns, sliced, 'id', r => this.openUrlDetail(r)) : this.empty(all.length ? 'Không tìm thấy URL phù hợp.' : 'Chưa có URL nào.'),
+      data.length ? this.renderPagBar(data.length, 'urls', 'URL') : null
+    );
+  }
+
+  openUrlDetail(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const all = this.URLS();
+    const full = this.urlFull(r, all);
+    const parent = r.level === 2 ? this.urlNode(r.pid, all) : null;
+    const kids = r.level === 1 ? all.filter(n => n.level === 2 && n.pid === r.id) : [];
+    const usage = this.urlUsage(r, all);
+    const mono = (t, color) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: color || 'var(--color-text)' } }, t);
+    const rows = [this.detailRow('Cấp URL', 'Cấp ' + r.level)];
+    if (r.level === 1) {
+      rows.push(this.detailRow('Slug cấp 1', mono(r.slug)));
+      rows.push(this.detailRow('Loại', h(DS.Badge, { theme: r.type === 'ldp' ? 'brand' : 'info' }, r.type === 'ldp' ? 'Landing Page' : 'Trang thường')));
+    } else {
+      rows.push(this.detailRow('Slug cha', mono(parent ? parent.slug : '—')));
+      rows.push(this.detailRow('Slug cấp 2', mono(r.slug)));
+    }
+    rows.push(this.detailRow('Đường dẫn', mono('fpt.vn/' + full, 'var(--color-accent-text)')));
+    rows.push(this.detailRow('Trạng thái', this.statusBadge(this.urlIsActive(r) ? 'active' : 'inactive')));
+    if (r.level === 1) {
+      rows.push(this.detailRow('Danh sách URL con', kids.length
+        ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } }, kids.map(c => h('div', { key: c.id, style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 } },
+            mono('└─ ' + c.slug), this.statusBadge(this.urlIsActive(c) ? 'active' : 'inactive'))))
+        : h('span', { style: { fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Trống — chưa có URL cấp 2')));
+    }
+    rows.push(this.detailRow('Đang dùng bởi', usage.length
+      ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, usage.map((u, i) => h('div', { key: i }, this.urlUsageLabel(u))))
+      : h('span', { style: { fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, (r.level === 1 && kids.length) ? '—' : 'Chưa sử dụng')));
+    rows.push(this.detailRow('Người tạo', r.createdBy), this.detailRow('Ngày tạo', r.createdAt), this.detailRow('Ngày chỉnh sửa', r.updatedAt));
+    this.openDrawer({ title: full, subtitle: 'Chi tiết URL cấp ' + r.level, width: 480,
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } }, rows),
+      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
+        this.urlCanEdit() ? h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openUrlEditor(r); } }, 'Chỉnh sửa') : null
+      )
+    });
+  }
+
+  renderUrlEditor(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const all = this.URLS();
+    const isNew = !r;
+    const tried = !!this.state.urlTried;
+    const d = this.state.urlDraft || { level: 0, slug: '', type: '', pid: '', active: true };
+    const setD = patch => this.setState(s => ({ urlDraft: { ...(s.urlDraft || {}), ...patch } }));
+    const level = isNew ? (d.level || 0) : r.level;
+    const slug = String(d.slug || '').replace(/-+$/, '');
+    const parent = level === 2 ? this.urlNode(d.pid, all) : null;
+    const children = (r && r.level === 1) ? all.filter(n => n.level === 2 && n.pid === r.id) : [];
+    const usedBy = r ? this.urlUsageDeep(r, all) : [];
+    // Đang có LDP "Đang chạy" dùng URL này → khoá slug / nhánh cha như ô URL Slug ở Quản lý LDP (đổi sẽ làm đổi đường dẫn trang đang chạy).
+    const liveLdp = usedBy.find(u => u.kind === 'ldp' && u.status === 'publish');
+    const mono = { fontFamily: 'var(--font-dev)' };
+    const req = t => h(React.Fragment, null, t, h('span', { style: { color: 'var(--color-danger)' } }, ' *'));
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+        h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
+      ),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
+    );
+    const hintBox = (msg, icon) => h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 8, background: 'var(--color-accent-bg)', color: 'var(--color-accent-text)', fontSize: 12 } },
+      h(DS.Icon, { name: icon || 'info-circle-line', size: 14, style: { flexShrink: 0, marginTop: 1 } }), h('span', null, msg));
+    const prefixBox = txt => h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 12px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13, fontFamily: 'var(--font-dev)', color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0, maxWidth: '55%', overflow: 'hidden', textOverflow: 'ellipsis' } }, txt);
+
+    // ── Kiểm tra (tính lại mỗi lần render → lỗi tự biến mất khi người dùng sửa xong, CLAUDE.md §14). Báo lỗi MỌI trường cùng lúc khi bấm Lưu. ──
+    const errs = {};
+    if (!level) errs.level = 'Vui lòng chọn cấp URL cần tạo.';
+    if (level === 1 && !d.type) errs.type = 'Trường bắt buộc — vui lòng chọn loại.';
+    if (level === 2 && !d.pid) errs.pid = 'Trường bắt buộc — vui lòng chọn Slug cha.';
+    if (level) {
+      if (!slug) errs.slug = FPT_REQ_MSG;
+      else if (!this.URL_SLUG_RE().test(slug)) errs.slug = 'Slug chỉ gồm chữ thường không dấu, số và dấu gạch ngang (VD: truyen-hinh-fpt-play).';
+      else if (level === 1 && all.some(n => n.level === 1 && (!r || n.id !== r.id) && n.slug === slug)) errs.slug = 'Slug cấp 1 "' + slug + '" đã tồn tại. Vui lòng nhập slug khác.';
+      else if (level === 2 && d.pid && all.some(n => n.level === 2 && n.pid === d.pid && (!r || n.id !== r.id) && n.slug === slug)) errs.slug = 'Slug cấp 2 "' + slug + '" đã tồn tại trong nhánh "' + (parent ? parent.slug : '') + '". Vui lòng nhập slug khác.';
+    }
+    // Lỗi định dạng / trùng hiện ngay khi gõ; lỗi "bắt buộc" + ô chọn chỉ hiện sau khi bấm Lưu.
+    const showErr = k => !!errs[k] && (tried || (k === 'slug' && errs.slug !== FPT_REQ_MSG));
+    const errAttr = k => ({ 'data-url-err': showErr(k) ? '1' : undefined });
+    const compBox = (k, node) => h('div', null,
+      h('div', { className: showErr(k) ? 'fpt-req-box-err' : undefined, style: showErr(k) ? { padding: 2 } : undefined }, node),
+      showErr(k) && h('div', { className: 'fpt-req-err-msg' }, errs[k]));
+
+    // ── 1. Cấp URL: CHỈ hiện ở bước tạo mới (bắt buộc chọn Lv1 / Lv2 để điều hướng form tương ứng). Khi sửa, cấp theo bản ghi nên không dựng thẻ này
+    //    (tiêu đề trang + tên các thẻ "Thông tin URL cấp N" đã nêu rõ cấp) và các thẻ sau đánh số lại từ 1. ──
+    const levelCard = (lv, icon, title, desc) => {
+      const on = level === lv;
+      const pick = () => setD({ level: lv });
+      return h('div', {
+        key: 'lv' + lv, role: 'radio', 'aria-checked': on, tabIndex: 0, onClick: pick,
+        onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } },
+        style: { display: 'flex', alignItems: 'flex-start', gap: 12, padding: 14, borderRadius: 10, cursor: 'pointer', outline: 'none',
+          border: '1.5px solid ' + (on ? 'var(--color-accent)' : 'var(--color-border)'), background: on ? 'var(--color-accent-bg)' : 'var(--color-surface)',
+          boxShadow: on ? '0 0 0 3px var(--color-accent-bg)' : 'none', transition: 'border-color .15s, background .15s, box-shadow .15s' }
+      },
+        h('span', { style: { width: 38, height: 38, borderRadius: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--color-surface)' : 'var(--color-surface-alt)' } },
+          h(DS.Icon, { name: icon, size: 20, color: on ? 'var(--color-accent)' : 'var(--color-text-subtle)' })),
+        h('div', { style: { flex: 1, minWidth: 0 } },
+          h('div', { style: { fontWeight: 700, fontSize: 14, color: on ? 'var(--color-accent-text)' : 'var(--color-text)' } }, title),
+          h('div', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', marginTop: 3, lineHeight: 1.5 } }, desc)),
+        h('span', { style: { width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 2, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid ' + (on ? 'var(--color-accent)' : 'var(--color-border-strong)'), background: 'var(--color-surface)' } },
+          on && h('span', { style: { width: 8, height: 8, borderRadius: '50%', background: 'var(--color-accent)' } }))
+      );
+    };
+    const sections = [];
+    if (isNew) {
+      sections.push(section(1, 'folder-line', 'Cấp URL',
+        h('div', { ...errAttr('level') }, compBox('level', h('div', { role: 'radiogroup', 'aria-label': 'Cấp URL', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
+          levelCard(1, 'folder-line', 'URL cấp 1 (Lv1)', 'Nhánh gốc fpt.vn/{slug}. Chọn loại Trang thường hoặc Landing Page; danh sách URL con được thêm khi tạo URL cấp 2.'),
+          levelCard(2, 'file-doc-line', 'URL cấp 2 (Lv2)', 'Nhánh con của 1 URL cấp 1: fpt.vn/{slug cha}/{slug}. Không có loại riêng — theo loại của URL cấp 1 đã chọn.')
+        ))),
+        level ? null : h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Chọn cấp URL để hiển thị biểu mẫu tương ứng.')
+      ));
+    }
+    const no = isNew ? 1 : 0; // số thứ tự thẻ đứng sau thẻ "Cấp URL" (chỉ có khi tạo mới)
+
+    if (level === 1) {
+      sections.push(section(no + 1, 'globe-01-line', 'Thông tin URL cấp 1',
+        h('div', { ...errAttr('slug') }, this.field(req('Slug cấp 1'),
+          h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
+            prefixBox('fpt.vn/'),
+            h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { value: d.slug || '', disabled: !!liveLdp, placeholder: 'VD: truyen-hinh-fpt-play', error: showErr('slug') ? errs.slug : undefined, onChange: e => setD({ slug: this.ldpSlugify(e && e.target ? e.target.value : e) }) }))
+          ))),
+        h('div', { ...errAttr('type') }, this.field(req('Loại'), compBox('type', h(DS.Select, {
+          options: this.URL_TYPES(), value: d.type || '', placeholder: 'Chọn loại URL…', disabled: usedBy.length > 0,
+          onChange: v => setD({ type: v })
+        })))),
+        usedBy.length ? h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: -6 } }, 'Không thể đổi loại vì URL đang được sử dụng.') : null,
+        d.type === 'page' ? hintBox('Trang thường — các URL của nhánh này được đồng bộ với trường "Mã code (Slug)" của module Quản lý Trang (nhập theo định dạng lv1/lv2).') : null
+      ));
+      sections.push(section(no + 2, 'menu-01-line', 'Danh sách URL con',
+        children.length === 0
+          ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10, lineHeight: 1.6 } },
+              'Chưa có URL con nào.', h('br'), 'URL cấp 2 sẽ được thêm vào đây khi bạn tạo URL cấp 2 và chọn URL cấp 1 này làm Slug cha.')
+          : h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+              children.map((c, i) => {
+                const u = this.urlUsage(c, all);
+                return h('div', { key: c.id, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderBottom: i < children.length - 1 ? '1px solid var(--color-border-pale)' : 'none' } },
+                  h('span', { style: { ...mono, fontSize: 13, color: 'var(--color-text-subtle)' } }, '└─'),
+                  h('span', { style: { ...mono, fontSize: 13, fontWeight: 600 } }, c.slug),
+                  h('span', { style: { ...mono, flex: 1, minWidth: 0, fontSize: 12, color: 'var(--color-text-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, 'fpt.vn/' + this.urlFull(c, all)),
+                  u.length ? h(FptChipList, { theme: 'neutral', max: 1, list: u.map(x => this.urlUsageLabel(x)) }) : h('span', { style: { fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Chưa sử dụng'),
+                  this.statusBadge(this.urlIsActive(c) ? 'active' : 'inactive')
+                );
+              }))
+      ));
+    }
+
+    if (level === 2) {
+      const curType = r ? this.urlTypeOf(r, all) : null;
+      // Đang được dùng → chỉ chuyển được sang URL cấp 1 cùng loại (đổi loại sẽ làm lệch bản ghi đang dùng).
+      const parentOpts = all.filter(n => n.level === 1 && (!usedBy.length || n.type === curType))
+        .sort((a, b) => a.slug.localeCompare(b.slug)).map(n => ({ value: n.id, label: n.slug }));
+      sections.push(section(no + 1, 'globe-01-line', 'Thông tin URL cấp 2',
+        h('div', { ...errAttr('pid') }, this.field(req('Slug cha'), compBox('pid', h(DS.Select, {
+          options: parentOpts, value: d.pid || '', placeholder: 'Chọn Slug cha (URL cấp 1)…', searchable: true, searchPlaceholder: 'Tìm URL cấp 1…', disabled: !!liveLdp,
+          onChange: v => setD({ pid: v })
+        })))),
+        h('div', { ...errAttr('slug') }, this.field(req('Slug cấp 2'),
+          h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
+            prefixBox('fpt.vn/' + (parent ? parent.slug + '/' : '…/')),
+            h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { value: d.slug || '', disabled: !!liveLdp, placeholder: 'VD: detail', error: showErr('slug') ? errs.slug : undefined, onChange: e => setD({ slug: this.ldpSlugify(e && e.target ? e.target.value : e) }) }))
+          ))),
+        h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: -6 } }, 'Loại của URL cấp 2 tự động theo URL cấp 1 đã chọn.')
+      ));
+    }
+
+    // Trạng thái hoạt động: thanh nổi bật đứng đầu form, ngoài mọi thẻ (CLAUDE.md §10). Loại hiệu lực của URL cấp 2 theo URL cấp 1 cha.
+    const effType = level === 1 ? d.type : (parent ? parent.type : '');
+    const statusBar = h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+      h('div', null,
+        h('div', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
+        effType === 'ldp' ? h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 2 } }, 'Khi ngừng hoạt động, URL không còn hiện trong ô chọn URL Slug lúc tạo Landing Page mới.') : null),
+      h(DS.Switch, { checked: d.active !== false, onChange: v => setD({ active: v }) }));
+
+    const onSave = () => {
+      const keys = Object.keys(errs);
+      if (keys.length) {
+        this.setState({ urlTried: true });
+        this.toast('danger', 'Thiếu hoặc sai thông tin', 'Vui lòng kiểm tra ' + keys.length + ' trường chưa hợp lệ trước khi lưu.');
+        setTimeout(() => { const el = document.querySelector('[data-url-err="1"]'); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
+        return;
+      }
+      this.saveUrl(r, d, slug);
+    };
+    return this.editorShell(
+      isNew ? 'Tạo URL mới' : 'Chỉnh sửa URL cấp ' + r.level + ': ' + this.urlFull(r, all),
+      isNew ? 'Quản lý URL' : 'Cấu trúc đường dẫn',
+      () => this.closeUrlEditor(),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        statusBar,
+        ...sections),
+      onSave,
+      isNew ? 'Tạo URL' : 'Lưu URL'
+    );
   }
 
   // ===== Pages =====
@@ -4666,7 +5329,7 @@ class Component extends DCLogic {
   }
   renderPageEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ pageEditor: undefined, pageSecOrder: undefined, pageSecDragIdx: undefined, pageSecDragOverIdx: undefined });
+    const isNew = !r; const back = () => this.setState({ pageEditor: undefined, pageSecOrder: undefined, pageSecDragIdx: undefined, pageSecDragOverIdx: undefined, pageDraft: undefined });
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -4727,42 +5390,93 @@ class Component extends DCLogic {
       );
     }
 
+    // ── Giá trị đang soạn (controlled) để lưu thật + đồng bộ "Mã code (Slug)" sang module Quản lý URL ──
+    const draft = this.state.pageDraft || {};
+    const dv = (k, def) => draft[k] !== undefined ? draft[k] : def;
+    const setDv = (k, v) => this.setState(s => ({ pageDraft: { ...(s.pageDraft || {}), [k]: v } }));
+    const evVal = e => (e && e.target ? e.target.value : e);
+    const actMap = this.state.pageActiveMap || {};
+    const val = {
+      name: dv('name', r ? r.name : ''), slug: dv('slug', r ? r.slug : ''), h1: dv('h1', r ? r.h1 : ''),
+      newsTag: dv('newsTag', r ? (r.newsTag || '') : ''),
+      metaTitle: dv('metaTitle', r ? (r.metaTitle || '') : ''), metaKeywords: dv('metaKeywords', r ? (r.metaKeywords || '') : ''), metaDesc: dv('metaDesc', r ? (r.metaDesc || '') : ''),
+      active: dv('active', r ? (actMap[r.slug] !== undefined ? !!actMap[r.slug] : r.status !== 'hidden') : true),
+    };
+    // Mã code (Slug) nhập theo định dạng lv1/lv2 — kiểm tra ngay khi gõ, hiện bản xem trước phần sẽ đồng bộ sang Quản lý URL.
+    const slugChk = val.slug ? this.urlCheckPageSlug(val.slug, r ? r.slug : null) : null;
+    const slugMsg = slugChk && !slugChk.ok ? slugChk.msg : undefined;
+    const slugExtras = h('div', { style: { marginTop: 8 } },
+      slugChk && slugChk.ok
+        ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 12, color: 'var(--color-text-subtle)' } },
+            h('span', null, 'Đồng bộ sang Quản lý URL:'),
+            h(FptUrlPathChip, { l1: slugChk.l1, l2: slugChk.l2, l1Exists: slugChk.lv1Exists, l2Exists: slugChk.lv2Exists }))
+        : h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Nhập theo định dạng lv1/lv2 (VD: truyen-hinh-fpt-play/detail) — tự đồng bộ sang module Quản lý URL.')
+    );
+
+    // Lưu thật: ghi trang vào state.pagesData, đồng bộ URL cấp 1 / cấp 2 sang Quản lý URL, giữ liên kết Section khi đổi tên trang.
+    const onSave = () => {
+      const chk = this.urlCheckPageSlug(val.slug, r ? r.slug : null);
+      if (!chk.ok) { this.toast('danger', 'Mã code (Slug) chưa hợp lệ', chk.msg || 'Vui lòng nhập Mã code (Slug) theo định dạng lv1/lv2.'); return; }
+      const now = this.nowStr();
+      const rec = { name: val.name.trim(), slug: chk.path, h1: val.h1, status: val.active ? 'active' : 'hidden', newsTag: val.newsTag, metaTitle: val.metaTitle, metaKeywords: val.metaKeywords, metaDesc: val.metaDesc, updatedAt: now };
+      const list = this.PAGES();
+      const nextPages = r ? list.map(p => p.slug === r.slug ? { ...p, ...rec } : p) : [{ ...rec, faqCat: '', createdBy: 'Admin User', createdAt: now }, ...list];
+      const prevUrls = this.URLS();
+      const nextUrls = this.urlSyncFromPage(prevUrls, r ? this.ldpNormalizePath(r.slug) : '', chk.path, 'Admin User', now);
+      const urlChanged = JSON.stringify(nextUrls) !== JSON.stringify(prevUrls);
+      const m = { ...actMap }; if (r) delete m[r.slug]; delete m[chk.path];
+      const patch = { pagesData: nextPages, pageActiveMap: m };
+      if (urlChanged) patch.urlData = nextUrls;
+      if (r && rec.name !== r.name) {
+        const ren = { ...(this.state.pageRenames || {}) };
+        const origKey = Object.keys(ren).find(k => ren[k] === r.name) || r.name;
+        if (origKey === rec.name) delete ren[origKey]; else ren[origKey] = rec.name;
+        patch.pageRenames = ren;
+      }
+      this.setState(patch);
+      back();
+      this.toast('success', 'Đã lưu', (isNew ? 'Trang mới đã được tạo.' : 'Đã cập nhật trang "' + rec.name + '".') + (urlChanged ? ' Mã code (Slug) đã được đồng bộ sang Quản lý URL.' : ''));
+    };
+
     return this.editorShell(
       isNew ? 'Tạo trang mới' : 'Chỉnh sửa trang: ' + r.name,
       isNew ? 'Thông tin trang & SEO' : r.slug, back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
           h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
-          h(DS.Switch, { defaultChecked: !r || r.status === 'active' })
+          h(DS.Switch, { checked: val.active, onChange: v => setDv('active', v) })
         ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('Tên trang', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Trang chủ' }), true)),
-            h('div', null, this.field('Mã code (Slug)', h(DS.Input, { defaultValue: r ? r.slug : '', placeholder: 'VD: home' }), true))
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'start' } },
+            h('div', null, this.field('Tên trang', h(DS.Input, { value: val.name, onChange: e => setDv('name', evVal(e)), placeholder: 'VD: Trang chủ' }), true)),
+            h('div', null,
+              this.field('Mã code (Slug)', h(DS.Input, { value: val.slug, onChange: e => setDv('slug', this.urlSlugifyPath(evVal(e))), placeholder: 'VD: truyen-hinh-fpt-play/detail', error: slugMsg }), true),
+              slugMsg ? null : slugExtras)
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('Tiêu đề (H1)', h(DS.Input, { defaultValue: r ? r.h1 : '', placeholder: 'Nhập tiêu đề chính hiển thị' }), true)),
+            h('div', null, this.field('Tiêu đề (H1)', h(DS.Input, { value: val.h1, onChange: e => setDv('h1', evVal(e)), placeholder: 'Nhập tiêu đề chính hiển thị' }), true)),
             h('div', null, this.field('Tag tin tức', h(DS.Select, {
               options: this.NEWS_TAGS().map(t => ({ value: t.slug, label: t.name })),
-              defaultValue: r ? (r.newsTag || '') : '',
+              value: val.newsTag,
               placeholder: 'Chọn tag…',
-              searchable: true, searchPlaceholder: 'Tìm tag…'
+              searchable: true, searchPlaceholder: 'Tìm tag…',
+              onChange: v => setDv('newsTag', v)
             }), true))
           )
         ),
         section(2, 'search-medium-line', 'Cấu hình SEO',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('Meta tiêu đề', h(DS.Input, { defaultValue: r ? (r.metaTitle || '') : '', placeholder: 'Tiêu đề hiển thị trên Google' }), true)),
-            h('div', null, this.field('Meta từ khóa', h(DS.Input, { defaultValue: r ? (r.metaKeywords || '') : '', placeholder: 'internet fpt, wifi 6, …' }), true))
+            h('div', null, this.field('Meta tiêu đề', h(DS.Input, { value: val.metaTitle, onChange: e => setDv('metaTitle', evVal(e)), placeholder: 'Tiêu đề hiển thị trên Google' }), true)),
+            h('div', null, this.field('Meta từ khóa', h(DS.Input, { value: val.metaKeywords, onChange: e => setDv('metaKeywords', evVal(e)), placeholder: 'internet fpt, wifi 6, …' }), true))
           ),
-          this.field('Meta mô tả', h(DS.Textarea, { defaultValue: r ? (r.metaDesc || '') : '', maxLength: 160, placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 }), true)
+          this.field('Meta mô tả', h(DS.Textarea, { value: val.metaDesc, onChange: e => setDv('metaDesc', evVal(e)), maxLength: 160, placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 }), true)
         ),
         section(3, 'image-line', 'Hình ảnh',
           h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } }, this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤200KB', true))
         ),
         pageSectionsCard
       ),
-      () => { back(); this.toast('success', 'Đã lưu', isNew ? 'Trang mới đã được tạo.' : 'Đã cập nhật trang "' + r.name + '".'); },
+      onSave,
       isNew ? 'Tạo trang' : 'Lưu trang'
     );
   }
@@ -8233,6 +8947,12 @@ class Component extends DCLogic {
         ) },
       { key: 'tpl', header: 'Template', width: 150, render: (_, r) =>
           h('span', { style: { background: tplBg[r.tplId] || 'var(--color-surface-alt)', color: tplColors[r.tplId] || 'var(--color-text-muted)', padding: '2px 10px', borderRadius: 10, fontSize: 12, whiteSpace: 'nowrap', fontWeight: 600 } }, r.tplLabel) },
+      { key: 'ldpType', header: 'Loại LDP', width: 190, render: (_, r) => r.ldpType === 'region'
+          ? h('div', null,
+              h(DS.Badge, { theme: 'info' }, 'LDP Khu vực'),
+              h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 4, lineHeight: 1.35 } }, this.ldpRegionLabel(r))
+            )
+          : h(DS.Badge, { theme: 'neutral' }, 'LDP thường') },
       { key: 'url', header: 'URL', width: 160, render: (_, r) =>
           h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url) },
       { key: 'period', header: 'Thời gian hiệu lực', width: 150, render: (_, r) =>
@@ -8348,6 +9068,9 @@ class Component extends DCLogic {
           h('div', { style: { fontSize: 12 } }, r.rejectReason, h('div', { style: { marginTop: 4, color: 'var(--color-text-subtle)' } }, (r.reviewedBy || '') + (r.reviewedAt ? ' · ' + r.reviewedAt : '')))
         ) : null,
         this.detailRow('Tên chiến dịch', h('strong', null, r.name)),
+        this.detailRow('Loại LDP', r.ldpType === 'region' ? h(DS.Badge, { theme: 'info' }, 'LDP Khu vực') : h(DS.Badge, { theme: 'neutral' }, 'LDP thường')),
+        r.ldpType === 'region' ? this.detailRow('Tỉnh/Thành phố', r.province || '—') : null,
+        r.ldpType === 'region' ? this.detailRow('Phường/Xã', r.ward || '—') : null,
         this.detailRow('URL', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url)),
         this.detailRow('Nhánh Level 1', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5 } }, r.lv1 || '—')),
         this.detailRow('Mục tiêu', r.goal),
@@ -8383,8 +9106,10 @@ class Component extends DCLogic {
       const lv1 = f2.urlSlug1 !== undefined ? f2.urlSlug1 : (editRow.lv1 || '');
       const l2 = f2.urlSlug2 !== undefined ? f2.urlSlug2 : (editRow.l2 || '');
       const url = '/' + this.ldpNormalizePath([lv1, l2].filter(Boolean).join('/'));
+      const v = this.ldpStep2Values();
+      const isRegion = v.ldpType === 'region';
       const list = this.LDP_LIST().map(r => r.id === editRow.id
-        ? { ...r, name, lv1, l2, url, goal: f2.goal || r.goal, status: 'publish', lastEdit: this.ldpNow(), lastEditBy: 'Admin User' }
+        ? { ...r, name, lv1, l2, url, goal: f2.goal || r.goal, ldpType: v.ldpType, province: isRegion ? v.province : '', ward: isRegion ? v.ward : '', status: 'publish', lastEdit: this.ldpNow(), lastEditBy: 'Admin User' }
         : r);
       this.setState({ ldpListData: list, ldpStatuses: { ...(this.state.ldpStatuses || {}), [editRow.id]: 'publish' } });
     }
@@ -8418,10 +9143,12 @@ class Component extends DCLogic {
     };
     const nextApprovals = [newReq, ...approvals.filter(a => !(prior && a.id === prior.id))];
     let list = this.LDP_LIST();
+    const sv = this.ldpStep2Values();
+    const regionFields = { ldpType: sv.ldpType, province: sv.ldpType === 'region' ? sv.province : '', ward: sv.ldpType === 'region' ? sv.ward : '' };
     if (editRow) {
-      list = list.map(r => r.id === editRow.id ? { ...r, status: 'pending', lv1, l2, url, goal, lastEdit: this.ldpNow(), lastEditBy: 'Admin User', submittedBy: 'Admin User', submittedAt: now } : r);
+      list = list.map(r => r.id === editRow.id ? { ...r, status: 'pending', lv1, l2, url, goal, ...regionFields, lastEdit: this.ldpNow(), lastEditBy: 'Admin User', submittedBy: 'Admin User', submittedAt: now } : r);
     } else {
-      list = [{ id: ldpId, name, tplId, tplLabel, goal, lv1, l2, url, startDate: '—', endDate: '—', createdBy: 'Admin User', createdAt: this.ldpNow(), lastEdit: this.ldpNow(), lastEditBy: 'Admin User', status: 'pending', submittedBy: 'Admin User', submittedAt: now }, ...list];
+      list = [{ id: ldpId, name, tplId, tplLabel, goal, lv1, l2, url, ...regionFields, startDate: '—', endDate: '—', createdBy: 'Admin User', createdAt: this.ldpNow(), lastEdit: this.ldpNow(), lastEditBy: 'Admin User', status: 'pending', submittedBy: 'Admin User', submittedAt: now }, ...list];
     }
     const nextStatuses = { ...(this.state.ldpStatuses || {}) };
     if (editRow) nextStatuses[editRow.id] = 'pending';
@@ -8480,16 +9207,20 @@ class Component extends DCLogic {
         onClick: () => {
           if (slugBlocked) { this.toast('danger', 'URL chưa hợp lệ', slugCheck.msg || 'Vui lòng kiểm tra lại URL Slug.'); return; }
           if (!this.state.ldpTpl) { this.toast('warning', 'Chưa chọn template', 'Vui lòng quay lại Bước 1 và chọn template.'); return; }
-          const effR = f2.effRange || {};
+          const sv = this.ldpStep2Values();
+          const effR = sv.effRange;
+          const isRegionType = sv.ldpType === 'region' && !this.ldpTypeLocked();
           const errs = {
-            campaignName: !f2.campaignName,
-            goal: !f2.goal,
+            province: isRegionType && !sv.province,
+            ward: isRegionType && !sv.ward,
+            campaignName: !sv.campaignName,
+            goal: !sv.goal,
             effRange: !(effR.start && effR.end),
           };
           const errCount = Object.values(errs).filter(Boolean).length;
           if (errCount) {
             this.setState({ ldpStep2Err: errs });
-            this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng điền đầy đủ ' + errCount + ' trường bắt buộc ở phần Thông tin cơ bản trước khi tiếp tục.');
+            this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng điền đầy đủ ' + errCount + ' trường bắt buộc trước khi tiếp tục.');
             return;
           }
           if (f2.redirect !== undefined && !fptIsValidTargetUrl(f2.redirect)) {
@@ -8631,10 +9362,84 @@ class Component extends DCLogic {
     const set = (k, v) => this.setState(s => ({ ldpForm2: { ...(s.ldpForm2 || {}), [k]: v } }));
     const get = (k, def) => { const v = form[k]; return v !== undefined ? v : (def !== undefined ? def : ''); };
     const step2Err = this.state.ldpStep2Err || {};
-    const effRange = get('effRange', null) || {};
+    const sv = this.ldpStep2Values();
+    const effRange = sv.effRange;
     const lbSt = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 5, display: 'block' };
     const req  = h('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*');
-    const secHdr = lbl => h('div', { style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--color-text-subtle)', margin: '20px 0 14px', borderBottom: '1px solid var(--color-border)', paddingBottom: 8 } }, lbl);
+    // §10: mỗi nhóm trường là một DS.Card đánh số có icon (bước này có 3 nhóm: Loại LDP & khu vực / Thông tin cơ bản / SEO).
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'ldpsec' + num },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+        h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
+      ),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
+    );
+    // ── Nhóm 1: Loại LDP & phạm vi khu vực ──
+    // 2 lựa chọn loại trang dạng thẻ chọn (DS.Radio bọc trong thẻ). LDP Khu vực mở thêm khối "Khu vực áp dụng" với 2 ô chọn phụ thuộc nhau (Tỉnh/TP → Phường/Xã).
+    const ldpType = sv.ldpType === 'region' ? 'region' : 'normal';
+    const isRegion = ldpType === 'region';
+    const regionData = this.LDP_REGION_DATA();
+    const province = sv.province, ward = sv.ward;
+    const provinceOptions = this.LDP_PROVINCES().map(p => ({ value: p, label: p }));
+    const wardOptions = (regionData[province] || []).map(w => ({ value: w, label: w }));
+    // Lỗi tính lại mỗi lần render → tự biến mất ngay khi người dùng chọn xong (§14).
+    const provinceErr = !!step2Err.province && !province;
+    const wardErr = !!step2Err.ward && !ward;
+    // LDP đang chạy (publish) → cả nhóm 1 bị khoá, không cho đổi loại LDP / khu vực (giống ô URL Slug đã khoá).
+    const typeLocked = this.ldpTypeLocked();
+    const typeOpts = [
+      { id: 'normal', icon: 'globe-01-line', title: 'LDP thường', desc: 'Không giới hạn khu vực', badge: 'Mặc định' },
+      { id: 'region', icon: 'marker-pin-01-line', title: 'LDP Khu vực', desc: 'Chính sách giá theo Tỉnh/Thành phố và Phường/Xã được chọn.' },
+    ];
+    const typeCards = h('div', { role: 'radiogroup', 'aria-label': 'Loại LDP', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
+      typeOpts.map(o => {
+        const on = ldpType === o.id;
+        return h(DS.Radio, {
+          key: o.id, name: 'ldpType', value: o.id, checked: on, disabled: typeLocked,
+          onChange: () => set('ldpType', o.id),
+          style: { display: 'flex', width: '100%', boxSizing: 'border-box', alignItems: 'flex-start', padding: '14px 16px', borderRadius: 12, border: '1.5px solid ' + (on ? 'var(--color-accent)' : 'var(--color-border)'), background: 'var(--color-surface)', boxShadow: on ? '0 0 0 3px var(--color-accent-bg)' : 'none', transition: 'border-color 150ms, box-shadow 150ms' },
+          label: h('span', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+            // margin âm giữ chiều cao hàng nhãn = 20px (bằng nút radio) để icon, tiêu đề và chấm radio nằm cùng trục giữa.
+            h('span', { style: { width: 26, height: 26, margin: '-3px 0', borderRadius: 7, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--color-accent-bg)' : 'var(--color-surface-sunken)', transition: 'background 150ms' } },
+              h(DS.Icon, { name: o.icon, size: 16, color: on ? 'var(--color-accent)' : 'var(--color-text-subtle)' })
+            ),
+            h('span', { style: { fontWeight: 700, fontSize: 14 } }, o.title),
+            o.badge ? h(DS.Badge, { theme: 'neutral' }, o.badge) : null
+          ),
+          description: o.desc
+        });
+      })
+    );
+    const regionPanel = isRegion ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, padding: 16, borderRadius: 12, background: 'color-mix(in srgb, var(--color-surface-sunken) 50%, var(--color-surface))' } },
+      h('span', { style: { fontWeight: 700, fontSize: 13.5, color: 'var(--color-text)' } }, 'Khu vực áp dụng'),
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 } },
+        h('div', null,
+          h('label', { style: lbSt }, 'Tỉnh/Thành phố', req),
+          h(DS.Select, {
+            value: province, options: provinceOptions, placeholder: 'Chọn Tỉnh/Thành phố', disabled: typeLocked,
+            searchable: true, searchPlaceholder: 'Tìm Tỉnh/Thành phố…',
+            onChange: v => { set('province', v); if (v !== province) set('ward', ''); },
+            error: provinceErr ? 'Trường bắt buộc — vui lòng chọn Tỉnh/Thành phố.' : undefined,
+            containerStyle: { width: '100%' }
+          })
+        ),
+        h('div', null,
+          h('label', { style: lbSt }, 'Phường/Xã', req),
+          h(DS.Select, {
+            value: ward, options: wardOptions, disabled: typeLocked || !province,
+            placeholder: province ? 'Chọn Phường/Xã' : 'Chọn Tỉnh/Thành phố trước',
+            searchable: true, searchPlaceholder: 'Tìm Phường/Xã…',
+            onChange: v => set('ward', v),
+            error: wardErr ? 'Trường bắt buộc — vui lòng chọn Phường/Xã.' : undefined,
+            containerStyle: { width: '100%' }
+          })
+        )
+      ),
+      (province && ward) ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-success-text)' } },
+        h(DS.Icon, { name: 'check-circle-line', size: 14 }),
+        h('span', null, 'Phạm vi áp dụng: ', h('strong', null, ward + ', ' + province))
+      ) : null
+    ) : null;
     // Thông báo lỗi/cảnh báo/hợp lệ của URL Slug luôn hiện ở dòng chung bên dưới cả 2 field (không lồng trong
     // từng cột Level 1/Level 2) để mép trái của text thẳng hàng với dòng "Xem trước" ngay dưới nó; field cụ thể
     // sai vẫn được đánh dấu qua viền đỏ (slug1Err/slug2Err) trên chính Select/Input.
@@ -8643,31 +9448,6 @@ class Component extends DCLogic {
     const slugLocked = !!(editRow && this.ldpSlugLocked(effStatus));
     const slug1 = get('urlSlug1', editRow ? (editRow.lv1 || '') : '');
     const slug2 = get('urlSlug2', editRow ? (editRow.l2 || '') : '');
-    const FPT_CATS = [
-      { value: 'khuyen-mai',           label: 'khuyen-mai',              children: [] },
-      { value: 'internet',             label: 'internet',                children: [
-        { value: 'combo-the-thao',  label: 'Combo Internet thể thao giải trí' },
-        { value: 'wifi-7',          label: 'Internet Wi-Fi 7' },
-        { value: 'game-thu',        label: 'Internet game thủ' },
-        { value: 'doanh-nghiep',    label: 'Internet doanh nghiệp' },
-      ]},
-      { value: 'truyen-hinh-fpt-play', label: 'truyen-hinh-fpt-play',    children: [
-        { value: 'fpt-play',        label: 'FPT Play' },
-        { value: 'nang-cap',        label: 'Nâng cấp gói combo thể thao' },
-        { value: 'ngoai-hang-anh',  label: 'Combo Internet Ngoại hạng Anh' },
-      ]},
-      { value: 'thiet-bi-thong-minh',  label: 'thiet-bi-thong-minh',     children: [
-        { value: 'fpt-camera',      label: 'FPT Camera' },
-        { value: 'fpt-smart-home',  label: 'FPT Smart Home' },
-        { value: 'access-point',    label: 'Access Point' },
-        { value: 'smart-tivi',      label: 'Smart Tivi' },
-      ]},
-      { value: 'dich-vu-so',          label: 'dich-vu-so',               children: [
-        { value: 'dich-vu-f-safe',  label: 'Dịch vụ F-Safe' },
-      ]},
-      { value: 'tin-tuc',             label: 'tin-tuc',                  children: [] },
-      { value: 'lien-he',             label: 'lien-he',                  children: [] },
-    ];
     const slugCheck = slugLocked ? { ok: true } : this.ldpSlugValidate(slug1, slug2, editRow ? editRow.id : null);
     const slug1Err = !!(slugCheck.block && slugCheck.bad1);
     const slug2Err = !!(slugCheck.block && slugCheck.bad2);
@@ -8675,28 +9455,43 @@ class Component extends DCLogic {
     // lệ") thì giới hạn chiều rộng dòng thông báo trong khoảng ~ thanh Lv1 (badge fpt.vn/ + Select) thay vì tràn hết
     // cả dòng URL Slug — tránh nhìn như đang lấn sang phần Level 2 dù nội dung không liên quan tới Level 2.
     const scopeL1Only = !!(slugCheck.block && slugCheck.bad1 && !slugCheck.bad2);
-    // Danh sách nhánh Level 1 có sẵn — chỉ 7 nhánh cố định, chọn bằng DS.Select. Nhãn hiển thị dùng chính
-    // định dạng URL slug (chữ thường, không dấu, nối bằng gạch ngang) để người dùng thấy đúng segment sẽ dùng.
-    const lv1Options = FPT_CATS.map(c => ({ value: c.value, label: c.label }));
+    // Nhánh Level 1 / Level 2 lấy từ module Quản lý URL: Level 1 = URL cấp 1 loại "Landing Page"; Level 2 = các URL cấp 2 đã tạo dưới nhánh
+    // Level 1 đang chọn. Cả hai chọn bằng DS.Select (searchable). Nhãn dùng đúng định dạng URL slug để người dùng thấy đúng segment sẽ dùng.
+    // Bản ghi cũ trỏ tới slug không còn trong danh mục vẫn giữ lại 1 lựa chọn tương ứng để ô không bị trống.
+    const urlAll = this.URLS();
+    // URL ngừng hoạt động (cờ active ở Quản lý URL) không được đưa vào danh sách chọn; riêng giá trị đang chọn của bản ghi vẫn được giữ.
+    const lv1Nodes = urlAll.filter(n => n.level === 1 && n.type === 'ldp');
+    const lv1Options = lv1Nodes.filter(n => this.urlIsActive(n) || n.slug === slug1).map(n => ({ value: n.slug, label: n.slug }));
+    if (slug1 && !lv1Options.some(o => o.value === slug1)) lv1Options.push({ value: slug1, label: slug1 });
+    const lv1Node = lv1Nodes.find(n => n.slug === slug1);
+    const lv2Nodes = lv1Node ? urlAll.filter(n => n.level === 2 && n.pid === lv1Node.id) : [];
+    const lv2Options = lv2Nodes.filter(n => this.urlIsActive(n) || n.slug === slug2).map(n => ({ value: n.slug, label: n.slug }));
+    if (slug2 && !lv2Options.some(o => o.value === slug2)) lv2Options.push({ value: slug2, label: slug2 });
+    // Đã chọn Level 2 rồi thì thêm lựa chọn "Bỏ chọn" ở đầu để quay lại URL 1 cấp (DS.Select không có nút xoá).
+    const lv2Menu = slug2 ? [{ value: '', label: '— Bỏ chọn URL cấp 2 —' }, ...lv2Options] : lv2Options;
     const slug  = [slug1, slug2].filter(s => s).join('/') || 'khuyen-mai/km-t5';
     const tplDefaultColors = { internet: '#ffffff', sa: '#0a1628', landingpage: '#f4f6fa', customhtml: '#ffffff' };
     const defaultBgColor = tplDefaultColors[this.state.ldpTpl] || '#ffffff';
     const bgColor = get('bgColor', defaultBgColor);
-    const seoTitle = get('metaTitle', 'Khuyến mãi Internet Tháng 5 - FPT Telecom');
-    const seoDesc  = get('metaDesc', '');
+    const seoTitle = editRow ? sv.metaTitle : get('metaTitle', 'Khuyến mãi Internet Tháng 5 - FPT Telecom');
+    const seoDesc  = sv.metaDesc;
 
     const inSt  = { width: '100%', padding: '8px 12px', border: '1.5px solid var(--color-border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: 'var(--color-surface)', color: 'var(--color-text)', outline: 'none', boxSizing: 'border-box' };
     const taSt  = { ...inSt, resize: 'vertical' };
-    return h(DS.Card, { style: { padding: 24 } },
-      (editRow && effStatus === 'rejected') ? h(DS.Alert, { theme: 'danger', title: 'LDP đã bị Super Admin từ chối', style: { borderRadius: 10, marginBottom: 18 } },
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      (editRow && effStatus === 'rejected') ? h(DS.Alert, { theme: 'danger', title: 'LDP đã bị Super Admin từ chối', style: { borderRadius: 10 } },
         h('div', { style: { fontSize: 12.5, lineHeight: 1.55 } },
           h('div', null, h('strong', null, 'Lý do: '), editRow.rejectReason || '—'),
           h('div', { style: { marginTop: 4, color: 'var(--color-text-subtle)' } }, 'Người duyệt: ' + (editRow.reviewedBy || '—') + (editRow.reviewedAt ? ' · ' + editRow.reviewedAt : '')),
           h('div', { style: { marginTop: 6 } }, 'Chỉnh sửa nhánh Level 1 cho hợp lệ, sau đó bấm ', h('strong', null, 'Gửi duyệt lại'), ' ở bước Nội dung.')
         )
       ) : null,
-      secHdr('Thông tin cơ bản'),
-      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 4 } },
+      section(1, 'marker-pin-01-line', 'Loại LDP & khu vực áp dụng', typeCards,
+        typeLocked ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--color-text-subtle)' } },
+          h(DS.Icon, { name: 'lock-01-line', size: 13 }), h('span', null, 'LDP đang chạy — không thể thay đổi loại LDP và khu vực áp dụng.')) : null,
+        regionPanel),
+      section(2, 'file-doc-line', 'Thông tin cơ bản',
+      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 } },
         h('div', { style: { gridColumn: '1 / -1' } },
           h('label', { style: lbSt }, 'URL Slug', req),
           slugLocked
@@ -8719,14 +9514,20 @@ class Component extends DCLogic {
                       placeholder: 'Chọn nhánh Level 1',
                       searchable: true,
                       searchPlaceholder: 'Tìm nhánh Level 1…',
-                      onChange: v => set('urlSlug1', v),
+                      onChange: v => { set('urlSlug1', v); if (v !== slug1) set('urlSlug2', ''); },
                       error: slug1Err,
                       containerStyle: { width: '100%' }
                     })
                   ),
                   h('span', { style: { display: 'flex', alignItems: 'center', height: 48, color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
                   h('div', { style: { flex: '1 1 170px', minWidth: 150 } },
-                    h(DS.Input, { value: slug2, error: slug2Err, onChange: e => set('urlSlug2', this.ldpSlugify(e && e.target ? e.target.value : e)), placeholder: 'Nhập nhánh Level 2', disabled: !slug1 })
+                    h(DS.Select, {
+                      value: slug2, options: lv2Menu, error: slug2Err, disabled: !slug1 || !lv2Options.length,
+                      placeholder: !slug1 ? 'Chọn nhánh Level 1 trước' : (lv2Options.length ? 'Chọn nhánh Level 2' : 'Chưa có URL cấp 2'),
+                      searchable: true, searchPlaceholder: 'Tìm nhánh Level 2…',
+                      onChange: v => set('urlSlug2', v),
+                      containerStyle: { width: '100%' }
+                    })
                   )
                 ),
                 (() => {
@@ -8747,16 +9548,21 @@ class Component extends DCLogic {
                 })(),
                 h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } },
                   'Xem trước: fpt.vn/', h('strong', null, slug1 || 'level-1'), slug2 ? h('span', null, '/', h('strong', null, slug2)) : null
-                )
+                ),
+                (slug1 && !lv2Options.length) ? h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } },
+                  'Nhánh này chưa có URL cấp 2 nào. Cần đường dẫn 2 cấp? Vào ',
+                  h('button', { type: 'button', onClick: () => this.go('urls'), style: { border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontSize: 11, fontWeight: 700, color: 'var(--color-accent-text)', textDecoration: 'underline' } }, 'Quản lý URL'),
+                  ' tạo URL cấp 2 trước — biểu mẫu LDP này sẽ được giữ nguyên khi bạn quay lại.'
+                ) : null
               )
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Tên chiến dịch', req),
-          h(DS.Input, { value: get('campaignName'), onChange: e => set('campaignName', e.target.value), placeholder: 'VD: Khuyến mãi Internet Tháng 5', error: step2Err.campaignName ? 'Vui lòng nhập tên chiến dịch.' : undefined })
+          h(DS.Input, { value: sv.campaignName, onChange: e => set('campaignName', e.target.value), placeholder: 'VD: Khuyến mãi Internet Tháng 5', error: (step2Err.campaignName && !sv.campaignName) ? 'Vui lòng nhập tên chiến dịch.' : undefined })
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Mục tiêu trang', req),
-          h(DS.Input, { value: get('goal', ''), placeholder: 'VD: Lead Gen, Bán gói cước...', onChange: e => set('goal', e.target.value), error: step2Err.goal ? 'Vui lòng nhập mục tiêu trang.' : undefined })
+          h(DS.Input, { value: sv.goal, placeholder: 'VD: Lead Gen, Bán gói cước...', onChange: e => set('goal', e.target.value), error: (step2Err.goal && !sv.goal) ? 'Vui lòng nhập mục tiêu trang.' : undefined })
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Thời gian hiệu lực', req),
@@ -8764,12 +9570,12 @@ class Component extends DCLogic {
             placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', size: 'md', containerStyle: { width: '100%' },
             startDate: effRange.start || null, endDate: effRange.end || null,
             onChange: r => set('effRange', r),
-            error: step2Err.effRange ? 'Vui lòng chọn thời gian hiệu lực.' : undefined
+            error: (step2Err.effRange && !(effRange.start && effRange.end)) ? 'Vui lòng chọn thời gian hiệu lực.' : undefined
           })
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Redirect khi hết hạn'),
-          h(FptUrlInput, { value: get('redirect', '/'), onChange: e => set('redirect', e.target.value), placeholder: '/ (Trang chủ)', forceValidate: !!step2Err.redirect })
+          h(FptUrlInput, { value: get('redirect', (editRow && editRow.redirect) || '/'), onChange: e => set('redirect', e.target.value), placeholder: '/ (Trang chủ)', forceValidate: !!step2Err.redirect })
         ),
         h('div', { style: { gridColumn: '1 / -1' } },
           h('label', { style: lbSt }, 'Màu nền toàn trang'),
@@ -8781,12 +9587,12 @@ class Component extends DCLogic {
             bgColor !== defaultBgColor && h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'rotate-ccw-line', onClick: () => set('bgColor', defaultBgColor) }, 'Khôi phục mặc định')
           )
         )
-      ),
-      secHdr('SEO'),
-      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 4 } },
+      )),
+      section(3, 'search-medium-line', 'SEO',
+      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 } },
         h('div', null,
           h('label', { style: lbSt }, 'Meta Title'),
-          h(DS.Input, { value: get('metaTitle'), maxLength: 60, onChange: e => set('metaTitle', e.target.value), placeholder: 'Tiêu đề hiển thị trên Google (60 ký tự)' })
+          h(DS.Input, { value: sv.metaTitle, maxLength: 60, onChange: e => set('metaTitle', e.target.value), placeholder: 'Tiêu đề hiển thị trên Google (60 ký tự)' })
         ),
         h('div', null,
           h('label', { style: lbSt }, 'OG Image — ảnh share mạng xã hội'),
@@ -8797,7 +9603,7 @@ class Component extends DCLogic {
         ),
         h('div', { style: { gridColumn: '1 / -1' } },
           h('label', { style: lbSt }, 'Meta Description'),
-          h(DS.Textarea, { value: get('metaDesc'), maxLength: 160, onChange: e => set('metaDesc', e.target ? e.target.value : e), rows: 2, placeholder: 'Mô tả ngắn hiển thị trên kết quả tìm kiếm (150–160 ký tự)' })
+          h(DS.Textarea, { value: sv.metaDesc, maxLength: 160, onChange: e => set('metaDesc', e.target ? e.target.value : e), rows: 2, placeholder: 'Mô tả ngắn hiển thị trên kết quả tìm kiếm (150–160 ký tự)' })
         ),
         h('div', { style: { gridColumn: '1 / -1' } },
           h('label', { style: { ...lbSt, marginBottom: 8 } }, 'XEM TRƯỚC HIỂN THỊ TÌM KIẾM GOOGLE (SEO SNIPPET MOCKUP)'),
@@ -8813,8 +9619,7 @@ class Component extends DCLogic {
             h('div', { style: { color: 'var(--color-text-muted)', fontSize: 13, lineHeight: '20px' } }, seoDesc || 'Mô tả meta hiển thị tại đây...')
           )
         )
-      ),
-
+      ))
     );
   }
   renderLdpStep3() {
@@ -8857,8 +9662,7 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 } },
           h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
             h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Template:'),
-            h('span', { style: { fontWeight: 700, color: 'var(--color-accent)', fontSize: 14 } }, tpl.label + (tpl.sections ? ' (' + sections.length + ' sections)' : '')),
-            !this.state.ldpLockTemplate && h(DS.Button, { level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpStep: 2 }) }, 'Đổi template')
+            h('span', { style: { fontWeight: 700, color: 'var(--color-accent)', fontSize: 14 } }, tpl.label + (tpl.sections ? ' (' + sections.length + ' sections)' : ''))
           ),
           
         ),
@@ -13778,12 +14582,22 @@ class Component extends DCLogic {
   // ===== RBAC matrix =====
   RBAC() { return [
     { group: 'NỘI DUNG SẢN PHẨM', modules: ['Nội dung sản phẩm', 'Thông tin checkout'] },
-    { group: 'CẤU TRÚC TRANG', modules: ['Quản lý Trang (Pages)', 'Quản lý Sections', 'Quản lý Blocks', 'Quản lý Menu', 'Landing Page (LDP)'] },
+    { group: 'CẤU TRÚC TRANG', modules: ['Quản lý URL', 'Quản lý Trang (Pages)', 'Quản lý Sections', 'Quản lý Blocks', 'Quản lý Menu', 'Landing Page (LDP)'] },
     { group: 'MEDIA & QUẢNG BÁ', modules: ['Quản lý Banner', 'Quản lý Popup', 'Quản lý Quảng cáo'] },
     { group: 'BÀI VIẾT & NỘI DUNG', modules: ['Quản lý Tin tức', 'Quản lý FAQ', 'Cấu hình Thông tin hay'] },
     { group: 'CÀI ĐẶT & HỆ THỐNG', modules: ['Quản lý Vai trò', 'Quản lý Người dùng', 'Phân quyền tính năng'] },
     { group: 'BÁO CÁO', modules: ['Báo cáo bán hàng', 'Báo cáo đăng ký Online'] },
   ]; }
+  // Quyền mặc định của 1 vai trò trên 1 module (nguồn chung cho ma trận "Phân quyền tính năng" và cho các module tự khoá thao tác).
+  // Super Admin luôn full quyền. "Quản lý URL": thay đổi URL ảnh hưởng đến định tuyến của cả Trang thường lẫn Landing Page nên chỉ Super Admin
+  // và Admin CMS được "Thay đổi"; các vai trò còn lại chỉ xem.
+  rbacPerm(mod, role) {
+    if (role === 'Super Admin') return { view: true, edit: true };
+    let view = true, edit = true;
+    if (role === 'Biên tập viên') { edit = !/Vai trò|Người dùng|Phân quyền|checkout|Quản lý URL/.test(mod); view = !/checkout|Vai trò|Người dùng|Phân quyền/.test(mod); }
+    if (role === 'Viewer') { edit = false; view = !/Landing|Popup|checkout|Vai trò|Người dùng|Phân quyền|Thông tin hay/.test(mod); }
+    return { view, edit };
+  }
   openRoleDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     this.openDrawer({ title: r.name, subtitle: 'Vai trò hệ thống', width: 440,
@@ -13895,11 +14709,9 @@ class Component extends DCLogic {
         const cells = [h('td', { key: 'm', style: { padding: '9px 14px', fontSize: 13, fontWeight: 500, position: 'sticky', left: 0, background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border-pale)' } }, mod)];
         roles.forEach(rl => {
           const sa = rl === 'Super Admin';
-          let view = true, edit = true;
-          if (rl === 'Biên tập viên') { edit = !/Vai trò|Người dùng|Phân quyền|checkout/.test(mod); view = !/checkout|Vai trò|Người dùng|Phân quyền/.test(mod); }
-          if (rl === 'Viewer') { edit = false; view = !/Landing|Popup|checkout|Vai trò|Người dùng|Phân quyền|Thông tin hay/.test(mod); }
-          cells.push(h('td', { key: rl + 'v', style: { borderLeft: '1px solid var(--color-border-pale)', borderBottom: '1px solid var(--color-border-pale)', padding: 0 } }, cell(sa, sa || view, rl)));
-          cells.push(h('td', { key: rl + 'e', style: { borderBottom: '1px solid var(--color-border-pale)', padding: 0 } }, cell(sa, sa || edit, rl)));
+          const { view, edit } = this.rbacPerm(mod, rl);
+          cells.push(h('td', { key: rl + 'v', style: { borderLeft: '1px solid var(--color-border-pale)', borderBottom: '1px solid var(--color-border-pale)', padding: 0 } }, cell(sa, view, rl)));
+          cells.push(h('td', { key: rl + 'e', style: { borderBottom: '1px solid var(--color-border-pale)', padding: 0 } }, cell(sa, edit, rl)));
         });
         // No fpt-row-hover — hover disabled for this module per spec
         rows.push(h('tr', { key: grp.group + mi }, cells));
