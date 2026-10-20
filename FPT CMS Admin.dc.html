@@ -4725,6 +4725,7 @@ class Component extends DCLogic {
   //  • Landing Page → ô "URL Slug" nhánh Level 1 / Level 2 của Quản lý LDP chỉ cho chọn các URL loại Landing Page (LDP_FIXED_LV1, renderLdpStep2).
   // Dữ liệu ở state.urlData (null = dùng URL_SEED). Cấp 2 lưu pid = id của URL cấp 1. Chỉnh sửa cần quyền "Thay đổi" (urlCanEdit → rbacPerm).
   // Mỗi URL có cờ active (thiếu = bật). URL ngừng hoạt động không còn hiện trong ô chọn URL Slug Level 1/2 khi tạo Landing Page mới (renderLdpStep2).
+  // URL loại Trang thường (cấp 1 + toàn bộ cấp 2 con) do Quản lý Trang đồng bộ sang → CHỈ ĐỌC ở module này (urlIsLocked); chỉ tạo / sửa được URL Landing Page.
   URL_SEED() { return [
     // ── Trang thường (đồng bộ từ "Mã code (Slug)" của Quản lý Trang) ──
     { id: 'u1',  level: 1, slug: 'truyen-hinh-fpt-play', type: 'page', pid: null, createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
@@ -4769,6 +4770,9 @@ class Component extends DCLogic {
   urlCanEdit() { return this.rbacPerm('Quản lý URL', this.state.currentRole || 'Super Admin').edit; }
   urlNode(id, all) { return (all || this.URLS()).find(n => n.id === id) || null; }
   urlIsActive(n) { return !!n && n.active !== false; }
+  // URL Trang thường được đồng bộ từ Quản lý Trang (Mã code (Slug)) → không chỉnh sửa tại Quản lý URL; muốn đổi thì sửa slug ở Quản lý Trang.
+  urlIsLocked(n, all) { return !!n && this.urlTypeOf(n, all) === 'page'; }
+  URL_LOCK_MSG() { return 'URL Trang thường được đồng bộ từ Quản lý Trang nên không thể chỉnh sửa tại đây.'; }
   // Đường dẫn đầy đủ (không có "fpt.vn/"): cấp 1 = slug, cấp 2 = slug cha + "/" + slug.
   urlFull(n, all) {
     if (!n) return '';
@@ -4906,9 +4910,11 @@ class Component extends DCLogic {
   }
   openUrlEditor(r) {
     if (!this.urlCanEdit()) { this.toast('warning', 'Không có quyền chỉnh sửa', 'Tài khoản của bạn chỉ được xem Quản lý URL. Liên hệ Super Admin để được cấp quyền "Thay đổi".'); return; }
+    if (r && this.urlIsLocked(r)) { this.toast('warning', 'Không thể chỉnh sửa', this.URL_LOCK_MSG()); return; }
     this.setState({
       urlEditor: r || null, urlTried: false,
-      urlDraft: r ? { level: r.level, slug: r.slug, type: r.type || '', pid: r.pid || '', active: this.urlIsActive(r) } : { level: 0, slug: '', type: '', pid: '', active: true },
+      // Tạo mới luôn là Landing Page (URL Trang thường chỉ được sinh ra từ Quản lý Trang).
+      urlDraft: r ? { level: r.level, slug: r.slug, type: r.type || '', pid: r.pid || '', active: this.urlIsActive(r) } : { level: 0, slug: '', type: 'ldp', pid: '', active: true },
     });
   }
   // Bật/tắt nhanh ở cột "Hoạt động" của bảng. Không đổi ngày chỉnh sửa (tránh nhóm cấp 1 tự nhảy lên đầu bảng khi bấm công tắc).
@@ -4916,7 +4922,7 @@ class Component extends DCLogic {
   urlSetActive(id, v, confirmed) {
     if (!this.urlCanEdit()) return;
     const n = this.urlNode(id);
-    if (!n) return;
+    if (!n || this.urlIsLocked(n)) return;
     if (!v && !confirmed) {
       const all = this.URLS();
       const nodes = [n, ...(n.level === 1 ? all.filter(c => c.level === 2 && c.pid === n.id && this.urlIsActive(c)) : [])];
@@ -5035,15 +5041,20 @@ class Component extends DCLogic {
       { key: 'updatedAt', header: 'Ngày chỉnh sửa', width: 148, render: (_, r) => h('span', { style: muted }, r.updatedAt || '—') },
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = this.urlIsActive(r);
-          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+          const locked = this.urlIsLocked(r, all);
+          return h('div', { onClick: e => e.stopPropagation(), title: locked ? this.URL_LOCK_MSG() : undefined, style: { display: 'flex', justifyContent: 'center' } },
             // Controlled (checked) thay vì defaultChecked: khi người dùng Hủy ở modal cảnh báo tắt URL, công tắc tự bật lại đúng trạng thái thật.
-            h(DS.Switch, { key: 'sw-url-act-' + r.id, checked: isOn, size: 'sm', disabled: !canEdit,
+            h(DS.Switch, { key: 'sw-url-act-' + r.id, checked: isOn, size: 'sm', disabled: !canEdit || locked,
               onChange: v => this.urlSetActive(r.id, v) }));
         } },
-      { key: 'act', header: 'Thao tác', width: 60, align: 'right', render: (_, r) => canEdit
-          ? this.rowActions([{ icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openUrlEditor(r) }])
-          : h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
-              h(DS.IconButton, { icon: 'lock-01-line', label: 'Bạn không có quyền chỉnh sửa', title: 'Bạn không có quyền chỉnh sửa', level: 'tertiary', size: 'sm', disabled: true })) },
+      { key: 'act', header: 'Thao tác', width: 60, align: 'right', render: (_, r) => {
+          // URL Trang thường (đồng bộ từ Quản lý Trang) luôn khoá, kể cả khi vai trò có quyền Thay đổi.
+          const lockMsg = !canEdit ? 'Bạn không có quyền chỉnh sửa' : (this.urlIsLocked(r, all) ? this.URL_LOCK_MSG() : '');
+          return lockMsg
+            ? h('div', { title: lockMsg, style: { display: 'flex', justifyContent: 'flex-end' } },
+                h(DS.IconButton, { icon: 'lock-01-line', label: lockMsg, title: lockMsg, level: 'tertiary', size: 'sm', disabled: true }))
+            : this.rowActions([{ icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openUrlEditor(r) }]);
+        } },
     ];
     const typeLabel = { page: 'Trang thường', ldp: 'Landing Page' };
     return this.listCard(
@@ -5091,6 +5102,7 @@ class Component extends DCLogic {
     const parent = r.level === 2 ? this.urlNode(r.pid, all) : null;
     const kids = r.level === 1 ? all.filter(n => n.level === 2 && n.pid === r.id) : [];
     const usage = this.urlUsage(r, all);
+    const locked = this.urlIsLocked(r, all);
     const mono = (t, color) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: color || 'var(--color-text)' } }, t);
     const rows = [this.detailRow('Cấp URL', 'Cấp ' + r.level)];
     if (r.level === 1) {
@@ -5114,9 +5126,11 @@ class Component extends DCLogic {
     rows.push(this.detailRow('Người tạo', r.createdBy), this.detailRow('Ngày tạo', r.createdAt), this.detailRow('Ngày chỉnh sửa', r.updatedAt));
     this.openDrawer({ title: full, subtitle: 'Chi tiết URL cấp ' + r.level, width: 480,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } }, rows),
-      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+      footer: () => h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-end' } },
+        locked ? h('span', { style: { flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-subtle)' } },
+          h(DS.Icon, { name: 'lock-01-line', size: 14, style: { flexShrink: 0 } }), 'Đồng bộ từ Quản lý Trang — không chỉnh sửa tại đây') : null,
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
-        this.urlCanEdit() ? h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openUrlEditor(r); } }, 'Chỉnh sửa') : null
+        this.urlCanEdit() && !locked ? h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openUrlEditor(r); } }, 'Chỉnh sửa') : null
       )
     });
   }
@@ -5126,7 +5140,7 @@ class Component extends DCLogic {
     const all = this.URLS();
     const isNew = !r;
     const tried = !!this.state.urlTried;
-    const d = this.state.urlDraft || { level: 0, slug: '', type: '', pid: '', active: true };
+    const d = this.state.urlDraft || { level: 0, slug: '', type: 'ldp', pid: '', active: true };
     const setD = patch => this.setState(s => ({ urlDraft: { ...(s.urlDraft || {}), ...patch } }));
     const level = isNew ? (d.pid ? 2 : 1) : r.level; // tạo mới: cấp suy ra từ Slug cha (có cha = cấp 2)
     const slug = String(d.slug || '').replace(/-+$/, '');
@@ -5168,9 +5182,8 @@ class Component extends DCLogic {
     // ── Cấp URL KHÔNG còn là ô chọn: suy ra từ "Slug cha" (để trống = URL cấp 1 · chọn 1 URL cấp 1 = URL cấp 2). Tránh người dùng hiểu nhầm
     //    "tạo URL 1 xong bấm qua URL 2" (tạo 2 cấp cùng lúc). Khi sửa, cấp theo bản ghi (không đổi được). ──
     const sections = [];
-    const curType = r ? this.urlTypeOf(r, all) : null;
-    // Đang được dùng → chỉ chuyển được sang URL cấp 1 cùng loại (đổi loại sẽ làm lệch bản ghi đang dùng).
-    const parentOpts = all.filter(n => n.level === 1 && (!usedBy.length || n.type === curType))
+    // Slug cha chỉ chọn được URL cấp 1 Landing Page: URL Trang thường do Quản lý Trang đồng bộ nên không thêm / chuyển URL con vào nhánh đó.
+    const parentOpts = all.filter(n => n.level === 1 && n.type === 'ldp')
       .sort((a, b) => a.slug.localeCompare(b.slug)).map(n => ({ value: n.id, label: n.slug }));
     const noParentOpt = { value: '', label: isNew ? '— Không có (tạo URL cấp 1) —' : '— Không có —' };
     const parentLocked = !!r && level === 1; // URL cấp 1 là nhánh gốc: không có Slug cha, khoá ở "— Không có —"
@@ -5217,12 +5230,14 @@ class Component extends DCLogic {
       ? [
           h('div', { key: 'type', ...errAttr('type') }, this.field(req('Loại'), compBox('type', h(DS.Select, {
             options: this.URL_TYPES(), value: d.type || '', placeholder: 'Chọn loại URL…',
+            disabled: isNew,
             onChange: askChangeType
           })))),
+          isNew ? h('div', { key: 'typeNew', style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: -6 } }, 'Chỉ tạo được URL Landing Page — URL Trang thường được đồng bộ từ Quản lý Trang.') : null,
           typeDirty
             ? h('div', { key: 'typeDirty', style: { fontSize: 12, color: 'var(--color-warning-text)', marginTop: -6 } }, 'Loại sẽ đổi từ "' + typeLabel(origType) + '" sang "' + typeLabel(d.type) + '" khi bạn bấm "Lưu URL".')
-            : (usedBy.length ? h('div', { key: 'typeUsed', style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: -6 } }, 'URL đang được sử dụng — khi đổi loại, hệ thống sẽ hỏi xác nhận trước.') : null),
-          d.type === 'page' ? h('div', { key: 'typePage' }, hintBox('Trang thường — các URL của nhánh này được đồng bộ với trường "Mã code (Slug)" của module Quản lý Trang (nhập theo định dạng lv1/lv2).')) : null
+            : null,
+          d.type === 'page' ? h('div', { key: 'typePage' }, hintBox('Trang thường — URL của nhánh này được đồng bộ từ "Mã code (Slug)" của Quản lý Trang, nên sau khi lưu sẽ không chỉnh sửa được tại Quản lý URL.')) : null
         ]
       : [
           h('div', { key: 'type' }, this.field('Loại', h(DS.Select, {
