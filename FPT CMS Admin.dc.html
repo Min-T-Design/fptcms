@@ -4421,67 +4421,67 @@ class Component extends DCLogic {
   LDP_SECTION_DATA() {
     return {
       internet: [
-        { id: 'inet-hero',     name: 'Hero Banner Internet', desc: 'Background, Headline, Subheadline, CTA chính & phụ, dải Countdown dính liền (Case 1)', type: 'Hero',     emoji: '🖼',  ec: 'rgba(255,107,0,0.15)',   tc: 'var(--color-accent)' },
-        { id: 'inet-countdown',name: 'Dải Countdown độc lập',       desc: 'Section độc lập · Ưu đãi theo thời gian, bộ đếm giờ ngược, CTA',                    type: 'Countdown', emoji: '⏰',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
-        { id: 'inet-stats',    name: 'Ưu đãi, tiện ích',                     desc: '6 chỉ số: icon + text (tốc độ, số khách hàng, đánh giá sao…)',            type: 'Stats',    emoji: '📊',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
+        { id: 'inet-hero',     name: 'Hero Banner Internet', desc: 'Ảnh nền, tiêu đề, 2 nút CTA, dải Countdown', type: 'Hero',     emoji: '🖼',  ec: 'rgba(255,107,0,0.15)',   tc: 'var(--color-accent)' },
+        { id: 'inet-countdown',name: 'Dải Countdown độc lập',       desc: 'Đếm ngược thời gian ưu đãi, kèm nút CTA',                    type: 'Countdown', emoji: '⏰',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
+        { id: 'inet-stats',    name: 'Ưu đãi, tiện ích',                     desc: '6 chỉ số nổi bật: icon + nội dung',            type: 'Stats',    emoji: '📊',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
         // Quy tắc đặt tên section card gói: "[Card_n] - Tên section" (n = loại card gói, làm lần lượt 1→7). Card_1 = tab gói cước + Tag nổi bật.
-        { id: 'inet-products', name: '[Card_1] - Danh sách gói internet',    desc: 'Tiêu đề section, card gói: tên, giá, tag nổi bật, ảnh, tính năng, nút đăng ký', type: 'Products', emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
+        { id: 'inet-products', name: '[Card_1] - Danh sách gói internet',    desc: 'Card gói theo tab: tên, giá, tag, ảnh, nút đăng ký', type: 'Products', emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
         { id: 'inet-playbox',  name: 'FPT Play Box – Giải trí không giới hạn', desc: 'Ảnh sản phẩm, tính năng nổi bật, CTA đổi/mua Play Box',              type: 'PlayBox',  emoji: '📺',  ec: 'rgba(99,102,241,0.15)',  tc: '#818cf8' },
-        { id: 'sa-products',   name: 'Gói dịch vụ SA',                       desc: 'Tiêu đề section, card gói SA: tên, giá, tính năng, nút đăng ký',           type: 'SaProducts', emoji: '📦', ec: 'rgba(109,40,217,0.15)', tc: '#6d28d9' },
-        { id: 'inet-review',   name: 'Video Review FPT Internet',            desc: 'Tiêu đề section, danh sách video (thumbnail + link YouTube)',              type: 'Media',    emoji: '🎬',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
+        { id: 'sa-products',   name: 'Gói dịch vụ SA',                       desc: 'Card gói SA: tên, giá, tính năng, nút đăng ký',           type: 'SaProducts', emoji: '📦', ec: 'rgba(109,40,217,0.15)', tc: '#6d28d9' },
+        { id: 'inet-review',   name: 'Video Review FPT Internet',            desc: 'Danh sách video review (ảnh bìa + link YouTube)',              type: 'Media',    emoji: '🎬',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
         { id: 'inet-steps',    name: 'Hướng dẫn thủ tục đăng ký',            desc: 'Các bước đăng ký FPT Internet',                                           type: 'Steps',    emoji: '📋',  ec: 'rgba(20,184,166,0.15)',  tc: '#2dd4bf' },
         { id: 'inet-promo',    name: 'Ưu đãi khuyến mãi',                    desc: 'Các chương trình khuyến mãi hiện hành',                                   type: 'Promo',    emoji: '🎁',  ec: 'rgba(234,179,8,0.15)',   tc: '#fbbf24' },
         { id: 'inet-faq',      name: 'Câu hỏi thường gặp',                   desc: 'Danh sách FAQ về FPT Internet',                                           type: 'FAQ',      emoji: '❓',  ec: 'rgba(168,85,247,0.15)',  tc: '#c084fc' },
-        { id: 'inet-sticky',   name: 'Sticky Bottom Bar',                   desc: 'Thanh ưu đãi/đăng ký nhanh dính chân trang (Icon, Tiêu đề, CTA)',        type: 'Sticky',   emoji: '📌',  ec: 'rgba(236,72,153,0.15)',  tc: '#f472b6' },
+        { id: 'inet-sticky',   name: 'Sticky Bottom Bar',                   desc: 'Thanh đăng ký nhanh dính chân trang',        type: 'Sticky',   emoji: '📌',  ec: 'rgba(236,72,153,0.15)',  tc: '#f472b6' },
       ],
       sa: [
-        { id: 'sa-hero',         name: 'Hero Banner SA',              desc: 'Ảnh nền fullscreen, Ảnh thiết bị, Nút CTA chính & phụ',                   type: 'Hero',      emoji: '🖼',  ec: 'rgba(109,40,217,0.2)',   tc: 'var(--color-accent)' },
-        { id: 'sa-countdown',    name: 'Dải Countdown độc lập',       desc: 'Section độc lập · Ưu đãi theo thời gian, bộ đếm giờ ngược, CTA',                    type: 'Countdown', emoji: '⏰',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
+        { id: 'sa-hero',         name: 'Hero Banner SA',              desc: 'Ảnh nền, ảnh thiết bị, 2 nút CTA',                   type: 'Hero',      emoji: '🖼',  ec: 'rgba(109,40,217,0.2)',   tc: 'var(--color-accent)' },
+        { id: 'sa-countdown',    name: 'Dải Countdown độc lập',       desc: 'Đếm ngược thời gian ưu đãi, kèm nút CTA',                    type: 'Countdown', emoji: '⏰',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
         { id: 'sa-sports',       name: 'Thể thao trực tiếp',                  desc: 'Danh sách giải đấu, lịch thi đấu, poster',                                type: 'Sports',    emoji: '⚽',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
-        { id: 'sa-experience',   name: 'Trải nghiệm giải trí đỉnh cao',       desc: 'Tiêu đề, mô tả phụ, ảnh minh họa bên phải, 4 đặc điểm giải trí (icon, tiêu đề, mô tả ngắn)', type: 'Experience', emoji: '✨', ec: 'rgba(16,185,129,0.15)', tc: '#10b981' },
-        { id: 'sa-categories',   name: 'Danh mục nội dung giải trí',          desc: '3 tab danh mục, upload banner & title mỗi tab',                           type: 'Categories',emoji: '🎭',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
-        { id: 'sa-pricing',      name: 'Bảng giá & Đăng ký',                 desc: 'Giá gói, text khuyến mãi, điều kiện ưu đãi, nút đăng ký',                 type: 'Pricing',   emoji: '💰',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
-        { id: 'sa-commentators', name: 'Bình luận viên & chuyên gia',         desc: 'Danh sách BLV, ảnh đại diện, tên, chức danh',                             type: 'Experts',   emoji: '🎙',  ec: 'rgba(236,72,153,0.15)',  tc: '#f472b6' },
-        { id: 'sa-faq-support',  name: 'FAQ & hỗ trợ thêm',                  desc: 'Accordion câu hỏi, hotline, website, khung hỗ trợ',                       type: 'FAQ',       emoji: '❓',  ec: 'rgba(168,85,247,0.15)',  tc: '#c084fc' },
-        { id: 'sa-sticky',       name: 'Sticky ưu đãi cuối trang',            desc: 'Thanh ưu đãi màu cam, icon quà, tiêu đề, nút Mua ngay',                   type: 'Sticky',    emoji: '📌',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
+        { id: 'sa-experience',   name: 'Trải nghiệm giải trí đỉnh cao',       desc: 'Tiêu đề, ảnh minh họa, 4 đặc điểm giải trí', type: 'Experience', emoji: '✨', ec: 'rgba(16,185,129,0.15)', tc: '#10b981' },
+        { id: 'sa-categories',   name: 'Danh mục nội dung giải trí',          desc: '3 tab danh mục, mỗi tab có banner & tiêu đề',                           type: 'Categories',emoji: '🎭',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
+        { id: 'sa-pricing',      name: 'Bảng giá & Đăng ký',                 desc: 'Giá gói, khuyến mãi, điều kiện, nút đăng ký',                 type: 'Pricing',   emoji: '💰',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
+        { id: 'sa-commentators', name: 'Bình luận viên & chuyên gia',         desc: 'Danh sách BLV: ảnh, tên, chức danh',                             type: 'Experts',   emoji: '🎙',  ec: 'rgba(236,72,153,0.15)',  tc: '#f472b6' },
+        { id: 'sa-faq-support',  name: 'FAQ & hỗ trợ thêm',                  desc: 'Câu hỏi thường gặp & thông tin hỗ trợ',                       type: 'FAQ',       emoji: '❓',  ec: 'rgba(168,85,247,0.15)',  tc: '#c084fc' },
+        { id: 'sa-sticky',       name: 'Sticky ưu đãi cuối trang',            desc: 'Thanh ưu đãi cuối trang kèm nút Mua ngay',                   type: 'Sticky',    emoji: '📌',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
       ],
       camera: [
-        { id: 'cam-hero',   name: 'Hero Banner Camera AI',                   desc: 'Background, Headline, Subheadline, Nút CTA, Ảnh FPT Camera',               type: 'Hero',     emoji: '📷',  ec: 'rgba(255,107,0,0.15)',  tc: 'var(--color-accent)' },
-        { id: 'cam-usp',    name: 'Công nghệ nổi bật',                       desc: 'IQ nhận diện người/vật, Đàm thoại 2 chiều, Cloud Server bảo mật',           type: 'Features', emoji: '✨',  ec: 'rgba(16,185,129,0.15)', tc: '#10b981' },
-        { id: 'cam-detail', name: 'Chi tiết FPT Camera AI',                  desc: 'Camera IQ3, SE, Play: thông số phần cứng, độ phân giải, chuẩn IP66',        type: 'Detail',   emoji: '🔍',  ec: 'rgba(245,158,11,0.15)', tc: '#d97706' },
-        { id: 'cam-select', name: 'Các gói cước camera',                     desc: 'Grid chọn dòng Camera và gói lưu trữ Cloud, tính tổng tiền dự kiến',        type: 'Products', emoji: '📦',  ec: 'rgba(245,158,11,0.15)', tc: '#d97706' },
-        { id: 'cam-app',    name: 'Ứng dụng FPT Camera',                     desc: 'Mockup App di động, xem trực tiếp, link App Store/Google Play',             type: 'App',      emoji: '📱',  ec: 'rgba(139,92,246,0.15)', tc: '#a78bfa' },
-        { id: 'cam-awards', name: 'Thương hiệu & Giải thưởng',               desc: 'Danh hiệu: Sản phẩm công nghệ số tiêu biểu, Sao Khuê...',                  type: 'Awards',   emoji: '🏆',  ec: 'rgba(239,68,68,0.15)',  tc: '#ef4444' },
-        { id: 'cam-faq',    name: 'FAQ Accordion',                            desc: 'Câu hỏi thường gặp về lắp đặt, bảo hành, gói lưu trữ Cloud',               type: 'FAQ',      emoji: '❓',  ec: 'rgba(139,92,246,0.15)', tc: '#a78bfa' },
-        { id: 'cam-sticky', name: 'Sticky Bottom Bar',                       desc: 'Thanh bar dính chân trang, giữ nút CTA đăng ký nhanh khi cuộn trang',       type: 'Sticky',   emoji: '📌',  ec: 'rgba(239,68,68,0.15)',  tc: '#ef4444' },
+        { id: 'cam-hero',   name: 'Hero Banner Camera AI',                   desc: 'Ảnh nền, tiêu đề, nút CTA, ảnh Camera',               type: 'Hero',     emoji: '📷',  ec: 'rgba(255,107,0,0.15)',  tc: 'var(--color-accent)' },
+        { id: 'cam-usp',    name: 'Công nghệ nổi bật',                       desc: 'Nhận diện người/vật, đàm thoại 2 chiều, Cloud bảo mật',           type: 'Features', emoji: '✨',  ec: 'rgba(16,185,129,0.15)', tc: '#10b981' },
+        { id: 'cam-detail', name: 'Chi tiết FPT Camera AI',                  desc: 'Thông số các dòng Camera IQ3, SE, Play',        type: 'Detail',   emoji: '🔍',  ec: 'rgba(245,158,11,0.15)', tc: '#d97706' },
+        { id: 'cam-select', name: 'Các gói cước camera',                     desc: 'Chọn dòng Camera & gói Cloud, tính tổng tiền',        type: 'Products', emoji: '📦',  ec: 'rgba(245,158,11,0.15)', tc: '#d97706' },
+        { id: 'cam-app',    name: 'Ứng dụng FPT Camera',                     desc: 'Mockup app & link tải App Store/Google Play',             type: 'App',      emoji: '📱',  ec: 'rgba(139,92,246,0.15)', tc: '#a78bfa' },
+        { id: 'cam-awards', name: 'Thương hiệu & Giải thưởng',               desc: 'Danh hiệu & giải thưởng của sản phẩm',                  type: 'Awards',   emoji: '🏆',  ec: 'rgba(239,68,68,0.15)',  tc: '#ef4444' },
+        { id: 'cam-faq',    name: 'FAQ Accordion',                            desc: 'Câu hỏi về lắp đặt, bảo hành, gói Cloud',               type: 'FAQ',      emoji: '❓',  ec: 'rgba(139,92,246,0.15)', tc: '#a78bfa' },
+        { id: 'cam-sticky', name: 'Sticky Bottom Bar',                       desc: 'Thanh nút đăng ký nhanh dính chân trang',       type: 'Sticky',   emoji: '📌',  ec: 'rgba(239,68,68,0.15)',  tc: '#ef4444' },
       ],
       campaign: [
-        { id: 'camp-hero',     name: 'Hero Banner Wi-Fi 7',              desc: 'Headline, Wi-Fi 7, bộ đếm ngược thời gian kết thúc ưu đãi, form nhanh',    type: 'Hero',       emoji: '⚡',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
-        { id: 'camp-countdown', name: 'Dải Countdown độc lập',       desc: 'Section độc lập · Ưu đãi theo thời gian, bộ đếm giờ ngược, CTA',                    type: 'Countdown', emoji: '⏰',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
-        { id: 'camp-usp',      name: 'USP Công nghệ Wi-Fi 7',                 desc: 'Tốc độ băng thông, độ trễ cực thấp, Multi-Link Operation (MLO)',             type: 'Features',   emoji: '✨',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
-        { id: 'camp-highlights', name: 'Công nghệ nổi bật của Wi-Fi 7',       desc: 'Tiêu đề section, lưới 6 thẻ công nghệ (icon cố định, tiêu đề, mô tả) và nút CTA', type: 'Highlights', emoji: '📶',  ec: 'rgba(59,130,246,0.15)',  tc: '#3b82f6' },
-        { id: 'camp-products', name: '[Card_1] - Các gói cước Wi-Fi 7',      desc: 'Tiêu đề section, card gói Lux 500, Lux 800: tên, giá, tag nổi bật, ảnh, nội dung gói bán, nút đăng ký',                   type: 'Products',   emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
-        { id: 'camp-compare',  name: 'Bảng so sánh thế hệ Wi-Fi',            desc: 'Bảng đối chiếu thông số giữa Wi-Fi 5, Wi-Fi 6 và Wi-Fi 7',                   type: 'Comparison', emoji: '📊',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
-        { id: 'camp-targets',  name: 'Đối tượng mục tiêu',                   desc: 'Gợi ý sử dụng: Gamer/Streamer, Hộ gia đình đông người, Biệt thự',           type: 'Targets',    emoji: '🎯',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
-        { id: 'camp-videos',   name: 'Video Review thực tế',                  desc: 'Các video trải nghiệm tốc độ và độ ổn định thực tế của Wi-Fi 7 FPT',         type: 'Media',      emoji: '🎬',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
-        { id: 'camp-sticky',   name: 'Sticky Bottom Bar',                     desc: 'Thanh ưu đãi/đăng ký nhanh dính chân trang (Icon, Tiêu đề, CTA)',            type: 'Sticky',     emoji: '📌',  ec: 'rgba(236,72,153,0.15)',  tc: '#f472b6' },
-        { id: 'camp-faq',      name: 'FAQ Accordion',                         desc: 'Thắc mắc về thiết bị Wi-Fi 7, phí hòa mạng, chuyển đổi từ gói cũ',          type: 'FAQ',        emoji: '❓',  ec: 'rgba(139,92,246,0.15)',  tc: '#a78bfa' },
+        { id: 'camp-hero',     name: 'Hero Banner Wi-Fi 7',              desc: 'Tiêu đề Wi-Fi 7, đếm ngược ưu đãi, form nhanh',    type: 'Hero',       emoji: '⚡',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
+        { id: 'camp-countdown', name: 'Dải Countdown độc lập',       desc: 'Đếm ngược thời gian ưu đãi, kèm nút CTA',                    type: 'Countdown', emoji: '⏰',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
+        { id: 'camp-usp',      name: 'USP Công nghệ Wi-Fi 7',                 desc: 'Tốc độ, độ trễ thấp, Multi-Link Operation (MLO)',             type: 'Features',   emoji: '✨',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
+        { id: 'camp-highlights', name: 'Công nghệ nổi bật của Wi-Fi 7',       desc: 'Lưới 6 thẻ công nghệ và nút CTA', type: 'Highlights', emoji: '📶',  ec: 'rgba(59,130,246,0.15)',  tc: '#3b82f6' },
+        { id: 'camp-products', name: '[Card_1] - Các gói cước Wi-Fi 7',      desc: 'Card gói Lux 500, Lux 800: tên, giá, tag, ảnh, nút đăng ký',                   type: 'Products',   emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
+        { id: 'camp-compare',  name: 'Bảng so sánh thế hệ Wi-Fi',            desc: 'Bảng so sánh Wi-Fi 5, 6 và 7',                   type: 'Comparison', emoji: '📊',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
+        { id: 'camp-targets',  name: 'Đối tượng mục tiêu',                   desc: 'Gợi ý theo nhóm: Gamer, gia đình đông người, biệt thự',           type: 'Targets',    emoji: '🎯',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
+        { id: 'camp-videos',   name: 'Video Review thực tế',                  desc: 'Video trải nghiệm thực tế Wi-Fi 7',         type: 'Media',      emoji: '🎬',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
+        { id: 'camp-sticky',   name: 'Sticky Bottom Bar',                     desc: 'Thanh đăng ký nhanh dính chân trang',            type: 'Sticky',     emoji: '📌',  ec: 'rgba(236,72,153,0.15)',  tc: '#f472b6' },
+        { id: 'camp-faq',      name: 'FAQ Accordion',                         desc: 'Câu hỏi về thiết bị, phí hòa mạng, đổi gói',          type: 'FAQ',        emoji: '❓',  ec: 'rgba(139,92,246,0.15)',  tc: '#a78bfa' },
       ],
       thulead: [
-        { id: 'lead-top-header', name: 'Top Header - Khuyến mãi',           desc: 'Dải thông báo trên cùng trang: icon, nội dung ưu đãi, nút CTA',              type: 'TopHeader', emoji: '🎁',  ec: 'rgba(30,42,92,0.15)',    tc: '#1e2a5c' },
-        { id: 'lead-hero',      name: 'Hero Banner Thu Lead',                      desc: 'Title ưu đãi độc quyền, Subtitle, Form điền thông tin nhanh nhận quà',      type: 'Hero',      emoji: '📝',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
-        { id: 'lead-proof',     name: 'Social Proof chạy chữ',                 desc: 'Chạy chữ ngang thông tin khách hàng vừa đăng ký thành công (ẩn SĐT)',       type: 'Social',    emoji: '📣',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
-        { id: 'lead-pricing',   name: '[Card_1] - Danh sách gói internet',     desc: 'Hiển thị danh sách gói cước Internet theo tab, kéo sắp xếp',                type: 'Products',   emoji: '💰',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
-        { id: 'lead-pkg-compare', name: 'So sánh các gói Internet',            desc: 'Bảng so sánh gói theo tiêu chí: tốc độ, thiết bị, ưu đãi, số thiết bị… + hàng nút đăng ký',  type: 'PkgCompare', emoji: '📊',  ec: 'rgba(59,130,246,0.15)',  tc: '#3b82f6' },
-        { id: 'lead-steps',     name: 'Ưu đãi, tiện ích',                       desc: '6 chỉ số: icon + text (tốc độ, số khách hàng, đánh giá sao…)',               type: 'Stats',  emoji: '👣',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
-        { id: 'lead-reviews',   name: 'Video Review FPT Internet',              desc: 'Tiêu đề section, danh sách video (thumbnail + link YouTube)',                 type: 'Media',   emoji: '⭐',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
-        { id: 'lead-feedback',  name: 'Đánh giá khách hàng',                   desc: 'Khách hàng nói gì sau khi lắp đặt? (Slider)',                                type: 'Rating',    emoji: '⭐',  ec: 'rgba(251,191,36,0.15)',  tc: '#fbbf24' },
+        { id: 'lead-top-header', name: 'Top Header - Khuyến mãi',           desc: 'Dải thông báo ưu đãi trên cùng trang',              type: 'TopHeader', emoji: '🎁',  ec: 'rgba(30,42,92,0.15)',    tc: '#1e2a5c' },
+        { id: 'lead-hero',      name: 'Hero Banner Thu Lead',                      desc: 'Tiêu đề ưu đãi & form nhận quà',      type: 'Hero',      emoji: '📝',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
+        { id: 'lead-proof',     name: 'Social Proof chạy chữ',                 desc: 'Chữ chạy ngang: khách vừa đăng ký (ẩn SĐT)',       type: 'Social',    emoji: '📣',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
+        { id: 'lead-pricing',   name: '[Card_1] - Danh sách gói internet',     desc: 'Danh sách gói cước Internet theo tab',                type: 'Products',   emoji: '💰',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
+        { id: 'lead-pkg-compare', name: 'So sánh các gói Internet',            desc: 'Bảng so sánh gói theo tiêu chí, kèm nút đăng ký',  type: 'PkgCompare', emoji: '📊',  ec: 'rgba(59,130,246,0.15)',  tc: '#3b82f6' },
+        { id: 'lead-steps',     name: 'Ưu đãi, tiện ích',                       desc: '6 chỉ số nổi bật: icon + nội dung',               type: 'Stats',  emoji: '👣',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
+        { id: 'lead-reviews',   name: 'Video Review FPT Internet',              desc: 'Danh sách video review (ảnh bìa + link YouTube)',                 type: 'Media',   emoji: '⭐',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
+        { id: 'lead-feedback',  name: 'Đánh giá khách hàng',                   desc: 'Slider đánh giá của khách hàng',                                type: 'Rating',    emoji: '⭐',  ec: 'rgba(251,191,36,0.15)',  tc: '#fbbf24' },
         { id: 'lead-procedure', name: 'Hướng dẫn thủ tục đăng ký',             desc: 'Các bước đăng ký FPT Internet',                                               type: 'Steps', emoji: '📋',  ec: 'rgba(59,130,246,0.15)',  tc: '#60a5fa' },
-        { id: 'lead-faq',       name: 'FAQ Accordion',                         desc: 'Giải đáp thắc mắc về điều kiện hưởng khuyến mãi, cam kết sử dụng',          type: 'FAQ',       emoji: '❓',  ec: 'rgba(139,92,246,0.15)',  tc: '#a78bfa' },
-        { id: 'lead-sticky',    name: 'Sticky Bottom Bar',                     desc: 'Thông điệp khuyến mãi kèm nút đăng ký nhanh dưới chân trang',                type: 'Sticky',    emoji: '📌',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
+        { id: 'lead-faq',       name: 'FAQ Accordion',                         desc: 'Câu hỏi về điều kiện khuyến mãi, cam kết',          type: 'FAQ',       emoji: '❓',  ec: 'rgba(139,92,246,0.15)',  tc: '#a78bfa' },
+        { id: 'lead-sticky',    name: 'Sticky Bottom Bar',                     desc: 'Thanh khuyến mãi kèm nút đăng ký nhanh',                type: 'Sticky',    emoji: '📌',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
       ],
       customhtml: [
-        { id: 'customhtml-code', name: 'Mã HTML tùy chỉnh', desc: 'Dán mã HTML, inline CSS và JS tùy chỉnh trực tiếp vào trang', type: 'Code', emoji: '💻', ec: 'rgba(245,158,11,0.15)', tc: '#fbbf24' },
+        { id: 'customhtml-code', name: 'Mã HTML tùy chỉnh', desc: 'Dán mã HTML, CSS, JS tùy chỉnh', type: 'Code', emoji: '💻', ec: 'rgba(245,158,11,0.15)', tc: '#fbbf24' },
       ],
     };
   }
@@ -5198,7 +5198,7 @@ class Component extends DCLogic {
         description: 'URL "fpt.vn/' + this.urlFull(r, all) + '" đang được ' + usedBy.length + ' bản ghi sử dụng' + (children.length ? ' (tính cả ' + children.length + ' URL cấp 2 bên dưới)' : '') + '.',
         render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
           h(DS.Alert, { theme: 'warning', title: 'Đổi từ "' + typeLabel(d.type) + '" sang "' + typeLabel(v) + '"', style: { borderRadius: 10 } },
-            'Các bản ghi bên dưới sẽ không còn khớp với loại URL này, không còn được tính là đang dùng URL này và có thể phải gán lại URL khác. Thay đổi chỉ có hiệu lực khi bạn bấm "Lưu URL".'),
+            'Nếu thay đổi Loại, các URL đang chạy sẽ bị ảnh hưởng. Bạn có muốn thay đổi không? Thay đổi chỉ có hiệu lực khi bạn bấm "Lưu URL".'),
           liveLdp ? h(DS.Alert, { theme: 'danger', title: 'Có Landing Page đang chạy', style: { borderRadius: 10 } },
             'Landing Page "' + liveLdp.name + '" đang chạy cho người dùng cuối. Đổi loại có thể ảnh hưởng đến đường dẫn đang chạy này.') : null,
           h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
@@ -5458,13 +5458,11 @@ class Component extends DCLogic {
     // Mã code (Slug) nhập theo định dạng lv1/lv2 — kiểm tra ngay khi gõ, hiện bản xem trước phần sẽ đồng bộ sang Quản lý URL.
     const slugChk = val.slug ? this.urlCheckPageSlug(val.slug, r ? r.slug : null) : null;
     const slugMsg = slugChk && !slugChk.ok ? slugChk.msg : undefined;
-    const slugExtras = h('div', { style: { marginTop: 8 } },
-      slugChk && slugChk.ok
-        ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 12, color: 'var(--color-text-subtle)' } },
-            h('span', null, 'Đồng bộ sang Quản lý URL:'),
-            h(FptUrlPathChip, { l1: slugChk.l1, l2: slugChk.l2, l1Exists: slugChk.lv1Exists, l2Exists: slugChk.lv2Exists }))
-        : h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Nhập theo định dạng lv1/lv2 (VD: truyen-hinh-fpt-play/detail) — tự đồng bộ sang module Quản lý URL.')
-    );
+    const slugExtras = slugChk && slugChk.ok
+      ? h('div', { style: { marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 12, color: 'var(--color-text-subtle)' } },
+          h('span', null, 'Đồng bộ sang Quản lý URL:'),
+          h(FptUrlPathChip, { l1: slugChk.l1, l2: slugChk.l2, l1Exists: slugChk.lv1Exists, l2Exists: slugChk.lv2Exists }))
+      : null;
 
     // Lưu thật: ghi trang vào state.pagesData, đồng bộ URL cấp 1 / cấp 2 sang Quản lý URL, giữ liên kết Section khi đổi tên trang.
     const onSave = () => {
@@ -9595,12 +9593,7 @@ class Component extends DCLogic {
                 })(),
                 h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } },
                   'Xem trước: fpt.vn/', h('strong', null, slug1 || 'level-1'), slug2 ? h('span', null, '/', h('strong', null, slug2)) : null
-                ),
-                (slug1 && !lv2Options.length) ? h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } },
-                  'Nhánh này chưa có URL cấp 2 nào. Cần đường dẫn 2 cấp? Vào ',
-                  h('button', { type: 'button', onClick: () => this.go('urls'), style: { border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontSize: 11, fontWeight: 700, color: 'var(--color-accent-text)', textDecoration: 'underline' } }, 'Quản lý URL'),
-                  ' tạo URL cấp 2 trước — biểu mẫu LDP này sẽ được giữ nguyên khi bạn quay lại.'
-                ) : null
+                )
               )
         ),
         h('div', null,
@@ -9797,18 +9790,18 @@ class Component extends DCLogic {
     const _camSel = Object.assign({}, (allSecData.camera || []).find(s => s.id === 'cam-select'), { source: 'camera' });
     if (_camSel && _camSel.id) { const _pi = allSecs.findIndex(s => s.id === 'inet-products'); allSecs.splice(_pi >= 0 ? _pi + 1 : allSecs.length, 0, _camSel); }
     // [Card_2] - card gói không ảnh, tag nổi bật nhập chữ: section chỉ có trong Thư viện (không nằm trong bộ section mặc định của template nào).
-    const _card2 = { id: 'inet-card2', name: '[Card_2] - Danh sách gói internet (tag chữ)', desc: 'Tiêu đề section, card gói theo tab: tên, giá, tag nổi bật nhập chữ, nội dung gói bán, nút đăng ký (không có ảnh card)', type: 'Card2', emoji: '📦', ec: 'rgba(245,158,11,0.15)', tc: '#d97706', source: 'internet' };
-    const _card3 = { id: 'inet-card3', name: '[Card_3] - Danh sách gói internet (nền card tùy chỉnh)', desc: 'Tiêu đề section, card gói theo tab: tên, nội dung phụ, giá, tag nổi bật, biến thể card Mặc định/Nổi bật (nổi bật chỉnh được nền solid/gradient), nội dung gói bán dạng text editor, 3 nút CTA (không có ảnh card)', type: 'Card3', emoji: '🎨', ec: 'rgba(168,85,247,0.15)', tc: '#9333ea', source: 'internet' };
-    const _card4 = { id: 'inet-card4', name: '[Card_4] - Danh sách gói internet', desc: 'Tiêu đề section, card gói theo tab: tên, giá, tag nổi bật, ảnh card, nội dung gói bán, nút đăng ký', type: 'Card4', emoji: '🗂️', ec: 'rgba(20,184,166,0.15)', tc: '#0d9488', source: 'internet' };
-    const _card5 = { id: 'inet-card5', name: '[Card_5] - Danh sách gói internet', desc: 'Tiêu đề section, card gói theo tab: tên, giá, tag nổi bật, nội dung gói bán, nút đăng ký (không có ảnh card)', type: 'Card5', emoji: '🧩', ec: 'rgba(244,63,94,0.15)', tc: '#e11d48', source: 'internet' };
-    const _card6 = { id: 'inet-card6', name: '[Card_6] - Danh sách gói internet', desc: 'Tiêu đề section, card gói theo tab: tên, giá, tag nổi bật, ảnh card, nội dung gói bán, nút đăng ký (giao diện Dark mode)', type: 'Card6', emoji: '🌙', ec: 'rgba(71,85,105,0.18)', tc: '#475569', source: 'internet' };
-    const _card7 = { id: 'inet-card7', name: '[Card_7] - Bảng giá & đăng ký gói internet', desc: 'Tiêu đề section, quản lý tiêu chí, danh sách gói: chọn gói, giá bán, hình ảnh & mô tả ngắn, bảng thông tin gói cước, nút đăng ký', type: 'Card7', emoji: '📊', ec: 'rgba(14,165,233,0.15)', tc: '#0284c7', source: 'internet' };
+    const _card2 = { id: 'inet-card2', name: '[Card_2] - Danh sách gói internet (tag chữ)', desc: 'Card gói theo tab, tag nổi bật nhập chữ, không có ảnh card', type: 'Card2', emoji: '📦', ec: 'rgba(245,158,11,0.15)', tc: '#d97706', source: 'internet' };
+    const _card3 = { id: 'inet-card3', name: '[Card_3] - Danh sách gói internet (nền card tùy chỉnh)', desc: 'Card gói theo tab, nền card Mặc định/Nổi bật tùy chỉnh, 3 nút CTA', type: 'Card3', emoji: '🎨', ec: 'rgba(168,85,247,0.15)', tc: '#9333ea', source: 'internet' };
+    const _card4 = { id: 'inet-card4', name: '[Card_4] - Danh sách gói internet', desc: 'Card gói theo tab, có ảnh card', type: 'Card4', emoji: '🗂️', ec: 'rgba(20,184,166,0.15)', tc: '#0d9488', source: 'internet' };
+    const _card5 = { id: 'inet-card5', name: '[Card_5] - Danh sách gói internet', desc: 'Card gói theo tab, không có ảnh card', type: 'Card5', emoji: '🧩', ec: 'rgba(244,63,94,0.15)', tc: '#e11d48', source: 'internet' };
+    const _card6 = { id: 'inet-card6', name: '[Card_6] - Danh sách gói internet', desc: 'Card gói theo tab, có ảnh card, giao diện Dark mode', type: 'Card6', emoji: '🌙', ec: 'rgba(71,85,105,0.18)', tc: '#475569', source: 'internet' };
+    const _card7 = { id: 'inet-card7', name: '[Card_7] - Bảng giá & đăng ký gói internet', desc: 'Bảng giá theo tiêu chí: chọn gói, giá, ảnh, bảng thông tin, nút đăng ký', type: 'Card7', emoji: '📊', ec: 'rgba(14,165,233,0.15)', tc: '#0284c7', source: 'internet' };
     { const _ci = allSecs.findIndex(s => s.id === 'cam-select'); allSecs.splice(_ci >= 0 ? _ci + 1 : allSecs.length, 0, _card2, _card3, _card4, _card5, _card6, _card7); }
     // Explicitly add sa-products (Gói dịch vụ SA)
-    const _saProd = { id: 'sa-products', name: 'Gói dịch vụ SA', desc: 'Tiêu đề section, card gói SA: tên, giá, tính năng, nút đăng ký', type: 'SaProducts', emoji: '📦', ec: 'rgba(109,40,217,0.15)', tc: '#6d28d9', source: 'sa' };
+    const _saProd = { id: 'sa-products', name: 'Gói dịch vụ SA', desc: 'Card gói SA: tên, giá, tính năng, nút đăng ký', type: 'SaProducts', emoji: '📦', ec: 'rgba(109,40,217,0.15)', tc: '#6d28d9', source: 'sa' };
     allSecs.push(_saProd);
     // Nội dung văn bản (Text Editor): section chỉ có nhóm "Thông tin cơ bản" + 1 vùng soạn thảo văn bản, KHÔNG có chỉnh màu nền. Chỉ có trong Thư viện.
-    allSecs.push({ id: 'lib-richtext', name: 'Nội dung văn bản (Text Editor)', desc: 'Chỉ gồm Thông tin cơ bản và 1 vùng soạn thảo văn bản (text editor), không chỉnh màu nền', type: 'TextEditor', emoji: '📝', ec: 'rgba(100,116,139,0.15)', tc: '#475569', source: 'common' });
+    allSecs.push({ id: 'lib-richtext', name: 'Nội dung văn bản (Text Editor)', desc: 'Vùng soạn thảo văn bản, không chỉnh màu nền', type: 'TextEditor', emoji: '📝', ec: 'rgba(100,116,139,0.15)', tc: '#475569', source: 'common' });
     return allSecs.filter((s, i, a) => a.findIndex(x => x.id === s.id) === i);
   }
   // Panel "Thư viện Sections" (tìm kiếm + danh sách kéo/nhấn + để thêm). canvasSecs = các section đang có trên trang (để hiện badge xN); onAdd(sec) = thêm 1 section vào cuối trang.
