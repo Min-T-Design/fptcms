@@ -2912,6 +2912,7 @@ class Component extends DCLogic {
           onClick: (e) => {
             e.stopPropagation();
             this.openModal({ kind: 'confirm',
+              danger: true,
               title: '\u0110\u1ed3ng b\u1ed9 ' + c.full + ' theo Global?',
               message: 'C\u00e1c t\u00f9y ch\u1ec9nh ri\u00eang c\u1ee7a k\u00eanh n\u00e0y s\u1ebd b\u1ecb x\u00f3a. K\u00eanh s\u1ebd chuy\u1ec3n v\u1ec1 d\u00f9ng c\u1ea5u h\u00ecnh Global.',
               onYes: () => {
@@ -3525,7 +3526,8 @@ class Component extends DCLogic {
           onClick: () => this.confirm(
             'Xóa cấu hình riêng → về Global?',
             'Mọi tùy chỉnh riêng của kênh này sẽ bị xóa và quay lại dùng cấu hình Global.',
-            () => { this.setState(s => ({ inherit: { ...s.inherit, [cid]: true } })); this.closeModal(); this.toast('info', 'Đã khôi phục', 'Kênh đã kế thừa lại Global.'); }
+            () => { this.setState(s => ({ inherit: { ...s.inherit, [cid]: true } })); this.closeModal(); this.toast('info', 'Đã khôi phục', 'Kênh đã kế thừa lại Global.'); },
+            true
           )
         }, 'Xóa cấu hình riêng → về Global'),
         h(DS.Button, {
@@ -3883,10 +3885,12 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const m = this.state.modal; if (!m) return null;
     if (m.kind === 'confirm') {
+      const cancelBtn = h(DS.Button, { key: 'c', level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy');
+      const okBtn = h(DS.Button, { key: 'ok', level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: m.onYes }, 'Xác nhận');
+      // CLAUDE.md §17: confirm nghiêm trọng (danger: xóa / ghi đè / tắt thứ đang chạy…) → nút chính đứng TRÁI, "Hủy" bên phải; confirm đơn giản → giữ thứ tự thường (Hủy trái, nút chính phải).
       return h(DS.Modal, { open: true, onClose: () => this.closeModal(), title: m.title, description: m.message },
         h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 } },
-          h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy'),
-          h(DS.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: m.onYes }, 'Xác nhận')
+          ...(m.danger ? [okBtn, cancelBtn] : [cancelBtn, okBtn])
         )
       );
     }
@@ -4658,7 +4662,7 @@ class Component extends DCLogic {
       const liveAtLv1 = this.ldpLv1LiveLdp(slug1, currentId);
       if (liveAtLv1) {
         return { ok: false, block: true, kind: 'needL2', bad1: true, bad2: false,
-          msg: 'Nhánh Cấp 1 fpt.vn/' + slug1 + ' hiện đang có chiến dịch [' + liveAtLv1.name + '] đang chạy. Vui lòng chọn thêm Slug Cấp 2 (URL cấp 2 đã tạo ở Quản lý URL) hoặc chọn nhánh khác để không ghi đè lên trang đang chạy.' };
+          msg: 'Nhánh Cấp 1 fpt.vn/' + slug1 + ' hiện đang có chiến dịch [' + liveAtLv1.name + '] đang chạy. Vui lòng chọn thêm Slug Cấp 2 hoặc chọn nhánh khác để không ghi đè lên trang đang chạy.' };
       }
       // Trường hợp 1A: nhánh Cấp 1 hiện không có LDP nào đang chạy → URL 1 cấp (fpt.vn/{slug1}) hợp lệ luôn,
       // không còn bắt buộc nhập thêm Slug Cấp 2 — rơi xuống các bước kiểm tra dùng chung bên dưới (portal/clash)
@@ -4908,12 +4912,45 @@ class Component extends DCLogic {
     });
   }
   // Bật/tắt nhanh ở cột "Hoạt động" của bảng. Không đổi ngày chỉnh sửa (tránh nhóm cấp 1 tự nhảy lên đầu bảng khi bấm công tắc).
-  urlSetActive(id, v) {
+  // Tắt URL đang có Landing Page "Đang chạy" (URL cấp 1: tính cả các URL cấp 2 còn bật bên dưới) → hỏi xác nhận trước vì người dùng cuối sẽ gặp 404.
+  urlSetActive(id, v, confirmed) {
     if (!this.urlCanEdit()) return;
     const n = this.urlNode(id);
     if (!n) return;
+    if (!v && !confirmed) {
+      const all = this.URLS();
+      const nodes = [n, ...(n.level === 1 ? all.filter(c => c.level === 2 && c.pid === n.id && this.urlIsActive(c)) : [])];
+      const live = nodes.flatMap(x => this.urlUsage(x, all).filter(u => u.kind === 'ldp' && u.status === 'publish').map(u => ({ ...u, path: this.urlFull(x, all) })));
+      if (live.length) { this.urlConfirmDeactivate(n, live); return; }
+    }
     this.setState({ urlData: this.URLS().map(x => x.id === id ? { ...x, active: v } : x) });
     this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'URL "' + this.urlFull(n) + '".');
+  }
+  urlConfirmDeactivate(n, live) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const mono = { fontFamily: 'var(--font-dev)' };
+    const branch = n.level === 1;
+    const MAXROW = 5;
+    this.openModal({
+      title: 'Tắt URL đang có Landing Page chạy?',
+      description: 'Bạn sắp tắt ' + (branch ? 'URL cấp 1' : 'URL') + ' "fpt.vn/' + this.urlFull(n) + '".',
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+        h(DS.Alert, { theme: 'danger', title: 'Người truy cập sẽ gặp lỗi 404', style: { borderRadius: 10 } },
+          (branch ? 'Các Landing Page bên dưới đang chạy trong nhánh này. ' : 'Landing Page bên dưới đang chạy trên URL này. ')
+          + 'Nếu tắt, người truy cập đường dẫn sẽ nhận lỗi 404 (không tìm thấy trang). Bạn có thể bật lại URL bất cứ lúc nào để khôi phục.'),
+        h('div', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Landing Page đang chạy (' + live.length + ')'),
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+          live.slice(0, MAXROW).map((u, i, arr) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: (i < arr.length - 1 || live.length > MAXROW) ? '1px solid var(--color-border-pale)' : 'none', fontSize: 13 } },
+            h(DS.Badge, { theme: 'neutral', style: { flexShrink: 0 } }, 'LDP'),
+            h('div', { style: { flex: 1, minWidth: 0 } },
+              h('div', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 } }, u.name),
+              branch ? h('div', { style: { ...mono, fontSize: 12, color: 'var(--color-text-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, 'fpt.vn/' + u.path) : null))),
+          live.length > MAXROW ? h('div', { style: { padding: '8px 12px', fontSize: 12, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, '+ ' + (live.length - MAXROW) + ' Landing Page khác') : null),
+        // Modal cảnh báo nghiêm trọng (CLAUDE.md §17): cụm nút căn phải, nút chính (phá hoại) đứng TRƯỚC (bên trái cụm), "Hủy" sau.
+        h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 } },
+          h(DS.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { this.closeModal(); this.urlSetActive(n.id, false, true); } }, 'Vẫn tắt URL'),
+          h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy')))
+    });
   }
   closeUrlEditor() { this.setState({ urlEditor: undefined, urlDraft: undefined, urlTried: false }); }
   saveUrl(r, d, slug) {
@@ -4921,7 +4958,7 @@ class Component extends DCLogic {
     const now = this.nowStr(); const by = 'Admin User';
     const next = all.map(n => ({ ...n }));
     const touch = id => { const n = next.find(x => x.id === id); if (n) n.updatedAt = now; };
-    const level = r ? r.level : d.level;
+    const level = r ? r.level : (d.pid ? 2 : 1);
     let saved;
     if (!r) {
       const id = 'u' + (next.reduce((m, n) => Math.max(m, parseInt(String(n.id).slice(1), 10) || 0), 0) + 1);
@@ -4999,7 +5036,8 @@ class Component extends DCLogic {
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = this.urlIsActive(r);
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
-            h(DS.Switch, { key: 'sw-url-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', disabled: !canEdit,
+            // Controlled (checked) thay vì defaultChecked: khi người dùng Hủy ở modal cảnh báo tắt URL, công tắc tự bật lại đúng trạng thái thật.
+            h(DS.Switch, { key: 'sw-url-act-' + r.id, checked: isOn, size: 'sm', disabled: !canEdit,
               onChange: v => this.urlSetActive(r.id, v) }));
         } },
       { key: 'act', header: 'Thao tác', width: 60, align: 'right', render: (_, r) => canEdit
@@ -5090,7 +5128,7 @@ class Component extends DCLogic {
     const tried = !!this.state.urlTried;
     const d = this.state.urlDraft || { level: 0, slug: '', type: '', pid: '', active: true };
     const setD = patch => this.setState(s => ({ urlDraft: { ...(s.urlDraft || {}), ...patch } }));
-    const level = isNew ? (d.level || 0) : r.level;
+    const level = isNew ? (d.pid ? 2 : 1) : r.level; // tạo mới: cấp suy ra từ Slug cha (có cha = cấp 2)
     const slug = String(d.slug || '').replace(/-+$/, '');
     const parent = level === 2 ? this.urlNode(d.pid, all) : null;
     const children = (r && r.level === 1) ? all.filter(n => n.level === 2 && n.pid === r.id) : [];
@@ -5112,7 +5150,6 @@ class Component extends DCLogic {
 
     // ── Kiểm tra (tính lại mỗi lần render → lỗi tự biến mất khi người dùng sửa xong, CLAUDE.md §14). Báo lỗi MỌI trường cùng lúc khi bấm Lưu. ──
     const errs = {};
-    if (!level) errs.level = 'Vui lòng chọn cấp URL cần tạo.';
     if (level === 1 && !d.type) errs.type = 'Trường bắt buộc — vui lòng chọn loại.';
     if (level === 2 && !d.pid) errs.pid = 'Trường bắt buộc — vui lòng chọn Slug cha.';
     if (level) {
@@ -5128,57 +5165,92 @@ class Component extends DCLogic {
       h('div', { className: showErr(k) ? 'fpt-req-box-err' : undefined, style: showErr(k) ? { padding: 2 } : undefined }, node),
       showErr(k) && h('div', { className: 'fpt-req-err-msg' }, errs[k]));
 
-    // ── 1. Cấp URL: CHỈ hiện ở bước tạo mới (bắt buộc chọn Lv1 / Lv2 để điều hướng form tương ứng). Khi sửa, cấp theo bản ghi nên không dựng thẻ này
-    //    (tiêu đề trang + tên các thẻ "Thông tin URL cấp N" đã nêu rõ cấp) và các thẻ sau đánh số lại từ 1. ──
-    const levelCard = (lv, icon, title, desc) => {
-      const on = level === lv;
-      const pick = () => setD({ level: lv });
-      return h('div', {
-        key: 'lv' + lv, role: 'radio', 'aria-checked': on, tabIndex: 0, onClick: pick,
-        onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } },
-        style: { display: 'flex', alignItems: 'flex-start', gap: 12, padding: 14, borderRadius: 10, cursor: 'pointer', outline: 'none',
-          border: '1.5px solid ' + (on ? 'var(--color-accent)' : 'var(--color-border)'), background: on ? 'var(--color-accent-bg)' : 'var(--color-surface)',
-          boxShadow: on ? '0 0 0 3px var(--color-accent-bg)' : 'none', transition: 'border-color .15s, background .15s, box-shadow .15s' }
-      },
-        h('span', { style: { width: 38, height: 38, borderRadius: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--color-surface)' : 'var(--color-surface-alt)' } },
-          h(DS.Icon, { name: icon, size: 20, color: on ? 'var(--color-accent)' : 'var(--color-text-subtle)' })),
-        h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { fontWeight: 700, fontSize: 14, color: on ? 'var(--color-accent-text)' : 'var(--color-text)' } }, title),
-          h('div', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', marginTop: 3, lineHeight: 1.5 } }, desc)),
-        h('span', { style: { width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 2, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid ' + (on ? 'var(--color-accent)' : 'var(--color-border-strong)'), background: 'var(--color-surface)' } },
-          on && h('span', { style: { width: 8, height: 8, borderRadius: '50%', background: 'var(--color-accent)' } }))
-      );
-    };
+    // ── Cấp URL KHÔNG còn là ô chọn: suy ra từ "Slug cha" (để trống = URL cấp 1 · chọn 1 URL cấp 1 = URL cấp 2). Tránh người dùng hiểu nhầm
+    //    "tạo URL 1 xong bấm qua URL 2" (tạo 2 cấp cùng lúc). Khi sửa, cấp theo bản ghi (không đổi được). ──
     const sections = [];
-    if (isNew) {
-      sections.push(section(1, 'folder-line', 'Cấp URL',
-        h('div', { ...errAttr('level') }, compBox('level', h('div', { role: 'radiogroup', 'aria-label': 'Cấp URL', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
-          levelCard(1, 'folder-line', 'URL cấp 1 (Lv1)', 'Nhánh gốc fpt.vn/{slug}. Chọn loại Trang thường hoặc Landing Page; danh sách URL con được thêm khi tạo URL cấp 2.'),
-          levelCard(2, 'file-doc-line', 'URL cấp 2 (Lv2)', 'Nhánh con của 1 URL cấp 1: fpt.vn/{slug cha}/{slug}. Không có loại riêng — theo loại của URL cấp 1 đã chọn.')
+    const curType = r ? this.urlTypeOf(r, all) : null;
+    // Đang được dùng → chỉ chuyển được sang URL cấp 1 cùng loại (đổi loại sẽ làm lệch bản ghi đang dùng).
+    const parentOpts = all.filter(n => n.level === 1 && (!usedBy.length || n.type === curType))
+      .sort((a, b) => a.slug.localeCompare(b.slug)).map(n => ({ value: n.id, label: n.slug }));
+    const noParentOpt = { value: '', label: isNew ? '— Không có (tạo URL cấp 1) —' : '— Không có —' };
+    const parentLocked = !!r && level === 1; // URL cấp 1 là nhánh gốc: không có Slug cha, khoá ở "— Không có —"
+    const parentField = this.field(level === 2 && !isNew ? req('Slug cha') : 'Slug cha',
+      compBox('pid', h(DS.Select, {
+        options: parentLocked || isNew ? [noParentOpt, ...(parentLocked ? [] : parentOpts)] : parentOpts,
+        value: d.pid || '', placeholder: 'Chọn Slug cha (URL cấp 1)…', searchable: true, searchPlaceholder: 'Tìm URL cấp 1…',
+        disabled: parentLocked || !!liveLdp,
+        onChange: v => setD({ pid: v })
+      })));
+    const parentHint = isNew
+      ? 'Để trống nếu đây là URL cấp 1. Chọn một URL cấp 1 để tạo URL cấp 2 nằm dưới nó.'
+      : (level === 1 ? 'URL cấp 1 là nhánh gốc nên không có Slug cha.' : null);
+    // Loại URL cấp 1 đang được dùng (Trang / LDP) vẫn đổi được, nhưng phải qua modal cảnh báo trước khi nhận giá trị mới vào form.
+    const typeLabel = v => (this.URL_TYPES().find(t => t.value === v) || {}).label || v;
+    const origType = r && r.level === 1 ? (r.type || 'page') : null;
+    const typeDirty = level === 1 && !isNew && !!d.type && d.type !== origType;
+    const askChangeType = v => {
+      if (v === d.type) return;
+      if (!usedBy.length || v === origType) { setD({ type: v }); return; } // chưa ai dùng, hoặc đổi về loại gốc → không cần cảnh báo
+      const stLabel = { publish: 'Đang chạy', hidden: 'Tạm ẩn', draft: 'Nháp', expired: 'Hết hạn', scheduled: 'Đặt lịch', pending: 'Chờ duyệt' };
+      const MAXROW = 6;
+      this.openModal({
+        title: 'Đổi loại URL đang được sử dụng?',
+        description: 'URL "fpt.vn/' + this.urlFull(r, all) + '" đang được ' + usedBy.length + ' bản ghi sử dụng' + (children.length ? ' (tính cả ' + children.length + ' URL cấp 2 bên dưới)' : '') + '.',
+        render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+          h(DS.Alert, { theme: 'warning', title: 'Đổi từ "' + typeLabel(d.type) + '" sang "' + typeLabel(v) + '"', style: { borderRadius: 10 } },
+            'Các bản ghi bên dưới sẽ không còn khớp với loại URL này, không còn được tính là đang dùng URL này và có thể phải gán lại URL khác. Thay đổi chỉ có hiệu lực khi bạn bấm "Lưu URL".'),
+          liveLdp ? h(DS.Alert, { theme: 'danger', title: 'Có Landing Page đang chạy', style: { borderRadius: 10 } },
+            'Landing Page "' + liveLdp.name + '" đang chạy cho người dùng cuối. Đổi loại có thể ảnh hưởng đến đường dẫn đang chạy này.') : null,
+          h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+            usedBy.slice(0, MAXROW).map((u, i, arr) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: (i < arr.length - 1 || usedBy.length > MAXROW) ? '1px solid var(--color-border-pale)' : 'none', fontSize: 13 } },
+              h(DS.Badge, { theme: 'neutral', style: { flexShrink: 0 } }, u.kind === 'ldp' ? 'LDP' : 'Trang'),
+              h('span', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 } }, u.name),
+              u.kind === 'ldp' ? h('span', { style: { fontSize: 12, flexShrink: 0, color: u.status === 'publish' ? 'var(--color-success-text)' : 'var(--color-text-subtle)' } }, stLabel[u.status] || u.status) : null)),
+            usedBy.length > MAXROW ? h('div', { style: { padding: '8px 12px', fontSize: 12, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, '+ ' + (usedBy.length - MAXROW) + ' bản ghi khác') : null),
+          // Modal cảnh báo nghiêm trọng (CLAUDE.md §17): cụm nút căn phải, nút chính (phá hoại) đứng TRƯỚC (bên trái cụm), "Hủy" sau.
+          h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 } },
+            h(DS.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { setD({ type: v }); this.closeModal(); } }, 'Vẫn đổi loại'),
+            h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy')))
+      });
+    };
+    const typeField = level === 1
+      ? [
+          h('div', { key: 'type', ...errAttr('type') }, this.field(req('Loại'), compBox('type', h(DS.Select, {
+            options: this.URL_TYPES(), value: d.type || '', placeholder: 'Chọn loại URL…',
+            onChange: askChangeType
+          })))),
+          typeDirty
+            ? h('div', { key: 'typeDirty', style: { fontSize: 12, color: 'var(--color-warning-text)', marginTop: -6 } }, 'Loại sẽ đổi từ "' + typeLabel(origType) + '" sang "' + typeLabel(d.type) + '" khi bạn bấm "Lưu URL".')
+            : (usedBy.length ? h('div', { key: 'typeUsed', style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: -6 } }, 'URL đang được sử dụng — khi đổi loại, hệ thống sẽ hỏi xác nhận trước.') : null),
+          d.type === 'page' ? h('div', { key: 'typePage' }, hintBox('Trang thường — các URL của nhánh này được đồng bộ với trường "Mã code (Slug)" của module Quản lý Trang (nhập theo định dạng lv1/lv2).')) : null
+        ]
+      : [
+          h('div', { key: 'type' }, this.field('Loại', h(DS.Select, {
+            options: this.URL_TYPES(), value: parent ? parent.type : '', placeholder: 'Theo URL cấp 1 đã chọn', disabled: true
+          }))),
+          h('div', { key: 'typeNote', style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: -6 } }, 'Loại của URL cấp 2 tự động theo URL cấp 1 đã chọn.')
+        ];
+    const fullPreview = 'fpt.vn/' + (level === 2 ? (parent ? parent.slug : '…') + '/' : '') + (slug || '…');
+    sections.push(section(1, 'globe-01-line', 'Thông tin URL',
+      parentField,
+      parentHint ? h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: -6 } }, parentHint) : null,
+      ...typeField,
+      h('div', { ...errAttr('slug') }, this.field(req('Slug cấp ' + level),
+        h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
+          prefixBox(level === 2 ? 'fpt.vn/' + (parent ? parent.slug + '/' : '…/') : 'fpt.vn/'),
+          h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { value: d.slug || '', disabled: !!liveLdp, placeholder: level === 2 ? 'VD: detail' : 'VD: truyen-hinh-fpt-play', error: showErr('slug') ? errs.slug : undefined, onChange: e => setD({ slug: this.ldpSlugify(e && e.target ? e.target.value : e) }) }))
         ))),
-        level ? null : h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Chọn cấp URL để hiển thị biểu mẫu tương ứng.')
-      ));
-    }
-    const no = isNew ? 1 : 0; // số thứ tự thẻ đứng sau thẻ "Cấp URL" (chỉ có khi tạo mới)
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, background: 'var(--color-surface-alt)' } },
+        h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', flexShrink: 0 } }, isNew ? 'URL sẽ tạo:' : 'URL:'),
+        h('span', { style: { ...mono, flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, fullPreview),
+        h(DS.Badge, { theme: level === 2 ? 'info' : 'brand', style: { flexShrink: 0 } }, 'Cấp ' + level))
+    ));
 
-    if (level === 1) {
-      sections.push(section(no + 1, 'globe-01-line', 'Thông tin URL cấp 1',
-        h('div', { ...errAttr('slug') }, this.field(req('Slug cấp 1'),
-          h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
-            prefixBox('fpt.vn/'),
-            h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { value: d.slug || '', disabled: !!liveLdp, placeholder: 'VD: truyen-hinh-fpt-play', error: showErr('slug') ? errs.slug : undefined, onChange: e => setD({ slug: this.ldpSlugify(e && e.target ? e.target.value : e) }) }))
-          ))),
-        h('div', { ...errAttr('type') }, this.field(req('Loại'), compBox('type', h(DS.Select, {
-          options: this.URL_TYPES(), value: d.type || '', placeholder: 'Chọn loại URL…', disabled: usedBy.length > 0,
-          onChange: v => setD({ type: v })
-        })))),
-        usedBy.length ? h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: -6 } }, 'Không thể đổi loại vì URL đang được sử dụng.') : null,
-        d.type === 'page' ? hintBox('Trang thường — các URL của nhánh này được đồng bộ với trường "Mã code (Slug)" của module Quản lý Trang (nhập theo định dạng lv1/lv2).') : null
-      ));
-      sections.push(section(no + 2, 'menu-01-line', 'Danh sách URL con',
+    if (level === 1 && !isNew) {
+      sections.push(section(2, 'menu-01-line', 'Danh sách URL con',
         children.length === 0
           ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10, lineHeight: 1.6 } },
-              'Chưa có URL con nào.', h('br'), 'URL cấp 2 sẽ được thêm vào đây khi bạn tạo URL cấp 2 và chọn URL cấp 1 này làm Slug cha.')
+              'Chưa có URL con nào.', h('br'), 'URL cấp 2 sẽ được thêm vào đây khi bạn tạo URL mới và chọn URL cấp 1 này làm Slug cha.')
           : h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
               children.map((c, i) => {
                 const u = this.urlUsage(c, all);
@@ -5190,25 +5262,6 @@ class Component extends DCLogic {
                   this.statusBadge(this.urlIsActive(c) ? 'active' : 'inactive')
                 );
               }))
-      ));
-    }
-
-    if (level === 2) {
-      const curType = r ? this.urlTypeOf(r, all) : null;
-      // Đang được dùng → chỉ chuyển được sang URL cấp 1 cùng loại (đổi loại sẽ làm lệch bản ghi đang dùng).
-      const parentOpts = all.filter(n => n.level === 1 && (!usedBy.length || n.type === curType))
-        .sort((a, b) => a.slug.localeCompare(b.slug)).map(n => ({ value: n.id, label: n.slug }));
-      sections.push(section(no + 1, 'globe-01-line', 'Thông tin URL cấp 2',
-        h('div', { ...errAttr('pid') }, this.field(req('Slug cha'), compBox('pid', h(DS.Select, {
-          options: parentOpts, value: d.pid || '', placeholder: 'Chọn Slug cha (URL cấp 1)…', searchable: true, searchPlaceholder: 'Tìm URL cấp 1…', disabled: !!liveLdp,
-          onChange: v => setD({ pid: v })
-        })))),
-        h('div', { ...errAttr('slug') }, this.field(req('Slug cấp 2'),
-          h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
-            prefixBox('fpt.vn/' + (parent ? parent.slug + '/' : '…/')),
-            h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { value: d.slug || '', disabled: !!liveLdp, placeholder: 'VD: detail', error: showErr('slug') ? errs.slug : undefined, onChange: e => setD({ slug: this.ldpSlugify(e && e.target ? e.target.value : e) }) }))
-          ))),
-        h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: -6 } }, 'Loại của URL cấp 2 tự động theo URL cấp 1 đã chọn.')
       ));
     }
 
@@ -8717,12 +8770,14 @@ class Component extends DCLogic {
     };
     // Viền trên tách rõ thanh nút khỏi nội dung đã cuộn phía trên — modal đã dài hơn từ khi có khối "Nội dung sections".
     const footerRow = (...btns) => h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 10, width: '100%', borderTop: '1px solid var(--color-border)', paddingTop: 14 } }, ...btns);
+    // Từ chối LDP là thao tác nghiêm trọng (CLAUDE.md §17): cụm nút căn phải, nút chính (đỏ) đứng TRƯỚC (bên trái cụm), "Hủy" sau.
+    const footerRowDanger = (...btns) => h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 10, width: '100%', borderTop: '1px solid var(--color-border)', paddingTop: 14 } }, ...btns);
     const footer = decided
       ? footerRow(h(DS.Button, { level: 'secondary', size: 'sm', onClick: back }, 'Đóng'))
       : decision === 'reject'
-        ? footerRow(
-            h(DS.Button, { key: 'c', level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false }) }, 'Hủy'),
-            h(DS.Button, { key: 'r', level: 'primary', size: 'sm', leadingIcon: 'x-circle-line', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: confirmReject }, 'Xác nhận từ chối')
+        ? footerRowDanger(
+            h(DS.Button, { key: 'r', level: 'primary', size: 'sm', leadingIcon: 'x-circle-line', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: confirmReject }, 'Xác nhận từ chối'),
+            h(DS.Button, { key: 'c', level: 'tertiary', size: 'sm', onClick: () => this.setState({ ldpReviewDecision: null, ldpReviewReason: '', ldpReviewReasonErr: false }) }, 'Hủy')
           )
         : footerRow(
             h(DS.Button, { key: 'r', level: 'secondary', size: 'sm', leadingIcon: 'x-circle-line', onClick: () => this.setState({ ldpReviewDecision: 'reject' }, () => {
@@ -8993,7 +9048,7 @@ class Component extends DCLogic {
                 }
                 this.confirm('Bật Landing Page?', 'Trang "' + r.name + '" sẽ được hiển thị trở lại cho người dùng.', () => { this.setState({ ldpStatuses: { ...(this.state.ldpStatuses||{}), [r.id]: 'publish' } }); this.closeModal(); this.toast('success', 'Đã bật', 'Landing Page "' + r.name + '" đang chạy.'); });
               }
-              else { this.confirm('Tắt Landing Page?', 'Trang "' + r.name + '" sẽ bị tạm ẩn. Bạn có thể bật lại bất kỳ lúc nào.', () => { this.setState({ ldpStatuses: { ...(this.state.ldpStatuses||{}), [r.id]: 'hidden' } }); this.closeModal(); this.toast('success', 'Đã tắt', 'Landing Page "' + r.name + '" đã tạm ẩn.'); }); }
+              else { this.confirm('Tắt Landing Page?', 'Trang "' + r.name + '" sẽ bị tạm ẩn. Bạn có thể bật lại bất kỳ lúc nào.', () => { this.setState({ ldpStatuses: { ...(this.state.ldpStatuses||{}), [r.id]: 'hidden' } }); this.closeModal(); this.toast('success', 'Đã tắt', 'Landing Page "' + r.name + '" đã tạm ẩn.'); }, true); }
             } })
           );
         } },
@@ -9248,7 +9303,7 @@ class Component extends DCLogic {
         : h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', disabled: slugBlocked,
             onClick: () => {
               if (slugBlocked) { this.setState({ ldpStep: 2 }); this.toast('danger', 'URL chưa hợp lệ', slugCheck.msg || 'Vui lòng kiểm tra lại URL Slug ở bước Thông tin trang.'); return; }
-              if (slugCheck.warn) { this.confirm('Phát hành đè lên URL cũ?', slugCheck.msg, () => this.publishLdpDirect()); return; }
+              if (slugCheck.warn) { this.confirm('Phát hành đè lên URL cũ?', slugCheck.msg, () => this.publishLdpDirect(), true); return; }
               this.publishLdpDirect();
             }
           }, 'Hoàn thành'))
@@ -9387,28 +9442,20 @@ class Component extends DCLogic {
     const wardErr = !!step2Err.ward && !ward;
     // LDP đang chạy (publish) → cả nhóm 1 bị khoá, không cho đổi loại LDP / khu vực (giống ô URL Slug đã khoá).
     const typeLocked = this.ldpTypeLocked();
+    // Loại LDP = 1 ô chọn (DS.Select, 2 lựa chọn nên không cần searchable — §11). LDP thường: không có thêm trường nào; LDP Khu vực: mở thêm khối "Khu vực áp dụng" bên dưới.
     const typeOpts = [
-      { id: 'normal', icon: 'globe-01-line', title: 'LDP thường', desc: 'Không giới hạn khu vực', badge: 'Mặc định' },
-      { id: 'region', icon: 'marker-pin-01-line', title: 'LDP Khu vực', desc: 'Chính sách giá theo Tỉnh/Thành phố và Phường/Xã được chọn.' },
+      { value: 'normal', label: 'LDP thường' },
+      { value: 'region', label: 'LDP Khu vực' },
     ];
-    const typeCards = h('div', { role: 'radiogroup', 'aria-label': 'Loại LDP', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
-      typeOpts.map(o => {
-        const on = ldpType === o.id;
-        return h(DS.Radio, {
-          key: o.id, name: 'ldpType', value: o.id, checked: on, disabled: typeLocked,
-          onChange: () => set('ldpType', o.id),
-          style: { display: 'flex', width: '100%', boxSizing: 'border-box', alignItems: 'flex-start', padding: '14px 16px', borderRadius: 12, border: '1.5px solid ' + (on ? 'var(--color-accent)' : 'var(--color-border)'), background: 'var(--color-surface)', boxShadow: on ? '0 0 0 3px var(--color-accent-bg)' : 'none', transition: 'border-color 150ms, box-shadow 150ms' },
-          label: h('span', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
-            // margin âm giữ chiều cao hàng nhãn = 20px (bằng nút radio) để icon, tiêu đề và chấm radio nằm cùng trục giữa.
-            h('span', { style: { width: 26, height: 26, margin: '-3px 0', borderRadius: 7, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--color-accent-bg)' : 'var(--color-surface-sunken)', transition: 'background 150ms' } },
-              h(DS.Icon, { name: o.icon, size: 16, color: on ? 'var(--color-accent)' : 'var(--color-text-subtle)' })
-            ),
-            h('span', { style: { fontWeight: 700, fontSize: 14 } }, o.title),
-            o.badge ? h(DS.Badge, { theme: 'neutral' }, o.badge) : null
-          ),
-          description: o.desc
-        });
-      })
+    const typeCards = h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 } },
+      h('div', null,
+        h('label', { style: lbSt }, 'Loại LDP'),
+        h(DS.Select, {
+          value: ldpType, options: typeOpts, disabled: typeLocked,
+          onChange: v => set('ldpType', v),
+          containerStyle: { width: '100%' }
+        })
+      )
     );
     const regionPanel = isRegion ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, padding: 16, borderRadius: 12, background: 'color-mix(in srgb, var(--color-surface-sunken) 50%, var(--color-surface))' } },
       h('span', { style: { fontWeight: 700, fontSize: 13.5, color: 'var(--color-text)' } }, 'Khu vực áp dụng'),
@@ -9636,7 +9683,16 @@ class Component extends DCLogic {
       this.setState({ [secKey]: [...getCurSecs(), { ...sec, uid: sec.id + '_' + Date.now() + '_' + Math.random().toString(36).slice(2) }] });
       this.toast('success', 'Đã thêm section', '"' + sec.name + '" đã được thêm vào cuối trang.');
     };
-    const removeSec = (uid) => this.setState({ [secKey]: getCurSecs().filter(s => s.uid !== uid) });
+    // Xóa mọi section của template (cả section có sẵn lẫn section thêm từ Thư viện): xóa theo vị trí dòng vì section có sẵn không có uid; hỏi xác nhận vì section có sẵn đã có nội dung cấu hình sẵn.
+    const removeSec = (i) => {
+      const s = getCurSecs()[i]; if (!s) return;
+      const nm = (this.state.ldpSectionNames && this.state.ldpSectionNames[s.id]) || (this.state.ldpSectionTitles && this.state.ldpSectionTitles[s.id]) || s.name;
+      this.confirm('Xóa section?', 'Section "' + nm + '" sẽ bị xóa khỏi trang LDP này.', () => {
+        this.setState({ [secKey]: getCurSecs().filter((_, j) => j !== i) });
+        this.closeModal();
+        this.toast('success', 'Đã xóa section', '"' + nm + '" đã được xóa khỏi trang.');
+      }, true);
+    };
     const dropLib = () => {
       const sec = this.ldpLibraryPool().find(s => s.id === this.state.ldpLibDragId);
       if (sec) addSec(sec);
@@ -9694,7 +9750,7 @@ class Component extends DCLogic {
                     h(DS.Switch, { size: 'sm', checked: this.state['ldpSecVis_' + (s.uid || s.id)] !== false, onChange: v => this.setState({ ['ldpSecVis_' + (s.uid || s.id)]: v }) }),
                     h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, 'Hiển thị'),
                     h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: () => this.openLdpSectionDrawer(s, tpl) }),
-                    s.uid && h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => removeSec(s.uid) })
+                    h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => removeSec(i) })
                   )
                 )
               )
@@ -9751,6 +9807,8 @@ class Component extends DCLogic {
     // Explicitly add sa-products (Gói dịch vụ SA)
     const _saProd = { id: 'sa-products', name: 'Gói dịch vụ SA', desc: 'Tiêu đề section, card gói SA: tên, giá, tính năng, nút đăng ký', type: 'SaProducts', emoji: '📦', ec: 'rgba(109,40,217,0.15)', tc: '#6d28d9', source: 'sa' };
     allSecs.push(_saProd);
+    // Nội dung văn bản (Text Editor): section chỉ có nhóm "Thông tin cơ bản" + 1 vùng soạn thảo văn bản, KHÔNG có chỉnh màu nền. Chỉ có trong Thư viện.
+    allSecs.push({ id: 'lib-richtext', name: 'Nội dung văn bản (Text Editor)', desc: 'Chỉ gồm Thông tin cơ bản và 1 vùng soạn thảo văn bản (text editor), không chỉnh màu nền', type: 'TextEditor', emoji: '📝', ec: 'rgba(100,116,139,0.15)', tc: '#475569', source: 'common' });
     return allSecs.filter((s, i, a) => a.findIndex(x => x.id === s.id) === i);
   }
   // Panel "Thư viện Sections" (tìm kiếm + danh sách kéo/nhấn + để thêm). canvasSecs = các section đang có trên trang (để hiện badge xN); onAdd(sec) = thêm 1 section vào cuối trang.
@@ -9896,6 +9954,7 @@ class Component extends DCLogic {
     // ── helpers ──────────────────────────────────────────────────────────────
     const TITLE_LABELS = ['Tiêu đề section', 'Headline lớn', 'Tiêu đề Section chọn camera', 'Tiêu đề dải Countdown / Nhãn ưu đãi'];
     const titleRef = { value: this.state.ldpSectionTitles[section.id] || '' };
+    const rtKp = 'ldpSecRt_' + (section.uid || section.id); // tiền tố state/ref của vùng soạn thảo (loại TextEditor), riêng từng bản section
     const nameRef = { value: (this.state.ldpSectionNames && this.state.ldpSectionNames[section.id]) || '' };
     // Mọi trường trong editor này đều bắt buộc trừ khi gọi fld(..., false) tường minh
     // (CLAUDE.md — Landing: tất cả trường ở phần chỉnh sửa section đều bắt buộc).
@@ -10911,7 +10970,9 @@ class Component extends DCLogic {
         const pkgMissing = (p, badges) => {
           const m = [];
           if (CFG.subText && !fptHasTxt(p.subText)) m.push('subText');
-          if (p.tagOn && (CFG.tagText ? !fptHasTxt(p.tagText) : !badges.some(b => b.id === p.tagBadgeId))) m.push('tag');
+          // Card_2 (CFG.tagText): không có công tắc — luôn có Tag; loại Mặc định bắt buộc nhập chữ, loại Nổi bật bắt buộc chọn Badge/Tag.
+          if (CFG.tagText) { if (p.tagKind === 'featured' ? !badges.some(b => b.id === p.tagBadgeId) : !fptHasTxt(p.tagText)) m.push('tag'); }
+          else if (p.tagOn && !badges.some(b => b.id === p.tagBadgeId)) m.push('tag');
           if (!CFG.noImage) { if (fptUpErr(p.imgDesktop)) m.push('imgDesktop'); if (fptUpErr(p.imgMobile)) m.push('imgMobile'); }
           if (CFG.cardBg && p.cardVariant === 'featured') {
             if (p.cardBgMode === 'gradient') {
@@ -10958,11 +11019,25 @@ class Component extends DCLogic {
         class InetProductsEd extends React.Component {
           constructor(p) {
             super(p);
-            this.state = { tabs: DEF_TABS.map(t => ({...t, addSel: new Set()})), defaultTab: DEF_TABS[0].id, tabDragFrom: -1, tabDragOver: -1 };
+            // tabMode: 'tabs' = Có tab (nhiều tab như trước) · 'single' = Không tab (đúng 1 tab, không thêm/xóa/kéo tab, không có "Mặc định").
+            this.state = { tabs: DEF_TABS.map(t => ({...t, addSel: new Set()})), defaultTab: DEF_TABS[0].id, tabDragFrom: -1, tabDragOver: -1, tabMode: 'tabs' };
             this._seenErr = mainThis.state.ldpSecFieldErr;
           }
           // Sau mỗi lần Lưu báo thiếu trường bắt buộc: mở tab có lỗi và chọn sẵn gói lỗi đầu tiên (fptRevealTabErrors).
           componentDidUpdate() { fptRevealTabErrors(this, mainThis, CFG.key + '-', p => pkgMissing(p, cardBadges())); }
+          // Đổi kiểu hiển thị. Sang "Không tab" mà đang có ≥2 tab thì phải bỏ bớt (chỉ còn 1 tab) → hỏi xác nhận, giữ lại tab Mặc định; từ "Không tab" về "Có tab" không mất gì.
+          setTabMode(mode) {
+            const { tabs, defaultTab, tabMode } = this.state;
+            if (mode === tabMode) return;
+            if (mode === 'single' && tabs.length > 1) {
+              const keep = tabs.find(t => t.id === defaultTab) || tabs[0];
+              mainThis.confirm('Chuyển sang "Không tab"?',
+                'Section chỉ còn 1 tab nên chỉ giữ tab "' + (keep.name || 'Chưa đặt tên') + '" (tab mặc định). ' + (tabs.length - 1) + ' tab còn lại cùng các gói trong đó sẽ bị xóa.',
+                () => { this.setState({ tabMode: 'single', tabs: [keep], defaultTab: keep.id }); mainThis.closeModal(); }, true);
+              return;
+            }
+            this.setState({ tabMode: mode });
+          }
           updTab(tid, patch) {
             this.setState(s => ({ tabs: s.tabs.map(t => t.id===tid ? {...t,...patch} : t) }));
           }
@@ -10974,7 +11049,8 @@ class Component extends DCLogic {
             this.setState(s => ({ tabs: s.tabs.map(t => t.id!==tid ? t : {...t, pkgs: t.pkgs.map((p,i) => i!==pidx ? p : {...p, [field]: typeof v === 'function' ? v(p[field]) : v})}) }));
           }
           render() {
-            const { tabs, defaultTab, tabDragFrom, tabDragOver } = this.state;
+            const { tabs, defaultTab, tabDragFrom, tabDragOver, tabMode } = this.state;
+            const single = tabMode === 'single';
             const DS = window.ZENKaizenDesignSystem_4069b4;
             const h = React.createElement;
             const lb = { fontSize:12, fontWeight:600, color:'var(--color-text-subtle)', marginBottom:4, display:'block' };
@@ -11002,6 +11078,18 @@ class Component extends DCLogic {
             );
             const tagChip = b => h('span',{style:{display:'inline-flex',alignItems:'center',padding:'5px 14px',borderRadius:6,fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:'.5px',background:b.bgColor,color:b.textColor}},b.name);
             return h('div',{style:{display:'flex',flexDirection:'column',gap:0}},
+
+              // Kiểu hiển thị: Có tab (nhiều tab) / Không tab (đúng 1 tab, không thêm được tab). Luôn có giá trị nên không đánh dấu bắt buộc (§10).
+              h('div',{key:'tabmode',style:{marginBottom:14}},
+                h('label',{style:lb},'Kiểu hiển thị'),
+                h('div',{style:{display:'flex',gap:20}},
+                  h(DS.Radio,{name:CFG.key+'-tabmode',label:'Có tab',checked:!single,onChange:()=>this.setTabMode('tabs')}),
+                  h(DS.Radio,{name:CFG.key+'-tabmode',label:'Không tab',checked:single,onChange:()=>this.setTabMode('single')})
+                ),
+                h('div',{style:{fontSize:11.5,color:'var(--color-text-subtle)',marginTop:4}},single
+                  ? 'Không tab: trang hiển thị trực tiếp danh sách gói, không có thanh chuyển tab. Chỉ có 1 tab, không thêm được tab mới.'
+                  : 'Có tab: chia các gói thành nhiều tab, khách chuyển tab để xem từng nhóm gói.')
+              ),
 
               ...tabs.map((tab, ti) => {
                 const col = TAB_COLORS[ti % TAB_COLORS.length];
@@ -11080,7 +11168,8 @@ class Component extends DCLogic {
 
                 const rightPanel = h('div',{style:{flex:1,paddingLeft:14,minWidth:0,overflowY:'auto'}},
                   sel ? h('div',null,
-                    h('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:14,paddingBottom:10,borderBottom:'1px solid var(--color-border)'}},
+                    // Không kẻ đường dưới tiêu đề gói: nhóm đầu tiên ngay dưới ("Thông tin hiển thị trên card") đã có đường kẻ riêng, thêm đường nữa sẽ thành 2 đường liền nhau.
+                    h('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:16}},
                       h('div',{style:{flex:1,minWidth:0}},
                         h('div',{style:{fontWeight:700,fontSize:14}},sel.name),
                         h('div',{style:{fontSize:11.5,color:'var(--color-text-subtle)',marginTop:2}},sel.code)
@@ -11094,25 +11183,51 @@ class Component extends DCLogic {
                     grp('Thông tin hiển thị trên card',
                       (() => {
                         const priceF = fld0('Giá cước', h('div',{style:{padding:'0 12px',height:48,background:'var(--color-surface-sunken)',borderRadius:12,fontSize:13,color:'var(--color-text-muted)',border:'1px solid var(--color-border)',display:'flex',alignItems:'center'}},sel.price));
-                        // Card_3 (CFG.subText): thêm "Nội dung phụ" cạnh giá cước.
-                        if (CFG.subText) return g2(
-                          fld('Nội dung phụ', h(DS.Input,{key:'sb'+tab.id+selIdx,defaultValue:sel.subText||'',placeholder:'VD: Phù hợp 1–2 người dùng',onChange:e=>this.updPkg(tab.id,selIdx,{subText:e.target.value})}), E('subText')),
-                          priceF
+                        // Tooltip ghi chú giá (mọi Card gói): nằm kế ô giá, dùng chung nhãn/chú thích/trường dữ liệu priceTooltip với "Cài đặt web" của Nội dung sản phẩm. Không bắt buộc (như bên đó).
+                        const tipF = fld0('Nội dung Tooltip ghi chú giá', h('div',null,
+                          h(DS.Input,{key:'pt'+tab.id+selIdx,defaultValue:sel.priceTooltip||'',placeholder:'VD: Giá đã gồm VAT, có thể thay đổi theo khu vực',onChange:e=>this.updPkg(tab.id,selIdx,{priceTooltip:e.target.value})}),
+                          h('div',{style:{fontSize:11,color:'var(--color-text-subtle)',marginTop:4}},'Hiển thị khi khách hover hoặc click icon (ⓘ) cạnh giá trên Website/App.')
+                        ));
+                        const priceRow = g2(priceF, tipF);
+                        // Card_3 (CFG.subText): "Nội dung phụ" đứng trên hàng giá (đúng thứ tự trên card: tên → nội dung phụ → giá).
+                        if (CFG.subText) return h('div',null,
+                          h('div',{style:{width:'calc(50% - 6px)',minWidth:220}}, fld('Nội dung phụ', h(DS.Input,{key:'sb'+tab.id+selIdx,defaultValue:sel.subText||'',placeholder:'VD: Phù hợp 1–2 người dùng',onChange:e=>this.updPkg(tab.id,selIdx,{subText:e.target.value})}), E('subText'))),
+                          priceRow
                         );
-                        return h('div',{style:{width:'calc(50% - 6px)',minWidth:220}}, priceF);
+                        return priceRow;
                       })(),
                       (() => {
                         // Đồng bộ với "Cài đặt web → Tag nổi bật" của module Nội dung sản phẩm. Công tắc tắt thì không có ô nhập nên Tag không bắt buộc.
                         const tagOn = !!sel.tagOn;
-                        // Card_2 (CFG.tagText): Tag nổi bật chỉ gồm công tắc + 1 ô nhập nội dung, không chọn từ module Quản lý Badge/Tag.
+                        // Card_2 (CFG.tagText): không có công tắc bật/tắt — chọn loại Tag bằng radio. Mặc định = 1 ô nhập chữ (ghi chú đề xuất ≤15 ký tự, không chặn nhập);
+                        // Nổi bật = chọn Badge/Tag từ module Quản lý Badge/Tag (ghi chú đề xuất tên ngắn 8–10 ký tự). Hai giá trị lưu riêng (tagText / tagBadgeId) nên đổi qua lại không mất dữ liệu.
                         if (CFG.tagText) {
+                          const TAG_HINT = 15; // chỉ là ghi chú đề xuất — người dùng yêu cầu KHÔNG chặn nhập / không đếm ký tự (ngoại lệ có chủ đích của §13)
+                          const kind = sel.tagKind === 'featured' ? 'featured' : 'default';
                           const tagTxt = sel.tagText || '';
+                          const setP = patch => this.updPkg(tab.id,selIdx,patch);
+                          const noteSt = {fontSize:11.5,color:'var(--color-text-subtle)',marginTop:4};
+                          const badgeOpts2 = badges.map(b => ({ value:b.id, searchText:b.name, label:h('span',{style:{display:'inline-flex',alignItems:'center',padding:'3px 10px',borderRadius:5,fontWeight:700,fontSize:10.5,textTransform:'uppercase',letterSpacing:'.4px',background:b.bgColor,color:b.textColor}},b.name) }));
                           return h('div',{style:{border:'1px solid var(--color-border)',borderRadius:10,padding:14}},
-                            h('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:tagOn?10:0}},
-                              h(DS.Switch,{size:'sm',checked:tagOn,onChange:v=>this.updPkg(tab.id,selIdx,{tagOn:v})}),
-                              h('span',{style:{fontWeight:700,fontSize:13}},'Tag nổi bật')
+                            h('label',{style:lb},'Loại tag'),
+                            h('div',{style:{display:'flex',gap:20,marginBottom:12}},
+                              h(DS.Radio,{name:'tgk'+tab.id+selIdx,label:'Mặc định',checked:kind==='default',onChange:()=>setP({tagKind:'default'})}),
+                              h(DS.Radio,{name:'tgk'+tab.id+selIdx,label:'Nổi bật',checked:kind==='featured',onChange:()=>setP({tagKind:'featured'})})
                             ),
-                            tagOn && fld('Nội dung tag', h(DS.Input,{key:'tt'+tab.id+selIdx,defaultValue:tagTxt,placeholder:'VD: Đề xuất, Bán chạy, Giảm 20%…',onChange:e=>this.updPkg(tab.id,selIdx,{tagText:e.target.value})}), E('tag'))
+                            kind==='default'
+                              ? h('div',null,
+                                  fld('Nội dung tag', h(DS.Input,{key:'tt'+tab.id+selIdx,value:tagTxt,placeholder:'VD: Ưu đãi HOT',onChange:e=>setP({tagText:String(e&&e.target?e.target.value:e||'')})}), E('tag'), {mb:0}),
+                                  h('div',{style:noteSt},`Đề xuất tối đa ${TAG_HINT} ký tự, VD: Ưu đãi HOT.`)
+                                )
+                              : h('div',null,
+                                  badges.length
+                                    ? fld('Badge/Tag', h(DS.Select,{key:'tg'+tab.id+selIdx,options:badgeOpts2,value:sel.tagBadgeId||'',placeholder:'Chọn Badge/Tag…',searchable:true,searchPlaceholder:'Tìm Badge/Tag…',onChange:v=>setP({tagBadgeId:v})}), E('tag') && 'Trường bắt buộc — vui lòng chọn Badge/Tag.', {w:280,mb:0})
+                                    : h('div',{style:{display:'flex',alignItems:'center',gap:8,padding:10,borderRadius:8,background:'var(--color-warning-bg)',color:'var(--color-warning-text)',fontSize:12.5}},
+                                        h(DS.Icon,{name:'alert-triangle-line',size:14,style:{flexShrink:0}}),
+                                        'Chưa có Badge/Tag nào thuộc phân loại "Card gói" đang hoạt động. Hãy tạo tại module Quản lý Badge/Tag.'
+                                      ),
+                                  h('div',{style:noteSt},'Đề xuất tên Tag tối đa 8–10 ký tự, VD: Bán chạy. Tên hiển thị và màu sắc được quản lý tại module Quản lý Badge/Tag.')
+                                )
                           );
                         }
                         const picked = badges.find(b => b.id === sel.tagBadgeId);
@@ -11284,7 +11399,7 @@ class Component extends DCLogic {
                           const toAdd=INET_PKGS.filter(p=>addSel.has(p.code)&&!existingCodes.has(p.code));
                           const newPkgs=toAdd.map((p,i)=>({
                             id:'p'+Date.now()+i,code:p.code,name:p.name,price:p.price,
-                            tagOn:false,tagBadgeId:'',dlSpeed:p.speed,ulSpeed:'',speedIcon:'60%',
+                            tagOn:false,tagBadgeId:'',tagKind:'default',tagText:'',dlSpeed:p.speed,ulSpeed:'',speedIcon:'60%',
                             ctaPrimaryOn:true,ctaSecondaryOn:true,ctaText:'Đăng ký ngay',ctaUrl:'#',ctaAlt:'Xem chi tiết',ctaAltUrl:'',
                             features:'',tooltipOn:false,tooltipContent:''
                           }));
@@ -11297,9 +11412,9 @@ class Component extends DCLogic {
                 );
 
                 const isDragOver = tabDragFrom >= 0 && tabDragFrom !== ti && tabDragOver === ti;
-                return h('div',{key:tab.id,draggable:true,
+                return h('div',{key:tab.id,draggable:!single,
                   'data-ldp-req-empty':nMiss>0?'true':undefined,'data-ldp-req-key':tabKey,'data-ldp-req-count':nMiss,
-                  onDragStart:e=>{e.dataTransfer.effectAllowed='move';this.setState({tabDragFrom:ti,tabDragOver:-1});},
+                  onDragStart:e=>{if(single)return;e.dataTransfer.effectAllowed='move';this.setState({tabDragFrom:ti,tabDragOver:-1});},
                   onDragOver:e=>{e.preventDefault();if(tabDragFrom!==ti)this.setState({tabDragOver:ti});},
                   onDrop:e=>{e.preventDefault();if(tabDragFrom<0||tabDragFrom===ti)return;const nt=[...tabs];const[mv]=nt.splice(tabDragFrom,1);nt.splice(ti,0,mv);this.setState({tabs:nt,tabDragFrom:-1,tabDragOver:-1});},
                   onDragEnd:()=>this.setState({tabDragFrom:-1,tabDragOver:-1}),
@@ -11308,11 +11423,11 @@ class Component extends DCLogic {
                     onClick:()=>this.updTab(tab.id,{expanded:!expanded}),
                     style:{background:expanded?'var(--color-accent-bg)':'var(--color-surface-alt)',padding:'10px 14px',display:'flex',alignItems:'center',gap:8,cursor:'pointer',transition:'background .15s',userSelect:'none'}
                   },
-                    h(DS.Icon,{name:'dots-grid-line',size:16,color:'var(--color-text-subtle)',style:{cursor:'grab',flexShrink:0,lineHeight:1}}),
+                    !single && h(DS.Icon,{name:'dots-grid-line',size:16,color:'var(--color-text-subtle)',style:{cursor:'grab',flexShrink:0,lineHeight:1}}),
                     h(DS.Icon,{name:expanded?'chevron-down-line':'chevron-right-line',size:16,color:expanded?'var(--color-accent)':'var(--color-text-subtle)'}),
                     h('span',{style:{fontWeight:700,fontSize:13,color:expanded?'var(--color-accent)':'var(--color-text)',flex:1}},'Tab: '+(tab.name||'Chưa đặt tên')),
                     showErr && h('span',{style:{fontSize:11,fontWeight:700,color:'var(--color-danger-text)',background:'var(--color-danger-bg)',border:'1px solid var(--color-danger)',borderRadius:10,padding:'2px 8px',whiteSpace:'nowrap',flexShrink:0}},nMiss+' trường chưa điền'),
-                    h('div',{style:{display:'flex',gap:8,alignItems:'center',marginLeft:'auto',flexShrink:0},onClick:e=>e.stopPropagation()},
+                    !single && h('div',{style:{display:'flex',gap:8,alignItems:'center',marginLeft:'auto',flexShrink:0},onClick:e=>e.stopPropagation()},
                       h(DS.Switch,{size:'sm',label:'Mặc định',checked:defaultTab===tab.id,onChange:v=>{if(v)this.setState({defaultTab:tab.id});}}),
                       tabs.length>1 && h(DS.Button,{level:'tertiary',size:'sm',leadingIcon:'trash-line',style:{color:'var(--color-danger-text)',fontSize:11},
                         onClick:e=>{e.stopPropagation();this.setState(s=>({tabs:s.tabs.filter(t=>t.id!==tab.id)}));}
@@ -11330,7 +11445,8 @@ class Component extends DCLogic {
                 );
               }),
 
-              h(DS.Button,{
+              // Không tab: chỉ có 1 tab nên không cho thêm tab mới.
+              !single && h(DS.Button,{
                 level:'secondary',
                 size:'sm',
                 leadingIcon:'plus-line',
@@ -11391,7 +11507,7 @@ class Component extends DCLogic {
           mkTab('t3', 'Combo Wi-Fi 7 + Play Box', []),
         ]
       }),
-      // ── CARD2 ([Card_2] - Danh sách gói internet, tag chữ): dùng chung editor Card_1 nhưng không có ảnh card, Tag nổi bật = bật/tắt + nhập chữ ──
+      // ── CARD2 ([Card_2] - Danh sách gói internet, tag chữ): dùng chung editor Card_1 nhưng không có ảnh card; Tag = radio Mặc định (nhập chữ, đề xuất ≤15 ký tự) / Nổi bật (chọn Badge/Tag), không có công tắc ──
       Card2: buildCard1Editor({
         key:'inet-card2-ed',
         title:'Chọn gói phù hợp với bạn',
@@ -11400,11 +11516,11 @@ class Component extends DCLogic {
         tagText:true,
         makeTabs: mkTab => [
           mkTab('t1', 'Cá nhân', [
-            { id:'p1', code:'INT-GIGA', name:'Internet Giga', price:'165.000đ/tháng', tagOn:false, tagText:'', dlSpeed:'150 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Router Wi-Fi miễn phí\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
-            { id:'p2', code:'INT-SKY',  name:'Internet Sky',  price:'249.000đ/tháng', tagOn:true,  tagText:'Bán chạy', dlSpeed:'500 Mbps', ulSpeed:'200 Mbps', speedIcon:'80%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Router Wi-Fi 6\nLắp đặt trong ngày', tooltipOn:false, tooltipContent:'' },
+            { id:'p1', code:'INT-GIGA', name:'Internet Giga', price:'165.000đ/tháng', tagKind:'default', tagText:'Ưu đãi HOT', tagBadgeId:'', dlSpeed:'150 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Router Wi-Fi miễn phí\nHỗ trợ 24/7', tooltipOn:false, tooltipContent:'' },
+            { id:'p2', code:'INT-SKY',  name:'Internet Sky',  price:'249.000đ/tháng', tagKind:'featured', tagText:'', tagBadgeId:'bdg-suggest', dlSpeed:'500 Mbps', ulSpeed:'200 Mbps', speedIcon:'80%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'Router Wi-Fi 6\nLắp đặt trong ngày', tooltipOn:false, tooltipContent:'' },
           ]),
           mkTab('t2', 'Gia đình', [
-            { id:'p3', code:'INT-HOME', name:'Internet Home', price:'135.000đ/tháng', tagOn:false, tagText:'', dlSpeed:'100 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'', tooltipOn:false, tooltipContent:'' },
+            { id:'p3', code:'INT-HOME', name:'Internet Home', price:'135.000đ/tháng', tagKind:'default', tagText:'Giá tốt', tagBadgeId:'', dlSpeed:'100 Mbps', ulSpeed:'50 Mbps',  speedIcon:'60%', ctaPrimaryOn:true, ctaSecondaryOn:true, ctaText:'Đăng ký ngay', ctaUrl:'#', ctaAlt:'Xem chi tiết', ctaAltUrl:'', features:'', tooltipOn:false, tooltipContent:'' },
           ]),
         ]
       }),
@@ -11638,9 +11754,13 @@ class Component extends DCLogic {
                     // ── thân gói ──
                     it.expanded && h('div', { style: { padding: '16px 14px 0', background: 'var(--color-surface)' } },
                       grp('Gói cước',
-                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0 12px', alignItems: 'start' } },
+                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0 12px', alignItems: 'start' } },
                           fptReqFld('Chọn gói', h(DS.Select, { options: opts, value: it.code || '', placeholder: 'Chọn gói cước…', searchable: true, searchPlaceholder: 'Tìm gói cước…', onChange: v => upd(it.id, fromPkg(v)) }), E('code') && 'Trường bắt buộc — vui lòng chọn gói.'),
-                          roField('Giá bán', it.price, 'pr'))
+                          roField('Giá bán', it.price, 'pr'),
+                          // Tooltip ghi chú giá: nằm kế ô giá, dùng chung nhãn/chú thích/trường dữ liệu priceTooltip với "Cài đặt web" của Nội dung sản phẩm. Không bắt buộc (như bên đó).
+                          fld('Nội dung Tooltip ghi chú giá', h('div', null,
+                            h(DS.Input, { key: 'pt' + it.id, defaultValue: it.priceTooltip || '', placeholder: 'VD: Giá đã gồm VAT, có thể thay đổi theo khu vực', onChange: e => upd(it.id, { priceTooltip: e.target.value }) }),
+                            h('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 4 } }, 'Hiển thị khi khách hover hoặc click icon (ⓘ) cạnh giá trên Website/App.'))))
                       ),
                       grp('Hình ảnh & mô tả',
                         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, alignItems: 'start' } },
@@ -11818,11 +11938,11 @@ class Component extends DCLogic {
                 description: 'Block đánh giá này sẽ bị xóa. Hành động này không thể hoàn tác.'
               },
                 h('div', { style: { display:'flex', gap:10, justifyContent:'flex-end' } },
-                  h(DS.Button, { level:'tertiary', onClick:() => this.setState({ confirmIdx: null }) }, 'Hủy'),
                   h(DS.Button, { level:'primary', style:{background:'var(--color-danger)',borderColor:'var(--color-danger)'}, onClick:() => {
                     const idx = confirmIdx;
                     this.setState(s => ({ items: s.items.filter((_,j)=>j!==idx), confirmIdx: null }));
-                  }}, 'Xóa')
+                  }}, 'Xóa'),
+                  h(DS.Button, { level:'tertiary', onClick:() => this.setState({ confirmIdx: null }) }, 'Hủy')
                 )
               )
             );
@@ -11969,11 +12089,11 @@ class Component extends DCLogic {
                 h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => this.setState({ pickerOpen: true }) }, 'Thêm câu hỏi'),
                 confirmIdx !== null && h(DS.Modal, { open: true, onClose: () => this.setState({ confirmIdx: null }), title: 'Xóa câu hỏi?', description: 'Câu hỏi này sẽ bị xóa khỏi danh sách section.' },
                   h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-                    h(DS.Button, { level: 'tertiary', onClick: () => this.setState({ confirmIdx: null }) }, 'Hủy'),
                     h(DS.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => {
                       const idx = confirmIdx;
                       this.setState(s => ({ items: s.items.filter((_, ii) => ii !== idx), confirmIdx: null }));
-                    }}, 'Xóa')
+                    }}, 'Xóa'),
+                    h(DS.Button, { level: 'tertiary', onClick: () => this.setState({ confirmIdx: null }) }, 'Hủy')
                   )
                 ),
                 pickerOpen && h(DS.Modal, { open: true, onClose: () => this.setState({ pickerOpen: false }), title: 'Chọn câu hỏi từ kho FAQ', description: 'Chọn câu hỏi để thêm vào section này.' },
@@ -12134,11 +12254,11 @@ class Component extends DCLogic {
                 description: 'Block này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.'
               },
                 h('div', { style: { display:'flex', gap:10, justifyContent:'flex-end' } },
-                  h(DS.Button, { level:'tertiary', onClick:() => this.setState({ confirmIdx: null }) }, 'Hủy'),
                   h(DS.Button, { level:'primary', style:{background:'var(--color-danger)',borderColor:'var(--color-danger)'}, onClick:() => {
                     const idx = confirmIdx;
                     this.setState(s => ({ items: s.items.filter((_,j)=>j!==idx), confirmIdx: null }));
-                  }}, 'Xóa')
+                  }}, 'Xóa'),
+                  h(DS.Button, { level:'tertiary', onClick:() => this.setState({ confirmIdx: null }) }, 'Hủy')
                 )
               )
             );
@@ -12229,11 +12349,11 @@ class Component extends DCLogic {
                 description: 'Block giải thưởng này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.'
               },
                 h('div', { style: { display:'flex', gap:10, justifyContent:'flex-end' } },
-                  h(DS.Button, { level:'tertiary', onClick:() => this.setState({ confirmIdx: null }) }, 'Hủy'),
                   h(DS.Button, { level:'primary', style:{background:'var(--color-danger)',borderColor:'var(--color-danger)'}, onClick:() => {
                     const idx = confirmIdx;
                     this.setState(s => ({ items: s.items.filter((_,i)=>i!==idx), confirmIdx: null }));
-                  }}, 'Xóa')
+                  }}, 'Xóa'),
+                  h(DS.Button, { level:'tertiary', onClick:() => this.setState({ confirmIdx: null }) }, 'Hủy')
                 )
               )
             );
@@ -12486,11 +12606,11 @@ class Component extends DCLogic {
                 description: 'Block này sẽ bị xóa khỏi danh sách Social Proof. Hành động này không thể hoàn tác.'
               },
                 h('div', { style: { display:'flex', gap:10, justifyContent:'flex-end' } },
-                  h(DS.Button, { level:'tertiary', onClick:() => this.setState({ confirmIdx: null }) }, 'Hủy'),
                   h(DS.Button, { level:'primary', style:{background:'var(--color-danger)',borderColor:'var(--color-danger)'}, onClick:() => {
                     const idx = confirmIdx;
                     this.setState(s => ({ items: s.items.filter((_,j)=>j!==idx), confirmIdx: null }));
-                  }}, 'Xóa')
+                  }}, 'Xóa'),
+                  h(DS.Button, { level:'tertiary', onClick:() => this.setState({ confirmIdx: null }) }, 'Hủy')
                 )
               )
             );
@@ -12567,11 +12687,11 @@ class Component extends DCLogic {
               h(DS.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => this.setState({ pickerOpen: true }) }, 'Thêm câu hỏi'),
               confirmIdx !== null && h(DS.Modal, { open: true, onClose: () => this.setState({ confirmIdx: null }), title: 'Xóa câu hỏi?', description: 'Câu hỏi này sẽ bị xóa khỏi danh sách section.' },
                 h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-                  h(DS.Button, { level: 'tertiary', onClick: () => this.setState({ confirmIdx: null }) }, 'Hủy'),
                   h(DS.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => {
                     const idx = confirmIdx;
                     this.setState(s => ({ items: s.items.filter((_, ii) => ii !== idx), confirmIdx: null }));
-                  }}, 'Xóa')
+                  }}, 'Xóa'),
+                  h(DS.Button, { level: 'tertiary', onClick: () => this.setState({ confirmIdx: null }) }, 'Hủy')
                 )
               ),
               pickerOpen && h(DS.Modal, { open: true, onClose: () => this.setState({ pickerOpen: false }), title: 'Chọn câu hỏi từ kho FAQ', description: 'Chọn câu hỏi để thêm vào section này.' },
@@ -12894,6 +13014,10 @@ class Component extends DCLogic {
         }
         return [h(this._ldpSaProdsCls,{key:'sa-products-ed'})];
       })(),
+      // Nội dung văn bản: chỉ 1 vùng soạn thảo (nằm trong nhóm "Thông tin cơ bản" cùng Tên section). Bắt buộc có nội dung — kiểm tra ở validateLdpSecFields (đọc DOM vùng soạn thảo).
+      TextEditor: section.type === 'TextEditor'
+        ? [fld('Nội dung', this.richTextEditor((this.state.ldpSecHtml || {})[section.uid || section.id] || '', rtKp))]
+        : [],
     };
 
     const extra = extraByType[section.id] || extraByType[section.type] || [fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Tiêu đề section...' }))];
@@ -12915,6 +13039,12 @@ class Component extends DCLogic {
       const markFirst = el => { if (!firstInvalidEl || (firstInvalidEl.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING)) firstInvalidEl = el; };
       if (root) {
         root.querySelectorAll('[data-ldp-field]').forEach(el => {
+          // Vùng soạn thảo (text editor, contentEditable) — rỗng khi không có chữ và không có ảnh/bảng/đường kẻ.
+          const rtEl = el.querySelector('.fpt-richtext-canvas');
+          if (rtEl) {
+            if (!(rtEl.textContent || '').trim() && !rtEl.querySelector('img, table, hr')) { errMap[el.getAttribute('data-ldp-field')] = true; markFirst(el); }
+            return;
+          }
           const ctrlEl = el.querySelector('input, textarea');
           if (!ctrlEl) return; // trường composite không có input/textarea đơn — bỏ qua kiểm tra tự động
           if (String(ctrlEl.value || '').trim() === '') {
@@ -12936,7 +13066,8 @@ class Component extends DCLogic {
       if (!el) return;
       const key = el.getAttribute('data-ldp-field');
       if (!(this.state.ldpSecFieldErr && this.state.ldpSecFieldErr[key])) return;
-      if (String(e.target.value || '').trim() === '') return;
+      const isRt = !!(e.target.classList && e.target.classList.contains('fpt-richtext-canvas'));
+      if (isRt ? (!(e.target.textContent || '').trim() && !e.target.querySelector('img, table, hr')) : String(e.target.value || '').trim() === '') return;
       this.setState(s => { const m = { ...(s.ldpSecFieldErr || {}) }; delete m[key]; return { ldpSecFieldErr: m }; });
     };
     const onSave = () => {
@@ -12957,6 +13088,10 @@ class Component extends DCLogic {
       this.setState({ ldpSecFieldErr: {} });
       if (titleRef.value) { this.setState(s => ({ ldpSectionTitles: { ...s.ldpSectionTitles, [section.id]: titleRef.value } })); }
       this.setState(s => ({ ldpSectionNames: { ...(s.ldpSectionNames || {}), [section.id]: nameRef.value } }));
+      if (section.type === 'TextEditor') {
+        const rtRef = this['_' + rtKp + 'HtmlRef'];
+        if (rtRef && rtRef.current) { const html = rtRef.current.innerHTML; this.setState(s => ({ ldpSecHtml: { ...(s.ldpSecHtml || {}), [section.uid || section.id]: html } })); }
+      }
       const savedName = nameRef.value || titleRef.value || section.name;
       back();
       this.toast('success', 'Đã lưu section', '"' + savedName + '" đã được lưu.');
@@ -12994,7 +13129,7 @@ class Component extends DCLogic {
       }
     });
     if (curGroup.items.length) secGroups.push(curGroup);
-    if (secGroups.length === 1 && secGroups[0].items.length > 1) secGroups[0].title = 'Nội dung section';
+    if (secGroups.length === 1 && secGroups[0].items.length > 1 && section.type !== 'TextEditor') secGroups[0].title = 'Nội dung section';
 
     // ── Sticky-header subtitle: block identity moved here (replaces the old in-form identity banner) ──
     const headerSubtitle = h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, verticalAlign: 'middle' } },
@@ -13003,7 +13138,8 @@ class Component extends DCLogic {
       h('span', null, (tpl.label || '') + ' · ' + section.type)
     );
 
-    const formContent = h('div', { id: formId, onBlur: onSectionFieldBlur, style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+    // Vùng soạn thảo: lỗi bắt buộc tắt ngay khi gõ được nội dung (không chờ rời ô) — §14.
+    const formContent = h('div', { id: formId, onBlur: onSectionFieldBlur, onInput: e => { if (e.target && e.target.classList && e.target.classList.contains('fpt-richtext-canvas')) onSectionFieldBlur(e); }, style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       // ── Standing status toggle (§10) — kept in sync with the sections list ──
       section.type !== 'PopupForm' && h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
         h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Hiển thị section trên trang'),

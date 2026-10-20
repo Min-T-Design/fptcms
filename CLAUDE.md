@@ -350,3 +350,33 @@ Mandatory behavior going forward:
 * **New modules:** when writing `open*Detail`, build the row list by walking the table `columns` first, then the editor's fields; stop there. Don't pad with "Thứ tự", "Ngày tạo", phone/channel or other fields just because the demo data has them.
 * A field that exists *only* as a search criterion (e.g. phone in the Users search box) is not a table column — it needs an editor field or a table column before it earns a drawer row.
 * Report drawers (Báo cáo bán hàng / đăng ký Online) have no editor: their drawer rows must come from the same field-defs / columns array as the table (`salesReportOnline*FieldDefs`), never a separate hand-written list.
+
+---
+
+## 17. Warning / Confirm Modal: Button Order Depends on Severity
+
+**Every modal footer is right-aligned** (`justifyContent: 'flex-end'`) — never pin the buttons to the left edge of the modal. What changes with severity is only the **order inside the button group**, i.e. whether the primary (confirm) button sits left or right of "Hủy".
+
+### Serious actions → primary button FIRST (left of the pair), "Hủy" last
+
+Use this when the action is **destructive, an important change, or has wide impact**, for example:
+
+* deleting / irreversibly removing a record;
+* changing something that live records depend on (đổi loại URL đang được dùng, đổi slug/nhánh của URL đang chạy);
+* turning off something that is currently serving users (tắt URL đang có Landing Page chạy → người dùng gặp 404);
+* overwriting existing content, or any change that touches many records at once.
+
+Footer layout: `display: 'flex', gap: 10, justifyContent: 'flex-end'`, children in this order — **primary (confirm) button first, "Hủy" (`level: 'tertiary'`) second** (so the group reads `[Vẫn tắt URL] [Hủy]` at the right edge). The primary button is the danger-red variant (`background/borderColor: 'var(--color-danger)'`) with a specific action label ("Vẫn tắt URL", "Vẫn đổi loại"), so the dangerous action is never in the usual right-most "proceed" spot that people click on autopilot. (An earlier revision left-aligned the whole group with `flex-start`; the user rejected that — keep the group right-aligned.)
+
+Reference implementations: `askChangeType` in `renderUrlEditor` (đổi loại URL đang dùng) and `urlConfirmDeactivate` (tắt URL có LDP đang chạy) in `FPT CMS Admin.dc.html`.
+
+### Simple, low-severity confirmations → normal order, primary LAST (right-most)
+
+Use the usual layout (`justifyContent: 'flex-end'`, **"Hủy" first, primary last**) for plain confirmations that are reversible and low impact — e.g. bật lại một mục, xác nhận thao tác thường, gửi/lưu có hỏi lại. No danger-red styling needed.
+
+### How it is implemented
+
+* **Shared confirm modal — `this.confirm(title, message, onYes, danger)`** (`renderModal`, `kind: 'confirm'`, and `openModal({ kind: 'confirm', danger: true, … })`): the 4th argument / `danger` flag **is** the severity switch. `danger: true` → footer `flex-end`, `[Xác nhận (red), Hủy]`; omitted → `flex-end`, `[Hủy, Xác nhận]`. So any new serious confirm must pass `true` — never leave the flag off on a delete / overwrite / turn-off-what's-live dialog.
+* **Hand-built `DS.Modal` dialogs** (the `confirmIdx` delete dialogs in Section/Block editors, LDP reject footer `footerRowDanger`, URL modals): lay out the footer by hand exactly as above.
+* Already on the primary-first layout: every `danger: true` confirm (xóa chương trình/Badge/vai trò/cấu hình/section/chu kỳ, đổi danh mục FAQ, đồng bộ/xóa cấu hình riêng về Global, tắt Landing Page, phát hành đè lên URL cũ), the "Xóa …?" `DS.Modal` dialogs in Section/Block editors, "Xác nhận từ chối" (LDP approval), the route-name "Nếu tiếp tục" dialog, and the two URL modals (đổi loại URL đang dùng, tắt URL đang có LDP chạy).
+* Intentionally **primary-last** (simple / form / picker dialogs): bật Landing Page, gửi duyệt LDP, tạo tùy chỉnh riêng cho kênh, xác nhận route name, các modal chọn dữ liệu (chọn bài viết/FAQ/banner/gói/trang, thêm gói vào tab, chọn ảnh), form Thêm/Sửa vai trò & tài khoản, hộp thoại Thu phóng.
