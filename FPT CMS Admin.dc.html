@@ -8521,9 +8521,12 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.faqSearch || '').toLowerCase();
     const catF = this.state.faqCatFilter || 'all';
+    const statusF = this.state.faqStatusFilter || 'all';
+    const statusOptions = [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }];
     const data = (this.state.faqItems || this.FAQS()).filter(f => {
       if (q && !(f.q + f.cat).toLowerCase().includes(q)) return false;
       if (catF !== 'all' && f.cat !== catF) return false;
+      if (statusF !== 'all' && (f.status === 'inactive' ? 'inactive' : 'active') !== statusF) return false;
       return true;
     });
     const columns = [
@@ -8561,6 +8564,9 @@ class Component extends DCLogic {
               ...cats.map(c => ({ value: c, label: c }))
             ], searchable: true, searchPlaceholder: 'Tìm danh mục…', onChange: v => this.setState({ faqCatFilter: v, faqQ_pg: 1 }) })
           ),
+          h('div', { style: { width: 220 } },
+            h(DS.Select, { value: statusF, options: statusOptions, onChange: v => this.setState({ faqStatusFilter: v, faqQ_pg: 1 }) })
+          ),
         ),
         h('div', { style: { display: 'flex', gap: 8 } },
           h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ faqEditor: null, faqDraft: { cat: '', lang: '', q: '', answer: '', order: '1', active: true } }) }, 'Thêm Câu hỏi (FAQ)')
@@ -8569,6 +8575,7 @@ class Component extends DCLogic {
       this.filterChipsBar([
         this.state.faqSearch && this.filterChip('Tìm: ' + this.state.faqSearch, 'neutral', () => this.setState({ faqSearch: '', faqQ_pg: 1 })),
         catF !== 'all' && this.filterChip('Danh mục: ' + catF, 'brand', () => this.setState({ faqCatFilter: 'all', faqQ_pg: 1 })),
+        statusF !== 'all' && this.filterChip('Trạng thái: ' + (statusOptions.find(o => o.value === statusF) || {}).label, 'brand', () => this.setState({ faqStatusFilter: 'all', faqQ_pg: 1 })),
       ]),
       data.length ? this.tbl(columns, this.sliceData(data, 'faqQ'), 'id', r => this.openFaqDetail(r)) : this.empty('Chưa có câu hỏi.'),
       data.length ? this.renderPagBar(data.length, 'faqQ', 'câu hỏi') : null
@@ -8645,7 +8652,7 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
     );
     return this.editorShell(
-      isNew ? 'Thêm câu hỏi (FAQ)' : 'Chỉnh sửa câu hỏi', 'Ngân hàng câu hỏi thường gặp', back,
+      isNew ? 'Thêm câu hỏi (FAQ)' : 'Chỉnh sửa câu hỏi', '', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
           h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
@@ -8658,8 +8665,8 @@ class Component extends DCLogic {
           )
         ),
         section(2, 'menu-01-line', 'Nội dung câu hỏi và trả lời',
-          this.field('Câu hỏi', h(DS.Input, { value: d.q, onChange: e => setD({ q: e && e.target ? e.target.value : e }) }), true),
-          this.field('Câu trả lời', h(DS.Textarea, { rows: 6, value: d.answer, onChange: e => setD({ answer: e && e.target ? e.target.value : e }), placeholder: 'Nội dung hướng dẫn chi tiết…' }), true)
+          this.field('Câu hỏi', h(DS.Input, { value: d.q, onChange: e => setD({ q: e && e.target ? e.target.value : e }), placeholder: 'Nhập nội dung câu hỏi' }), true),
+          this.field('Câu trả lời', h(DS.Textarea, { rows: 6, value: d.answer, onChange: e => setD({ answer: e && e.target ? e.target.value : e }), placeholder: 'Nhập nội dung câu trả lời' }), true)
         )
       ),
       () => {
