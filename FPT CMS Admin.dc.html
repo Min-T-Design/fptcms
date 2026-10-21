@@ -4497,10 +4497,10 @@ class Component extends DCLogic {
   }
   LDP_LIST() {
     return this.state.ldpListData || [
-      { id: 1, name: 'Khuyến mãi Internet Tháng 5', tplId: 'internet', tplLabel: 'LDP Internet',         goal: 'Lead Gen',           lv1: 'khuyen-mai',           l2: 'internet-thang-5', url: '/khuyen-mai/internet-thang-5',           startDate: '01/05/26', endDate: '31/05/26', createdBy: 'Hà Linh', createdAt: '28/04/26', lastEdit: '18/05/26', lastEditBy: 'Hà Linh', status: 'publish' },
-      { id: 2, name: 'Sự kiện FPT Play 2026',       tplId: 'sa',       tplLabel: 'LDP SA',               goal: 'Sự kiện / Branding', lv1: 'su-kien',               l2: 'fpt-play-2026',    url: '/su-kien/fpt-play-2026',                  startDate: '01/01/26', endDate: '31/01/26', createdBy: 'Minh Tú', createdAt: '18/12/25', lastEdit: '28/01/26', lastEditBy: 'Minh Tú', status: 'expired' },
-      { id: 3, name: 'Camera AI Tháng 6',           tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-thang-6', url: '/thiet-bi-thong-minh/camera-ai-thang-6', startDate: '01/06/26', endDate: '30/06/26', createdBy: 'Admin User', createdAt: '19/05/26', lastEdit: '02/06/26', lastEditBy: 'Admin',   status: 'publish' },
-      { id: 4, name: 'Wi-Fi 7 Launch',              tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Lead Gen',           lv1: 'khuyen-mai',            l2: 'wifi-7-launch',    url: '/khuyen-mai/wifi-7-launch',               startDate: '15/06/26', endDate: '15/07/26', createdBy: 'Minh Tú', createdAt: '30/05/26', lastEdit: '14/06/26', lastEditBy: 'Minh Tú', status: 'draft' },
+      { id: 1, name: 'Khuyến mãi Internet Tháng 5', tplId: 'internet', tplLabel: 'LDP Internet',         goal: 'Lead Gen',           lv1: 'khuyen-mai',           l2: 'internet-thang-5', url: '/khuyen-mai/internet-thang-5',           startDate: '01/05/26', endDate: '31/05/26', createdBy: 'Hà Linh', createdAt: '28/04/26', lastEdit: '18/05/26', lastEditBy: 'Hà Linh', status: 'publish', bcLv1: 'Lắp mạng internet', bcLv2: 'Internet gia đình' },
+      { id: 2, name: 'Sự kiện FPT Play 2026',       tplId: 'sa',       tplLabel: 'LDP SA',               goal: 'Sự kiện / Branding', lv1: 'su-kien',               l2: 'fpt-play-2026',    url: '/su-kien/fpt-play-2026',                  startDate: '01/01/26', endDate: '31/01/26', createdBy: 'Minh Tú', createdAt: '18/12/25', lastEdit: '28/01/26', lastEditBy: 'Minh Tú', status: 'expired', bcLv1: 'Sự kiện', bcLv2: 'FPT Play 2026' },
+      { id: 3, name: 'Camera AI Tháng 6',           tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-thang-6', url: '/thiet-bi-thong-minh/camera-ai-thang-6', startDate: '01/06/26', endDate: '30/06/26', createdBy: 'Admin User', createdAt: '19/05/26', lastEdit: '02/06/26', lastEditBy: 'Admin',   status: 'publish', bcLv1: 'Camera an ninh', bcLv2: 'Camera AI' },
+      { id: 4, name: 'Wi-Fi 7 Launch',              tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Lead Gen',           lv1: 'khuyen-mai',            l2: 'wifi-7-launch',    url: '/khuyen-mai/wifi-7-launch',               startDate: '15/06/26', endDate: '15/07/26', createdBy: 'Minh Tú', createdAt: '30/05/26', lastEdit: '14/06/26', lastEditBy: 'Minh Tú', status: 'draft', bcLv1: 'Lắp mạng internet', bcLv2: 'Wi-Fi 7' },
       // LDP Khu vực (ldpType: 'region'): chỉ áp dụng cho khách hàng thuộc Tỉnh/Thành phố + Phường/Xã đã chọn. Bản ghi không có ldpType = LDP thường.
       { id: 5, name: 'Ưu đãi Internet Phường Bến Thành', tplId: 'internet', tplLabel: 'LDP Internet',     goal: 'Lead Gen',           lv1: 'khuyen-mai',            l2: 'internet-ben-thanh', url: '/khuyen-mai/internet-ben-thanh',        startDate: '01/10/26', endDate: '31/10/26', createdBy: 'Hà Linh', createdAt: '28/09/26', lastEdit: '15/10/26', lastEditBy: 'Hà Linh', status: 'publish', ldpType: 'region', province: 'TP. Hồ Chí Minh', ward: 'Phường Bến Thành' },
       { id: 6, name: 'Camera AI Phường Hoàn Kiếm',  tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-hoan-kiem', url: '/thiet-bi-thong-minh/camera-ai-hoan-kiem', startDate: '15/11/26', endDate: '15/12/26', createdBy: 'Minh Tú', createdAt: '12/10/26', lastEdit: '16/10/26', lastEditBy: 'Minh Tú', status: 'draft', ldpType: 'region', province: 'Hà Nội', ward: 'Phường Hoàn Kiếm' },
@@ -4559,6 +4559,11 @@ class Component extends DCLogic {
     };
   }
   LDP_PROVINCES() { return Object.keys(this.LDP_REGION_DATA()); }
+  // Breadcrumb Level 1 của LDP (bước 2 → "Breadcrumb"): sau này lấy từ trường breadcrumb của module Quản lý Trang (chưa phát triển) —
+  // hiện là danh sách mẫu; khi có trường đó chỉ cần đổi nguồn ở hàm này. Level 2 do người dùng tự nhập.
+  LDP_BREADCRUMB_LV1() {
+    return ['Lắp mạng internet', 'Truyền hình FPT Play', 'Camera an ninh', 'Dịch vụ số', 'Thiết bị thông minh', 'Khuyến mãi', 'Sự kiện', 'Tin tức', 'Hỗ trợ khách hàng'];
+  }
   // Chuỗi "Phường/Xã, Tỉnh/TP" của một LDP Khu vực (rỗng nếu là LDP thường).
   ldpRegionLabel(r) {
     return (r && r.ldpType === 'region') ? [r.ward, r.province].filter(Boolean).join(', ') : '';
@@ -4591,6 +4596,8 @@ class Component extends DCLogic {
       ldpType: pick('ldpType', (r && r.ldpType) || 'normal'),
       province: pick('province', (r && r.province) || ''),
       ward: pick('ward', (r && r.ward) || ''),
+      bcLv1: pick('bcLv1', (r && r.bcLv1) || ''),
+      bcLv2: pick('bcLv2', (r && r.bcLv2) || ''),
       campaignName: pick('campaignName', r ? (r.name || '') : ''),
       goal: pick('goal', r ? (r.goal || '') : ''),
       effRange: pick('effRange', r ? this.ldpEffRangeOf(r) : null) || {},
@@ -9228,6 +9235,7 @@ class Component extends DCLogic {
         r.ldpType === 'region' ? this.detailRow('Phường/Xã', r.ward || '—') : null,
         this.detailRow('URL', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url)),
         this.detailRow('Nhánh Level 1', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5 } }, r.lv1 || '—')),
+        this.detailRow('Breadcrumb', (r.bcLv1 || r.bcLv2) ? [r.bcLv1, r.bcLv2].filter(Boolean).join(' › ') : '—'),
         this.detailRow('Mục tiêu', r.goal),
         this.detailRow('Thời gian hiệu lực', r.startDate + ' – ' + r.endDate),
         this.detailRow('Người tạo', h('div', null, h('div', null, r.createdBy || '—'), r.createdAt ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, r.createdAt) : null)),
@@ -9264,7 +9272,7 @@ class Component extends DCLogic {
       const v = this.ldpStep2Values();
       const isRegion = v.ldpType === 'region';
       const list = this.LDP_LIST().map(r => r.id === editRow.id
-        ? { ...r, name, lv1, l2, url, goal: f2.goal || r.goal, ldpType: v.ldpType, province: isRegion ? v.province : '', ward: isRegion ? v.ward : '', status: 'publish', lastEdit: this.ldpNow(), lastEditBy: 'Admin User' }
+        ? { ...r, name, lv1, l2, url, goal: f2.goal || r.goal, bcLv1: v.bcLv1, bcLv2: v.bcLv2, ldpType: v.ldpType, province: isRegion ? v.province : '', ward: isRegion ? v.ward : '', status: 'publish', lastEdit: this.ldpNow(), lastEditBy: 'Admin User' }
         : r);
       this.setState({ ldpListData: list, ldpStatuses: { ...(this.state.ldpStatuses || {}), [editRow.id]: 'publish' } });
     }
@@ -9299,7 +9307,7 @@ class Component extends DCLogic {
     const nextApprovals = [newReq, ...approvals.filter(a => !(prior && a.id === prior.id))];
     let list = this.LDP_LIST();
     const sv = this.ldpStep2Values();
-    const regionFields = { ldpType: sv.ldpType, province: sv.ldpType === 'region' ? sv.province : '', ward: sv.ldpType === 'region' ? sv.ward : '' };
+    const regionFields = { ldpType: sv.ldpType, province: sv.ldpType === 'region' ? sv.province : '', ward: sv.ldpType === 'region' ? sv.ward : '', bcLv1: sv.bcLv1, bcLv2: sv.bcLv2 };
     if (editRow) {
       list = list.map(r => r.id === editRow.id ? { ...r, status: 'pending', lv1, l2, url, goal, ...regionFields, lastEdit: this.ldpNow(), lastEditBy: 'Admin User', submittedBy: 'Admin User', submittedAt: now } : r);
     } else {
@@ -9521,7 +9529,7 @@ class Component extends DCLogic {
     const effRange = sv.effRange;
     const lbSt = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 5, display: 'block' };
     const req  = h('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*');
-    // §10: mỗi nhóm trường là một DS.Card đánh số có icon (bước này có 3 nhóm: Loại LDP & khu vực / Thông tin cơ bản / SEO).
+    // §10: mỗi nhóm trường là một DS.Card đánh số có icon (bước này có 4 nhóm: Loại LDP & khu vực / Thông tin cơ bản / Breadcrumb / SEO).
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'ldpsec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -9620,6 +9628,22 @@ class Component extends DCLogic {
     const tplDefaultColors = { internet: '#ffffff', sa: '#0a1628', landingpage: '#f4f6fa', customhtml: '#ffffff' };
     const defaultBgColor = tplDefaultColors[this.state.ldpTpl] || '#ffffff';
     const bgColor = get('bgColor', defaultBgColor);
+    // ── Nhóm Breadcrumb: Level 1 chọn từ danh sách (nguồn: trường breadcrumb của Quản lý Trang — xem LDP_BREADCRUMB_LV1), Level 2 tự nhập.
+    // Cả hai không bắt buộc. Bản ghi cũ có giá trị Level 1 không còn trong danh sách vẫn giữ lại 1 lựa chọn để ô không bị trống.
+    const bcLv1 = sv.bcLv1, bcLv2 = sv.bcLv2;
+    const bcLv1Options = this.LDP_BREADCRUMB_LV1().map(n => ({ value: n, label: n }));
+    if (bcLv1 && !bcLv1Options.some(o => o.value === bcLv1)) bcLv1Options.push({ value: bcLv1, label: bcLv1 });
+    const bcCrumb = (txt, ph, last) => h('span', { style: { fontSize: 15, fontWeight: last ? 600 : 400, color: txt && last ? 'var(--color-text)' : 'var(--color-text-subtle)', opacity: txt ? 1 : 0.55, minWidth: 0, wordBreak: 'break-word' } }, txt || ph);
+    const bcChev = key => h(DS.Icon, { key, name: 'chevron-right-01-line', size: 14, color: 'var(--color-text-subtle)' });
+    const bcPreview = h('div', null,
+      h('label', { style: lbSt }, 'Xem trước'),
+      h('div', { style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, padding: '12px 16px', borderRadius: 12, background: 'color-mix(in srgb, var(--color-surface-sunken) 50%, var(--color-surface))' } },
+        h(DS.Icon, { name: 'home-01-line', size: 18, color: 'var(--color-text-muted)' }),
+        bcChev('c1'), bcCrumb(bcLv1, 'Level 1', !bcLv2),
+        bcLv2 || !bcLv1 ? bcChev('c2') : null,
+        (bcLv2 || !bcLv1) ? bcCrumb(bcLv2, 'Level 2', true) : null
+      )
+    );
     const seoTitle = editRow ? sv.metaTitle : get('metaTitle', 'Khuyến mãi Internet Tháng 5 - FPT Telecom');
     const seoDesc  = sv.metaDesc;
 
@@ -9730,7 +9754,24 @@ class Component extends DCLogic {
           )
         )
       )),
-      section(3, 'search-medium-line', 'SEO',
+      section(3, 'home-01-line', 'Breadcrumb',
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 } },
+        h('div', null,
+          h('label', { style: lbSt }, 'Breadcrumb Level 1'),
+          h(DS.Select, {
+            value: bcLv1, options: bcLv1Options, placeholder: 'Chọn Level 1',
+            searchable: true, searchPlaceholder: 'Tìm Level 1…',
+            onChange: v => set('bcLv1', v),
+            containerStyle: { width: '100%' }
+          })
+        ),
+        h('div', null,
+          h('label', { style: lbSt }, 'Breadcrumb Level 2'),
+          h(DS.Input, { value: bcLv2, onChange: e => set('bcLv2', e.target.value), placeholder: 'VD: Internet gia đình' })
+        )
+      ),
+      bcPreview),
+      section(4, 'search-medium-line', 'SEO',
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 } },
         h('div', null,
           h('label', { style: lbSt }, 'Meta Title'),
