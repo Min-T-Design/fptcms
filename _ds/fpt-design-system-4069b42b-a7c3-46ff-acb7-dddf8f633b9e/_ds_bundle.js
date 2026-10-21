@@ -2461,6 +2461,7 @@ function Select({
   disabled = false,
   searchable = false,
   searchPlaceholder = "Tìm kiếm…",
+  clearable,
   style,
   containerStyle,
   ...rest
@@ -2480,6 +2481,11 @@ function Select({
   const s = SIZES[size] || SIZES.md;
   const invalid = !!error;
   const selected = norm.find(o => o.value === current);
+  // Nút "×" bỏ chọn: mặc định bật cho select có thanh tìm kiếm, trừ khi danh sách đã có sẵn mục "đặt lại"
+  // (value rỗng / 'all' / nhãn bắt đầu bằng "Tất cả") — bộ lọc kiểu đó đã tự có cách quay về, và giá trị rỗng
+  // sẽ làm hỏng logic lọc. Truyền clearable={true|false} để ép bật/tắt.
+  const isResetOpt = o => o.value === "" || o.value == null || o.value === "all" || typeof o.label === "string" && /^[\s—–-]*tất cả/i.test(o.label);
+  const canClear = !disabled && !!selected && (clearable === undefined ? searchable && !norm.some(isResetOpt) : !!clearable);
   const visible = searchable && query ? norm.filter(o => (typeof o.label === "string" ? o.label : String(o.searchText || "")).toLowerCase().includes(query.toLowerCase())) : norm;
   React.useEffect(() => {
     const close = e => {
@@ -2527,6 +2533,11 @@ function Select({
   const pick = v => {
     if (!isControlled) setInternal(v);
     onChange && onChange(v);
+    setOpen(false);
+  };
+  const clear = () => {
+    if (!isControlled) setInternal("");
+    onChange && onChange("");
     setOpen(false);
   };
   return /*#__PURE__*/React.createElement("div", {
@@ -2578,7 +2589,8 @@ function Select({
     style: {
       overflow: "hidden",
       textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
+      whiteSpace: "nowrap",
+      marginRight: canClear ? 24 : 0
     }
   }, selected ? selected.label : placeholder), /*#__PURE__*/React.createElement(__ds_scope.Icon, {
     name: "chevron-down-line",
@@ -2588,6 +2600,40 @@ function Select({
       transform: open ? "rotate(180deg)" : "none",
       transition: "transform var(--dur-fast)"
     }
+  })), canClear && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": "Bỏ chọn",
+    title: "Bỏ chọn",
+    onClick: e => {
+      e.stopPropagation();
+      clear();
+    },
+    onMouseEnter: e => {
+      e.currentTarget.style.background = "var(--color-surface-alt)";
+    },
+    onMouseLeave: e => {
+      e.currentTarget.style.background = "transparent";
+    },
+    style: {
+      position: "absolute",
+      top: "50%",
+      right: s.px + 24,
+      transform: "translateY(-50%)",
+      width: 20,
+      height: 20,
+      padding: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      border: "none",
+      borderRadius: "50%",
+      background: "transparent",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(__ds_scope.Icon, {
+    name: "x-circle-line",
+    size: 18,
+    color: "var(--color-text-subtle)"
   })), open && menuPos && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",

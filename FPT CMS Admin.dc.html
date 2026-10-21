@@ -2789,7 +2789,7 @@ class Component extends DCLogic {
         this.setState(s => ({ pkgForm: { ...s.pkgForm, faqCat: val, faqList: qs.map(f => ({ id: f.id, hidden: false })) } }));
       };
       if (faqCat && faqCat !== val && list.length > 0) {
-        this.confirm('Đổi danh mục FAQ?', 'Danh sách câu hỏi, thứ tự và trạng thái ẩn/hiện hiện tại sẽ được thay bằng toàn bộ câu hỏi của danh mục "' + val + '".', () => { apply(); this.closeModal(); }, true);
+        this.confirm(val ? 'Đổi danh mục FAQ?' : 'Bỏ chọn danh mục FAQ?', val ? 'Danh sách câu hỏi, thứ tự và trạng thái ẩn/hiện hiện tại sẽ được thay bằng toàn bộ câu hỏi của danh mục "' + val + '".' : 'Danh sách câu hỏi, thứ tự và trạng thái ẩn/hiện hiện tại sẽ bị xóa.', () => { apply(); this.closeModal(); }, true);
       } else apply();
     };
     const toggleHidden = (id) => writeList(list.map(f => f.id === id ? { ...f, hidden: !f.hidden } : f));
@@ -4186,15 +4186,15 @@ class Component extends DCLogic {
   // Danh sách trang: state.pagesData (sau khi lưu ở Quản lý Trang hoặc khi đổi slug ở Quản lý URL) hoặc dữ liệu mẫu PAGES_SEED.
   PAGES() { return this.state.pagesData || this.PAGES_SEED(); }
   PAGES_SEED() { return [
-    { name: 'FPT Play detail', slug: 'truyen-hinh-fpt-play/detail', h1: 'FPT Play detail', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
-    { name: 'SA detail', slug: 'dich-vu-so/detail', h1: 'SA detail', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
-    { name: 'Internet detail sections2', slug: 'internet-detail/sections2', h1: 'Internet detail sections2', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
-    { name: 'Internet - Wifi 2', slug: 'internet/detail2', h1: 'Internet - Wifi', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:25', updatedAt: '26/03/2026 08:26' },
-    { name: 'Dịch vụ F-Safe', slug: 'dich-vu-f-safe', h1: 'F-Safe FPT bảo mật Internet toàn diện cho cả gia đình', status: 'active', newsTag: 'internet', metaTitle: 'F-Safe FPT - Bảo mật Internet', metaKeywords: 'f-safe, bảo mật internet, fpt', metaDesc: 'F-Safe FPT bảo mật Internet toàn diện cho cả gia đình.', faqCat: 'Dịch vụ GTGT', createdBy: 'Phạm Thu Hà', createdAt: '03/02/2026 16:40', updatedAt: '18/03/2026 17:54' },
-    { name: 'Camera An Ninh FPT', slug: 'camera-an-ninh', h1: 'Camera An Ninh FPT – Giám sát mọi lúc mọi nơi', status: 'hidden', newsTag: 'camera', metaTitle: 'Camera An Ninh FPT – Giám sát mọi lúc mọi nơi', metaKeywords: 'camera an ninh, fpt camera, giám sát', metaDesc: 'Camera An Ninh FPT – Giải pháp giám sát thông minh cho gia đình và doanh nghiệp.', faqCat: '', createdBy: 'Phạm Thu Hà', createdAt: '03/02/2026 16:33', updatedAt: '10/05/2026 09:00' },
-    { name: 'Trang chủ', slug: 'home', h1: 'FPT Telecom — Nhà cung cấp Internet & Truyền hình', status: 'active', newsTag: '', metaTitle: 'FPT Telecom - Internet, Truyền hình, Camera', metaKeywords: 'fpt, internet, truyền hình, camera', metaDesc: 'Nhà cung cấp dịch vụ Internet, Truyền hình và Camera hàng đầu Việt Nam.', faqCat: 'Thanh toán cước', createdBy: 'Admin User', createdAt: '01/01/2026 08:00', updatedAt: '20/06/2026 10:00' },
-    { name: 'Tin tức', slug: 'tin-tuc', h1: 'Tin tức & Sự kiện FPT', status: 'active', newsTag: 'khuyen-mai', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Admin User', createdAt: '01/01/2026 08:00', updatedAt: '10/06/2026 08:00' },
-    { name: 'Liên hệ', slug: 'lien-he', h1: 'Liên hệ FPT Telecom', status: 'hidden', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: 'Chính sách & Thủ tục', createdBy: 'Trần Thị Bích', createdAt: '01/01/2026 08:00', updatedAt: '05/06/2026 14:30' },
+    { name: 'FPT Play detail', bcLv1: 'Trang chủ', bcLv2: 'Truyền hình FPT Play', slug: 'truyen-hinh-fpt-play/detail', h1: 'FPT Play detail', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
+    { name: 'SA detail', bcLv1: 'Trang chủ', bcLv2: 'Dịch vụ số', slug: 'dich-vu-so/detail', h1: 'SA detail', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
+    { name: 'Internet detail sections2', bcLv1: 'Trang chủ', bcLv2: 'Chi tiết Internet', slug: 'internet-detail/sections2', h1: 'Internet detail sections2', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
+    { name: 'Internet - Wifi 2', bcLv1: 'Trang chủ', bcLv2: 'Lắp mạng internet', slug: 'internet/detail2', h1: 'Internet - Wifi', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:25', updatedAt: '26/03/2026 08:26' },
+    { name: 'Dịch vụ F-Safe', bcLv1: 'Dịch vụ số', bcLv2: 'Dịch vụ F-Safe', slug: 'dich-vu-f-safe', h1: 'F-Safe FPT bảo mật Internet toàn diện cho cả gia đình', status: 'active', newsTag: 'internet', metaTitle: 'F-Safe FPT - Bảo mật Internet', metaKeywords: 'f-safe, bảo mật internet, fpt', metaDesc: 'F-Safe FPT bảo mật Internet toàn diện cho cả gia đình.', faqCat: 'Dịch vụ GTGT', createdBy: 'Phạm Thu Hà', createdAt: '03/02/2026 16:40', updatedAt: '18/03/2026 17:54' },
+    { name: 'Camera An Ninh FPT', bcLv1: 'Trang chủ', bcLv2: 'Camera an ninh', slug: 'camera-an-ninh', h1: 'Camera An Ninh FPT – Giám sát mọi lúc mọi nơi', status: 'hidden', newsTag: 'camera', metaTitle: 'Camera An Ninh FPT – Giám sát mọi lúc mọi nơi', metaKeywords: 'camera an ninh, fpt camera, giám sát', metaDesc: 'Camera An Ninh FPT – Giải pháp giám sát thông minh cho gia đình và doanh nghiệp.', faqCat: '', createdBy: 'Phạm Thu Hà', createdAt: '03/02/2026 16:33', updatedAt: '10/05/2026 09:00' },
+    { name: 'Trang chủ', bcLv1: '', bcLv2: 'Trang chủ', slug: 'home', h1: 'FPT Telecom — Nhà cung cấp Internet & Truyền hình', status: 'active', newsTag: '', metaTitle: 'FPT Telecom - Internet, Truyền hình, Camera', metaKeywords: 'fpt, internet, truyền hình, camera', metaDesc: 'Nhà cung cấp dịch vụ Internet, Truyền hình và Camera hàng đầu Việt Nam.', faqCat: 'Thanh toán cước', createdBy: 'Admin User', createdAt: '01/01/2026 08:00', updatedAt: '20/06/2026 10:00' },
+    { name: 'Tin tức', bcLv1: 'Trang chủ', bcLv2: 'Tin tức', slug: 'tin-tuc', h1: 'Tin tức & Sự kiện FPT', status: 'active', newsTag: 'khuyen-mai', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Admin User', createdAt: '01/01/2026 08:00', updatedAt: '10/06/2026 08:00' },
+    { name: 'Liên hệ', bcLv1: 'Trang chủ', bcLv2: 'Liên hệ', slug: 'lien-he', h1: 'Liên hệ FPT Telecom', status: 'hidden', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: 'Chính sách & Thủ tục', createdBy: 'Trần Thị Bích', createdAt: '01/01/2026 08:00', updatedAt: '05/06/2026 14:30' },
   ]; }
   // Section gắn với trang theo TÊN trang (pages[]). Khi đổi tên trang ở Quản lý Trang, state.pageRenames { tênGốc: tênMới } giúp
   // các Section vẫn bám đúng trang đó (không bị mất liên kết chỉ vì sửa tên).
@@ -4559,10 +4559,33 @@ class Component extends DCLogic {
     };
   }
   LDP_PROVINCES() { return Object.keys(this.LDP_REGION_DATA()); }
-  // Breadcrumb Level 1 của LDP (bước 2 → "Breadcrumb"): sau này lấy từ trường breadcrumb của module Quản lý Trang (chưa phát triển) —
+  // Breadcrumb trang trước (Lv1) của LDP (bước 2 → "Breadcrumb"): sau này lấy từ trường breadcrumb của module Quản lý Trang (chưa phát triển) —
   // hiện là danh sách mẫu; khi có trường đó chỉ cần đổi nguồn ở hàm này. Level 2 do người dùng tự nhập.
   LDP_BREADCRUMB_LV1() {
     return ['Lắp mạng internet', 'Truyền hình FPT Play', 'Camera an ninh', 'Dịch vụ số', 'Thiết bị thông minh', 'Khuyến mãi', 'Sự kiện', 'Tin tức', 'Hỗ trợ khách hàng'];
+  }
+  // Khung "Xem trước" breadcrumb dùng chung (LDP bước 2 + Quản lý Trang): icon nhà › trang trước (xám) › trang hiện tại (đậm).
+  // Chưa nhập thì hiện chữ mờ gợi ý; tự xuống dòng khi chữ dài. Nhãn "Xem trước" do nơi gọi tự vẽ theo kiểu nhãn của editor đó.
+  breadcrumbPreview(lv1, lv2) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const crumb = (txt, ph, last) => h('span', { style: { fontSize: 15, fontWeight: last ? 600 : 400, color: txt && last ? 'var(--color-text)' : 'var(--color-text-subtle)', opacity: txt ? 1 : 0.55, minWidth: 0, wordBreak: 'break-word' } }, txt || ph);
+    const chev = key => h(DS.Icon, { key, name: 'chevron-right-01-line', size: 14, color: 'var(--color-text-subtle)' });
+    return h('div', { style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, padding: '12px 16px', borderRadius: 12, background: 'color-mix(in srgb, var(--color-surface-sunken) 50%, var(--color-surface))' } },
+      h(DS.Icon, { name: 'home-01-line', size: 18, color: 'var(--color-text-muted)' }),
+      chev('c1'), crumb(lv1, 'Trang trước', !lv2),
+      lv2 || !lv1 ? chev('c2') : null,
+      (lv2 || !lv1) ? crumb(lv2, 'Trang hiện tại', true) : null
+    );
+  }
+  // Check trùng "Breadcrumb trang hiện tại" (bước 2): so với danh sách Breadcrumb trang trước và Breadcrumb trang hiện tại của các LDP khác
+  // (selfId = LDP đang sửa, bỏ qua chính nó). Không phân biệt hoa/thường, dấu, khoảng trắng thừa. Chỉ CẢNH BÁO — không chặn, vẫn cho áp dụng.
+  ldpBreadcrumbDup(value, selfId) {
+    const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'd').toLowerCase().replace(/\s+/g, ' ').trim();
+    const key = norm(value);
+    if (!key) return null;
+    if (this.LDP_BREADCRUMB_LV1().some(n => norm(n) === key)) return { kind: 'lv1' };
+    const hit = this.LDP_LIST().find(r => r.id !== selfId && norm(r.bcLv2) === key);
+    return hit ? { kind: 'ldp', name: hit.name } : null;
   }
   // Chuỗi "Phường/Xã, Tỉnh/TP" của một LDP Khu vực (rỗng nếu là LDP thường).
   ldpRegionLabel(r) {
@@ -5478,7 +5501,9 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Slug', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: '#f43f5e' } }, r.slug)),
         this.detailRow('Tiêu đề (H1)', r.h1), this.detailRow('Trạng thái', this.statusBadge(r.status)),
-        this.detailRow('Tag tin tức', (this.NEWS_TAGS().find(t => t.slug === r.newsTag) || {}).name || r.newsTag), this.detailRow('Meta tiêu đề', r.metaTitle),
+        this.detailRow('Tag tin tức', (this.NEWS_TAGS().find(t => t.slug === r.newsTag) || {}).name || r.newsTag),
+        this.detailRow('Breadcrumb', (r.bcLv1 || r.bcLv2) ? [r.bcLv1, r.bcLv2].filter(Boolean).join(' › ') : '—'),
+        this.detailRow('Meta tiêu đề', r.metaTitle),
         this.detailRow('Meta mô tả', r.metaDesc),
         this.detailRow('Người tạo', r.createdBy),
         this.detailRow('Ngày tạo', r.createdAt), this.detailRow('Ngày sửa', r.updatedAt)
@@ -5523,7 +5548,7 @@ class Component extends DCLogic {
         },
         onDragEnd: () => this.setState({ pageSecDragIdx: null, pageSecDragOverIdx: null }),
       });
-      pageSectionsCard = section(4, 'apps-2-line', 'Danh sách Section của trang',
+      pageSectionsCard = section(5, 'apps-2-line', 'Danh sách Section của trang',
         h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', marginTop: -6, marginBottom: 2 } },
           orderedSections.length ? 'Kéo thả để thay đổi thứ tự hiển thị section trên trang.' : null
         ),
@@ -5561,9 +5586,14 @@ class Component extends DCLogic {
     const val = {
       name: dv('name', r ? r.name : ''), slug: dv('slug', r ? r.slug : ''), h1: dv('h1', r ? r.h1 : ''),
       newsTag: dv('newsTag', r ? (r.newsTag || '') : ''),
+      bcLv1: dv('bcLv1', r ? (r.bcLv1 || '') : ''), bcLv2: dv('bcLv2', r ? (r.bcLv2 || '') : ''),
       metaTitle: dv('metaTitle', r ? (r.metaTitle || '') : ''), metaKeywords: dv('metaKeywords', r ? (r.metaKeywords || '') : ''), metaDesc: dv('metaDesc', r ? (r.metaDesc || '') : ''),
       active: dv('active', r ? (actMap[r.slug] !== undefined ? !!actMap[r.slug] : r.status !== 'hidden') : true),
     };
+    // Breadcrumb: "trang trước" chọn từ breadcrumb (trang hiện tại) của các trang khác — đây cũng là nguồn sau này cho ô Breadcrumb trang trước của LDP
+    // (xem LDP_BREADCRUMB_LV1); "trang hiện tại" tự nhập. Cả hai không bắt buộc. Giá trị cũ không còn trong danh sách vẫn giữ lại 1 lựa chọn.
+    const bcOptions = [...new Set(this.PAGES().filter(p => !r || p.slug !== r.slug).map(p => (p.bcLv2 || '').trim()).filter(Boolean))].map(n => ({ value: n, label: n }));
+    if (val.bcLv1 && !bcOptions.some(o => o.value === val.bcLv1)) bcOptions.push({ value: val.bcLv1, label: val.bcLv1 });
     // Mã code (Slug) nhập theo định dạng lv1/lv2 — kiểm tra ngay khi gõ, hiện bản xem trước phần sẽ đồng bộ sang Quản lý URL.
     const slugChk = val.slug ? this.urlCheckPageSlug(val.slug, r ? r.slug : null) : null;
     const slugMsg = slugChk && !slugChk.ok ? slugChk.msg : undefined;
@@ -5578,7 +5608,7 @@ class Component extends DCLogic {
       const chk = this.urlCheckPageSlug(val.slug, r ? r.slug : null);
       if (!chk.ok) { this.toast('danger', 'Mã code (Slug) chưa hợp lệ', chk.msg || 'Vui lòng nhập Mã code (Slug) theo định dạng lv1/lv2.'); return; }
       const now = this.nowStr();
-      const rec = { name: val.name.trim(), slug: chk.path, h1: val.h1, status: val.active ? 'active' : 'hidden', newsTag: val.newsTag, metaTitle: val.metaTitle, metaKeywords: val.metaKeywords, metaDesc: val.metaDesc, updatedAt: now };
+      const rec = { name: val.name.trim(), slug: chk.path, h1: val.h1, status: val.active ? 'active' : 'hidden', newsTag: val.newsTag, bcLv1: val.bcLv1, bcLv2: val.bcLv2.trim(), metaTitle: val.metaTitle, metaKeywords: val.metaKeywords, metaDesc: val.metaDesc, updatedAt: now };
       const list = this.PAGES();
       const nextPages = r ? list.map(p => p.slug === r.slug ? { ...p, ...rec } : p) : [{ ...rec, faqCat: '', createdBy: 'Admin User', createdAt: now }, ...list];
       const prevUrls = this.URLS();
@@ -5624,14 +5654,25 @@ class Component extends DCLogic {
             }), true))
           )
         ),
-        section(2, 'search-medium-line', 'Cấu hình SEO',
+        section(2, 'home-01-line', 'Breadcrumb',
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'start' } },
+            h('div', null, this.field('Breadcrumb trang trước', h(DS.Select, {
+              options: bcOptions, value: val.bcLv1, placeholder: 'Chọn trang trước',
+              searchable: true, searchPlaceholder: 'Tìm trang trước…',
+              onChange: v => setDv('bcLv1', v)
+            }))),
+            h('div', null, this.field('Breadcrumb trang hiện tại', h(DS.Input, { value: val.bcLv2, onChange: e => setDv('bcLv2', evVal(e)), placeholder: 'VD: Internet gia đình' })))
+          ),
+          this.field('Xem trước', this.breadcrumbPreview(val.bcLv1, val.bcLv2))
+        ),
+        section(3, 'search-medium-line', 'Cấu hình SEO',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
             h('div', null, this.field('Meta tiêu đề', h(DS.Input, { value: val.metaTitle, onChange: e => setDv('metaTitle', evVal(e)), placeholder: 'Tiêu đề hiển thị trên Google' }), true)),
             h('div', null, this.field('Meta từ khóa', h(DS.Input, { value: val.metaKeywords, onChange: e => setDv('metaKeywords', evVal(e)), placeholder: 'internet fpt, wifi 6, …' }), true))
           ),
           this.field('Meta mô tả', h(DS.Textarea, { value: val.metaDesc, onChange: e => setDv('metaDesc', evVal(e)), maxLength: 160, placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 }), true)
         ),
-        section(3, 'image-line', 'Hình ảnh',
+        section(4, 'image-line', 'Hình ảnh',
           h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } }, this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤200KB', true))
         ),
         pageSectionsCard
@@ -9633,16 +9674,10 @@ class Component extends DCLogic {
     const bcLv1 = sv.bcLv1, bcLv2 = sv.bcLv2;
     const bcLv1Options = this.LDP_BREADCRUMB_LV1().map(n => ({ value: n, label: n }));
     if (bcLv1 && !bcLv1Options.some(o => o.value === bcLv1)) bcLv1Options.push({ value: bcLv1, label: bcLv1 });
-    const bcCrumb = (txt, ph, last) => h('span', { style: { fontSize: 15, fontWeight: last ? 600 : 400, color: txt && last ? 'var(--color-text)' : 'var(--color-text-subtle)', opacity: txt ? 1 : 0.55, minWidth: 0, wordBreak: 'break-word' } }, txt || ph);
-    const bcChev = key => h(DS.Icon, { key, name: 'chevron-right-01-line', size: 14, color: 'var(--color-text-subtle)' });
+    const bcDup = this.ldpBreadcrumbDup(bcLv2, editRow ? editRow.id : null);
     const bcPreview = h('div', null,
       h('label', { style: lbSt }, 'Xem trước'),
-      h('div', { style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, padding: '12px 16px', borderRadius: 12, background: 'color-mix(in srgb, var(--color-surface-sunken) 50%, var(--color-surface))' } },
-        h(DS.Icon, { name: 'home-01-line', size: 18, color: 'var(--color-text-muted)' }),
-        bcChev('c1'), bcCrumb(bcLv1, 'Level 1', !bcLv2),
-        bcLv2 || !bcLv1 ? bcChev('c2') : null,
-        (bcLv2 || !bcLv1) ? bcCrumb(bcLv2, 'Level 2', true) : null
-      )
+      this.breadcrumbPreview(bcLv1, bcLv2)
     );
     const seoTitle = editRow ? sv.metaTitle : get('metaTitle', 'Khuyến mãi Internet Tháng 5 - FPT Telecom');
     const seoDesc  = sv.metaDesc;
@@ -9757,17 +9792,20 @@ class Component extends DCLogic {
       section(3, 'home-01-line', 'Breadcrumb',
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 } },
         h('div', null,
-          h('label', { style: lbSt }, 'Breadcrumb Level 1'),
+          h('label', { style: lbSt }, 'Breadcrumb trang trước'),
           h(DS.Select, {
-            value: bcLv1, options: bcLv1Options, placeholder: 'Chọn Level 1',
-            searchable: true, searchPlaceholder: 'Tìm Level 1…',
+            value: bcLv1, options: bcLv1Options, placeholder: 'Chọn trang trước',
+            searchable: true, searchPlaceholder: 'Tìm trang trước…',
             onChange: v => set('bcLv1', v),
             containerStyle: { width: '100%' }
           })
         ),
         h('div', null,
-          h('label', { style: lbSt }, 'Breadcrumb Level 2'),
-          h(DS.Input, { value: bcLv2, onChange: e => set('bcLv2', e.target.value), placeholder: 'VD: Internet gia đình' })
+          h('label', { style: lbSt }, 'Breadcrumb trang hiện tại'),
+          h(DS.Input, { value: bcLv2, onChange: e => set('bcLv2', e.target.value), placeholder: 'VD: Internet gia đình' }),
+          bcDup && h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: 'var(--color-warning-text)', fontWeight: 600 } },
+            h(DS.Icon, { name: 'alert-triangle-line', size: 14 }),
+            h('span', null, 'Breadcrumb "', h('strong', null, bcLv2.trim()), bcDup.kind === 'lv1' ? '" đã có trong danh sách Breadcrumb trang trước' : '" đã được dùng ở LDP "' + bcDup.name + '"', '. Bạn vẫn có thể áp dụng.'))
         )
       ),
       bcPreview),
