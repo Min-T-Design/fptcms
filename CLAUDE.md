@@ -381,3 +381,15 @@ Use the usual layout (`justifyContent: 'flex-end'`, **"Hủy" first, primary las
 * **Hand-built `DS.Modal` dialogs** (the `confirmIdx` delete dialogs in Section/Block editors, LDP reject footer `footerRowDanger`, URL modals): lay out the footer by hand exactly as above.
 * Already on the primary-first layout: every `danger: true` confirm (xóa chương trình/Badge/vai trò/cấu hình/section/chu kỳ, đổi danh mục FAQ, đồng bộ/xóa cấu hình riêng về Global, tắt Landing Page, phát hành đè lên URL cũ), the "Xóa …?" `DS.Modal` dialogs in Section/Block editors, "Xác nhận từ chối" (LDP approval), the route-name "Nếu tiếp tục" dialog, and the two URL modals (đổi loại URL đang dùng, tắt URL đang có LDP chạy).
 * Intentionally **primary-last** (simple / form / picker dialogs): bật Landing Page, gửi duyệt LDP, tạo tùy chỉnh riêng cho kênh, xác nhận route name, các modal chọn dữ liệu (chọn bài viết/FAQ/banner/gói/trang, thêm gói vào tab, chọn ảnh), form Thêm/Sửa vai trò & tài khoản, hộp thoại Thu phóng.
+
+---
+
+## 18. Bộ 3 cột kiểm toán: Người tạo / Ngày tạo / Ngày cập nhật
+
+Mọi bảng danh sách bản ghi của CMS phải có đủ 3 cột **Người tạo**, **Ngày tạo**, **Ngày cập nhật** (đặt ngay trước cột Trạng thái / Bật-Tắt / Thao tác), và drawer chi tiết của bảng đó hiện đủ 3 dòng tương ứng (§16 cho phép vì bảng có cột).
+
+* Dùng helper trung tâm trên root component — **không tự vẽ cột riêng**: `...this.auditCols(opts)` cho bảng, `...this.auditRows(r, opts)` cho drawer. Cả hai đọc qua `this.audit(r, opts)`.
+* Bản ghi lưu thật từ editor phải ghi sẵn `createdBy`/`createdAt` (lúc tạo) và `updatedAt` (mỗi lần lưu) bằng `this.nowStr()`. Bản ghi demo thiếu trường thì `audit()` tự suy ra giá trị cố định theo id (không đổi giữa các lần render) để bảng và drawer luôn khớp.
+* `opts`: `only` (chỉ lấy một số cột, vd. SKU đã có sẵn "Thời gian cập nhật"/"Người cập nhật"), `createdKey` (trường sẵn có mang nghĩa ngày tạo, vd. `date` của Menu/Vai trò), `postedKey` + `byKey` (Tin tức: ngày tạo suy ra trước "Ngày đăng", người tạo lấy từ `author`).
+* Không áp dụng: bảng Vai trò + Người dùng (theo yêu cầu), bảng báo cáo (Báo cáo bán hàng / đăng ký Online), ma trận Phân quyền tính năng, bảng quy trình Duyệt LDP (đang ẩn khỏi menu), bảng nhỏ trong editor.
+* Đã bổ sung (2026-10-26): Nội dung sản phẩm (+Người tạo, Ngày tạo) · Thông tin checkout – Chương trình · Quản lý Badge/Tag · Quản lý URL (tách Ngày tạo khỏi ô Người tạo) · Sections · Blocks · Menu · Landing Page (tách Ngày tạo; "Lần sửa cuối" đổi tên "Ngày cập nhật") · Banner · Popup · Tin tức (Bài viết, Chuyên mục, Tags, Cấu hình Thông tin hay) · (Vai trò, Người dùng: cố ý **không** áp dụng — giữ nguyên cột cũ.) Pages, Quảng cáo, Chiến dịch QC, FAQ, Danh mục FAQ, Phương thức thanh toán đã đủ từ trước.

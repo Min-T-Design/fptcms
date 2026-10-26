@@ -1730,8 +1730,9 @@ class Component extends DCLogic {
         render: (_, r) => { const meta = this.PKG_QLCS_META(skuByCode.get(r.skuCode)); return h('span', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, meta ? meta.giaMin : '—'); } },
       { key: 'priceMax', header: 'Giá Max', width: 120, align: 'right',
         render: (_, r) => { const meta = this.PKG_QLCS_META(skuByCode.get(r.skuCode)); return h('span', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, meta ? meta.giaMax : '—'); } },
+      ...this.auditCols({ only: ['createdBy', 'createdAt'] }),
       { key: 'updatedAt', header: 'Thời gian cập nhật', width: 150,
-        render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedAt || '—') },
+        render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, this.audit(r).updatedAt || '—') },
       { key: 'updatedBy', header: 'Người cập nhật', width: 150,
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' } }, r.updatedBy || '—') },
       { key: 'act', header: 'Thao tác', width: 110, align: 'right',
@@ -1797,7 +1798,8 @@ class Component extends DCLogic {
         this.detailRow('Đặc quyền', (r.privileges || []).length ? r.privileges.length + ' đặc quyền' : '—'),
         this.detailRow('Danh mục FAQ', r.faqCat || '—'),
         this.detailRow('FAQ đính kèm', (r.faqList || []).length ? r.faqList.length + ' câu hỏi (' + (r.faqList || []).filter(x => !x.hidden).length + ' đang hiển thị)' : '—'),
-        this.detailRow('Cập nhật lần cuối', r.updatedAt + ' · ' + r.updatedBy)
+        this.detailRow('Người tạo', this.audit(r).createdBy), this.detailRow('Ngày tạo', this.audit(r).createdAt),
+        this.detailRow('Cập nhật lần cuối', this.audit(r).updatedAt + ' · ' + (r.updatedBy || '—'))
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -3593,6 +3595,7 @@ class Component extends DCLogic {
       { key: 'regPage', header: 'Trang đăng ký', render: (_, r) => pageBannerCell(pageBannerList([r.headerBanner, r.footerBanner, r.popupCheckout])) },
       { key: 'payPage', header: 'Trang thanh toán', render: (_, r) => pageBannerCell(pageBannerList([r.payHeaderBanner, r.payFooterBanner, r.payModalPopup, r.payVoucherPopup])) },
       { key: 'donePage', header: 'Trang hoàn tất đơn hàng', render: (_, r) => pageBannerCell(pageBannerList([r.doneHeaderBanner, r.doneAppBanner, r.donePopup])) },
+      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
       { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ ruleEditor: r }) },
@@ -3642,6 +3645,7 @@ class Component extends DCLogic {
         this.detailRow('Tên chương trình', r.name),
         this.detailRow('Gói bán áp dụng', h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap' } }, r.skus.map(s => h(DS.Badge, { key: s, theme: 'brand' }, s)))),
         this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        ...this.auditRows(r),
 
         sub('Trang thông tin đăng ký'),
         this.detailRow('Header Banner', r.headerBanner),
@@ -3951,6 +3955,55 @@ class Component extends DCLogic {
     const pg = this.state[key + '_pg'] || 1;
     const sz = this.state[key + '_sz'] || 10;
     return data.slice((pg - 1) * sz, pg * sz);
+  }
+  // ── Bộ 3 cột kiểm toán dùng chung mọi bảng: Người tạo / Ngày tạo / Ngày cập nhật ──
+  // `audit(r, opts)` đọc createdBy/createdAt/updatedAt của bản ghi; bản ghi demo nào thiếu thì suy ra giá trị
+  // cố định theo id (không đổi giữa các lần render) để bảng + drawer luôn khớp nhau. Bản ghi lưu thật từ editor
+  // phải ghi sẵn createdBy/createdAt (lúc tạo) và updatedAt (mỗi lần lưu) → helper chỉ còn đọc lại.
+  // opts: createdKey (trường sẵn có đã mang nghĩa "ngày tạo"), postedKey (ngày đăng — ngày tạo suy ra trước đó
+  // 1–5 ngày), byKey (trường tác giả sẵn có dùng làm người tạo), only (['createdBy','createdAt','updatedAt']).
+  AUDIT_PEOPLE() { return ['Admin User', 'Trần Minh Khoa', 'Nguyễn Thị Thùy']; }
+  auditParse(s) {
+    const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/.exec(String(s || '').trim());
+    if (!m) return null;
+    const y = +m[3] < 100 ? 2000 + +m[3] : +m[3];
+    return { d: new Date(y, +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0)), time: m[4] !== undefined };
+  }
+  auditFmt(d, withTime) {
+    const p = n => String(n).padStart(2, '0');
+    return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() + (withTime ? ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) : '');
+  }
+  audit(r, opts) {
+    const o = opts || {};
+    const key = String(r.id != null ? r.id : (r.code || r.slug || r.skuCode || r.name || r.tag || ''));
+    let n = 0; for (let i = 0; i < key.length; i++) n = (n * 31 + key.charCodeAt(i)) >>> 0;
+    const day = 86400000;
+    const posted = o.postedKey ? this.auditParse(r[o.postedKey]) : null;
+    const upd = this.auditParse(r.updatedAt || r.lastEdit) || posted;
+    let createdAt = r.createdAt || (o.createdKey ? r[o.createdKey] : '');
+    if (!createdAt) {
+      const base = upd ? upd.d : new Date(2026, 0, 5 + (n % 90), 9 + (n % 8), (n * 7) % 60);
+      const back = posted ? 1 + (n % 5) : (upd ? 1 + (n % 25) : 0);
+      createdAt = this.auditFmt(new Date(base.getTime() - back * day), true);
+    }
+    const createdBy = r.createdBy || (o.byKey && r[o.byKey]) || this.AUDIT_PEOPLE()[n % 3];
+    const updatedAt = r.updatedAt || r.lastEdit || (posted ? r[o.postedKey] : createdAt);
+    return { createdBy, createdAt, updatedAt };
+  }
+  auditCols(opts) {
+    const h = React.createElement; const o = opts || {};
+    const cell = f => (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, this.audit(r, o)[f] || '—');
+    const all = [
+      { key: 'createdBy', header: 'Người tạo', width: 140, render: cell('createdBy') },
+      { key: 'createdAt', header: 'Ngày tạo', width: 148, render: cell('createdAt') },
+      { key: 'updatedAt', header: 'Ngày cập nhật', width: 148, render: cell('updatedAt') },
+    ];
+    return o.only ? all.filter(c => o.only.includes(c.key)) : all;
+  }
+  // 3 hàng audit cho drawer chi tiết (mirror đúng 3 cột của bảng — §16)
+  auditRows(r, opts) {
+    const a = this.audit(r, opts);
+    return [this.detailRow('Người tạo', a.createdBy), this.detailRow('Ngày tạo', a.createdAt), this.detailRow('Ngày cập nhật', a.updatedAt)];
   }
   // Cột ghim phải dùng chung mọi bảng (CLAUDE.md §9): "Thao tác" (key 'act') + cột bật/tắt "Hoạt động"/"Hiển thị"
   // (key 'active' | 'visible') đứng sát bên trái nó. Gọn theo nội dung: toggle header "Bật/Tắt" rộng 76px; Thao tác
@@ -5102,9 +5155,8 @@ class Component extends DCLogic {
           ? (kidCount(r.id) ? h(DS.Badge, { theme: 'neutral' }, String(kidCount(r.id))) : h('span', { style: { ...muted, fontStyle: 'italic' } }, 'Trống'))
           : null },
       { key: 'usage', header: 'Đang dùng bởi', width: 250, render: (_, r) => usageCell(r) },
-      { key: 'createdBy', header: 'Người tạo', width: 150, render: (_, r) => h('div', { style: { fontSize: 12, whiteSpace: 'nowrap' } },
-          h('div', { style: { fontWeight: 600 } }, r.createdBy || '—'),
-          r.createdAt ? h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, r.createdAt) : null) },
+      { key: 'createdBy', header: 'Người tạo', width: 140, render: (_, r) => h('span', { style: muted }, r.createdBy || '—') },
+      { key: 'createdAt', header: 'Ngày tạo', width: 148, render: (_, r) => h('span', { style: muted }, r.createdAt || '—') },
       { key: 'updatedAt', header: 'Ngày chỉnh sửa', width: 148, render: (_, r) => h('span', { style: muted }, r.updatedAt || '—') },
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = this.urlIsActive(r);
@@ -5789,8 +5841,7 @@ class Component extends DCLogic {
         } },
       { key: 'type', header: 'Loại', width: 110,
         render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'var(--font-dev)' } }, r.type) },
-      { key: 'createdAt', header: 'Ngày tạo', width: 128,
-        render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
+      ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.secActiveMap || {})[r.id] !== undefined ? !!(this.state.secActiveMap || {})[r.id] : r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -5836,7 +5887,8 @@ class Component extends DCLogic {
         this.detailRow('Tiêu đề hiển thị', r.title), this.detailRow('Thuộc trang', (r.pages || []).join(', ') || '—'),
         this.detailRow('Loại', r.type),
         this.detailRow('Trạng thái', this.statusBadge(r.status)),
-        this.detailRow('Blocks gắn', (r.blocks || []).join(', ') || '—'), this.detailRow('Ngày tạo', r.createdAt)
+        this.detailRow('Blocks gắn', (r.blocks || []).join(', ') || '—'),
+        ...this.auditRows(r)
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -6059,7 +6111,7 @@ class Component extends DCLogic {
           return h(FptChipList, { theme: 'neutral', max: 2, list: secs });
         } },
       { key: 'loai', header: 'Loại', render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, r.layout + (r.datasource ? ' · ' + r.datasource : '')) },
-      { key: 'createdAt', header: 'Ngày tạo', width: 145, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
+      ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.blkActiveMap || {})[r.id] !== undefined ? !!(this.state.blkActiveMap || {})[r.id] : true;
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -6981,7 +7033,7 @@ class Component extends DCLogic {
         this.detailRow('Mã Block', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: '#f43f5e' } }, r.code)),
         this.detailRow('Tên Block', r.name), this.detailRow('Section', this.blockSections(r).join(', ') || '—'),
         this.detailRow('Loại / Layout', r.layout + ' · ' + r.datasource),
-        this.detailRow('Ngày tạo', r.createdAt)
+        ...this.auditRows(r)
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -7038,7 +7090,7 @@ class Component extends DCLogic {
       { key: 'type',   header: 'Loại',     width: 110, render: (_, r) => typeBadge(r.type) },
       { key: 'url',    header: 'Link URL',             render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-text-subtle)' }, title: r.url }, r.url && r.url !== '—' ? (r.url.length > 38 ? r.url.slice(0, 38) + '…' : r.url) : '—') },
       { key: 'target', header: 'Target',   width: 90,  align: 'center', render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: r.target === '_blank' ? 'var(--color-warning-text)' : 'var(--color-text-muted)' } }, r.target) },
-      { key: 'date',   header: 'Ngày tạo', width: 160, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.date || '—') },
+      ...this.auditCols({ createdKey: 'date' }),
       { key: 'active', header: 'Hoạt động', width: 64,  align: 'center', render: (_, r) => {
           const isOn = (this.state.menuActiveMap || {})[r.id] !== undefined ? !!(this.state.menuActiveMap || {})[r.id] : r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -7321,7 +7373,8 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên menu', r.name), this.detailRow('Loại', r.type),
         this.detailRow('Vị trí', r.pos), this.detailRow('Cấp độ', String(r.level)),
-        this.detailRow('Thứ tự', String(r.order)), this.detailRow('Trạng thái', this.statusBadge(r.status))
+        this.detailRow('Thứ tự', String(r.order)), this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        ...this.auditRows(r, { createdKey: 'date' })
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -7364,7 +7417,7 @@ class Component extends DCLogic {
       { key: 'link', header: 'Link URL', width: 190, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-subtle)' } }, r.link) },
       { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, whiteSpace: 'nowrap' } }, r.period) },
       { key: 'order', header: 'Thứ tự', width: 72, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
-      { key: 'createdAt', header: 'Ngày tạo', width: 108, render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt) },
+      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', width: 110, render: (_, r) => this.statusBadge(this.effStatus(this.state.bannerActiveMap, r, 'active')) },
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
@@ -7460,6 +7513,7 @@ class Component extends DCLogic {
       { key: 'name', header: 'Tên Popup', width: 200, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
       { key: 'type', header: 'Trang áp dụng', width: 190, render: (_, r) => this.popupTypeCell(r) },
       { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.period) },
+      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', width: 120, render: (_, r) => this.statusBadge(this.effStatus(this.state.popupActiveMap, r, 'running')) },
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
@@ -7522,7 +7576,7 @@ class Component extends DCLogic {
         this.detailRow('Danh sách trang áp dụng (' + r.pages.length + ')', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 } }, r.pages.map(p => h(DS.Tag, { key: p, size: 'sm' }, p)))),
         this.detailRow('Thời gian hiển thị', r.period),
         this.detailRow('Thứ tự ưu tiên', String(r.order)),
-        this.detailRow('Ngày tạo', r.createdAt),
+        ...this.auditRows(r),
         this.detailRow('Trạng thái', this.statusBadge(r.status))
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
@@ -7617,7 +7671,8 @@ class Component extends DCLogic {
               this.detailRow('Thời gian tự đóng', r.autoCloseSec ? r.autoCloseSec + ' giây' : 'Không tự đóng'),
               this.detailRow('Tần suất hiển thị', freqLabel[r.frequency])
             ),
-        this.detailRow('Trạng thái', this.statusBadge(r.status))
+        this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        ...this.auditRows(r)
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -8357,6 +8412,7 @@ class Component extends DCLogic {
       { key: 'categories', header: 'Phân loại', width: 240, render: (_, r) => categoryCell(r.categories) },
       { key: 'bgColor', header: 'Màu nền', width: 150, render: (_, r) => colorCell(r.bgColor) },
       { key: 'textColor', header: 'Màu chữ', width: 150, render: (_, r) => colorCell(r.textColor) },
+      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', width: 150, render: (_, r) => this.statusBadge(r.status) },
       { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openBadgeEditor(r) },
@@ -8399,7 +8455,8 @@ class Component extends DCLogic {
         this.detailRow('Mã màu chữ', r.textColor.toUpperCase()),
         this.detailRow('Icon', r.icon ? h('img', { src: r.icon, style: { width: 22, height: 22, objectFit: 'contain' } }) : '—'),
         this.detailRow('Vị trí icon', r.icon ? (r.iconPosition === 'right' ? 'Bên phải' : 'Bên trái') : '—'),
-        this.detailRow('Trạng thái', this.statusBadge(r.status))
+        this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        ...this.auditRows(r)
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -9230,11 +9287,10 @@ class Component extends DCLogic {
       { key: 'period', header: 'Thời gian hiệu lực', width: 150, render: (_, r) =>
           h('span', { style: { whiteSpace: 'nowrap', color: 'var(--color-text-muted)' } }, r.startDate + ' – ' + r.endDate) },
       { key: 'createdBy', header: 'Người tạo', width: 130, render: (_, r) =>
-          h('div', { style: { fontSize: 12, whiteSpace: 'nowrap' } },
-            h('div', { style: { fontWeight: 600 } }, r.createdBy || '—'),
-            r.createdAt ? h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, r.createdAt) : null
-          ) },
-      { key: 'lastEdit', header: 'Lần sửa cuối', width: 130, render: (_, r) =>
+          h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdBy || '—') },
+      { key: 'createdAt', header: 'Ngày tạo', width: 120, render: (_, r) =>
+          h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.createdAt || '—') },
+      { key: 'lastEdit', header: 'Ngày cập nhật', width: 130, render: (_, r) =>
           h('div', { style: { fontSize: 12, whiteSpace: 'nowrap' } },
             h('div', { style: { fontWeight: 600 } }, r.lastEditBy || '—'),
             r.lastEdit ? h('div', { style: { color: 'var(--color-text-subtle)', marginTop: 1 } }, r.lastEdit) : null
@@ -9348,8 +9404,9 @@ class Component extends DCLogic {
         this.detailRow('Breadcrumb', (r.bcLv1 || r.bcLv2) ? [r.bcLv1, r.bcLv2].filter(Boolean).join(' › ') : '—'),
         this.detailRow('Mục tiêu', r.goal),
         this.detailRow('Thời gian hiệu lực', r.startDate + ' – ' + r.endDate),
-        this.detailRow('Người tạo', h('div', null, h('div', null, r.createdBy || '—'), r.createdAt ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, r.createdAt) : null)),
-        this.detailRow('Lần sửa cuối', h('div', null, h('div', null, r.lastEditBy || '—'), r.lastEdit ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, r.lastEdit) : null)),
+        this.detailRow('Người tạo', r.createdBy || '—'),
+        this.detailRow('Ngày tạo', r.createdAt || '—'),
+        this.detailRow('Ngày cập nhật', h('div', null, h('div', null, r.lastEditBy || '—'), r.lastEdit ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, r.lastEdit) : null)),
         this.detailRow('Trạng thái', stBadge(effStatus))
       ),
       footer: effStatus === 'pending' ? null : () => h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 8 } },
@@ -14182,6 +14239,7 @@ class Component extends DCLogic {
       { key: 'date',   header: 'Ngày đăng', width: 90 },
       { key: 'views',  header: 'Lượt xem', width: 78, align: 'right',
         render: (_, r) => h('span', { style: { fontWeight: 600, fontVariantNumeric: 'tabular-nums' } }, r.views.toLocaleString()) },
+      ...this.auditCols({ postedKey: 'date', byKey: 'author' }),
       { key: 'status', header: 'Trạng thái', width: 96,
         render: (_, r) => this.statusBadge(this.effStatus(this.state.newsArtActiveMap, r, 'published')) },
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
@@ -14485,6 +14543,7 @@ class Component extends DCLogic {
       { key: 'level',  header: 'Cấp', width: 64, align: 'center', render: (_, r) => h('span', null, String(levelOf(r))) },
       { key: 'order',  header: 'Thứ tự', width: 80, align: 'center', render: (_, r) => h('span', null, String(r.order || 0)) },
       { key: 'count',  header: 'Số bài', width: 80, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
+      ...this.auditCols(),
       { key: 'status', header: 'Tình trạng', width: 120, render: (_, r) => {
           const isOn = (this.state.newsCatActiveMap || {})[r.id] !== undefined ? !!(this.state.newsCatActiveMap || {})[r.id] : r.status !== 'inactive';
           return this.statusBadge(isOn ? 'active' : 'inactive');
@@ -14528,6 +14587,7 @@ class Component extends DCLogic {
       { key: 'name', header: 'Tên Tag', render: (_, r) => h('span', { style: { fontWeight: 600 } }, '#' + r.name) },
       { key: 'slug', header: 'Slug', render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
       { key: 'count', header: 'Số bài dùng', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
+      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', render: (_, r) => {
           const isOn = (this.state.newsTagActiveMap || {})[r.id] !== undefined ? !!(this.state.newsTagActiveMap || {})[r.id] : r.status !== 'inactive';
           return this.statusBadge(isOn ? 'active' : 'inactive');
@@ -14565,6 +14625,7 @@ class Component extends DCLogic {
           overflow > 0 && h(DS.Badge, { key: '__more', theme: 'neutral' }, '+' + overflow)
         );
       } },
+      ...this.auditCols(),
 
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Cấu hình', onClick: () => this.setState({ tagMappingEditor: r, tagSkuConfirmed: r.skus.length ? [...r.skus] : ['INT-GIGA', 'INT-SKY'], tagSkuSel: r.skus.length ? [...r.skus] : ['INT-GIGA', 'INT-SKY'], tagSkuQ: '', tagSkuCat: 'all', tagEditingTag: r.tag }) },
@@ -14696,7 +14757,8 @@ class Component extends DCLogic {
         this.detailRow('Chuyên mục', r.cat),
         this.detailRow('Kênh', r.channel), this.detailRow('Ngày đăng', r.date),
         this.detailRow('Lượt xem', r.views ? r.views.toLocaleString() : '0'),
-        this.detailRow('Trạng thái', this.statusBadge(r.status))
+        this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        ...this.auditRows(r, { postedKey: 'date', byKey: 'author' })
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -14718,7 +14780,8 @@ class Component extends DCLogic {
         this.detailRow('Tên chuyên mục', r.name), this.detailRow('Slug', r.slug),
         this.detailRow('Chuyên mục cha', r.parent), this.detailRow('Kiểu giao diện', r.layout),
         this.detailRow('Cấp', String(lvl)), this.detailRow('Thứ tự', String(r.order || 0)),
-        this.detailRow('Số bài viết', String(r.count)), this.detailRow('Tình trạng', this.statusBadge(r.status))
+        this.detailRow('Số bài viết', String(r.count)), this.detailRow('Tình trạng', this.statusBadge(r.status)),
+        ...this.auditRows(r)
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
@@ -14898,7 +14961,8 @@ class Component extends DCLogic {
     this.openDrawer({ title: '#' + r.name, subtitle: 'Tag từ khóa', width: 420,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên Tag', '#' + r.name), this.detailRow('Slug', r.slug),
-        this.detailRow('Số bài viết', String(r.count)), this.detailRow('Trạng thái', this.statusBadge(r.status))
+        this.detailRow('Số bài viết', String(r.count)), this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        ...this.auditRows(r)
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
