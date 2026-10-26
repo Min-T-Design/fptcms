@@ -4644,14 +4644,13 @@ class Component extends DCLogic {
     if (o.ldpId !== undefined && this.LDP_BREADCRUMB_LV1().some(n => norm(n) === key)) return { kind: 'lv1' };
     return null;
   }
-  // Dòng cảnh báo trùng (chữ vàng + icon) hiện dưới ô "Breadcrumb trang hiện tại"; verb = 'lưu' | 'áp dụng'.
-  breadcrumbDupWarn(value, dup, verb) {
+  // Dòng cảnh báo trùng (chữ vàng + icon) hiện dưới ô "Breadcrumb trang hiện tại": Breadcrumb "…" đã được dùng. Chỉ cảnh báo, không chặn.
+  breadcrumbDupWarn(value, dup) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     if (!dup) return null;
-    const where = dup.kind === 'lv1' ? '" đã có trong danh sách Breadcrumb trang trước' : dup.kind === 'page' ? '" đã được dùng ở trang "' + dup.name + '"' : '" đã được dùng ở LDP "' + dup.name + '"';
     return h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: 'var(--color-warning-text)', fontWeight: 600 } },
       h(DS.Icon, { name: 'alert-triangle-line', size: 14 }),
-      h('span', null, 'Breadcrumb "', h('strong', null, (value || '').trim()), where, '. Bạn vẫn có thể ' + verb + '.'));
+      h('span', null, 'Breadcrumb "', h('strong', null, (value || '').trim()), '" đã được dùng'));
   }
   // Chuỗi "Phường/Xã, Tỉnh/TP" của một LDP Khu vực (rỗng nếu là LDP thường).
   ldpRegionLabel(r) {
@@ -5743,7 +5742,7 @@ class Component extends DCLogic {
             h('div', null,
               this.field(h(React.Fragment, null, 'Breadcrumb trang hiện tại', val.bcLv1 && h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
                 h(DS.Input, { value: val.bcLv2, onChange: e => setDv('bcLv2', evVal(e)), placeholder: 'VD: Internet gia đình', error: bcLv2Err ? 'Trường bắt buộc — vui lòng nhập.' : undefined })),
-              this.breadcrumbDupWarn(val.bcLv2, bcDup, 'lưu'))
+              this.breadcrumbDupWarn(val.bcLv2, bcDup))
           ),
           this.field('Xem trước', this.breadcrumbPreview(val.bcLv1, val.bcLv2))
         ),
@@ -9928,7 +9927,7 @@ class Component extends DCLogic {
         h('div', null,
           h('label', { style: lbSt }, 'Breadcrumb trang hiện tại', bcLv1 && req),
           h(DS.Input, { value: bcLv2, onChange: e => set('bcLv2', e.target.value), placeholder: 'VD: Internet gia đình', error: bcLv2Err ? 'Đã chọn Breadcrumb trang trước — vui lòng nhập Breadcrumb trang hiện tại.' : undefined }),
-          this.breadcrumbDupWarn(bcLv2, bcDup, 'áp dụng')
+          this.breadcrumbDupWarn(bcLv2, bcDup)
         )
       ),
       bcPreview),
