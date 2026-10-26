@@ -4347,31 +4347,30 @@ class Component extends DCLogic {
   AD_TYPES() { return [{ value: 'above_header', label: 'Trên header' }, { value: 'below_header', label: 'Dưới header' }]; }
   adTypeLabel(v) { const t = this.AD_TYPES().find(t => t.value === v); return t ? t.label : '—'; }
   AD_CATEGORIES() { return [
-    { id: 1, name: 'Combo Internet Ngoại Hạng Anh', code: 'scrolling_top_bar', type: 'above_header', desc: 'Thanh chạy chữ thông báo ưu đãi Internet, Camera AI & Cloud đầu website', status: 'active', createdAt: '01/06/2026 09:00', createdBy: 'Admin User', updatedAt: '12/08/2026 15:20', updatedBy: 'Nguyễn Thị Thùy' },
-    { id: 2, name: 'Black Friday 2026', code: 'popup_promo', desc: 'Các quảng cáo popup khuyến mãi Black Friday và Camera AI khi vào trang', status: 'active', createdAt: '05/06/2026 10:30', createdBy: 'Admin User', updatedAt: '20/07/2026 09:45', updatedBy: 'Trần Minh Khoa' },
-    { id: 3, name: 'Hè rực rỡ – FPT Play VIP', code: 'corner_banner', desc: 'Quảng cáo nhỏ ghim góc màn hình giới thiệu ưu đãi tặng FPT Play VIP mùa hè', status: 'active', createdAt: '10/06/2026 14:10', createdBy: 'Admin User', updatedAt: '10/06/2026 14:10', updatedBy: 'Admin User' },
-    { id: 4, name: 'Tri ân khách hàng 2026', code: 'footer_ads', desc: 'Quảng cáo tri ân khách hàng thân thiết hiển thị cố định ở chân trang website', status: 'inactive', createdAt: '15/06/2026 11:00', createdBy: 'Admin User', updatedAt: '02/09/2026 16:00', updatedBy: 'Admin User' },
+    { id: 1, name: 'Combo Internet Ngoại Hạng Anh', code: 'scrolling_top_bar', type: 'above_header', bgColor: '', bgImg: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7ae92542251_1786439973.png', desc: 'Thanh chạy chữ thông báo ưu đãi Internet, Camera AI & Cloud đầu website', status: 'active', createdAt: '01/06/2026 09:00', createdBy: 'Admin User', updatedAt: '12/08/2026 15:20', updatedBy: 'Nguyễn Thị Thùy' },
+    { id: 2, name: 'Black Friday 2026', code: 'popup_promo', bgColor: '#22c55e', bgImg: '', desc: 'Các quảng cáo popup khuyến mãi Black Friday và Camera AI khi vào trang', status: 'active', createdAt: '05/06/2026 10:30', createdBy: 'Admin User', updatedAt: '20/07/2026 09:45', updatedBy: 'Trần Minh Khoa' },
+    { id: 3, name: 'Hè rực rỡ – FPT Play VIP', code: 'corner_banner', bgColor: '#7c3aed', bgImg: '', desc: 'Quảng cáo nhỏ ghim góc màn hình giới thiệu ưu đãi tặng FPT Play VIP mùa hè', status: 'active', createdAt: '10/06/2026 14:10', createdBy: 'Admin User', updatedAt: '10/06/2026 14:10', updatedBy: 'Admin User' },
+    { id: 4, name: 'Tri ân khách hàng 2026', code: 'footer_ads', bgColor: '#0f172a', bgImg: '', desc: 'Quảng cáo tri ân khách hàng thân thiết hiển thị cố định ở chân trang website', status: 'inactive', createdAt: '15/06/2026 11:00', createdBy: 'Admin User', updatedAt: '02/09/2026 16:00', updatedBy: 'Admin User' },
   ]; }
   ADS() { return [
     { id: 1, catCode: 'scrolling_top_bar', title: 'Combo Internet V.VIP chỉ từ 220K: Xem Ngoại Hạng Anh - Nhận ngay Camera AI & Cloud miễn phí',
       img: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7aedea66620_1786441194.png',
-      bgColor: '#e6aa41', bgImg: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7ae92542251_1786439973.png',
       content: 'Combo Internet V.VIP chỉ từ 220K: Xem Ngoại Hạng Anh - Nhận ngay Camera AI & Cloud miễn phí <a href="#">TẠI ĐÂY</a>',
       url: 'https://fpt.vn/shop/internet/register/combo-internet-sky-vvip-lite?utm_source=nha-header', target: '_self', order: 1, status: 'active', startAt: '11/08/2026 00:00', endAt: '31/12/2026 23:59', createdAt: '11/08/2026 09:15', createdBy: 'Admin User', updatedAt: '25/08/2026 14:30', updatedBy: 'Nguyễn Thị Thùy' },
     { id: 2, catCode: 'scrolling_top_bar', title: 'Miễn phí lắp đặt Internet tốc độ cao — Ưu đãi cho khách hàng mới',
-      img: '', bgColor: '#0072BC', bgImg: '',
+      img: '',
       content: 'Miễn phí lắp đặt Internet tốc độ cao — Ưu đãi cho khách hàng mới trong tháng.',
       url: 'https://fpt.vn/shop/internet', target: '_self', order: 2, status: 'active', startAt: '01/07/2026 00:00', endAt: '', createdAt: '02/07/2026 10:20', createdBy: 'Trần Minh Khoa', updatedAt: '02/07/2026 10:20', updatedBy: 'Trần Minh Khoa' },
     { id: 3, catCode: 'popup_promo', title: 'Camera AI thế hệ mới — Giảm ngay 30% khi đăng ký Internet',
-      img: '', bgColor: '#22c55e', bgImg: '',
+      img: '',
       content: 'Camera AI thế hệ mới — Giảm ngay 30% khi đăng ký kèm Internet.',
       url: 'https://fpt.vn/shop/camera-an-ninh', target: '_blank', order: 1, status: 'inactive', startAt: '20/06/2026 08:00', endAt: '31/10/2026 23:59', createdAt: '20/06/2026 16:45', createdBy: 'Admin User', updatedAt: '15/08/2026 11:05', updatedBy: 'Admin User' },
     { id: 4, catCode: 'corner_banner', title: 'FPT Play VIP tặng kèm — Xem trọn giải Ngoại Hạng Anh',
-      img: '', bgColor: '#7c3aed', bgImg: '',
+      img: '',
       content: 'FPT Play VIP tặng kèm khi đăng ký gói Internet + Truyền hình.',
       url: 'https://fpt.vn/shop/truyen-hinh-fpt-play', target: '_self', order: 1, status: 'inactive', startAt: '01/06/2026 00:00', endAt: '31/08/2026 23:59', createdAt: '28/05/2026 08:30', createdBy: 'Admin User', updatedAt: '10/07/2026 17:40', updatedBy: 'Admin User' },
     { id: 5, catCode: 'popup_promo', title: 'Ưu đãi Black Friday — Giảm 50% cước Internet 6 tháng đầu',
-      img: '', bgColor: '#0f172a', bgImg: '',
+      img: '',
       content: 'Ưu đãi Black Friday — Giảm 50% cước Internet 6 tháng đầu cho khách hàng đăng ký mới.',
       url: 'https://fpt.vn/shop/internet/black-friday', target: '_blank', order: 2, status: 'active', startAt: '20/11/2026 00:00', endAt: '30/11/2026 23:59', createdAt: '25/09/2026 10:20', createdBy: 'Admin User', updatedAt: '28/09/2026 16:45', updatedBy: 'Admin User' },
   ]; }
@@ -4577,15 +4576,29 @@ class Component extends DCLogic {
       (lv2 || !lv1) ? crumb(lv2, 'Trang hiện tại', true) : null
     );
   }
-  // Check trùng "Breadcrumb trang hiện tại" (bước 2): so với danh sách Breadcrumb trang trước và Breadcrumb trang hiện tại của các LDP khác
-  // (selfId = LDP đang sửa, bỏ qua chính nó). Không phân biệt hoa/thường, dấu, khoảng trắng thừa. Chỉ CẢNH BÁO — không chặn, vẫn cho áp dụng.
-  ldpBreadcrumbDup(value, selfId) {
-    const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'd').toLowerCase().replace(/\s+/g, ' ').trim();
+  // Check trùng "Breadcrumb trang hiện tại" — dùng chung Quản lý Trang + LDP bước 2. So với Breadcrumb trang hiện tại của các trang khác, của các LDP khác
+  // và (chỉ LDP) danh sách Breadcrumb trang trước. opts: { pageSlug: trang đang sửa, ldpId: LDP đang sửa } — bỏ qua chính bản ghi đó.
+  // Không phân biệt hoa/thường, dấu, khoảng trắng thừa. Chỉ CẢNH BÁO — không chặn lưu.
+  breadcrumbDup(value, opts) {
+    const o = opts || {};
+    const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'd').toLowerCase().replace(/\s+/g, ' ').trim();
     const key = norm(value);
     if (!key) return null;
-    if (this.LDP_BREADCRUMB_LV1().some(n => norm(n) === key)) return { kind: 'lv1' };
-    const hit = this.LDP_LIST().find(r => r.id !== selfId && norm(r.bcLv2) === key);
-    return hit ? { kind: 'ldp', name: hit.name } : null;
+    const pg = this.PAGES().find(p => p.slug !== o.pageSlug && norm(p.bcLv2) === key);
+    if (pg) return { kind: 'page', name: pg.name };
+    const ld = this.LDP_LIST().find(r => r.id !== o.ldpId && norm(r.bcLv2) === key);
+    if (ld) return { kind: 'ldp', name: ld.name };
+    if (o.ldpId !== undefined && this.LDP_BREADCRUMB_LV1().some(n => norm(n) === key)) return { kind: 'lv1' };
+    return null;
+  }
+  // Dòng cảnh báo trùng (chữ vàng + icon) hiện dưới ô "Breadcrumb trang hiện tại"; verb = 'lưu' | 'áp dụng'.
+  breadcrumbDupWarn(value, dup, verb) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    if (!dup) return null;
+    const where = dup.kind === 'lv1' ? '" đã có trong danh sách Breadcrumb trang trước' : dup.kind === 'page' ? '" đã được dùng ở trang "' + dup.name + '"' : '" đã được dùng ở LDP "' + dup.name + '"';
+    return h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: 'var(--color-warning-text)', fontWeight: 600 } },
+      h(DS.Icon, { name: 'alert-triangle-line', size: 14 }),
+      h('span', null, 'Breadcrumb "', h('strong', null, (value || '').trim()), where, '. Bạn vẫn có thể ' + verb + '.'));
   }
   // Chuỗi "Phường/Xã, Tỉnh/TP" của một LDP Khu vực (rỗng nếu là LDP thường).
   ldpRegionLabel(r) {
@@ -5604,6 +5617,9 @@ class Component extends DCLogic {
     // (xem LDP_BREADCRUMB_LV1); "trang hiện tại" tự nhập. Cả hai không bắt buộc. Giá trị cũ không còn trong danh sách vẫn giữ lại 1 lựa chọn.
     const bcOptions = [...new Set(this.PAGES().filter(p => !r || p.slug !== r.slug).map(p => (p.bcLv2 || '').trim()).filter(Boolean))].map(n => ({ value: n, label: n }));
     if (val.bcLv1 && !bcOptions.some(o => o.value === val.bcLv1)) bcOptions.push({ value: val.bcLv1, label: val.bcLv1 });
+    // Đã chọn "trang trước" thì "trang hiện tại" bắt buộc nhập (lỗi chỉ hiện sau khi bấm Lưu, tự mất khi nhập); trùng breadcrumb trang khác/LDP chỉ cảnh báo.
+    const bcLv2Err = !!draft.bcErr && !!val.bcLv1 && !val.bcLv2.trim();
+    const bcDup = this.breadcrumbDup(val.bcLv2, { pageSlug: r ? r.slug : null });
     // Mã code (Slug) nhập theo định dạng lv1/lv2 — kiểm tra ngay khi gõ, hiện bản xem trước phần sẽ đồng bộ sang Quản lý URL.
     const slugChk = val.slug ? this.urlCheckPageSlug(val.slug, r ? r.slug : null) : null;
     const slugMsg = slugChk && !slugChk.ok ? slugChk.msg : undefined;
@@ -5615,6 +5631,7 @@ class Component extends DCLogic {
 
     // Lưu thật: ghi trang vào state.pagesData, đồng bộ URL cấp 1 / cấp 2 sang Quản lý URL, giữ liên kết Section khi đổi tên trang.
     const onSave = () => {
+      if (val.bcLv1 && !val.bcLv2.trim()) { setDv('bcErr', true); this.toast('danger', 'Thiếu thông tin bắt buộc', 'Đã chọn Breadcrumb trang trước thì phải nhập Breadcrumb trang hiện tại.'); return; }
       const chk = this.urlCheckPageSlug(val.slug, r ? r.slug : null);
       if (!chk.ok) { this.toast('danger', 'Mã code (Slug) chưa hợp lệ', chk.msg || 'Vui lòng nhập Mã code (Slug) theo định dạng lv1/lv2.'); return; }
       const now = this.nowStr();
@@ -5671,7 +5688,10 @@ class Component extends DCLogic {
               searchable: true, searchPlaceholder: 'Tìm trang trước…',
               onChange: v => setDv('bcLv1', v)
             }))),
-            h('div', null, this.field('Breadcrumb trang hiện tại', h(DS.Input, { value: val.bcLv2, onChange: e => setDv('bcLv2', evVal(e)), placeholder: 'VD: Internet gia đình' })))
+            h('div', null,
+              this.field(h(React.Fragment, null, 'Breadcrumb trang hiện tại', val.bcLv1 && h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+                h(DS.Input, { value: val.bcLv2, onChange: e => setDv('bcLv2', evVal(e)), placeholder: 'VD: Internet gia đình', error: bcLv2Err ? 'Trường bắt buộc — vui lòng nhập.' : undefined })),
+              this.breadcrumbDupWarn(val.bcLv2, bcDup, 'lưu'))
           ),
           this.field('Xem trước', this.breadcrumbPreview(val.bcLv1, val.bcLv2))
         ),
@@ -7710,16 +7730,18 @@ class Component extends DCLogic {
       h('span', { style: { color: v ? 'var(--color-text-muted)' : 'var(--color-text-subtle)' } }, v || 'Không giới hạn'));
     return h('div', { style: { fontSize: 12.5, display: 'flex', flexDirection: 'column', gap: 2 } }, line('Từ', r.startAt), line('Đến', r.endAt));
   }
+  // Nền (Ảnh nền hoặc Màu nền) giờ cấu hình ở Chiến dịch → thumbnail của quảng cáo lấy nền từ chiến dịch của nó.
+  adThumbBg(catCode) {
+    const c = this.getAdCatsList().find(x => x.code === catCode);
+    if (c && c.bgImg) return 'center / cover no-repeat url("' + c.bgImg + '")';
+    return (c && c.bgColor) || 'var(--color-surface-alt)';
+  }
   openAdEditor(r) {
     this.setState({
       adEditor: r, adCatErr: false, adTitleErr: false,
       adDraft: Object.assign(r
-        ? { catCode: r.catCode, title: r.title, url: r.url || '', target: r.target || '_self', order: String(r.order || 1), bgColor: r.bgColor || '#0072BC', active: r.status === 'active', dateStart: this.adParseDate(r.startAt), dateEnd: this.adParseDate(r.endAt) }
-        : { catCode: '', title: '', url: '', target: '_self', order: '1', bgColor: '#0072BC', active: true, dateStart: null, dateEnd: null },
-        (() => {
-          const g = /^linear-gradient\((\d+)deg,\s*(#[0-9a-fA-F]{6}),/.exec((r && r.bgColor) || '');
-          return g ? { bgColor: g[2] } : {};
-        })())
+        ? { catCode: r.catCode, title: r.title, url: r.url || '', target: r.target || '_self', order: String(r.order || 1), active: r.status === 'active', dateStart: this.adParseDate(r.startAt), dateEnd: this.adParseDate(r.endAt) }
+        : { catCode: '', title: '', url: '', target: '_self', order: '1', active: true, dateStart: null, dateEnd: null })
     });
   }
   closeAdEditor() {
@@ -7759,8 +7781,8 @@ class Component extends DCLogic {
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (adsPg - 1) * adsSz + sliced.indexOf(r) + 1) },
       { key: 'title', header: 'Tiêu đề', width: 320, render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
           r.img
-            ? h('img', { src: r.img, style: { width: 40, height: 40, borderRadius: 6, objectFit: 'contain', background: r.bgColor || 'var(--color-surface-alt)', flexShrink: 0 } })
-            : h('div', { style: { width: 40, height: 40, borderRadius: 6, background: r.bgColor || 'var(--color-surface-alt)', flexShrink: 0 } }),
+            ? h('img', { src: r.img, style: { width: 40, height: 40, borderRadius: 6, objectFit: 'contain', background: this.adThumbBg(r.catCode), flexShrink: 0 } })
+            : h('div', { style: { width: 40, height: 40, borderRadius: 6, background: this.adThumbBg(r.catCode), flexShrink: 0 } }),
           h('span', { style: { fontWeight: 600, fontSize: 13, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } }, r.title)
         ) },
       { key: 'cat', header: 'Chiến dịch', width: 170, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, this.adCatLabel(r.catCode)) },
@@ -7868,12 +7890,7 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tiêu đề', r.title),
         this.detailRow('Chiến dịch', this.adCatLabel(r.catCode)),
-        this.detailRow('Ảnh', r.img ? h('img', { src: r.img, style: { maxWidth: 120, maxHeight: 80, borderRadius: 6, objectFit: 'contain', background: r.bgColor || 'transparent' } }) : '—'),
-        this.detailRow('Màu nền', r.bgColor ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-          h('span', { style: { width: 18, height: 18, borderRadius: 5, background: r.bgColor, border: '1px solid var(--color-border-strong)', flexShrink: 0 } }),
-          h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, wordBreak: 'break-all' } }, /^#/.test(r.bgColor) ? r.bgColor.toUpperCase() : r.bgColor)
-        ) : '—'),
-        this.detailRow('Ảnh nền', r.bgImg ? h('img', { src: r.bgImg, style: { maxWidth: 200, maxHeight: 60, borderRadius: 6, objectFit: 'cover' } }) : '—'),
+        this.detailRow('Ảnh', r.img ? h('img', { src: r.img, style: { maxWidth: 120, maxHeight: 80, borderRadius: 6, objectFit: 'contain', background: this.adThumbBg(r.catCode) } }) : '—'),
         this.detailRow('Nội dung', r.content ? h('div', { style: { fontSize: 13 }, dangerouslySetInnerHTML: { __html: r.content } }) : '—'),
         this.detailRow('URL', r.url ? h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12 } }, r.url) : '—'),
         this.detailRow('Target', (this.AD_TARGETS().find(t => t.value === r.target) || {}).label || '—'),
@@ -7894,7 +7911,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.closeAdEditor();
     const setD = patch => this.setState(s => ({ adDraft: Object.assign({}, s.adDraft, patch) }));
-    const d = this.state.adDraft || { catCode: '', title: '', url: '', target: '_self', order: '1', bgColor: '#0072BC', active: true };
+    const d = this.state.adDraft || { catCode: '', title: '', url: '', target: '_self', order: '1', active: true };
     const cats = this.getAdCatsList();
     const catErr = !!this.state.adCatErr;
     // Tiêu đề: bắt buộc + tối đa 255 ký tự. Lỗi "để trống" chỉ hiện sau khi bấm Lưu (và tự tắt khi đã nhập); lỗi "vượt 255" hiện ngay khi gõ/dán quá giới hạn.
@@ -7919,46 +7936,16 @@ class Component extends DCLogic {
         onChange: v => { setD({ catCode: v }); if (v && this.state.adCatErr) this.setState({ adCatErr: false }); }
       })
     );
-    // Nền loại trừ nhau: đã có Ảnh nền → khoá Màu nền; đã chọn Màu nền → khoá Ảnh nền. Hai cột Ảnh nền | Màu nền.
-    // Ảnh / Icon và Ảnh nền dùng ô tải ảnh chung (FptUploadSlot): giá trị nằm trong adDraft.iconImg / adDraft.bgImgFile (null = đã xóa).
-    // Bản ghi đã lưu có sẵn URL ảnh (r.img / r.bgImg) → dựng thành ảnh "đã tải lên"; imgLink / bgImgLink là link S3 hiển thị cho ảnh vừa tải.
+    // Ảnh / Icon dùng ô tải ảnh chung (FptUploadSlot): giá trị nằm trong adDraft.iconImg (null = đã xóa).
+    // Bản ghi đã lưu có sẵn URL ảnh (r.img) → dựng thành ảnh "đã tải lên"; imgLink là link S3 hiển thị cho ảnh vừa tải.
+    // Ảnh nền / Màu nền không còn ở đây — cấu hình ở Chiến dịch quảng cáo (renderAdCatEditor), áp dụng cho mọi quảng cáo trong chiến dịch.
     const seedImg = (src, link, label) => src ? { id: 'seed:' + src, name: String(src).split('/').pop(), label, sizeKB: null, src, status: 'done', progress: 100, url: link || src } : null;
     const iconVal = d.iconImg !== undefined ? d.iconImg : seedImg(r && r.img, r && r.imgLink);
-    const bgVal = d.bgImgFile !== undefined ? d.bgImgFile : seedImg(r && r.bgImg, r && r.bgImgLink);
-    const iconSet = !!iconVal, bgImgSet = !!bgVal;
     const imgPatchBox = (field, seed) => v => this.setState(s => {
       const dd = s.adDraft || {};
       const prev = dd[field] !== undefined ? dd[field] : seed;
       return { adDraft: Object.assign({}, dd, { [field]: typeof v === 'function' ? v(prev) : v }) };
     });
-    const bgColorSet = d.bgColorSet !== undefined ? d.bgColorSet : !!(r && r.bgColor && !r.bgImg);
-    const isHex = v => /^#[0-9a-fA-F]{6}$/.test(v || '');
-    const setSolid = v => setD({ bgColor: v, bgColorSet: !!v });
-    const solidPresets = ['#0072BC', '#e6aa41', '#22c55e', '#7c3aed', '#ef4444', '#f97316', '#0891b2', '#111827'];
-    const swatch = (key, bg, title, selected, onClick) => h('button', { key, type: 'button', title, onClick, style: { width: 30, height: 30, borderRadius: 8, padding: 0, cursor: 'pointer', flexShrink: 0, background: bg, border: selected ? '2px solid var(--color-accent)' : '1px solid var(--color-border-strong)', boxShadow: selected ? '0 0 0 2px var(--color-accent-bg)' : 'none', transition: 'all .12s' } });
-    const colorPick = (value, onPick, title) => h('label', { title, style: { position: 'relative', width: 30, height: 30, borderRadius: 8, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: value, flexShrink: 0 } },
-      h('input', { type: 'color', value: isHex(value) ? value : '#000000', onChange: e => onPick(e.target.value), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
-    );
-    const cap = t => h('div', { style: { fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6 } }, t);
-    // Nền quảng cáo chọn 1 trong 2 bằng radio: Ảnh nền HOẶC Màu nền. Đổi radio = chuyển chế độ và xoá dữ liệu của chế độ còn lại (loại trừ nhau).
-    const bgMode = bgImgSet ? 'image' : bgColorSet ? 'color' : (d.bgMode || 'image');
-    const pickBgMode = m => { if (m === bgMode) return; setD(m === 'image' ? { bgMode: 'image', bgColor: '', bgColorSet: false } : { bgMode: 'color', bgImgFile: null }); };
-    const bgImgBox = this.uploadBox('Ảnh nền', 'JPG, PNG, WEBP · ≤200KB', false, null, { key: 'adBgImg', maxKB: 200, value: bgVal, onChange: imgPatchBox('bgImgFile', seedImg(r && r.bgImg, r && r.bgImgLink)) });
-    const bgPanel = h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 16, padding: 16, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10 } },
-      h('div', null,
-        cap('Gợi ý'),
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
-          solidPresets.map(c => swatch(c, c, c.toUpperCase(), bgColorSet && (d.bgColor || '').toLowerCase() === c.toLowerCase(), () => setSolid(c)))
-        )
-      ),
-      h('div', null,
-        cap('Tùy chỉnh'),
-        h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', maxWidth: 260 } },
-          h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { value: bgColorSet ? d.bgColor : '', onChange: e => setSolid(e && e.target ? e.target.value : e), style: { width: '100%', fontFamily: 'var(--font-dev)' }, placeholder: '#000000' })),
-          colorPick(bgColorSet ? d.bgColor : '', setSolid, 'Chọn màu nền tùy chỉnh')
-        )
-      )
-    );
     return this.editorShell(
       isNew ? 'Thêm quảng cáo' : 'Chỉnh sửa quảng cáo', '', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -8003,27 +7990,8 @@ class Component extends DCLogic {
           )
         ),
         section(3, 'image-line', 'Hình ảnh & tài nguyên',
-          // 2 phần: trái = Ảnh / Icon; phải = nhóm Nền quảng cáo (radio chọn Ảnh nền | Màu nền, loại trừ nhau). Hai phần cao bằng nhau.
-          h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 24, alignItems: 'stretch' } },
-            h('div', { style: { display: 'flex', flexDirection: 'column' } },
-              // Hàng tiêu đề cao cố định 28px: trái = nhãn "Ảnh / Icon", phải = radio Ảnh nền | Màu nền → 2 khung bên dưới thẳng hàng đỉnh.
-              h('div', { style: { height: 28, display: 'flex', alignItems: 'center', marginBottom: 8 } }, h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Ảnh / Icon')),
-              this.uploadBox('Ảnh / Icon', 'JPG, PNG, WEBP · ≤200KB', false, null, { key: 'adIcon', maxKB: 200, value: iconVal, onChange: imgPatchBox('iconImg', seedImg(r && r.img, r && r.imgLink)) })
-            ),
-            h('div', { style: { display: 'flex', flexDirection: 'column', minWidth: 0 } },
-              h('div', { style: { height: 28, display: 'flex', alignItems: 'center', gap: 20, marginBottom: 8 } },
-                h(DS.Radio, { name: 'adBgMode', label: 'Ảnh nền', checked: bgMode === 'image', onChange: () => pickBgMode('image') }),
-                h(DS.Radio, { name: 'adBgMode', label: 'Màu nền', checked: bgMode === 'color', onChange: () => pickBgMode('color') })
-              ),
-              h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 8 } },
-                bgMode === 'image'
-                  ? bgImgBox
-                  : h(React.Fragment, null,
-                      bgPanel,
-                      bgColorSet && h('div', null, h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => setD({ bgColor: '', bgColorSet: false, bgMode: 'color' }) }, 'Xóa màu nền'))
-                    )
-              )
-            )
+          h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } },
+            this.uploadBox('Ảnh / Icon', 'JPG, PNG, WEBP · ≤200KB', false, null, { key: 'adIcon', maxKB: 200, value: iconVal, onChange: imgPatchBox('iconImg', seedImg(r && r.img, r && r.imgLink)) })
           )
         )
       ),
@@ -8034,14 +8002,14 @@ class Component extends DCLogic {
           this.toast('danger', 'Thiếu thông tin', !d.catCode && titleMissing ? 'Vui lòng chọn chiến dịch và nhập tiêu đề quảng cáo.' : !d.catCode ? 'Vui lòng chọn chiến dịch quảng cáo.' : 'Vui lòng nhập tiêu đề quảng cáo.');
           return;
         }
-        if ((iconVal && iconVal.status === 'uploading') || (bgVal && bgVal.status === 'uploading')) { this.toast('warning', 'Ảnh đang tải lên', 'Vui lòng đợi ảnh tải xong rồi lưu.'); return; }
+        if (iconVal && iconVal.status === 'uploading') { this.toast('warning', 'Ảnh đang tải lên', 'Vui lòng đợi ảnh tải xong rồi lưu.'); return; }
         if (titleOver) { this.toast('danger', 'Tiêu đề quá dài', 'Tiêu đề quảng cáo không được vượt quá ' + TITLE_MAX + ' ký tự.'); return; }
         if (expiredErr) { this.toast('danger', 'Quảng cáo đã hết hạn', 'Vui lòng chọn lại thời gian kết thúc để mở lại quảng cáo.'); return; }
         if (this.state.adCatErr || this.state.adTitleErr) this.setState({ adCatErr: false, adTitleErr: false });
         const contentHtml = this._adHtmlRef && this._adHtmlRef.current ? this._adHtmlRef.current.innerHTML : (r ? (r.content || '') : '');
         const list = this.getAdsList();
         const rec = {
-          catCode: d.catCode, title: d.title, img: iconVal && iconVal.status === 'done' ? iconVal.src : '', imgLink: iconVal && iconVal.status === 'done' ? iconVal.url : '', bgColor: bgColorSet && !bgImgSet ? d.bgColor : '', bgImg: bgVal && bgVal.status === 'done' ? bgVal.src : '', bgImgLink: bgVal && bgVal.status === 'done' ? bgVal.url : '',
+          catCode: d.catCode, title: d.title, img: iconVal && iconVal.status === 'done' ? iconVal.src : '', imgLink: iconVal && iconVal.status === 'done' ? iconVal.url : '',
           content: contentHtml, url: d.url, target: d.target, order: r ? (r.order || 1) : Math.max(0, ...list.filter(a => a.catCode === d.catCode).map(a => a.order || 0)) + 1,
           status: d.active ? 'active' : 'inactive',
           startAt: this.adFmtDate(d.dateStart), endAt: this.adFmtDate(d.dateEnd),
@@ -8062,6 +8030,11 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên chiến dịch', r.name),
         this.detailRow('Vị trí', this.adTypeLabel(r.type)),
+        this.detailRow('Ảnh nền', r.bgImg ? h('img', { src: r.bgImg, style: { maxWidth: 200, maxHeight: 60, borderRadius: 6, objectFit: 'cover' } }) : '—'),
+        this.detailRow('Màu nền', r.bgColor ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+          h('span', { style: { width: 18, height: 18, borderRadius: 5, background: r.bgColor, border: '1px solid var(--color-border-strong)', flexShrink: 0 } }),
+          h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, wordBreak: 'break-all' } }, /^#/.test(r.bgColor) ? r.bgColor.toUpperCase() : r.bgColor)
+        ) : '—'),
         this.detailRow('Trang áp dụng', (r.pageScope === 'specific' && (r.pages || []).length)
           ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } }, r.pages.map(slug => {
               const p = this.AD_ALL_PAGES().find(pp => pp.slug === slug);
@@ -8091,7 +8064,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.setState({ adCatEditor: undefined, adCatDraft: null, adPagePickerOpen: false, adPageOverwriteOpen: false, adPageSearchQ: '' });
     const setD = patch => this.setState(s => ({ adCatDraft: Object.assign({}, s.adCatDraft, patch) }));
-    const dBase = r ? { name: r.name, type: r.type || '', active: r.status === 'active', pageScope: r.pageScope || 'all', pages: r.pages || [] } : { name: '', type: '', active: true, pageScope: 'all', pages: [] };
+    const dBase = r ? { name: r.name, type: r.type || '', active: r.status === 'active', pageScope: r.pageScope || 'all', pages: r.pages || [], bgColor: r.bgColor || '' } : { name: '', type: '', active: true, pageScope: 'all', pages: [], bgColor: '' };
     const d = Object.assign({}, dBase, this.state.adCatDraft);
     // Vị trí là Select bắt buộc (composite control, §14): lỗi hiện khi bấm Lưu mà chưa chọn, tự xoá khi đã chọn.
     const typeErr = !!d.typeErr && !d.type;
@@ -8195,6 +8168,43 @@ class Component extends DCLogic {
       this.setState({ adsListData: this.getAdsList().map(a => orderById.has(a.id) ? Object.assign({}, a, { order: orderById.get(a.id) }) : a) });
     };
 
+    // Nền của chiến dịch (áp dụng cho mọi quảng cáo con): chọn 1 trong 2 bằng radio — Ảnh nền HOẶC Màu nền; đổi radio = xoá dữ liệu của chế độ còn lại.
+    // Ảnh nền dùng ô tải ảnh chung (FptUploadSlot), giá trị nằm trong adCatDraft.bgImgFile (null = đã xóa); bản ghi cũ có r.bgImg → dựng thành ảnh "đã tải lên".
+    const seedImg = (src, link, label) => src ? { id: 'seed:' + src, name: String(src).split('/').pop(), label, sizeKB: null, src, status: 'done', progress: 100, url: link || src } : null;
+    const bgVal = d.bgImgFile !== undefined ? d.bgImgFile : seedImg(r && r.bgImg, r && r.bgImgLink);
+    const bgImgSet = !!bgVal;
+    const bgColorSet = d.bgColorSet !== undefined ? d.bgColorSet : !!(r && r.bgColor && !r.bgImg);
+    const isHex = v => /^#[0-9a-fA-F]{6}$/.test(v || '');
+    const setSolid = v => setD({ bgColor: v, bgColorSet: !!v });
+    const solidPresets = ['#0072BC', '#e6aa41', '#22c55e', '#7c3aed', '#ef4444', '#f97316', '#0891b2', '#111827'];
+    const swatch = (key, bg, title, selected, onClick) => h('button', { key, type: 'button', title, onClick, style: { width: 30, height: 30, borderRadius: 8, padding: 0, cursor: 'pointer', flexShrink: 0, background: bg, border: selected ? '2px solid var(--color-accent)' : '1px solid var(--color-border-strong)', boxShadow: selected ? '0 0 0 2px var(--color-accent-bg)' : 'none', transition: 'all .12s' } });
+    const colorPick = (value, onPick, title) => h('label', { title, style: { position: 'relative', width: 30, height: 30, borderRadius: 8, border: '1px solid var(--color-border-strong)', overflow: 'hidden', cursor: 'pointer', background: value, flexShrink: 0 } },
+      h('input', { type: 'color', value: isHex(value) ? value : '#000000', onChange: e => onPick(e.target.value), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
+    );
+    const cap = t => h('div', { style: { fontSize: 11.5, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6 } }, t);
+    const bgMode = bgImgSet ? 'image' : bgColorSet ? 'color' : (d.bgMode || 'image');
+    const pickBgMode = m => { if (m === bgMode) return; setD(m === 'image' ? { bgMode: 'image', bgColor: '', bgColorSet: false } : { bgMode: 'color', bgImgFile: null }); };
+    const bgImgBox = this.uploadBox('Ảnh nền', 'JPG, PNG, WEBP · ≤200KB', false, null, { key: 'adCatBgImg', maxKB: 200, value: bgVal, onChange: v => this.setState(s => {
+      const dd = s.adCatDraft || {};
+      const prev = dd.bgImgFile !== undefined ? dd.bgImgFile : seedImg(r && r.bgImg, r && r.bgImgLink);
+      return { adCatDraft: Object.assign({}, dd, { bgImgFile: typeof v === 'function' ? v(prev) : v }) };
+    }) });
+    const bgPanel = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, padding: 16, background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10 } },
+      h('div', null,
+        cap('Gợi ý'),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
+          solidPresets.map(c => swatch(c, c, c.toUpperCase(), bgColorSet && (d.bgColor || '').toLowerCase() === c.toLowerCase(), () => setSolid(c)))
+        )
+      ),
+      h('div', null,
+        cap('Tùy chỉnh'),
+        h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', maxWidth: 260 } },
+          h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { value: bgColorSet ? d.bgColor : '', onChange: e => setSolid(e && e.target ? e.target.value : e), style: { width: '100%', fontFamily: 'var(--font-dev)' }, placeholder: '#000000' })),
+          colorPick(bgColorSet ? d.bgColor : '', setSolid, 'Chọn màu nền tùy chỉnh')
+        )
+      )
+    );
+
     return this.editorShell(
       isNew ? 'Thêm chiến dịch quảng cáo' : 'Chỉnh sửa: ' + r.name, '', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -8214,7 +8224,20 @@ class Component extends DCLogic {
             ), true)
           )
         ),
-        section(2, 'marker-pin-01-line', 'Cấu hình trang hiển thị áp dụng',
+        section(2, 'image-line', 'Hình ảnh & tài nguyên',
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: -8 } }, 'Nền áp dụng cho tất cả quảng cáo trong chiến dịch này. Chọn Ảnh nền hoặc Màu nền (loại trừ nhau).'),
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 20 } },
+            h(DS.Radio, { name: 'adCatBgMode', label: 'Ảnh nền', checked: bgMode === 'image', onChange: () => pickBgMode('image') }),
+            h(DS.Radio, { name: 'adCatBgMode', label: 'Màu nền', checked: bgMode === 'color', onChange: () => pickBgMode('color') })
+          ),
+          bgMode === 'image'
+            ? h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } }, bgImgBox)
+            : h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260, display: 'flex', flexDirection: 'column', gap: 8 } },
+                bgPanel,
+                bgColorSet && h('div', null, h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => setD({ bgColor: '', bgColorSet: false, bgMode: 'color' }) }, 'Xóa màu nền'))
+              )
+        ),
+        section(3, 'marker-pin-01-line', 'Cấu hình trang hiển thị áp dụng',
           h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: -8 } }, 'Chọn các trang trên website FPT mà các quảng cáo trong chiến dịch này sẽ được phép xuất hiện'),
           h('div', { key: 'pageList', style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--color-surface-alt)', borderBottom: '1px solid var(--color-border)' } },
@@ -8249,7 +8272,7 @@ class Component extends DCLogic {
           pickerModal,
           overwriteModal
         ),
-        section(3, 'bell-01-line', 'Quảng cáo trong chiến dịch',
+        section(4, 'bell-01-line', 'Quảng cáo trong chiến dịch',
           !isNew && h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Kéo thả để sắp xếp lại thứ tự hiển thị của các quảng cáo con trong chiến dịch này.'),
           isNew || catAds.length === 0
             ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, fontStyle: 'italic', border: '1px solid var(--color-border)', borderRadius: 10 } }, 'Chiến dịch này chưa có quảng cáo nào.')
@@ -8265,8 +8288,8 @@ class Component extends DCLogic {
                   },
                   h(DS.Icon, { name: 'dots-grid-line', size: 15, color: 'var(--color-text-subtle)', style: { flexShrink: 0 }, title: 'Kéo để sắp xếp vị trí' }),
                   a.img
-                    ? h('img', { src: a.img, style: { width: 26, height: 26, borderRadius: 6, objectFit: 'contain', background: a.bgColor || 'var(--color-surface-alt)', flexShrink: 0 } })
-                    : h('span', { style: { width: 26, height: 26, borderRadius: 6, background: a.bgColor || 'var(--color-surface-alt)', flexShrink: 0 } }),
+                    ? h('img', { src: a.img, style: { width: 26, height: 26, borderRadius: 6, objectFit: 'contain', background: this.adThumbBg(a.catCode), flexShrink: 0 } })
+                    : h('span', { style: { width: 26, height: 26, borderRadius: 6, background: this.adThumbBg(a.catCode), flexShrink: 0 } }),
                   h('span', { style: { flex: 1, fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, a.title),
                   this.statusBadge(this.adEffStatus(a))
                 ))
@@ -8276,8 +8299,10 @@ class Component extends DCLogic {
       () => {
         const list = this.getAdCatsList();
         if (!d.type) { setD({ typeErr: true }); this.toast('danger', 'Thiếu thông tin', 'Vui lòng chọn vị trí.'); return; }
-        if (r) this.setState({ adCatsListData: list.map(c => c.id === r.id ? Object.assign({}, c, { name: d.name, type: d.type, pageScope: (d.pages || []).length ? 'specific' : 'all', pages: d.pages || [], status: d.active ? 'active' : 'inactive', updatedAt: this.nowStr(), updatedBy: 'Admin User' }) : c) });
-        else { const newId = Math.max(0, ...list.map(c => c.id)) + 1; this.setState({ adCatsListData: list.concat([{ id: newId, name: d.name, code: 'adcat_' + newId, type: d.type, pageScope: (d.pages || []).length ? 'specific' : 'all', pages: d.pages || [], status: d.active ? 'active' : 'inactive', createdAt: this.nowStr(), createdBy: 'Admin User', updatedAt: this.nowStr(), updatedBy: 'Admin User' }]) }); }
+        if (bgVal && bgVal.status === 'uploading') { this.toast('warning', 'Ảnh đang tải lên', 'Vui lòng đợi ảnh tải xong rồi lưu.'); return; }
+        const bgRec = { bgColor: bgColorSet && !bgImgSet ? d.bgColor : '', bgImg: bgVal && bgVal.status === 'done' ? bgVal.src : '', bgImgLink: bgVal && bgVal.status === 'done' ? bgVal.url : '' };
+        if (r) this.setState({ adCatsListData: list.map(c => c.id === r.id ? Object.assign({}, c, { name: d.name, type: d.type, pageScope: (d.pages || []).length ? 'specific' : 'all', pages: d.pages || [], status: d.active ? 'active' : 'inactive', updatedAt: this.nowStr(), updatedBy: 'Admin User' }, bgRec) : c) });
+        else { const newId = Math.max(0, ...list.map(c => c.id)) + 1; this.setState({ adCatsListData: list.concat([Object.assign({ id: newId, name: d.name, code: 'adcat_' + newId, type: d.type, pageScope: (d.pages || []).length ? 'specific' : 'all', pages: d.pages || [], status: d.active ? 'active' : 'inactive', createdAt: this.nowStr(), createdBy: 'Admin User', updatedAt: this.nowStr(), updatedBy: 'Admin User' }, bgRec)]) }); }
         back();
         this.toast('success', 'Đã lưu', 'Chiến dịch đã được lưu.');
       },
@@ -9463,6 +9488,7 @@ class Component extends DCLogic {
             campaignName: !sv.campaignName,
             goal: !sv.goal,
             effRange: !(effR.start && effR.end),
+            bcLv2: !!sv.bcLv1 && !(sv.bcLv2 || '').trim(),
           };
           const errCount = Object.values(errs).filter(Boolean).length;
           if (errCount) {
@@ -9715,7 +9741,8 @@ class Component extends DCLogic {
     const bcLv1 = sv.bcLv1, bcLv2 = sv.bcLv2;
     const bcLv1Options = this.LDP_BREADCRUMB_LV1().map(n => ({ value: n, label: n }));
     if (bcLv1 && !bcLv1Options.some(o => o.value === bcLv1)) bcLv1Options.push({ value: bcLv1, label: bcLv1 });
-    const bcDup = this.ldpBreadcrumbDup(bcLv2, editRow ? editRow.id : null);
+    const bcDup = this.breadcrumbDup(bcLv2, { ldpId: editRow ? editRow.id : null });
+    const bcLv2Err = !!step2Err.bcLv2 && !!bcLv1 && !(bcLv2 || '').trim();
     const bcPreview = h('div', null,
       h('label', { style: lbSt }, 'Xem trước'),
       this.breadcrumbPreview(bcLv1, bcLv2)
@@ -9842,11 +9869,9 @@ class Component extends DCLogic {
           })
         ),
         h('div', null,
-          h('label', { style: lbSt }, 'Breadcrumb trang hiện tại'),
-          h(DS.Input, { value: bcLv2, onChange: e => set('bcLv2', e.target.value), placeholder: 'VD: Internet gia đình' }),
-          bcDup && h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: 'var(--color-warning-text)', fontWeight: 600 } },
-            h(DS.Icon, { name: 'alert-triangle-line', size: 14 }),
-            h('span', null, 'Breadcrumb "', h('strong', null, bcLv2.trim()), bcDup.kind === 'lv1' ? '" đã có trong danh sách Breadcrumb trang trước' : '" đã được dùng ở LDP "' + bcDup.name + '"', '. Bạn vẫn có thể áp dụng.'))
+          h('label', { style: lbSt }, 'Breadcrumb trang hiện tại', bcLv1 && req),
+          h(DS.Input, { value: bcLv2, onChange: e => set('bcLv2', e.target.value), placeholder: 'VD: Internet gia đình', error: bcLv2Err ? 'Đã chọn Breadcrumb trang trước — vui lòng nhập Breadcrumb trang hiện tại.' : undefined }),
+          this.breadcrumbDupWarn(bcLv2, bcDup, 'áp dụng')
         )
       ),
       bcPreview),
