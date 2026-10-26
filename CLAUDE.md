@@ -384,12 +384,13 @@ Use the usual layout (`justifyContent: 'flex-end'`, **"Hủy" first, primary las
 
 ---
 
-## 18. Bộ 3 cột kiểm toán: Người tạo / Ngày tạo / Ngày cập nhật
+## 18. Bộ 4 cột kiểm toán: Người tạo / Ngày tạo / Người cập nhật / Ngày cập nhật
 
-Mọi bảng danh sách bản ghi của CMS phải có đủ 3 cột **Người tạo**, **Ngày tạo**, **Ngày cập nhật** (đặt ngay trước cột Trạng thái / Bật-Tắt / Thao tác), và drawer chi tiết của bảng đó hiện đủ 3 dòng tương ứng (§16 cho phép vì bảng có cột).
+Mọi bảng danh sách bản ghi của CMS phải có đủ 4 cột **theo đúng thứ tự này**: **Người tạo → Ngày tạo → Người cập nhật → Ngày cập nhật** (đặt ngay trước cột Trạng thái / Bật-Tắt / Thao tác), và drawer chi tiết của bảng đó hiện đủ 4 dòng tương ứng, cùng thứ tự (§16 cho phép vì bảng có cột).
 
 * Dùng helper trung tâm trên root component — **không tự vẽ cột riêng**: `...this.auditCols(opts)` cho bảng, `...this.auditRows(r, opts)` cho drawer. Cả hai đọc qua `this.audit(r, opts)`.
-* Bản ghi lưu thật từ editor phải ghi sẵn `createdBy`/`createdAt` (lúc tạo) và `updatedAt` (mỗi lần lưu) bằng `this.nowStr()`. Bản ghi demo thiếu trường thì `audit()` tự suy ra giá trị cố định theo id (không đổi giữa các lần render) để bảng và drawer luôn khớp.
-* `opts`: `only` (chỉ lấy một số cột, vd. SKU đã có sẵn "Thời gian cập nhật"/"Người cập nhật"), `createdKey` (trường sẵn có mang nghĩa ngày tạo, vd. `date` của Menu/Vai trò), `postedKey` + `byKey` (Tin tức: ngày tạo suy ra trước "Ngày đăng", người tạo lấy từ `author`).
+* Bản ghi lưu thật từ editor phải ghi sẵn `createdBy`/`createdAt` (lúc tạo) và `updatedAt` + `updatedBy` (mỗi lần lưu) bằng `this.nowStr()`. Bản ghi demo thiếu trường thì `audit()` tự suy ra giá trị cố định theo id (không đổi giữa các lần render) để bảng và drawer luôn khớp.
+* `opts`: `only` (chỉ lấy một số cột), `createdKey` (trường sẵn có mang nghĩa ngày tạo, vd. `date` của Menu/Vai trò), `postedKey` + `byKey` (Tin tức: ngày tạo suy ra trước "Ngày đăng", người tạo lấy từ `author`).
 * Không áp dụng: bảng Vai trò + Người dùng (theo yêu cầu), bảng báo cáo (Báo cáo bán hàng / đăng ký Online), ma trận Phân quyền tính năng, bảng quy trình Duyệt LDP (đang ẩn khỏi menu), bảng nhỏ trong editor.
 * Đã bổ sung (2026-10-26): Nội dung sản phẩm (+Người tạo, Ngày tạo) · Thông tin checkout – Chương trình · Quản lý Badge/Tag · Quản lý URL (tách Ngày tạo khỏi ô Người tạo) · Sections · Blocks · Menu · Landing Page (tách Ngày tạo; "Lần sửa cuối" đổi tên "Ngày cập nhật") · Banner · Popup · Tin tức (Bài viết, Chuyên mục, Tags, Cấu hình Thông tin hay) · (Vai trò, Người dùng: cố ý **không** áp dụng — giữ nguyên cột cũ.) Pages, Quảng cáo, Chiến dịch QC, FAQ, Danh mục FAQ, Phương thức thanh toán đã đủ từ trước.
+* Cập nhật 2026-10-26: thêm **Người cập nhật** (`updatedBy`, đọc `updatedBy`/`lastEditBy`, thiếu thì suy ra) vào mọi bảng đã áp dụng và thống nhất thứ tự 4 cột; các bảng đã có sẵn (SKU, Thanh toán, Quảng cáo, Chiến dịch QC, FAQ, Danh mục FAQ) cũng được đổi sang `auditCols()` để cùng tên cột/thứ tự (Quản lý URL/Trang: "Ngày chỉnh sửa" → "Ngày cập nhật"; Landing Page: tên người sửa tách thành cột riêng). Vai trò + Người dùng vẫn không áp dụng.
