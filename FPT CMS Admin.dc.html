@@ -4667,6 +4667,12 @@ class Component extends DCLogic {
     if (ld) return { kind: 'ldp', name: ld.name };
     return null;
   }
+  // Giới hạn ký tự của "Breadcrumb trang hiện tại" (§13): maxLength + clamp ở onChange + bộ đếm đổi màu đỏ khi chạm giới hạn.
+  BREADCRUMB_MAX() { return 225; }
+  breadcrumbLenNote(value) {
+    const h = React.createElement; const MAX = this.BREADCRUMB_MAX(); const len = (value || '').length; const atMax = len >= MAX;
+    return h('div', { style: { marginTop: 6, fontSize: 11.5, color: atMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)' } }, `Tối đa ${MAX} ký tự (${len}/${MAX})${atMax ? ' — đã đạt giới hạn' : ''}.`);
+  }
   // Dòng cảnh báo trùng (chữ vàng + icon) hiện dưới ô "Breadcrumb trang hiện tại": Breadcrumb "…" đã được dùng. Chỉ cảnh báo, không chặn.
   breadcrumbDupWarn(value, dup) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -5754,7 +5760,8 @@ class Component extends DCLogic {
               onChange: v => setDv('bcLv1', v)
             }))),
             h('div', null,
-              this.field('Breadcrumb trang hiện tại', h(DS.Input, { value: val.bcLv2, onChange: e => setDv('bcLv2', evVal(e)), placeholder: 'VD: Internet gia đình' }), true),
+              this.field('Breadcrumb trang hiện tại', h(DS.Input, { value: val.bcLv2, maxLength: this.BREADCRUMB_MAX(), onChange: e => setDv('bcLv2', String(evVal(e) || '').slice(0, this.BREADCRUMB_MAX())), placeholder: 'VD: Internet gia đình' }), true),
+              this.breadcrumbLenNote(val.bcLv2),
               this.breadcrumbDupWarn(val.bcLv2, bcDup))
           ),
           this.field('Xem trước', this.breadcrumbPreview(val.bcLv1, val.bcLv2))
@@ -9908,7 +9915,8 @@ class Component extends DCLogic {
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Breadcrumb trang hiện tại', req),
-          h(DS.Input, { value: bcLv2, onChange: e => set('bcLv2', e.target.value), placeholder: 'VD: Internet gia đình', error: bcLv2Err ? 'Vui lòng nhập Breadcrumb trang hiện tại.' : undefined }),
+          h(DS.Input, { value: bcLv2, maxLength: this.BREADCRUMB_MAX(), onChange: e => set('bcLv2', (e.target.value || '').slice(0, this.BREADCRUMB_MAX())), placeholder: 'VD: Internet gia đình', error: bcLv2Err ? 'Vui lòng nhập Breadcrumb trang hiện tại.' : undefined }),
+          this.breadcrumbLenNote(bcLv2),
           this.breadcrumbDupWarn(bcLv2, bcDup)
         )
       ),
