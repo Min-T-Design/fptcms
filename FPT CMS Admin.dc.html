@@ -10463,6 +10463,20 @@ class Component extends DCLogic {
         );
       }
     }
+    // Khối "Nút CTA" của dải Countdown: Text + URL chung 1 hàng trong khung nền xám, toggle bật/tắt (mặc định bật; tắt thì ẩn trường).
+    class CountdownCtaBlock extends React.Component {
+      constructor(p) { super(p); this.state = { on: true }; }
+      render() {
+        const { on } = this.state; const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+        return h('div', { style: { padding: '10px 12px', background: '#F6F6F6', borderRadius: 8, marginBottom: 12 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: on ? 12 : 0 } },
+            h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Nút CTA'),
+            h(DS.Switch, { size: 'sm', checked: on, onChange: v => this.setState({ on: v }), label: on ? 'Hiển thị' : 'Ẩn' })
+          ),
+          on ? h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' } }, ...React.Children.toArray(this.props.children)) : null
+        );
+      }
+    }
     // ── SportsList — dynamic tournament list ───────────────────────────────────
     const _fld = fld; const _mFld = mFld;
     class SportsList extends React.Component {
@@ -10930,11 +10944,11 @@ class Component extends DCLogic {
         ),
         fld('Tiêu đề countdown', h(DS.Input, { placeholder: 'Nhận ưu đãi...' })),
         fld('Nội dung / Body text', h(DS.Textarea, { rows: 2, placeholder: 'VD: Ưu đãi có hạn — Lắp đặt miễn phí, tặng router Wi-Fi 6...' })),
-        g2(
-          fld('Thời gian kết thúc', h(LdpDateTimeTrigger)),
-          fld('CTA Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' }))
+        fld('Thời gian kết thúc', h(LdpDateTimeTrigger)),
+        h(CountdownCtaBlock, { key: 'cta-hero-cd' },
+          fld('Nút CTA — Text', h(DS.Input, { defaultValue: 'Đăng ký ngay' })),
+          fld('Nút CTA — URL', h(FptUrlInput, { placeholder: '#register' }))
         ),
-        fld('CTA URL', h(FptUrlInput, { placeholder: '#register' })),
       ],
       // ── LEAD HERO (no countdown) ──
       'lead-hero': [
@@ -13068,11 +13082,11 @@ class Component extends DCLogic {
         ),
         fld('Tiêu đề dải Countdown / Nhãn ưu đãi', h(DS.Input, { placeholder: 'VD: Đăng ký lắp đặt Internet nhận ngay ưu đãi sốc' }), true),
         fld('Nội dung / Body text', h(DS.Textarea, { rows: 2, placeholder: 'VD: Ưu đãi có hạn — Lắp đặt miễn phí, tặng router Wi-Fi 6...' })),
-        g2(
-          fld('Thời gian kết thúc', h(LdpDateTimeTrigger)),
-          fld('Nút CTA — Text', h(DS.Input, { defaultValue: 'Nhận ưu đãi' }))
+        fld('Thời gian kết thúc', h(LdpDateTimeTrigger)),
+        h(CountdownCtaBlock, { key: 'cta-countdown' },
+          fld('Nút CTA — Text', h(DS.Input, { defaultValue: 'Nhận ưu đãi' })),
+          fld('Nút CTA — URL', h(FptUrlInput, { placeholder: '#register-form' }))
         ),
-        fld('Nút CTA — URL', h(FptUrlInput, { placeholder: '#register-form' })),
       ],
       // ── EXPERIENCE (TRẢI NGHIỆM GIẢI TRÍ) ──
       Experience: [
