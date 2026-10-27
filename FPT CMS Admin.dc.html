@@ -4347,6 +4347,7 @@ class Component extends DCLogic {
     { id: 3, name: 'Ưu đãi lắp mới Internet', type: 'menu-page', url: '/internet-ca-nhan', pages: ['Trang chủ', 'Internet - Wifi'], period: '10/04/2026 – 10/05/2026', trigger: 'delay', delaySec: 3, autoCloseSec: 0, frequency: 'always', status: 'expired' },
     { id: 4, name: 'Popup Tết 2026', type: 'menu-page', pages: ['Trang chủ', 'Danh mục Camera'], period: '20/01/2026 – 05/02/2026', trigger: 'scroll', delaySec: 0, autoCloseSec: 0, frequency: 'always', status: 'hidden' },
     { id: 5, name: 'Popup Khuyến mãi Tháng 10', type: 'menu-page', url: 'https://fpt.vn/khuyen-mai/thang-10', pages: ['Trang chủ'], period: '01/10/2026 – 15/10/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'scheduled' },
+    { id: 6, name: 'Ưu đãi gói Internet LUX', type: 'pkg-detail', pkgs: [{ code: 'INT-LUX800', url: '/int-lux800-fptvn' }, { code: 'INT-LUX1000', url: '/int-lux1000-fptvn' }, { code: 'INT-BIZ500', url: '/int-biz500' }], period: '01/10/2026 – 31/12/2026', trigger: 'delay', delaySec: 4, autoCloseSec: 0, frequency: 'every-session', status: 'running' },
   ]; }
   AD_TARGETS() { return [
     { value: '_self', label: '_self (cùng tab)' },
@@ -7513,9 +7514,15 @@ class Component extends DCLogic {
 
   // ===== Popup =====
   POPUP_TYPES() { return [
-    { value: 'menu-page', label: 'Trang thường (Menu Trang)' },
+    { value: 'menu-page', label: 'Trang thường' },
     { value: 'checkout', label: 'Trang Checkout' },
+    { value: 'pkg-detail', label: 'Trang chi tiết gói' },
   ]; }
+  // Link điều hướng mặc định của 1 gói trong popup "Trang chi tiết gói": route name của gói (thiếu → mã SKU), dạng đường dẫn nội bộ.
+  popupPkgDefaultUrl(code) {
+    const route = (this.PKG_SKU_PICKER_LABELS().get(code).route || '').trim();
+    return '/' + (route || String(code).toLowerCase());
+  }
   POPUP_TRIGGERS() { return [
     { value: 'immediate', label: 'Tức thì khi vào trang (Immediate)' },
     { value: 'delay', label: 'Thời gian trễ (Delay)' },
@@ -7528,6 +7535,10 @@ class Component extends DCLogic {
   popupTypeCell(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     if (r.type === 'checkout') return h('span', { style: { fontSize: 13 } }, 'Checkout' + (r.checkoutScope ? ' (' + r.checkoutScope + ')' : ''));
+    if (r.type === 'pkg-detail') return h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' } },
+      h('span', { style: { fontSize: 13 } }, 'Chi tiết gói'),
+      h(DS.Badge, { theme: 'neutral' }, (r.pkgs || []).length + ' gói')
+    );
     const pages = r.pages || [];
     return h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' } },
       h('span', { style: { fontSize: 13 } }, pages[0] || '—'),
@@ -7535,10 +7546,10 @@ class Component extends DCLogic {
     );
   }
   openPopupEditor(r) {
-    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '' });
+    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupEditorPkgs: r ? (r.pkgs || []).map(p => ({ ...p })) : [], popupSkuSource: 'ecp', popupSkuFilter: 'internet', popupSkuSearch: '' });
   }
   closePopupEditor() {
-    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined });
+    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupEditorPkgs: undefined, popupSkuSource: undefined, popupSkuFilter: undefined, popupSkuSearch: undefined });
   }
   renderPopup() {
     if (this.state.popupEditor !== undefined) return this.renderPopupEditor(this.state.popupEditor);
@@ -7712,7 +7723,13 @@ class Component extends DCLogic {
         r.type === 'menu-page' && this.detailRow('Trang áp dụng hiển thị (' + (r.pages || []).length + ')', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 } }, (r.pages || []).map(p => h(DS.Tag, { key: p, size: 'sm' }, p)))),
         r.type === 'checkout' && this.detailRow('Phạm vi Checkout', r.checkoutScope || '—'),
         this.detailRow('Thời gian hiển thị', r.period),
-        this.detailRow('Link điều hướng', r.url || '—'),
+        r.type === 'menu-page' && this.detailRow('Link điều hướng', r.url || '—'),
+        r.type === 'pkg-detail' && this.detailRow('Gói cước áp dụng (' + (r.pkgs || []).length + ')', (r.pkgs || []).length
+          ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 2 } }, (r.pkgs || []).map(p => h('div', { key: p.code },
+              h('div', { style: { fontWeight: 600, fontSize: 13 } }, this.PKG_SKU_PICKER_LABELS().get(p.code).name || p.code),
+              h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-subtle)' } }, p.code + ' · ' + (p.url || '—'))
+            )))
+          : '—'),
         r.type === 'checkout'
           ? this.detailRow('Hành vi hiển thị', 'Theo cấu hình Gói bán tại module Checkout')
           : h(React.Fragment, { key: 'behavior' },
@@ -7730,6 +7747,93 @@ class Component extends DCLogic {
       )
     });
   }
+  // Picker "DANH SÁCH SẢN PHẨM" (Gói cước áp dụng) của popup "Trang chi tiết gói" — cùng bố cục (tab nguồn ECP/FCP + danh mục
+  // 4 loại + tìm kiếm + checkbox) với renderPaySkuPicker; chọn gói thì tự điền sẵn link điều hướng mặc định (popupPkgDefaultUrl).
+  renderPopupPkgPicker() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const selected = this.state.popupEditorPkgs || [];
+    const skuSource = this.state.popupSkuSource || 'ecp';
+    const filter = this.state.popupSkuFilter || 'internet';
+    const search = (this.state.popupSkuSearch || '').toLowerCase();
+    const sourceTabDefs = [{ id: 'ecp', label: 'ECP' }, { id: 'fcp', label: 'FCP' }];
+    const isInternetSku = s => s.group === 'Internet' && s.kind === 'Dịch vụ';
+    const isCameraSku = s => s.group === 'Camera';
+    const isSaSku = s => s.group === 'Truyền hình' && s.kind === 'Dịch vụ';
+    const catDefs = [
+      { id: 'internet', label: 'Gói internet', match: isInternetSku },
+      { id: 'camera', label: 'Camera', match: isCameraSku },
+      { id: 'sa', label: 'Gói SA', match: isSaSku },
+      { id: 'other', label: 'Thiết bị khác', match: s => !isInternetSku(s) && !isCameraSku(s) && !isSaSku(s) },
+    ];
+    const activeCatDef = catDefs.find(c => c.id === filter) || catDefs[0];
+    const pkgLbl = this.PKG_SKU_PICKER_LABELS();
+    const allSkus = this.SKUS().filter(s => s.status === 'active' && (s.source || 'ECP').toLowerCase() === skuSource);
+    const filteredSkus = allSkus.filter(s => activeCatDef.match(s) && (!search || pkgLbl.match(s, search)));
+    const toggleSku = code => this.setState(sv => {
+      const cur = sv.popupEditorPkgs || [];
+      return { popupEditorPkgs: cur.some(p => p.code === code) ? cur.filter(p => p.code !== code) : cur.concat({ code, url: this.popupPkgDefaultUrl(code) }) };
+    });
+    // "Chọn tất cả" áp dụng cho danh sách đang lọc (tab nguồn + danh mục + ô tìm kiếm); gói đã chọn ở danh mục khác được giữ nguyên.
+    const allChk = filteredSkus.length > 0 && filteredSkus.every(x => selected.some(p => p.code === x.code));
+    const toggleAll = v => this.setState(sv => {
+      const cur = sv.popupEditorPkgs || [];
+      if (!v) return { popupEditorPkgs: cur.filter(p => !filteredSkus.some(x => x.code === p.code)) };
+      return { popupEditorPkgs: cur.concat(filteredSkus.filter(x => !cur.some(p => p.code === x.code)).map(x => ({ code: x.code, url: this.popupPkgDefaultUrl(x.code) }))) };
+    });
+    const renderSkuItem = (sku) => {
+      const isSel = selected.some(p => p.code === sku.code);
+      return h('div', { key: sku.code, onClick: () => toggleSku(sku.code), style: { display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2, background: isSel ? 'var(--color-accent-bg)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent' } },
+        h('div', { style: { paddingTop: 2 }, onClick: e => e.stopPropagation() },
+          h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(sku.code) })
+        ),
+        h('div', { style: { flex: 1, minWidth: 0 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
+            h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(sku.code).name || '—'),
+            h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
+          ),
+          h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(sku.code).route || '—')
+        )
+      );
+    };
+    return h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px' } },
+      h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 } }, 'DANH SÁCH SẢN PHẨM'),
+      h('div', {
+        role: 'tablist', title: '2 hệ thống cùng đổ dữ liệu sản phẩm về — nếu 1 sản phẩm trùng ở cả ECP và FCP, chỉ cần chọn ở đúng 1 tab nguồn là đủ.',
+        style: { display: 'flex', gap: 3, padding: 3, background: 'var(--color-surface-sunken)', borderRadius: 'var(--radius-full)', marginBottom: 10 }
+      },
+        sourceTabDefs.map(t => {
+          const active = t.id === skuSource;
+          return h('button', {
+            key: t.id, type: 'button', role: 'tab', 'aria-selected': active,
+            onClick: () => this.setState({ popupSkuSource: t.id, popupSkuFilter: 'internet', popupSkuSearch: '' }),
+            style: {
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '7px 10px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: active ? 700 : 500,
+              color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
+              background: active ? 'var(--color-surface)' : 'transparent',
+              border: 'none', borderRadius: 'var(--radius-full)',
+              boxShadow: active ? 'var(--shadow-sm)' : 'none',
+              cursor: 'pointer', transition: 'color var(--dur-fast), background var(--dur-fast)'
+            }
+          }, t.label);
+        })
+      ),
+      filteredSkus.length > 0 && h('div', { style: { padding: '0 10px', marginBottom: 8 } },
+        h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChk, onChange: toggleAll })
+      ),
+      h('div', { style: { marginBottom: 8 } },
+        h(DS.Input, { placeholder: 'Lọc tên hiển thị/route name...', leadingIcon: 'search-medium-line', value: this.state.popupSkuSearch || '', onChange: e => this.setState({ popupSkuSearch: e.target ? e.target.value : e }) })
+      ),
+      h('div', { style: { fontSize: 9.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 } }, 'Danh mục'),
+      h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
+        catDefs.map(f => h(DS.Tag, { key: f.id, size: 'sm', selected: filter === f.id, onClick: () => this.setState({ popupSkuFilter: f.id }) }, f.label))
+      ),
+      h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 380, overflowY: 'auto', overflowX: 'hidden' } },
+        filteredSkus.length ? filteredSkus.map(sku => renderSkuItem(sku)) : h('div', { style: { padding: '16px 6px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy SKU phù hợp.')
+      ),
+      selected.length > 0 && h('div', { style: { marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border)', fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Đã chọn ' + selected.length + ' gói.')
+    );
+  }
   renderPopupEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.closePopupEditor();
@@ -7737,6 +7841,11 @@ class Component extends DCLogic {
     const trigger = this.state.popupEditorTrigger !== undefined ? this.state.popupEditorTrigger : (r ? r.trigger : '');
     const frequency = this.state.popupEditorFrequency !== undefined ? this.state.popupEditorFrequency : (r ? r.frequency : '');
     const selectedPages = this.state.popupEditorPages || (r && r.pages) || [];
+    const selectedPkgs = this.state.popupEditorPkgs || (r && r.pkgs) || [];
+    const setPkgUrl = (code, url) => this.setState(sv => ({ popupEditorPkgs: (sv.popupEditorPkgs || []).map(p => p.code === code ? { ...p, url } : p) }));
+    const isPkg = type === 'pkg-detail';
+    const showPages = type !== 'checkout' && type !== 'pkg-detail';
+    const showLink = type !== 'checkout' && type !== 'pkg-detail';
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -7759,7 +7868,7 @@ class Component extends DCLogic {
             }), true))
           ),
           this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } })),
-          type !== 'checkout'
+          showPages
             ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
                 h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
                   h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Trang áp dụng hiển thị'),
@@ -7767,16 +7876,37 @@ class Component extends DCLogic {
                 ),
                 this.tagPicker(this.BANNER_PAGES(), selectedPages, v => this.setState({ popupEditorPages: v }), { placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
               )
-            : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Popup Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.')
+            : type === 'checkout'
+              ? h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Popup Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.')
+              : null
         ),
-        section(2, 'image-line', 'Hình ảnh & liên kết',
+        type === 'pkg-detail' && section(2, 'apps-2-line', 'Gói cước áp dụng',
+          h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Chọn các gói cước hiển thị popup ở trang chi tiết gói.'),
+          // Cột trái bọc ngoài cao bằng hàng grid (alignItems stretch) để picker bên trong "sticky" bám lại khi danh sách link bên phải dài hơn.
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(300px, 440px) minmax(0, 1fr)', gap: 16, alignItems: 'stretch' } },
+            h('div', null, h('div', { style: { position: 'sticky', top: 80 } }, this.renderPopupPkgPicker())),
+            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+              h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Link điều hướng theo gói' + (selectedPkgs.length ? ' (' + selectedPkgs.length + ')' : '')),
+              selectedPkgs.length
+                ? selectedPkgs.map(p => h('div', { key: p.code, style: { display: 'flex', flexDirection: 'column', gap: 4, padding: 10, border: '1px solid var(--color-border)', borderRadius: 10 } },
+                    h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 } },
+                      h('span', { style: { fontWeight: 700, fontSize: 12.5, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, this.PKG_SKU_PICKER_LABELS().get(p.code).name || p.code),
+                      h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11, color: 'var(--color-text-subtle)', flexShrink: 0 } }, p.code)
+                    ),
+                    h(FptUrlInput, { value: p.url || '', placeholder: 'VD: /int-lux800-fptvn hoặc https://fpt.vn/...', onChange: e => setPkgUrl(p.code, e && e.target ? e.target.value : e) })
+                  ))
+                : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Chưa chọn gói nào. Tick gói ở danh sách bên trái để thêm.')
+            )
+          )
+        ),
+        section(isPkg ? 3 : 2, 'image-line', showLink ? 'Hình ảnh & liên kết' : 'Hình ảnh',
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
             this.uploadBox('Popup Desktop', 'JPG, PNG, WEBP · ≤200KB'),
             this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · ≤150KB')
           ),
-          this.field('Link điều hướng', h(FptUrlInput, { defaultValue: r ? (r.url || '') : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai' }))
+          showLink && this.field('Link điều hướng', h(FptUrlInput, { defaultValue: r ? (r.url || '') : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai' }))
         ),
-        type !== 'checkout' && section(3, 'zap-line', 'Hành vi hiển thị',
+        type !== 'checkout' && section(isPkg ? 4 : 3, 'zap-line', 'Hành vi hiển thị',
           h('div', { style: { display: 'flex', gap: 12 } },
             h('div', { style: { flex: 1 } }, this.field('Kiểu kích hoạt', h(DS.Select, {
               options: this.POPUP_TRIGGERS(), value: trigger, placeholder: 'Chọn kiểu kích hoạt…', onChange: v => this.setState({ popupEditorTrigger: v })
