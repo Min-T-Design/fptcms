@@ -4342,11 +4342,11 @@ class Component extends DCLogic {
     { id: 7, name: 'Banner Khuyến mãi Tháng 10', order: 7, pages: ['Trang chủ'], link: '/khuyen-mai-thang-10', bannerType: 'normal', target: '_self', period: '01/10/2026 – 31/10/2026', createdAt: '15/09/2026', status: 'scheduled' },
   ]; }
   POPUPS() { return [
-    { id: 1, name: 'Flash Sale T5', type: 'menu-page', pages: ['Trang chủ'], period: '15/05/2026 – 20/05/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'running' },
+    { id: 1, name: 'Flash Sale T5', type: 'menu-page', url: '/khuyen-mai/flash-sale', pages: ['Trang chủ'], period: '15/05/2026 – 20/05/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'running' },
     { id: 2, name: 'Khuyến mãi Camera', type: 'checkout', checkoutScope: 'Gói Camera AI', period: '01/05/2026 – 31/05/2026', trigger: 'immediate', delaySec: 0, autoCloseSec: 8, frequency: 'every-session', status: 'running' },
-    { id: 3, name: 'Ưu đãi lắp mới Internet', type: 'menu-page', pages: ['Trang chủ', 'Internet - Wifi'], period: '10/04/2026 – 10/05/2026', trigger: 'delay', delaySec: 3, autoCloseSec: 0, frequency: 'always', status: 'expired' },
+    { id: 3, name: 'Ưu đãi lắp mới Internet', type: 'menu-page', url: '/internet-ca-nhan', pages: ['Trang chủ', 'Internet - Wifi'], period: '10/04/2026 – 10/05/2026', trigger: 'delay', delaySec: 3, autoCloseSec: 0, frequency: 'always', status: 'expired' },
     { id: 4, name: 'Popup Tết 2026', type: 'menu-page', pages: ['Trang chủ', 'Danh mục Camera'], period: '20/01/2026 – 05/02/2026', trigger: 'scroll', delaySec: 0, autoCloseSec: 0, frequency: 'always', status: 'hidden' },
-    { id: 5, name: 'Popup Khuyến mãi Tháng 10', type: 'menu-page', pages: ['Trang chủ'], period: '01/10/2026 – 15/10/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'scheduled' },
+    { id: 5, name: 'Popup Khuyến mãi Tháng 10', type: 'menu-page', url: 'https://fpt.vn/khuyen-mai/thang-10', pages: ['Trang chủ'], period: '01/10/2026 – 15/10/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'scheduled' },
   ]; }
   AD_TARGETS() { return [
     { value: '_self', label: '_self (cùng tab)' },
@@ -4680,6 +4680,32 @@ class Component extends DCLogic {
     return h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: 'var(--color-warning-text)', fontWeight: 600 } },
       h(DS.Icon, { name: 'alert-triangle-line', size: 14 }),
       h('span', null, 'Breadcrumb "', h('strong', null, (value || '').trim()), '" đã được dùng'));
+  }
+  // Cảnh báo "Breadcrumb trang trước" đang chọn không hoạt động — dùng chung Quản lý Trang + LDP. Nguồn của mục = trang (bcLv2) và LDP khác có cùng tên; trang "hoạt động" khi bật công tắc (pageActiveMap / status ≠ hidden),
+  // LDP "hoạt động" khi đang chạy (publish). Mọi nguồn đều không hoạt động → cảnh báo (chữ vàng + icon, không chặn lưu). Giá trị cũ không còn nguồn nào thì không cảnh báo.
+  breadcrumbPrevInactive(value, opts) {
+    const o = opts || {}; const v = (value || '').trim();
+    if (!v) return null;
+    const actMap = this.state.pageActiveMap || {}; const stMap = this.state.ldpStatuses || {};
+    const pages = this.PAGES().filter(p => p.slug !== o.pageSlug && (p.bcLv2 || '').trim() === v);
+    const ldps = this.LDP_LIST().filter(r => r.id !== o.ldpId && (r.bcLv2 || '').trim() === v);
+    if (!pages.length && !ldps.length) return null;
+    const pageOn = p => actMap[p.slug] !== undefined ? !!actMap[p.slug] : p.status !== 'hidden';
+    const ldpOn = r => (stMap[r.id] !== undefined ? stMap[r.id] : r.status) === 'publish';
+    return (pages.some(pageOn) || ldps.some(ldpOn)) ? null : v;
+  }
+  // Case bỏ chọn: bản ghi đang chạy (trang hoạt động / LDP publish) mà người dùng xoá "Breadcrumb trang trước" đã lưu → trả về tên đã bỏ để cảnh báo.
+  breadcrumbPrevCleared(savedValue, currentValue, running) {
+    const sv = (savedValue || '').trim();
+    return (running && sv && !(currentValue || '').trim()) ? sv : null;
+  }
+  // kind: 'inactive' (mặc định — trang trước đang chọn không hoạt động) | 'cleared' (đã bỏ chọn trang trước).
+  breadcrumbPrevWarn(inactiveName, kind) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    if (!inactiveName) return null;
+    return h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: 'var(--color-warning-text)', fontWeight: 600 } },
+      h(DS.Icon, { name: 'alert-triangle-line', size: 14 }),
+      h('span', null, 'Breadcrumb trang trước "', h('strong', null, inactiveName), kind === 'cleared' ? '" hiện không được chọn nên không hiển thị trên Portal' : '" hiện không hoạt động nên không hiển thị trên Portal'));
   }
   // Chuỗi "Phường/Xã, Tỉnh/TP" của một LDP Khu vực (rỗng nếu là LDP thường).
   ldpRegionLabel(r) {
@@ -5692,6 +5718,8 @@ class Component extends DCLogic {
     const bcOptions = this.breadcrumbPrevOptions({ pageSlug: r ? r.slug : null }, val.bcLv1);
     // Trùng breadcrumb trang khác/LDP chỉ cảnh báo, không chặn.
     const bcDup = this.breadcrumbDup(val.bcLv2, { pageSlug: r ? r.slug : null });
+    const bcPrevOff = this.breadcrumbPrevInactive(val.bcLv1, { pageSlug: r ? r.slug : null });
+    const bcPrevCleared = this.breadcrumbPrevCleared(r && r.bcLv1, val.bcLv1, !!r && (actMap[r.slug] !== undefined ? !!actMap[r.slug] : r.status !== 'hidden'));
     // Mã code (Slug) nhập theo định dạng lv1/lv2 — kiểm tra ngay khi gõ, hiện bản xem trước phần sẽ đồng bộ sang Quản lý URL.
     const slugChk = val.slug ? this.urlCheckPageSlug(val.slug, r ? r.slug : null) : null;
     const slugMsg = slugChk && !slugChk.ok ? slugChk.msg : undefined;
@@ -5754,11 +5782,13 @@ class Component extends DCLogic {
         ),
         this.breadcrumbSection(2, val.bcShow, v => setDv('bcShow', v),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'start' } },
-            h('div', null, this.field('Breadcrumb trang trước', h(DS.Select, {
-              options: bcOptions, value: val.bcLv1, placeholder: 'Chọn trang trước',
-              searchable: true, searchPlaceholder: 'Tìm trang trước…',
-              onChange: v => setDv('bcLv1', v)
-            }))),
+            h('div', null,
+              this.field('Breadcrumb trang trước', h(DS.Select, {
+                options: bcOptions, value: val.bcLv1, placeholder: 'Chọn trang trước',
+                searchable: true, searchPlaceholder: 'Tìm trang trước…',
+                onChange: v => setDv('bcLv1', v)
+              })),
+              this.breadcrumbPrevWarn(bcPrevOff), this.breadcrumbPrevWarn(bcPrevCleared, 'cleared')),
             h('div', null,
               this.field('Breadcrumb trang hiện tại', h(DS.Input, { value: val.bcLv2, maxLength: this.BREADCRUMB_MAX(), onChange: e => setDv('bcLv2', String(evVal(e) || '').slice(0, this.BREADCRUMB_MAX())), placeholder: 'VD: Internet gia đình' }), true),
               this.breadcrumbLenNote(val.bcLv2),
@@ -7682,6 +7712,7 @@ class Component extends DCLogic {
         r.type === 'menu-page' && this.detailRow('Trang áp dụng hiển thị (' + (r.pages || []).length + ')', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 } }, (r.pages || []).map(p => h(DS.Tag, { key: p, size: 'sm' }, p)))),
         r.type === 'checkout' && this.detailRow('Phạm vi Checkout', r.checkoutScope || '—'),
         this.detailRow('Thời gian hiển thị', r.period),
+        this.detailRow('Link điều hướng', r.url || '—'),
         r.type === 'checkout'
           ? this.detailRow('Hành vi hiển thị', 'Theo cấu hình Gói bán tại module Checkout')
           : h(React.Fragment, { key: 'behavior' },
@@ -7738,11 +7769,12 @@ class Component extends DCLogic {
               )
             : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Popup Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.')
         ),
-        section(2, 'image-line', 'Hình ảnh',
+        section(2, 'image-line', 'Hình ảnh & liên kết',
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
             this.uploadBox('Popup Desktop', 'JPG, PNG, WEBP · ≤200KB'),
             this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · ≤150KB')
-          )
+          ),
+          this.field('Link điều hướng', h(FptUrlInput, { defaultValue: r ? (r.url || '') : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai' }))
         ),
         type !== 'checkout' && section(3, 'zap-line', 'Hành vi hiển thị',
           h('div', { style: { display: 'flex', gap: 12 } },
@@ -9787,6 +9819,8 @@ class Component extends DCLogic {
     const bcLv1 = sv.bcLv1, bcLv2 = sv.bcLv2, bcShow = !!sv.bcShow;
     const bcLv1Options = this.breadcrumbPrevOptions({ ldpId: editRow ? editRow.id : null }, bcLv1);
     const bcDup = this.breadcrumbDup(bcLv2, { ldpId: editRow ? editRow.id : null });
+    const bcPrevOff = this.breadcrumbPrevInactive(bcLv1, { ldpId: editRow ? editRow.id : null });
+    const bcPrevCleared = this.breadcrumbPrevCleared(editRow && editRow.bcLv1, bcLv1, effStatus === 'publish');
     const bcLv2Err = !!step2Err.bcLv2 && !(bcLv2 || '').trim();
     const bcPreview = h('div', null,
       h('label', { style: lbSt }, 'Xem trước'),
@@ -9911,7 +9945,9 @@ class Component extends DCLogic {
             searchable: true, searchPlaceholder: 'Tìm trang trước…',
             onChange: v => set('bcLv1', v),
             containerStyle: { width: '100%' }
-          })
+          }),
+          this.breadcrumbPrevWarn(bcPrevOff),
+          this.breadcrumbPrevWarn(bcPrevCleared, 'cleared')
         ),
         h('div', null,
           h('label', { style: lbSt }, 'Breadcrumb trang hiện tại', req),
