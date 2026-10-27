@@ -97,8 +97,8 @@
     .fpt-richtext-canvas:empty:before{content:attr(data-placeholder);color:var(--color-text-subtle);pointer-events:none}
     /* CLAUDE.md §14 — required-field enforcement (this.field()/this.editorShell() centralized validation).
        DS.Input/DS.Textarea own their error visuals; do not paint the nested native input here. */
-    .fpt-req-err-msg{margin-top:4px;font-size:12px;line-height:1.4;color:var(--color-danger-text);font-family:var(--font-sans, inherit)}
-    .fpt-req-box-err{border:1px solid var(--color-danger)!important;border-radius:8px;background:var(--color-danger-bg)}
+    .fpt-req-err-msg{margin-top:4px;font-size:13px;line-height:1.4;color:var(--color-danger-text);font-family:var(--font-sans, inherit)}
+    .fpt-req-box-err{border-radius:8px}
   </style>
 </helmet>
 <div id="fpt-cms">{{ app }}</div>
@@ -8715,7 +8715,7 @@ class Component extends DCLogic {
           h('div', null,
             secHdr('Phân loại'),
             h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 } }, 'Chọn một hoặc nhiều nơi Badge/Tag này được phép sử dụng.'),
-            h('div', { className: catErr ? 'fpt-req-box-err' : undefined, style: { display: 'flex', flexDirection: 'column', gap: 10, padding: 14, border: catErr ? undefined : '1px solid var(--color-border)', borderRadius: 10 } },
+            h('div', { className: catErr ? 'fpt-req-box-err' : undefined, style: { display: 'flex', flexDirection: 'column', gap: 10, padding: 14, border: '1px solid ' + (catErr ? 'var(--color-danger)' : 'var(--color-border)'), borderRadius: 10 } },
               catDefs.map(c => h(DS.Checkbox, { key: c.value, label: c.label, checked: categories.includes(c.value), onChange: () => toggleCategory(c.value) }))
             ),
             catErr && h('div', { className: 'fpt-req-err-msg' }, 'Trường bắt buộc — vui lòng chọn ít nhất 1 phân loại.')
@@ -10452,16 +10452,14 @@ class Component extends DCLogic {
       const required = rq !== false;
       const fieldKey = (section.uid || section.id) + '-f' + (fldIdx++);
       const isErr = required && !!fieldErrMap[fieldKey];
-      const isSimpleCtrl = finalCtrl && (finalCtrl.type === DS.Input || finalCtrl.type === DS.Textarea);
+      const isSimpleCtrl = finalCtrl && (finalCtrl.type === DS.Input || finalCtrl.type === DS.Textarea || finalCtrl.type === FptUrlInput);
       const shownCtrl = isSimpleCtrl
         ? React.cloneElement(finalCtrl, { error: isErr ? 'Trường bắt buộc — vui lòng nhập.' : finalCtrl.props.error })
         : finalCtrl;
       return h('div', { key: 'fld-' + fieldKey, 'data-ldp-field': required ? fieldKey : undefined, style: { marginBottom: 12 } },
         h('label', { style: lbSt }, lbl, required && req),
         shownCtrl,
-        (!isSimpleCtrl && isErr) ? h('div', { style: { marginTop: 4, padding: '6px 10px', border: '1px solid var(--color-danger)', borderRadius: 8, background: 'var(--color-danger-bg)', fontSize: 12, color: 'var(--color-danger-text)', display: 'flex', alignItems: 'center', gap: 6 } },
-          h(DS.Icon, { name: 'alert-circle-line', size: 13 }), 'Trường bắt buộc — vui lòng nhập.'
-        ) : null
+        (!isSimpleCtrl && isErr) ? h('div', { className: 'fpt-req-err-msg' }, 'Trường bắt buộc — vui lòng nhập.') : null
       );
     };
     const openMediaPicker = (maxLabel) => {
@@ -11928,7 +11926,7 @@ class Component extends DCLogic {
                     !single && h(DS.Icon,{name:'dots-grid-line',size:16,color:'var(--color-text-subtle)',style:{cursor:'grab',flexShrink:0,lineHeight:1}}),
                     h(DS.Icon,{name:expanded?'chevron-down-line':'chevron-right-line',size:16,color:expanded?'var(--color-accent)':'var(--color-text-subtle)'}),
                     h('span',{style:{fontWeight:700,fontSize:13,color:expanded?'var(--color-accent)':'var(--color-text)',flex:1}},TabWord+': '+(tab.name||'Chưa đặt tên')),
-                    showErr && h('span',{style:{fontSize:11,fontWeight:700,color:'var(--color-danger-text)',background:'var(--color-danger-bg)',border:'1px solid var(--color-danger)',borderRadius:10,padding:'2px 8px',whiteSpace:'nowrap',flexShrink:0}},nMiss+' trường chưa điền'),
+                    showErr && h('span',{style:{fontSize:11,fontWeight:700,color:'var(--color-danger-text)',whiteSpace:'nowrap',flexShrink:0}},nMiss+' trường chưa điền'),
                     !single && h('div',{style:{display:'flex',gap:8,alignItems:'center',marginLeft:'auto',flexShrink:0},onClick:e=>e.stopPropagation()},
                       h(DS.Switch,{size:'sm',label:'Mặc định',checked:defaultTab===tab.id,onChange:v=>{if(v)this.setState({defaultTab:tab.id});}}),
                       tabs.length>1 && h(DS.Button,{level:'tertiary',size:'sm',leadingIcon:'trash-line',style:{color:'var(--color-danger-text)',fontSize:11},
@@ -12248,7 +12246,7 @@ class Component extends DCLogic {
                         it.code && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, it.price)
                       ),
                       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
-                        flagged && h('span', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-danger-text)', background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)', borderRadius: 10, padding: '2px 8px', whiteSpace: 'nowrap' } }, miss.length + ' trường chưa điền'),
+                        flagged && h('span', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-danger-text)', whiteSpace: 'nowrap' } }, miss.length + ' trường chưa điền'),
                         swText(it.visible ? 'Hiển thị' : 'Ẩn', it.visible, v => upd(it.id, { visible: v }), 56, true),
                         h(DS.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)' }, onClick: () => store.set({ items: store.items.filter(x => x.id !== it.id) }) }, 'Xóa')
                       )
@@ -13495,7 +13493,7 @@ class Component extends DCLogic {
                       h(DS.Icon,{name:'dots-grid-line',size:16,color:'var(--color-text-subtle)',style:{cursor:'grab',flexShrink:0}}),
                       h(DS.Icon,{name:expanded?'chevron-down-line':'chevron-right-line',size:16,color:expanded?'var(--color-accent)':'var(--color-text-subtle)'}),
                       h('span',{style:{fontWeight:700,fontSize:13,color:expanded?'var(--color-accent)':'var(--color-text)',flex:1}},'Tab: '+(tab.name||'Chưa đặt tên')),
-                      showErr && h('span',{style:{fontSize:11,fontWeight:700,color:'var(--color-danger-text)',background:'var(--color-danger-bg)',border:'1px solid var(--color-danger)',borderRadius:10,padding:'2px 8px',whiteSpace:'nowrap',flexShrink:0}},nMiss+' trường chưa điền'),
+                      showErr && h('span',{style:{fontSize:11,fontWeight:700,color:'var(--color-danger-text)',whiteSpace:'nowrap',flexShrink:0}},nMiss+' trường chưa điền'),
                       h('div',{style:{display:'flex',gap:8,alignItems:'center',marginLeft:'auto',flexShrink:0},onClick:e=>e.stopPropagation()},
                         h(DS.Switch,{size:'sm',label:'Mặc định',checked:defaultTab===tab.id,onChange:v=>{if(v)this.setState({defaultTab:tab.id});}}),
                         tabs.length>1 && h(DS.Button,{level:'tertiary',size:'sm',leadingIcon:'trash-line',style:{color:'var(--color-danger-text)',fontSize:11},onClick:e=>{e.stopPropagation();this.setState(s=>({tabs:s.tabs.filter(t=>t.id!==tab.id)}));}},'Xóa tab')
