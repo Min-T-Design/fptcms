@@ -4453,6 +4453,8 @@ class Component extends DCLogic {
     { id: 4, name: 'Popup Tết 2026', type: 'menu-page', pages: ['Trang chủ', 'Danh mục Camera'], period: '20/01/2026 – 05/02/2026', trigger: 'scroll', delaySec: 0, autoCloseSec: 0, frequency: 'always', status: 'hidden' },
     { id: 5, name: 'Popup Khuyến mãi Tháng 10', type: 'menu-page', url: 'https://fpt.vn/khuyen-mai/thang-10', pages: ['Trang chủ'], period: '01/10/2026 – 15/10/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'scheduled' },
     { id: 6, name: 'Ưu đãi gói Internet LUX', type: 'pkg-detail', pkgs: [{ code: 'INT-LUX800', url: '/int-lux800-fptvn' }, { code: 'INT-LUX1000', url: '/int-lux1000-fptvn' }, { code: 'INT-BIZ500', url: '/int-biz500' }], period: '01/10/2026 – 31/12/2026', trigger: 'delay', delaySec: 4, autoCloseSec: 0, frequency: 'every-session', status: 'running' },
+    { id: 7, name: 'Trigger giữ chân khách xem gói Internet', type: 'trigger', url: '/internet-ca-nhan/uu-dai-lap-moi', pages: ['Trang chủ', 'Internet - Wifi'], period: '15/10/2026 – 30/11/2026', autoCloseSec: 8, status: 'running' },
+    { id: 8, name: 'Trigger Camera AI', type: 'trigger', pages: ['Danh mục Camera'], period: '01/11/2026 – 15/11/2026', autoCloseSec: 0, status: 'scheduled' },
   ]; }
   AD_TARGETS() { return [
     { value: '_self', label: '_self (cùng tab)' },
@@ -5047,11 +5049,11 @@ class Component extends DCLogic {
   // 5 tham số UTM chính của URL (lưu ở bản ghi URL dạng { source, medium, campaign, term, content }, khoá nào trống thì bỏ).
   URL_UTM_KEYS() {
     return [
-      { key: 'source', param: 'utm_source', label: 'UTM Source', placeholder: 'VD: facebook', hint: 'Nguồn lưu lượng truy cập (facebook, google, email…).' },
-      { key: 'medium', param: 'utm_medium', label: 'UTM Medium', placeholder: 'VD: cpc', hint: 'Phương tiện / kênh (cpc, banner, email, social…).' },
-      { key: 'campaign', param: 'utm_campaign', label: 'UTM Campaign', placeholder: 'VD: khuyen-mai-thang-11', hint: 'Tên chiến dịch.' },
-      { key: 'term', param: 'utm_term', label: 'UTM Term', placeholder: 'VD: internet-fpt', hint: 'Từ khóa trả phí (nếu có).' },
-      { key: 'content', param: 'utm_content', label: 'UTM Content', placeholder: 'VD: banner-a', hint: 'Phân biệt nội dung / biến thể quảng cáo.' },
+      { key: 'source', param: 'utm_source', label: 'UTM Source', placeholder: 'VD: facebook' },
+      { key: 'medium', param: 'utm_medium', label: 'UTM Medium', placeholder: 'VD: cpc' },
+      { key: 'campaign', param: 'utm_campaign', label: 'UTM Campaign', placeholder: 'VD: khuyen-mai-thang-11' },
+      { key: 'term', param: 'utm_term', label: 'UTM Term', placeholder: 'VD: internet-fpt' },
+      { key: 'content', param: 'utm_content', label: 'UTM Content', placeholder: 'VD: banner-a' },
     ];
   }
   // Giá trị UTM đi vào query string nên cấm khoảng trắng và ký tự đặc biệt (& = ? # " ' ` < > \ /).
@@ -5610,11 +5612,9 @@ class Component extends DCLogic {
     const utmPath = (s1 || '…') + (showLv2Seg ? '/' + (s2 || '…') : '');
     const utmQuery = this.urlUtmQuery(d.utm);
     const utmCell = u => h('div', { key: u.key, ...errAttr('utm_' + u.key) }, this.field(u.label,
-      h('div', null,
-        h(DS.Input, { value: utmVal(u.key), placeholder: u.placeholder, disabled: viewOnly,
-          error: showErr('utm_' + u.key) ? errs['utm_' + u.key] : undefined,
-          onChange: e => setD({ utm: { ...(d.utm || {}), [u.key]: (e && e.target ? e.target.value : e) } }) }),
-        showErr('utm_' + u.key) ? null : h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 4 } }, u.hint))));
+      h(DS.Input, { value: utmVal(u.key), placeholder: u.placeholder, disabled: viewOnly,
+        error: showErr('utm_' + u.key) ? errs['utm_' + u.key] : undefined,
+        onChange: e => setD({ utm: { ...(d.utm || {}), [u.key]: (e && e.target ? e.target.value : e) } }) })));
     sections.push(section(3, 'bar-chart-square-02-line', 'Tham số UTM',
       h('div', { key: 'utmgrid', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 } }, utmDef.map(utmCell)),
       h('div', { key: 'utmprev', style: { display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 12px', borderRadius: 8, background: 'var(--color-surface-alt)' } },
@@ -7642,6 +7642,8 @@ class Component extends DCLogic {
     { value: 'menu-page', label: 'Trang thường' },
     { value: 'checkout', label: 'Trang Checkout' },
     { value: 'pkg-detail', label: 'Trang chi tiết gói' },
+    // Trigger: chọn trang + ảnh + link như Trang thường, không chọn gói; Hành vi hiển thị chỉ còn "Thời gian tự đóng" (không có Kiểu kích hoạt / Tần suất).
+    { value: 'trigger', label: 'Trigger' },
   ]; }
   // Link điều hướng mặc định của 1 gói trong popup "Trang chi tiết gói": route name của gói (thiếu → mã SKU), dạng đường dẫn nội bộ.
   popupPkgDefaultUrl(code) {
@@ -7667,14 +7669,15 @@ class Component extends DCLogic {
     const pages = r.pages || [];
     return h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' } },
       h('span', { style: { fontSize: 13 } }, pages[0] || '—'),
-      pages.length > 1 && h(DS.Badge, { theme: 'neutral' }, '+' + (pages.length - 1) + ' khác')
+      pages.length > 1 && h(DS.Badge, { theme: 'neutral' }, '+' + (pages.length - 1) + ' khác'),
+      r.type === 'trigger' && h(DS.Badge, { theme: 'info' }, 'Trigger')
     );
   }
   openPopupEditor(r) {
-    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupEditorPkgs: r ? (r.pkgs || []).map(p => ({ ...p })) : [], popupSkuSource: 'ecp', popupSkuFilter: 'internet', popupSkuSearch: '' });
+    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupEditorAutoClose: r && r.autoCloseSec ? String(r.autoCloseSec) : '', popupEditorPkgs: r ? (r.pkgs || []).map(p => ({ ...p })) : [], popupSkuSource: 'ecp', popupSkuFilter: 'internet', popupSkuSearch: '' });
   }
   closePopupEditor() {
-    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupEditorPkgs: undefined, popupSkuSource: undefined, popupSkuFilter: undefined, popupSkuSearch: undefined });
+    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupEditorAutoClose: undefined, popupEditorPkgs: undefined, popupSkuSource: undefined, popupSkuFilter: undefined, popupSkuSearch: undefined });
   }
   renderPopup() {
     if (this.state.popupEditor !== undefined) return this.renderPopupEditor(this.state.popupEditor);
@@ -7845,10 +7848,10 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên Popup', r.name),
         this.detailRow('Loại popup', typeLabel[r.type]),
-        r.type === 'menu-page' && this.detailRow('Trang áp dụng hiển thị (' + (r.pages || []).length + ')', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 } }, (r.pages || []).map(p => h(DS.Tag, { key: p, size: 'sm' }, p)))),
+        (r.type === 'menu-page' || r.type === 'trigger') && this.detailRow('Trang áp dụng hiển thị (' + (r.pages || []).length + ')', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 } }, (r.pages || []).map(p => h(DS.Tag, { key: p, size: 'sm' }, p)))),
         r.type === 'checkout' && this.detailRow('Phạm vi Checkout', r.checkoutScope || '—'),
         this.detailRow('Thời gian hiển thị', r.period),
-        r.type === 'menu-page' && this.detailRow('Link điều hướng', r.url || '—'),
+        (r.type === 'menu-page' || r.type === 'trigger') && this.detailRow('Link điều hướng', r.url || '—'),
         r.type === 'pkg-detail' && this.detailRow('Gói cước áp dụng (' + (r.pkgs || []).length + ')', (r.pkgs || []).length
           ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 2 } }, (r.pkgs || []).map(p => h('div', { key: p.code },
               h('div', { style: { fontWeight: 600, fontSize: 13 } }, this.PKG_SKU_PICKER_LABELS().get(p.code).name || p.code),
@@ -7857,12 +7860,14 @@ class Component extends DCLogic {
           : '—'),
         r.type === 'checkout'
           ? this.detailRow('Hành vi hiển thị', 'Theo cấu hình Gói bán tại module Checkout')
-          : h(React.Fragment, { key: 'behavior' },
-              this.detailRow('Kiểu kích hoạt', triggerLabel[r.trigger]),
-              r.trigger === 'delay' && this.detailRow('Thời gian trễ', (r.delaySec || 0) + ' giây'),
-              this.detailRow('Thời gian tự đóng', r.autoCloseSec ? r.autoCloseSec + ' giây' : 'Không tự đóng'),
-              this.detailRow('Tần suất hiển thị', freqLabel[r.frequency])
-            ),
+          : r.type === 'trigger'
+            ? this.detailRow('Thời gian tự đóng', r.autoCloseSec ? r.autoCloseSec + ' giây' : 'Không tự đóng')
+            : h(React.Fragment, { key: 'behavior' },
+                this.detailRow('Kiểu kích hoạt', triggerLabel[r.trigger]),
+                r.trigger === 'delay' && this.detailRow('Thời gian trễ', (r.delaySec || 0) + ' giây'),
+                this.detailRow('Thời gian tự đóng', r.autoCloseSec ? r.autoCloseSec + ' giây' : 'Không tự đóng'),
+                this.detailRow('Tần suất hiển thị', freqLabel[r.frequency])
+              ),
         this.detailRow('Trạng thái', this.statusBadge(r.status)),
         ...this.auditRows(r)
       ),
@@ -7972,6 +7977,10 @@ class Component extends DCLogic {
     const pkgIsAuto = p => p.auto !== undefined ? !!p.auto : (p.url || '') === this.popupPkgDefaultUrl(p.code);
     const setPkgAuto = (code, auto) => this.setState(sv => ({ popupEditorPkgs: (sv.popupEditorPkgs || selectedPkgs).map(p => p.code === code ? { ...p, auto, url: auto ? this.popupPkgDefaultUrl(code) : p.url } : p) }));
     const isPkg = type === 'pkg-detail';
+    const isTrigger = type === 'trigger';
+    // Thời gian tự đóng: số nguyên ≥ 0 (trống / 0 = không tự đóng). Controlled để báo lỗi ngay khi gõ sai (âm, thập phân, ký hiệu e…).
+    const autoClose = this.state.popupEditorAutoClose !== undefined ? this.state.popupEditorAutoClose : (r && r.autoCloseSec ? String(r.autoCloseSec) : '');
+    const autoCloseErr = autoClose !== '' && !/^\d+$/.test(autoClose) ? 'Chỉ nhập số nguyên từ 0 trở lên.' : undefined;
     const showPages = type !== 'checkout' && type !== 'pkg-detail';
     const showLink = type !== 'checkout' && type !== 'pkg-detail';
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
@@ -8039,16 +8048,22 @@ class Component extends DCLogic {
         ),
         type !== 'checkout' && section(isPkg ? 4 : 3, 'zap-line', 'Hành vi hiển thị',
           h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { flex: 1 } }, this.field('Kiểu kích hoạt', h(DS.Select, {
+            // Trigger: ẩn Kiểu kích hoạt / Thời gian trễ / Tần suất, chỉ còn Thời gian tự đóng.
+            !isTrigger && h('div', { style: { flex: 1 } }, this.field('Kiểu kích hoạt', h(DS.Select, {
               options: this.POPUP_TRIGGERS(), value: trigger, placeholder: 'Chọn kiểu kích hoạt…', onChange: v => this.setState({ popupEditorTrigger: v })
             }), true)),
-            trigger === 'delay' && h('div', { style: { width: 170 } }, this.field('Thời gian trễ (giây)', h(DS.Input, { type: 'number', defaultValue: r ? String(r.delaySec || 5) : '5' }), true)),
-            h('div', { style: { width: 200 } }, this.field('Thời gian tự đóng (giây)', h(DS.Input, { type: 'number', defaultValue: r && r.autoCloseSec ? String(r.autoCloseSec) : '', placeholder: 'Để trống nếu không tự đóng' })))
+            !isTrigger && trigger === 'delay' && h('div', { style: { width: 170 } }, this.field('Thời gian trễ (giây)', h(DS.Input, { type: 'number', defaultValue: r ? String(r.delaySec || 5) : '5' }), true)),
+            h('div', { style: isTrigger ? { width: 'calc(50% - 6px)', minWidth: 260 } : { width: 200 } }, this.field('Thời gian tự đóng (giây)',
+              h(DS.Input, { type: 'number', min: 0, step: 1, value: autoClose, placeholder: isTrigger ? 'Để trống hoặc 0 nếu không tự đóng' : 'Để trống nếu không tự đóng', error: autoCloseErr,
+                onChange: e => this.setState({ popupEditorAutoClose: String(e && e.target ? e.target.value : e) }) })))
           ),
-          this.field('Tần suất hiển thị', h(DS.Select, { options: this.POPUP_FREQUENCIES(), value: frequency, placeholder: 'Chọn tần suất hiển thị…', onChange: v => this.setState({ popupEditorFrequency: v }) }), true)
+          !isTrigger && this.field('Tần suất hiển thị', h(DS.Select, { options: this.POPUP_FREQUENCIES(), value: frequency, placeholder: 'Chọn tần suất hiển thị…', onChange: v => this.setState({ popupEditorFrequency: v }) }), true)
         )
       ),
-      () => { back(); this.toast('success', 'Đã lưu Popup', isNew ? 'Popup mới đã được tạo.' : 'Popup "' + r.name + '" đã được cập nhật.'); },
+      () => {
+        if (autoCloseErr) { this.toast('danger', 'Thời gian tự đóng không hợp lệ', autoCloseErr); return; }
+        back(); this.toast('success', 'Đã lưu Popup', isNew ? 'Popup mới đã được tạo.' : 'Popup "' + r.name + '" đã được cập nhật.');
+      },
       isNew ? 'Tạo Popup' : 'Lưu Popup'
     );
   }
