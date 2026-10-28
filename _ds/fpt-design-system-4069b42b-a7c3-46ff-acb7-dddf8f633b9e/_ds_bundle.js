@@ -284,6 +284,92 @@ Object.assign(__ds_scope, { Divider });
 // components/data/Table.jsx
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+
+// ── Bảo vệ ô bảng trước dữ liệu dài (chữ dài / chuỗi liền / nhiều chip) ──
+// Chạy tập trung trên MỌI DS.Table (không cần từng module tự xử lý):
+//  • Chữ dài  → giới hạn 2 dòng + "…" (slug/URL/monospace → 1 dòng), kèm title (tooltip) chứa nội dung đầy đủ.
+//  • Chuỗi liền (URL, slug không dấu cách) → ngắt bằng overflow-wrap:anywhere + max-width, không làm bảng nở ngang.
+//  • Nhiều chip trong 1 ô → hiện tối đa 3 chip + chip "+N" (title liệt kê đủ các chip còn lại).
+// Ghi đè theo cột: columns[i].lines (số dòng), .maxWidth (px), .chips (số chip tối đa; 0 = không gom), .noClamp:true.
+// Chỉ đổi class/attribute (không đụng cây React); MutationObserver chạy lại khi nội dung bảng đổi.
+function __fptIsChip(el) {
+  if (!el || el.nodeType !== 1) return false;
+  const tag = el.tagName;
+  if (tag === "TD" || tag === "TR" || tag === "BUTTON" || tag === "INPUT" || tag === "SVG" || tag === "svg" || tag === "LABEL") return false;
+  const cs = getComputedStyle(el);
+  if (!(cs.display === "inline-flex" || cs.display === "inline-block" || cs.display === "flex" || cs.display === "inline")) return false;
+  const br = parseFloat(cs.borderTopLeftRadius) || 0;
+  const bg = cs.backgroundColor;
+  const hasBg = bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent";
+  const hasBd = parseFloat(cs.borderTopWidth) > 0;
+  if (br < 6 || !(hasBg || hasBd)) return false;
+  const r = el.getBoundingClientRect();
+  const txt = (el.textContent || "").trim();
+  return r.height >= 14 && r.height <= 36 && txt.length > 0 && txt.length <= 200 && !el.querySelector("input,button,select,textarea");
+}
+function __fptGuardTable(root) {
+  if (!root || !root.isConnected) return;
+  root.querySelectorAll(".fpt-cl,.fpt-chip-long,.fpt-chip-hidden,.fpt-chips-more").forEach(el => {
+    el.classList.remove("fpt-cl", "fpt-cl-1", "fpt-chip-long", "fpt-chip-hidden", "fpt-chips-more");
+    if (el.hasAttribute("data-fpt-title")) { el.removeAttribute("title"); el.removeAttribute("data-fpt-title"); }
+    el.removeAttribute("data-more");
+  });
+  root.querySelectorAll("tbody td").forEach(td => {
+    if (td.classList.contains("fpt-table-sticky-col") || td.classList.contains("fpt-table-sticky-inner") || td.hasAttribute("data-noclamp")) return;
+    const lines = parseInt(td.getAttribute("data-lines"), 10) || 2;
+    const chipLimit = td.hasAttribute("data-chips") ? parseInt(td.getAttribute("data-chips"), 10) : 3;
+    // 1) Gom chip
+    const chips = [];
+    td.querySelectorAll("*").forEach(el => { if (__fptIsChip(el) && !chips.some(c => c.contains(el))) chips.push(el); });
+    const groups = new Map();
+    chips.forEach(c => { const p = c.parentElement; if (!groups.has(p)) groups.set(p, []); groups.get(p).push(c); });
+    // Chip có chữ dài → 1 dòng + "…" (không để chip phình ngang / vỡ thành 2 dòng trong viên thuốc)
+    chips.forEach(c => { const t = (c.textContent || "").trim(); if (t.length > 28) { c.style.setProperty("--fpt-chip-h", Math.round(c.getBoundingClientRect().height) + "px"); c.classList.add("fpt-cl", "fpt-cl-1", "fpt-chip-long"); if (!c.hasAttribute("title")) { c.setAttribute("title", t); c.setAttribute("data-fpt-title", "1"); } } });
+    if (chipLimit > 0) groups.forEach((list, parent) => {
+      if (list.length <= chipLimit + 1) return; // dư đúng 1 chip thì hiện luôn, không đổi thành "+1"
+      // Module đã tự có chip "+N" (FptChipList / chipList…) → nó đã gom rồi, không gom thêm lần 2 (tránh hai chip "+N" cạnh nhau)
+      if (Array.from(parent.querySelectorAll("*")).some(e => !e.children.length && /^\+\s*\d+(\s*khác)?$/.test((e.textContent || "").trim()))) return;
+      list.slice(chipLimit).forEach(c => c.classList.add("fpt-chip-hidden"));
+      parent.classList.add("fpt-chips-more");
+      parent.setAttribute("data-more", "+" + (list.length - chipLimit));
+      if (!parent.hasAttribute("title")) { parent.setAttribute("title", list.map(c => (c.textContent || "").trim()).join(", ")); parent.setAttribute("data-fpt-title", "1"); }
+    });
+    // 2) Giới hạn dòng cho chữ dài (lá văn bản, không phải chip / nút / ô nhập)
+    td.querySelectorAll("*").forEach(el => {
+      if (el.children.length) return;
+      const t = (el.textContent || "").trim();
+      if (t.length < 20 || el.closest("button,label,[role=switch],input,textarea,svg") || el.classList.contains("fpt-chip-hidden")) return;
+      if (chips.some(c => c === el || c.contains(el))) return;
+      const cs = getComputedStyle(el);
+      const mono = /mono|courier/i.test(cs.fontFamily);
+      const inline = cs.display === "inline";
+      // Lá inline đứng cạnh chữ inline khác (vd. <strong>tên</strong><code>slug</code> trong cùng 1 div) → giới hạn dòng ở khối cha,
+      // để không biến từng mảnh thành khối riêng làm vỡ dòng; nếu cha không phải khối thì giữ nguyên.
+      let target = el;
+      if (inline && el.parentElement !== td) {
+        const par = el.parentElement;
+        const inlineSib = [...par.childNodes].some(n => n !== el && ((n.nodeType === 3 && n.textContent.trim()) || (n.nodeType === 1 && /^inline/.test(getComputedStyle(n).display) && (n.textContent || "").trim())));
+        if (inlineSib) { if (getComputedStyle(par).display === "block") target = par; else return; }
+      }
+      target.classList.add("fpt-cl");
+      if (mono || lines === 1) target.classList.add("fpt-cl-1");
+      if (!target.hasAttribute("title")) { target.setAttribute("title", (target.textContent || "").trim()); target.setAttribute("data-fpt-title", "1"); }
+    });
+  });
+}
+function __fptUseTableGuard(ref, deps) {
+  React.useLayoutEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    let raf = 0;
+    const run = () => { cancelAnimationFrame(raf); __fptGuardTable(root); };
+    run();
+    if (typeof MutationObserver === "undefined") return;
+    const mo = new MutationObserver(() => { Promise.resolve().then(run); });
+    mo.observe(root, { childList: true, subtree: true, characterData: true });
+    return () => { mo.disconnect(); cancelAnimationFrame(raf); };
+  }, deps);
+}
 /** Table — lightweight data table. columns: [{key,header,align?,width?,render?,sticky?}]. `sticky: true|'right'` pins that column to the right edge (e.g. an actions column; several adjacent sticky columns stack leftwards, e.g. a Hoạt động toggle + Thao tác — a sticky column's `width` is a fixed, non-shrinking, non-wrapping width) so it stays reachable while other columns scroll underneath — pair with a horizontally scrolling ancestor whose overflow isn't clipped by this component's own wrapper (pass `overflow: 'visible'` via `style`). */
 function Table({
   columns = [],
@@ -295,6 +381,8 @@ function Table({
   ...rest
 }) {
   const [hover, setHover] = React.useState(-1);
+  const guardRef = React.useRef(null);
+  __fptUseTableGuard(guardRef, []);
   const pad = dense ? "8px 12px" : "13px 16px";
   // Nhiều cột sticky liền nhau (vd. "Hoạt động" + "Thao tác"): mỗi cột bám vào mép phải cộng dồn độ rộng thực đo được
   // của các cột sticky nằm bên phải nó. Chỉ cột sticky ngoài cùng bên trái (stickyEdge) mới có bóng đổ khi cuộn.
@@ -328,12 +416,15 @@ function Table({
     background: bg,
     boxSizing: "border-box",
     whiteSpace: "nowrap",
-    // Cột ghim phải gọn hơn cột thường: padding ngang 8px (cột căn phải chừa 12px phía mép bảng) để nhường chiều ngang cho cột nội dung
-    padding: dense ? (c.align === "right" ? "8px 12px 8px 8px" : "8px") : (c.align === "right" ? "13px 14px 13px 10px" : "13px 10px"),
-    ...(c.width ? { width: c.width, minWidth: c.width } : null)
+    // Cột ghim phải gọn hơn cột thường: padding ngang 8px để nhường chiều ngang cho cột nội dung
+    // dense: 8px mọi phía kể cả cột căn phải — cột Thao tác (98px) cần đủ 82px cho [Switch][icon] hoặc 2 icon, không chừa thêm 12px phía mép bảng
+    padding: dense ? "8px" : (c.align === "right" ? "13px 14px 13px 10px" : "13px 10px"),
+    // fit: cột tự co đúng bằng nội dung (nowrap + width 1% — bảng không chia thêm chỗ trống cho cột này); width chỉ còn là mức tối thiểu
+    ...(c.width ? { width: c.fit ? "1%" : c.width, minWidth: c.width } : null)
   });
   const stickyClass = c => c.sticky ? (c.key === stickyEdgeKey ? "fpt-table-sticky-col" : "fpt-table-sticky-inner") : undefined;
   return /*#__PURE__*/React.createElement("div", _extends({
+    ref: guardRef,
     style: {
       border: "1px solid var(--color-border)",
       borderRadius: "var(--radius-base)",
@@ -381,7 +472,11 @@ function Table({
   }, columns.map(c => /*#__PURE__*/React.createElement("td", {
     key: c.key,
     className: stickyClass(c),
+    "data-noclamp": c.noClamp ? "" : undefined,
+    "data-lines": c.lines || undefined,
+    "data-chips": c.chips != null ? c.chips : undefined,
     style: {
+      ...(c.maxWidth ? { "--fpt-cell-max": c.maxWidth + "px" } : null),
       textAlign: c.align || "left",
       padding: pad,
       fontSize: 14,
@@ -390,7 +485,7 @@ function Table({
       verticalAlign: "middle",
       ...(c.sticky ? stickyRightStyle(hover === i && onRowClick ? "var(--color-surface-alt)" : "var(--color-surface)", c) : null)
     }
-  }, c.render ? c.render(row[c.key], row, i) : row[c.key])))))));
+  }, (v => typeof v === "string" && v.length > 0 ? /*#__PURE__*/React.createElement("span", null, v) : v)(c.render ? c.render(row[c.key], row, i) : row[c.key]))))))));
 }
 Object.assign(__ds_scope, { Table });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/data/Table.jsx", error: String((e && e.message) || e) }); }

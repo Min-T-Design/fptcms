@@ -92,8 +92,15 @@
     .fpt-upslot-del:hover{background:var(--color-danger-bg)!important;color:var(--color-danger)!important}
     .fpt-upslot-mini:focus-visible,.fpt-upslot-linkbtn:focus-visible{outline:none;box-shadow:var(--shadow-focus)!important}
     .fpt-upslot-linkbtn{padding:0;border:0;background:none;font:inherit;color:var(--color-accent-text);text-decoration:underline;cursor:pointer;border-radius:4px}
-    .fpt-table-sticky-col::before{content:'';position:absolute;top:0;bottom:0;left:-10px;width:10px;pointer-events:none;opacity:0;transition:opacity .15s cubic-bezier(.2,0,0,1);background:linear-gradient(to right, rgba(16,24,40,0), rgba(16,24,40,.22))}
-    .fpt-table-scrolled .fpt-table-sticky-col::before{opacity:1}
+    /* §9: viền (stroke) luôn hiện ở mép trái cột ghim — thay cho bóng đổ, không phụ thuộc scroll */
+    .fpt-table-sticky-col::before{content:'';position:absolute;top:0;bottom:0;left:0;width:1px;pointer-events:none;background:var(--color-border)}
+    /* Bảo vệ ô bảng trước dữ liệu dài (DS.Table › __fptGuardTable): giới hạn dòng + … , ngắt chuỗi liền, gom chip "+N" */
+    .fpt-cl{display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;word-break:break-word;white-space:normal!important;text-overflow:ellipsis;max-width:var(--fpt-cell-max,340px)}
+    .fpt-cl.fpt-cl-1{-webkit-line-clamp:1}
+    .fpt-cl.fpt-chip-long{display:inline-block!important;-webkit-line-clamp:unset;white-space:nowrap!important;text-overflow:ellipsis;vertical-align:middle;box-sizing:border-box;height:var(--fpt-chip-h,auto);padding-top:0!important;padding-bottom:0!important;line-height:calc(var(--fpt-chip-h,22px) - 2px)!important;max-width:var(--fpt-cell-max,300px)}
+    .fpt-chip-hidden{display:none!important}
+    .fpt-chips-more{flex-wrap:wrap}
+    .fpt-chips-more::after{content:attr(data-more);display:inline-flex;align-items:center;flex:none;height:22px;padding:0 8px;border-radius:999px;background:var(--color-surface-alt);border:1px solid var(--color-border);font-size:12px;font-weight:600;line-height:1;color:var(--color-text-subtle);white-space:nowrap;cursor:help}
     .fpt-richtext-canvas:empty:before{content:attr(data-placeholder);color:var(--color-text-subtle);pointer-events:none}
     /* CLAUDE.md §14 — required-field enforcement (this.field()/this.editorShell() centralized validation).
        DS.Input/DS.Textarea own their error visuals; do not paint the nested native input here. */
@@ -895,6 +902,7 @@ class Component extends DCLogic {
   }
   SKUS() {
     return [
+      { code: 'INT-QC-EXTREME-LONG-NAME', name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', kind: 'Dịch vụ', group: 'Internet', price: '215.000đ', status: 'active', cms: true, source: 'ECP', devices: 'ONT 1 port 1G, Thiết bị Wi-Fi 6, Mesh Wi-Fi 6 Access Point treo trần, Bộ chuyển đổi quang điện FPT chuẩn mới', addons: 'Fsafe – Bảo mật, Ultra Fast – Chơi game, FPT Play VIP, Cloud Camera 30 ngày, Gói bảo hiểm thiết bị', updatedAt: '27/10/2026 09:15', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
       { code: 'INT-GIGA', name: 'Internet Giga (150Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '215.000đ', status: 'active', cms: true, source: 'ECP', devices: 'ONT 1 port 1G, Thiết bị Wi-Fi 6', addons: 'Fsafe – Bảo mật, Ultra Fast – Chơi game, FPT Play VIP', updatedAt: '20/05/2026 13:40', updatedBy: '24092 - Nguyễn' },
       { code: 'INT-SKY', name: 'Internet Sky (1Gbps/150Mbps)', kind: 'Dịch vụ', group: 'Internet', price: '290.000đ', status: 'active', cms: true, source: 'FCP', devices: 'ONT 1 port 1G, Thiết bị Wi-Fi 6', addons: 'FPT Play VIP', updatedAt: '20/05/2026 14:00', updatedBy: '24092 - Nguyễn' },
       { code: 'INT-META', name: 'Internet Meta (1Gbps)', kind: 'Dịch vụ', group: 'Internet', price: '375.000đ', status: 'active', cms: true, source: 'ECP', devices: 'ONT 2 port 1G, Thiết bị Wi-Fi 6E', addons: 'Ultra Fast – Chơi game', updatedAt: '19/05/2026 09:15', updatedBy: 'Admin User' },
@@ -1390,6 +1398,11 @@ class Component extends DCLogic {
   }
   PROMO_ICONS() { return ['star-01-line', 'stars-01-line', 'zap-line', 'check-circle-line', 'heart-line']; }
   PKG_CONTENTS() {
+    const __base = this.PKG_CONTENTS_SEED();
+    // Hàng demo cực đoan (QC bảng): tên/route rất dài, dùng SKU INT-QC-EXTREME-LONG-NAME
+    return [{ ...__base[0], id: 'INT-QC-EXTREME-LONG-NAME__fptvn', skuCode: 'INT-QC-EXTREME-LONG-NAME', displayName: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-dang-ky-moi-goi-internet-toc-do-cao-kem-wi-fi-6' }, ...__base];
+  }
+  PKG_CONTENTS_SEED() {
     return [
       { id: 'INT-GIGA__fptvn', skuCode: 'INT-GIGA', channel: 'fptvn', status: 'active', packageType: 'Dịch vụ',
         displayName: 'Internet Giga - Siêu tốc độ cho gia đình', slug: 'internet-giga',
@@ -2887,6 +2900,12 @@ class Component extends DCLogic {
     const isGlobal = c.id === 'global';
     const inherit = !isGlobal && this.state.inherit[c.id];
     const open = this.state.checkoutOpen === c.id;
+    // Dựng nội dung trước để form Global đăng ký thanh thao tác (đếm thay đổi/Lưu/Hủy) cho tiêu đề bên dưới.
+    this._checkoutBar = null;
+    const bodyEl = open && h('div', { className: 'fpt-accordion-body', style: { padding: '18px 20px', borderTop: '1px solid var(--color-border)' } },
+      isGlobal ? this.renderCheckoutGlobalForm(false, 'global', false) : this.renderCheckoutChildForm(c, inherit)
+    );
+    const bar = open && isGlobal ? this._checkoutBar : null;
     return h(DS.Card, { key: c.id, style: { padding: 0, overflow: 'visible' } },
       h('div', { onClick: () => {
         if (!isGlobal && inherit && this.state.checkoutOpen !== c.id) {
@@ -2898,14 +2917,14 @@ class Component extends DCLogic {
         } else {
           this.setState(s => ({ checkoutOpen: s.checkoutOpen === c.id ? null : c.id }));
         }
-      }, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', cursor: 'pointer', background: open ? 'var(--color-surface-alt)' : 'transparent', borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)', transition: 'background .18s cubic-bezier(.2,0,0,1)', height: 56, boxSizing: 'border-box' } },
+      }, style: { ...(open ? { position: 'sticky', top: -24, zIndex: 9, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' } : null), display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', cursor: 'pointer', background: open ? 'var(--color-surface-alt)' : 'transparent', borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)', transition: 'background .18s cubic-bezier(.2,0,0,1)', height: 56, boxSizing: 'border-box' } },
         h('span', { className: 'fpt-chevron' + (open ? ' fpt-chevron-open' : '') }, h(DS.Icon, { name: 'chevron-right-01-line', size: 18, color: 'var(--color-text-subtle)' })),
         h(DS.Icon, { name: c.icon, size: 18, color: 'var(--color-accent)' }),
         h('span', { style: { fontWeight: 700, fontSize: 14.5 } }, c.full),
         h('div', { style: { flex: 1 } }),
         h(DS.Button, {
           level: 'secondary', size: 'sm', leadingIcon: 'upload-cloud-line',
-          style: { marginRight: 8, visibility: (!isGlobal && !inherit) ? 'visible' : 'hidden', pointerEvents: (!isGlobal && !inherit) ? 'auto' : 'none' },
+          style: { marginRight: 8, display: isGlobal ? 'none' : undefined, visibility: (!isGlobal && !inherit) ? 'visible' : 'hidden', pointerEvents: (!isGlobal && !inherit) ? 'auto' : 'none' },
           onClick: (e) => {
             e.stopPropagation();
             this.openModal({ kind: 'confirm',
@@ -2924,11 +2943,14 @@ class Component extends DCLogic {
             });
           }
         }, '\u0110\u1ed3ng b\u1ed9 theo Global'),
+        // Thanh thao tác của tab đang mở (chỉ khi đã chọn ≥ 1 gói): Hủy + Lưu (chỉ bấm được khi có thay đổi chưa lưu).
+        bar && h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'default' } },
+          h(DS.Button, { level: 'tertiary', size: 'sm', disabled: !bar.count, onClick: bar.onCancel }, 'Hủy'),
+          h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', disabled: !bar.count, onClick: bar.onSave }, 'Lưu')
+        ),
         !isGlobal ? this.statusBadge(inherit ? 'global' : 'custom') : null
       ),
-      open && h('div', { className: 'fpt-accordion-body', style: { padding: '18px 20px', borderTop: '1px solid var(--color-border)' } },
-        isGlobal ? this.renderCheckoutGlobalForm(false, 'global', false) : this.renderCheckoutChildForm(c, inherit)
-      )
+      bodyEl
     );
   }
   renderCheckoutChildForm(c, inherit) {
@@ -3175,6 +3197,74 @@ class Component extends DCLogic {
     );
     const saveBundledConfig = () => this.toast('success', 'Đã lưu', 'Đã lưu thiết bị đi kèm & dịch vụ bổ sung cho ' + selectedSkus.length + ' gói.');
 
+    // ── Đếm thay đổi chưa lưu + Lưu/Hủy cho tab đang mở — hiển thị trên thanh tiêu đề "Tất cả các kênh (Global)" (xem renderCheckoutChannel) ──
+    // Dữ liệu được sửa trực tiếp vào state nên cần mốc "đã lưu" (baseline): chụp lần đầu mỗi gói được chọn xuất hiện, cập nhật lại khi Lưu, khôi phục khi Hủy.
+    // Đơn vị đếm: mỗi trường/dòng ưu đãi/chu kỳ bị đổi = 1 thay đổi (cùng 1 chỉnh sửa áp dụng cho nhiều gói chỉ tính 1); mô tả thiết bị/dịch vụ tính riêng từng gói.
+    if (!isChild && selectedSkus.length > 0) {
+      const ckBase = this._ckBase = this._ckBase || { offers: {}, bundled: {} };
+      const clone = v => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
+      const diffPaths = (a, b, path, out) => {
+        if (Array.isArray(a) || Array.isArray(b)) {
+          const aa = Array.isArray(a) ? a : [], bb = Array.isArray(b) ? b : [];
+          if (aa.length !== bb.length) out.add(path + '#len');
+          for (let i = 0; i < Math.min(aa.length, bb.length); i++) diffPaths(aa[i], bb[i], path + '[' + i + ']', out);
+          return;
+        }
+        if ((a && typeof a === 'object') || (b && typeof b === 'object')) {
+          const ao = a || {}, bo = b || {};
+          new Set([...Object.keys(ao), ...Object.keys(bo)]).forEach(k => { if (k !== 'id') diffPaths(ao[k], bo[k], path + '.' + k, out); });
+          return;
+        }
+        if ((a == null ? '' : a) !== (b == null ? '' : b)) out.add(path);
+      };
+      const isOffersScope = effectiveContentTab === 'offers';
+      const BFIELDS = ['devices', 'addons'];
+      selectedSkus.forEach(sk => {
+        if (isOffersScope) {
+          const k = cid + '|' + sk.code;
+          if (!(k in ckBase.offers)) ckBase.offers[k] = clone(cyclesMap[sk.code] || defaultEntryFor());
+        } else BFIELDS.forEach(f => {
+          const k = sk.code + '|' + f;
+          if (!(k in ckBase.bundled)) ckBase.bundled[k] = clone(this.getSkuConfigItems(sk, f));
+        });
+      });
+      const changed = new Set();
+      // Nội dung ưu đãi: 1 bộ chỉnh sửa chung cho mọi gói chọn → đếm khác biệt của form đang hiển thị so với mốc đã lưu của gói đầu tiên (không cộng dồn theo từng gói).
+      if (isOffersScope) diffPaths(ckBase.offers[cid + '|' + selectedSkus[0].code], sharedDraft, 'o', changed);
+      else selectedSkus.forEach(sk => BFIELDS.forEach(f => diffPaths(ckBase.bundled[sk.code + '|' + f], this.getSkuConfigItems(sk, f), sk.code + '.' + f, changed)));
+      const changeCount = changed.size;
+      const commitBase = () => selectedSkus.forEach(sk => {
+        if (isOffersScope) ckBase.offers[cid + '|' + sk.code] = clone(cyclesMap[sk.code] || defaultEntryFor());
+        else BFIELDS.forEach(f => { ckBase.bundled[sk.code + '|' + f] = clone(this.getSkuConfigItems(sk, f)); });
+      });
+      const revertToBase = () => {
+        if (isOffersScope) {
+          this.setState(st => {
+            const map = { ...((st.checkoutCycles || {})[cid] || {}) };
+            selectedSkus.forEach(sk => { map[sk.code] = clone(ckBase.offers[cid + '|' + sk.code]); });
+            const drafts = { ...((st.checkoutSharedDraft || {})[cid] || {}) };
+            delete drafts[mainTab]; // bộ chỉnh sửa dựng lại từ dữ liệu đã khôi phục của gói đầu tiên
+            return { checkoutCycles: { ...st.checkoutCycles, [cid]: map }, checkoutSharedDraft: { ...st.checkoutSharedDraft, [cid]: drafts } };
+          });
+        } else {
+          const patch = {};
+          selectedSkus.forEach(sk => BFIELDS.forEach(f => { patch['skuCfg_' + sk.code + '_' + f] = clone(ckBase.bundled[sk.code + '|' + f]); }));
+          this.setState(patch);
+        }
+        this.toast('info', 'Đã hủy thay đổi', 'Đã khôi phục nội dung về lần lưu gần nhất.');
+      };
+      this._checkoutBar = {
+        count: changeCount,
+        onSave: () => { (isOffersScope ? saveSharedDraft : saveBundledConfig)(); commitBase(); this.setState({ _ckSavedTick: Date.now() }); },
+        onCancel: () => this.confirm(
+          'Hủy thay đổi chưa lưu?',
+          'Nội dung vừa chỉnh ở tab này sẽ được khôi phục về lần lưu gần nhất, áp dụng cho ' + selectedSkus.length + ' gói đang chọn.',
+          () => { this.closeModal(); revertToBase(); },
+          true
+        )
+      };
+    }
+
     // ── Item trong "Danh sách gói cước (SKU)" bên trái ──
     const onSkuIconFile = (code) => e => {
       const file = e.target.files && e.target.files[0];
@@ -3198,9 +3288,9 @@ class Component extends DCLogic {
           h('input', { type: 'file', accept: 'image/*', style: { display: 'none' }, onChange: onSkuIconFile(s.code) })
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 1 } },
             h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(s.code).name || '—'),
-            h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, s.group)
+            h('span', { style: { flexShrink: 0, whiteSpace: 'nowrap', fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, s.group)
           ),
           h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(s.code).route || '—'),
           h('div', { style: { display: 'flex', gap: 3, flexWrap: 'wrap' } },
@@ -3381,12 +3471,12 @@ class Component extends DCLogic {
             ? 'Tick chọn một hoặc nhiều gói cước ở danh sách bên trái để áp dụng cho trang Checkout — chỉnh sửa nội dung ưu đãi bên phải sẽ áp dụng đồng thời cho tất cả các gói đang được chọn.'
             : 'Tick chọn một hoặc nhiều gói cước ở danh sách bên trái — thiết bị đi kèm & dịch vụ bổ sung được đồng bộ tự động từ QLCS theo từng gói, chỉ có thể chỉnh sửa mô tả.'
         ),
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1.36fr 3fr', gap: 16, alignItems: 'stretch' } },
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1.36fr) minmax(0, 3fr)', gap: 16, alignItems: 'stretch' } },
 
           // ── Trái: Danh sách gói cước — kiểu giống module Phương thức thanh toán ──
           // (bọc ngoài không sticky, cao bằng hàng grid → cho phép khối bên trong "sticky" bám lại khi cột phải dài hơn)
           h('div', null,
-            h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px', position: 'sticky', top: 8 } },
+            h('div', { style: { background: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 10px', position: 'sticky', top: 44 } },
               h('div', { style: { fontSize: 10.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 } }, 'DANH SÁCH SẢN PHẨM'),
               h('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)', marginBottom: 8 } }, 'Icon gói: tỉ lệ 1:1 · ≤50KB'),
 
@@ -3436,10 +3526,7 @@ class Component extends DCLogic {
               )
             : effectiveContentTab !== 'offers'
             ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 } },
-                selectedSkus.map(sku => renderBundledSkuCard(sku)),
-                h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
-                  h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', onClick: saveBundledConfig }, 'Lưu cấu hình')
-                )
+                selectedSkus.map(sku => renderBundledSkuCard(sku))
               )
             : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 } },
                 showOverwriteWarning && h(DS.Alert, { theme: 'warning', title: 'Chỉnh sửa sẽ ghi đè nội dung hiện có', style: { borderRadius: 10 } },
@@ -3458,9 +3545,6 @@ class Component extends DCLogic {
                         style: { fontSize: 11.5, fontWeight: 700, color: 'var(--color-text-subtle)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 2px', textDecoration: 'underline' } },
                         'Thu gọn'
                       )
-                    ),
-                    h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', style: { flexShrink: 0 }, onClick: saveSharedDraft },
-                      'Lưu (' + selectedSkus.length + ' gói)'
                     )
                   ),
                   isCameraMain
@@ -3590,8 +3674,8 @@ class Component extends DCLogic {
       { key: 'regPage', header: 'Trang đăng ký', render: (_, r) => pageBannerCell(pageBannerList([r.headerBanner, r.footerBanner, r.popupCheckout])) },
       { key: 'payPage', header: 'Trang thanh toán', render: (_, r) => pageBannerCell(pageBannerList([r.payHeaderBanner, r.payFooterBanner, r.payModalPopup, r.payVoucherPopup])) },
       { key: 'donePage', header: 'Trang hoàn tất đơn hàng', render: (_, r) => pageBannerCell(pageBannerList([r.doneHeaderBanner, r.doneAppBanner, r.donePopup])) },
-      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', align: 'center', render: (_, r) => this.statusBadge(r.status) },
+      ...this.auditCols(),
       { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ ruleEditor: r }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa chương trình?', 'Chương trình "' + r.name + '" sẽ bị xóa khỏi hệ thống.', () => { this.closeModal(); this.toast('success', 'Đã xóa', 'Chương trình đã được xóa.'); }, true) },
@@ -3611,6 +3695,10 @@ class Component extends DCLogic {
     );
   }
   CHECKOUT_RULES() {
+    const __base = this.CHECKOUT_RULES_SEED();
+    return [{ ...__base[0], id: 901, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', skus: ['INT-GIGA','INT-SKY','INT-META','INT-LUX500','INT-LUX800','CAM-IQ3','CAM-IQ4S','SA-SMAX','SA-SVIP'], headerBanner: 'Banner Hero Hè 2026 — chương trình ưu đãi dành riêng cho khách hàng thân thiết', popupCheckout: 'Popup Flash Sale dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao' }, ...__base];
+  }
+  CHECKOUT_RULES_SEED() {
     return [
       { id: 1, name: 'Ưu đãi Combo Thể thao Hè 2026', channel: 'Global', skus: ['INT-SKY', 'SA-SMAX'], period: '01/06 – 31/08', priority: 10, headerBanner: 'Banner Hero Hè 2026', footerBanner: '— Không hiển thị —', popupCheckout: 'Popup Flash Sale', status: 'active',
         regPopupDelay: 3, regPopupAutoClose: 10,
@@ -4002,20 +4090,31 @@ class Component extends DCLogic {
     const a = this.audit(r, opts);
     return [this.detailRow('Người tạo', a.createdBy), this.detailRow('Ngày tạo', a.createdAt), this.detailRow('Người cập nhật', a.updatedBy), this.detailRow('Ngày cập nhật', a.updatedAt)];
   }
-  // Cột ghim phải dùng chung mọi bảng (CLAUDE.md §9): "Thao tác" (key 'act') + cột bật/tắt "Hoạt động"/"Hiển thị"
-  // (key 'active' | 'visible') đứng sát bên trái nó. Gọn theo nội dung: toggle header "Bật/Tắt" rộng 76px; Thao tác
-  // không hiện chữ header (chỉ còn nhãn ẩn cho trình đọc màn hình), rộng tối thiểu 56px và tự nở theo số icon.
+  // Cột ghim phải dùng chung mọi bảng (CLAUDE.md §9). Bảng có cột "Thao tác" (key 'act') thì cột ghim luôn là MỘT cột
+  // duy nhất nằm cuối bảng và có CÙNG một chuẩn ở mọi module: header "Thao tác" luôn hiện, căn PHẢI (cả header lẫn nội dung),
+  // padding 8px. Độ rộng TỰ CO theo số thao tác (cờ fit của DS.Table: width 1% + nowrap → cột chỉ rộng bằng nội dung, không bị
+  // bảng chia thêm chỗ trống): 1 icon ≈ 81px (bị chữ header "THAO TÁC" quyết định), 2 icon = 98px, 3 icon = 140px (mỗi icon `sm` 40px + gap 2).
+  // Nếu bảng còn có cột bật/tắt "Hoạt động"/"Hiển thị" (key 'active' | 'visible') thì Switch được GỘP vào chính cột này, đứng bên
+  // trái icon: [Switch 36][gap 6][icon…] (cả cụm căn phải) — không còn cột "Bật/Tắt" riêng.
+  // Hàm render gốc của từng module (switch, icon, tooltip, khóa quyền…) được gọi nguyên vẹn, không đổi chức năng.
   stickyCols(columns) {
     const h = React.createElement;
     const TOGGLE_KEYS = ['active', 'visible'];
-    const hasAct = columns.some(c => c.key === 'act');
-    const srOnly = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' };
-    const cols = columns.map(c => c.key === 'act' ? { ...c, sticky: true, width: 56, header: h('span', { style: srOnly }, 'Thao tác') }
-      : (hasAct && TOGGLE_KEYS.includes(c.key)) ? { ...c, sticky: true, width: 76, header: 'Bật/Tắt' } : c);
-    // Cột bật/tắt luôn nằm liền trước cột Thao tác (nếu khai báo lệch chỗ thì tự dời lại)
-    const toggles = cols.filter(c => c.sticky && c.key !== 'act');
-    const act = cols.find(c => c.key === 'act');
-    return act ? [...cols.filter(c => !c.sticky), ...toggles, act] : cols;
+    const act = columns.find(c => c.key === 'act');
+    if (!act) return columns;
+    const tog = columns.find(c => TOGGLE_KEYS.includes(c.key));
+    const rest = columns.filter(c => c !== act && c !== tog);
+    const std = { sticky: true, fit: true, width: 56, align: 'right', header: 'Thao tác' };
+    if (!tog) return [...rest, { ...act, ...std }];
+    const merged = {
+      ...act, ...std,
+      render: (_, r, i) => h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 } },
+        // Ô switch có bề rộng tối thiểu cố định → hàng nào ít icon hơn (hoặc không có switch) vẫn thẳng cột với hàng khác
+        h('div', { style: { flex: 'none', minWidth: 36, display: 'flex', justifyContent: 'center' } },
+          tog.render ? tog.render(r[tog.key], r, i) : null),
+        act.render ? act.render(r[act.key], r, i) : null)
+    };
+    return [...rest, merged];
   }
   tbl(columns, data, rowKey, onRowClick) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -4236,6 +4335,7 @@ class Component extends DCLogic {
   // Danh sách trang: state.pagesData (sau khi lưu ở Quản lý Trang hoặc khi đổi slug ở Quản lý URL) hoặc dữ liệu mẫu PAGES_SEED.
   PAGES() { return this.state.pagesData || this.PAGES_SEED(); }
   PAGES_SEED() { return [
+    { name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', bcLv1: 'Trang chủ', bcLv2: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026/dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', h1: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
     { name: 'FPT Play detail', bcLv1: 'Trang chủ', bcLv2: 'Truyền hình FPT Play', slug: 'truyen-hinh-fpt-play/detail', h1: 'FPT Play detail', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
     { name: 'SA detail', bcLv1: 'Trang chủ', bcLv2: 'Dịch vụ số', slug: 'dich-vu-so/detail', h1: 'SA detail', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
     { name: 'Internet detail sections2', bcLv1: 'Trang chủ', bcLv2: 'Chi tiết Internet', slug: 'internet-detail/sections2', h1: 'Internet detail sections2', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
@@ -4254,6 +4354,7 @@ class Component extends DCLogic {
     return ren ? base.map(s => ({ ...s, pages: (s.pages || []).map(n => ren[n] || n) })) : base;
   }
   SECTIONS_SEED() { return [
+    { id:901, name:'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', title:'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', code:'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', pages:['Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6','Trang chủ','Internet detail sections2','Camera An Ninh FPT','SA detail','Tin tức','FPT Play detail','Thiết bị thông minh'], type:'product_list', status:'active', order:9, blocks:['Block gói cước Internet Giga kèm Combo truyền hình và Camera An Ninh FPT Play Box','Ultrafast','FPL','Hyperfast','Camera Only','Internet Fam Test','Combo Internet Truyền hình'], createdAt:'27/10/2026 09:15' },
     { id:17, name:'Khối ưu đãi chiến dịch mùa hè', title:'Ưu đãi chiến dịch mùa hè 2026', code:'khoi-uu-dai-chien-dich-mua-he', pages:['Landing page chiến dịch khuyến mãi Internet cáp quang FPT Telecom mùa hè 2026','Trang chủ','Internet detail sections2','Camera An Ninh FPT','SA detail','Tin tức','FPT Play detail','Thiết bị thông minh'], type:'product_list', status:'active', order:3, blocks:['Block gói cước Internet Giga kèm Combo truyền hình và Camera An Ninh FPT Play Box','Ultrafast'], createdAt:'02/10/2026 08:45' },
     { id:16, name:'Bảng giá gói Internet cá nhân FPT | Nhận thêm camera kèm Cloud', title:'Bảng giá gói Internet cá nhân FPT', code:'bang-gia-goi-internet-ca-nhan-fpt-nhan-them-camera-kem-cloud', pages:['Landing page chiến dịch khuyến mãi Internet cáp quang FPT Telecom mùa hè 2026','Trang chi tiết gói cước Internet Giga kèm Combo truyền hình và Camera An Ninh'], type:'product_list', status:'active', order:2, blocks:['Internet Fam Test'], createdAt:'01/10/2026 09:30' },
     { id:15, name:'Banner ưu đãi dùng chung', title:'Ưu đãi đặc biệt tháng 10',   code:'banner-uu-dai-chung',     pages:['Trang chủ','Internet detail sections2','Camera An Ninh FPT','SA detail','Tin tức'], type:'hero_banner', status:'active', order:1, blocks:['Ultrafast','FPL','Hyperfast','Camera Only','Internet Fam Test','Combo Internet Truyền hình','Block Gói cước Internet Giga'], createdAt:'30/09/2026 10:00' },
@@ -4276,6 +4377,7 @@ class Component extends DCLogic {
     { id:14, name:'Best Sellers',           title:'Sản phẩm bán chạy',         code:'best-sellers',            pages:['Camera An Ninh FPT'],        type:'product_list', status:'active',   order:2,    blocks:['Camera Only','Ultrafast'],                    createdAt:'18/02/2026 10:20' },
   ]; }
   BLOCKS() { return [
+    { id:901, name:'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', code:'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', section:'Bảng giá gói Internet cá nhân FPT | Nhận thêm camera kèm Cloud', layout:'Slider', datasource:'Internet', datasourceKey:'internet', order:9, createdAt:'27/10/2026 09:15' },
     { id:1, name:'Internet cá nhân trang danh mục', code:'internet-ca-nhan-trang-danh-muc', section:'Các gói nổi bật',                    layout:'Slider',    datasource:'Internet',     datasourceKey:'internet', order:null, createdAt:'23/04/2026 14:31' },
     { id:2, name:'Camera Only',                      code:'camera-only',                       section:'Camera bán chạy',                    layout:'Slider',    datasource:'Camera',       datasourceKey:'camera',   order:null, createdAt:'15/04/2026 09:46' },
     { id:3, name:'Internet Fam Test',                code:'internet-fam-test',                 section:'Internet gia đình',                  layout:'Slider',    datasource:'Internet',     datasourceKey:'internet', order:1,    createdAt:'15/04/2026 09:07' },
@@ -4304,6 +4406,7 @@ class Component extends DCLogic {
     { id:25, name:'Câu hỏi thường gặp - Khuyến mãi', code:'cau-hoi-thuong-gap-khuyen-mai',       section:'Câu hỏi thường gặp',                 layout:'Accordion', datasource:'Câu hỏi',    datasourceKey:'faq',      order:null, createdAt:'10/06/2026 17:44' },
   ]; }
   MENU() { return [
+    { id: 901, pid: 0, level: 0, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', type: 'page', pos: 'Header', url: '/chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026/dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', target: '_self', order: 99, date: '27/10/2026 09:15', status: 'active' },
     { id: 1,  pid: 0,  level: 0, name: 'Sản phẩm dịch vụ',                   type: 'category', pos: 'Header', url: '/san-pham',                               target: '_self',  order: 0, date: '29/01/2026 09:40', status: 'active' },
     { id: 2,  pid: 1,  level: 1, name: 'Internet – Wifi',                     type: 'page',     pos: 'Header', url: 'internet',                                target: '_self',  order: 1, date: '29/01/2026 09:42', status: 'active' },
     { id: 3,  pid: 2,  level: 2, name: 'Combo Internet thể thao giải trí',    type: 'page',     pos: 'Header', url: 'truyen-hinh-fpt-play',                    target: '_self',  order: 1, date: '29/01/2026 09:55', status: 'active' },
@@ -4333,6 +4436,7 @@ class Component extends DCLogic {
   ]; }
   BANNER_PAGES() { return ['Trang chủ', 'Danh mục Camera', 'Smart Tivi', 'FPT Smart Home', 'Internet - Wifi']; }
   BANNERS() { return [
+    { id: 901, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', order: 9, pages: ['Trang chủ', 'Danh mục Camera', 'Smart Tivi', 'FPT Smart Home', 'Internet - Wifi'], link: '/chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026/dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', bannerType: 'normal', target: '_self', period: '01/10/2026 – 31/12/2026', createdAt: '27/10/2026', status: 'active' },
     { id: 1, name: 'Banner Hero Trang Chủ Q3', order: 1, pages: ['Trang chủ'], link: '/khuyen-mai-quy-3', bannerType: 'normal', target: '_self', period: '01/08/2026 – 31/08/2026', createdAt: '20/07/2026', status: 'active' },
     { id: 2, name: 'Banner Wi-Fi 7 Ưu đãi', order: 2, pages: ['Trang chủ', 'Internet - Wifi'], link: '/internet/wifi-7', bannerType: 'normal', target: '_self', period: '15/07/2026 – 15/09/2026', createdAt: '10/07/2026', status: 'active' },
     { id: 3, name: 'Banner Camera AI Khuyến mãi Hè', order: 3, pages: ['Danh mục Camera'], link: '/camera-an-ninh/khuyen-mai', bannerType: 'normal', target: '_blank', period: '01/05/2026 – 31/05/2026', createdAt: '20/04/2026', status: 'expired' },
@@ -4342,6 +4446,7 @@ class Component extends DCLogic {
     { id: 7, name: 'Banner Khuyến mãi Tháng 10', order: 7, pages: ['Trang chủ'], link: '/khuyen-mai-thang-10', bannerType: 'normal', target: '_self', period: '01/10/2026 – 31/10/2026', createdAt: '15/09/2026', status: 'scheduled' },
   ]; }
   POPUPS() { return [
+    { id: 901, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', type: 'menu-page', url: '/chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026/dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', pages: ['Trang chủ', 'Danh mục Camera', 'Smart Tivi', 'FPT Smart Home', 'Internet - Wifi'], period: '01/10/2026 – 31/12/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'running' },
     { id: 1, name: 'Flash Sale T5', type: 'menu-page', url: '/khuyen-mai/flash-sale', pages: ['Trang chủ'], period: '15/05/2026 – 20/05/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'running' },
     { id: 2, name: 'Khuyến mãi Camera', type: 'checkout', checkoutScope: 'Gói Camera AI', period: '01/05/2026 – 31/05/2026', trigger: 'immediate', delaySec: 0, autoCloseSec: 8, frequency: 'every-session', status: 'running' },
     { id: 3, name: 'Ưu đãi lắp mới Internet', type: 'menu-page', url: '/internet-ca-nhan', pages: ['Trang chủ', 'Internet - Wifi'], period: '10/04/2026 – 10/05/2026', trigger: 'delay', delaySec: 3, autoCloseSec: 0, frequency: 'always', status: 'expired' },
@@ -4398,12 +4503,14 @@ class Component extends DCLogic {
   AD_TYPES() { return [{ value: 'above_header', label: 'Trên header' }, { value: 'below_header', label: 'Dưới header' }]; }
   adTypeLabel(v) { const t = this.AD_TYPES().find(t => t.value === v); return t ? t.label : '—'; }
   AD_CATEGORIES() { return [
+    { id: 901, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', code: 'qc_extreme_long_name', type: 'above_header', bgColor: '#0f172a', bgImg: '', desc: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc — Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', status: 'active', createdAt: '27/10/2026 09:15', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedAt: '27/10/2026 09:15', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
     { id: 1, name: 'Combo Internet Ngoại Hạng Anh', code: 'scrolling_top_bar', type: 'above_header', bgColor: '', bgImg: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7ae92542251_1786439973.png', desc: 'Thanh chạy chữ thông báo ưu đãi Internet, Camera AI & Cloud đầu website', status: 'active', createdAt: '01/06/2026 09:00', createdBy: 'Admin User', updatedAt: '12/08/2026 15:20', updatedBy: 'Nguyễn Thị Thùy' },
     { id: 2, name: 'Black Friday 2026', code: 'popup_promo', bgColor: '#22c55e', bgImg: '', desc: 'Các quảng cáo popup khuyến mãi Black Friday và Camera AI khi vào trang', status: 'active', createdAt: '05/06/2026 10:30', createdBy: 'Admin User', updatedAt: '20/07/2026 09:45', updatedBy: 'Trần Minh Khoa' },
     { id: 3, name: 'Hè rực rỡ – FPT Play VIP', code: 'corner_banner', bgColor: '#7c3aed', bgImg: '', desc: 'Quảng cáo nhỏ ghim góc màn hình giới thiệu ưu đãi tặng FPT Play VIP mùa hè', status: 'active', createdAt: '10/06/2026 14:10', createdBy: 'Admin User', updatedAt: '10/06/2026 14:10', updatedBy: 'Admin User' },
     { id: 4, name: 'Tri ân khách hàng 2026', code: 'footer_ads', bgColor: '#0f172a', bgImg: '', desc: 'Quảng cáo tri ân khách hàng thân thiết hiển thị cố định ở chân trang website', status: 'inactive', createdAt: '15/06/2026 11:00', createdBy: 'Admin User', updatedAt: '02/09/2026 16:00', updatedBy: 'Admin User' },
   ]; }
   ADS() { return [
+    { id: 901, catCode: 'qc_extreme_long_name', title: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', img: '', content: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', url: 'https://fpt.vn/shop/internet/register/chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026/dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh?utm_source=nha-header&utm_medium=banner&utm_campaign=qc-extreme', target: '_self', order: 9, status: 'active', startAt: '01/10/2026 00:00', endAt: '31/12/2026 23:59', createdAt: '27/10/2026 09:15', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedAt: '27/10/2026 09:15', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
     { id: 1, catCode: 'scrolling_top_bar', title: 'Combo Internet V.VIP chỉ từ 220K: Xem Ngoại Hạng Anh - Nhận ngay Camera AI & Cloud miễn phí',
       img: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7aedea66620_1786441194.png',
       content: 'Combo Internet V.VIP chỉ từ 220K: Xem Ngoại Hạng Anh - Nhận ngay Camera AI & Cloud miễn phí <a href="#">TẠI ĐÂY</a>',
@@ -4426,6 +4533,7 @@ class Component extends DCLogic {
       url: 'https://fpt.vn/shop/internet/black-friday', target: '_blank', order: 2, status: 'active', startAt: '20/11/2026 00:00', endAt: '30/11/2026 23:59', createdAt: '25/09/2026 10:20', createdBy: 'Admin User', updatedAt: '28/09/2026 16:45', updatedBy: 'Admin User' },
   ]; }
   FAQS() { return [
+    { id: 901, cat: 'Thanh toán cước', q: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc?', a: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc. Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc. Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc.', lang: 'Tiếng Việt', order: 9, status: 'active', createdAt: '27/10/2026', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedAt: '27/10/2026', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
     { id: 1, cat: 'Thanh toán cước', q: 'Làm thế nào để thanh toán cước trực tuyến?', a: 'FPT Telecom hỗ trợ đa dạng hình thức thanh toán: ứng dụng Hi FPT, ví điện tử MoMo, VNPay, ZaloPay, chuyển khoản ngân hàng hoặc tại quầy giao dịch FPT.', lang: 'Tiếng Việt', order: 1, status: 'active', createdAt: '14/01/2026', createdBy: 'Nguyễn Văn An', updatedAt: '20/03/2026', updatedBy: 'Trần Thị Bích' },
     { id: 2, cat: 'Khắc phục sự cố', q: 'Wifi chập chờn phải xử lý thế nào?', a: 'Vui lòng khởi động lại modem, kiểm tra dây cáp và vị trí đặt thiết bị. Nếu vẫn không cải thiện, hãy liên hệ hotline 1900 6600 để được hỗ trợ kỹ thuật.', lang: 'Tiếng Việt', order: 1, status: 'active', createdAt: '18/01/2026', createdBy: 'Trần Thị Bích', updatedAt: '18/01/2026', updatedBy: 'Trần Thị Bích' },
     { id: 3, cat: 'Chính sách & Thủ tục', q: 'Thủ tục lắp đặt Internet cần giấy tờ gì?', a: 'Khách hàng cá nhân chỉ cần cung cấp ảnh chụp Căn cước công dân (CCCD). Doanh nghiệp cần bổ sung Giấy phép kinh doanh và hợp đồng thuê nhà (nếu có).', lang: 'Tiếng Việt', order: 2, status: 'active', createdAt: '22/01/2026', createdBy: 'Lê Minh Hoàng', updatedAt: '09/04/2026', updatedBy: 'Phạm Thu Hà' },
@@ -4442,6 +4550,7 @@ class Component extends DCLogic {
     { id: 14, cat: 'Dịch vụ GTGT', q: 'Camera AI có cần đăng ký thêm gói Cloud không?', a: 'Camera hoạt động độc lập với bộ nhớ trong, tuy nhiên để lưu trữ trực tuyến và xem lại từ xa, khách hàng nên đăng ký thêm gói Cloud Camera theo nhu cầu lưu trữ.', lang: 'Tiếng Việt', order: 3, status: 'active', createdAt: '20/03/2026', createdBy: 'Admin User', updatedAt: '08/07/2026', updatedBy: 'Nguyễn Văn An' },
   ]; }
   FAQ_CATS() { return [
+    { id: 901, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', order: 9, count: 0, lang: 'Tiếng Việt', status: 'active', createdAt: '27/10/2026', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedAt: '27/10/2026', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
     { id: 1, name: 'Thanh toán cước', order: 1, count: 4, lang: 'Tiếng Việt', status: 'active', createdAt: '01/01/2026', createdBy: 'Admin User', updatedAt: '18/05/2026', updatedBy: 'Nguyễn Văn An' },
     { id: 2, name: 'Khắc phục sự cố', order: 2, count: 4, lang: 'Tiếng Việt', status: 'active', createdAt: '01/01/2026', createdBy: 'Admin User', updatedAt: '11/04/2026', updatedBy: 'Trần Thị Bích' },
     { id: 3, name: 'Chính sách & Thủ tục', order: 3, count: 3, lang: 'Tiếng Việt', status: 'active', createdAt: '05/01/2026', createdBy: 'Lê Minh Hoàng', updatedAt: '22/06/2026', updatedBy: 'Phạm Thu Hà' },
@@ -4456,6 +4565,7 @@ class Component extends DCLogic {
     ];
   }
   BADGE_TAGS() { return [
+    { id: 'bdg-qc-extreme', name: 'SIÊU ƯU ĐÃI THÁNG 10 – GIẢM SỐC 50%', bgColor: '#7c3aed', textColor: '#ffffff', status: 'active', categories: ['card', 'detail', 'checkout', 'menu'], createdAt: '27/10/2026 09:15', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedAt: '27/10/2026 09:15', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
     { id: 'bdg-hot', name: 'HOT', bgColor: '#ef4444', textColor: '#ffffff', status: 'active', categories: ['card', 'checkout', 'menu'], createdAt: '02/05/2026 09:10', createdBy: 'Admin User', updatedAt: '20/05/2026 13:40', updatedBy: '24092 - Nguyễn' },
     { id: 'bdg-new', name: 'MỚI', bgColor: '#10b981', textColor: '#ffffff', status: 'active', categories: ['card', 'detail', 'menu'], createdAt: '28/04/2026 08:30', createdBy: 'FI-25128', updatedAt: '28/04/2026 08:30', updatedBy: 'FI-25128' },
     { id: 'bdg-suggest', name: 'ĐỀ XUẤT', bgColor: '#3b82f6', textColor: '#ffffff', status: 'active', categories: ['card', 'checkout'], createdAt: '18/05/2026 15:30', createdBy: '24092 - Nguyễn', updatedAt: '18/05/2026 15:30', updatedBy: '24092 - Nguyễn' },
@@ -4547,6 +4657,7 @@ class Component extends DCLogic {
   }
   LDP_LIST() {
     return this.state.ldpListData || [
+      { id: 8, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', tplId: 'internet', tplLabel: 'LDP Internet', goal: 'Sự kiện / Branding', lv1: 'khuyen-mai', l2: 'qc-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', url: '/khuyen-mai/qc-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', startDate: '01/10/26', endDate: '31/12/26', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/26', lastEdit: '27/10/26', lastEditBy: 'Nguyễn Thị Thùy Linh Phương Anh', status: 'publish', bcLv1: 'Lắp mạng internet', bcLv2: 'Internet gia đình' },
       { id: 1, name: 'Khuyến mãi Internet Tháng 5', tplId: 'internet', tplLabel: 'LDP Internet',         goal: 'Lead Gen',           lv1: 'khuyen-mai',           l2: 'internet-thang-5', url: '/khuyen-mai/internet-thang-5',           startDate: '01/05/26', endDate: '31/05/26', createdBy: 'Hà Linh', createdAt: '28/04/26', lastEdit: '18/05/26', lastEditBy: 'Hà Linh', status: 'publish', bcLv1: 'Lắp mạng internet', bcLv2: 'Internet gia đình' },
       { id: 2, name: 'Sự kiện FPT Play 2026',       tplId: 'sa',       tplLabel: 'LDP SA',               goal: 'Sự kiện / Branding', lv1: 'su-kien',               l2: 'fpt-play-2026',    url: '/su-kien/fpt-play-2026',                  startDate: '01/01/26', endDate: '31/01/26', createdBy: 'Minh Tú', createdAt: '18/12/25', lastEdit: '28/01/26', lastEditBy: 'Minh Tú', status: 'expired', bcLv1: 'Sự kiện', bcLv2: 'FPT Play 2026' },
       { id: 3, name: 'Camera AI Tháng 6',           tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-thang-6', url: '/thiet-bi-thong-minh/camera-ai-thang-6', startDate: '01/06/26', endDate: '30/06/26', createdBy: 'Admin User', createdAt: '19/05/26', lastEdit: '02/06/26', lastEditBy: 'Admin',   status: 'publish', bcLv1: 'Camera an ninh', bcLv2: 'Camera AI' },
@@ -4883,6 +4994,9 @@ class Component extends DCLogic {
   // URL loại Trang thường (cấp 1 + toàn bộ cấp 2 con) do Quản lý Trang đồng bộ sang → slug / trạng thái CHỈ ĐỌC ở module này (urlIsLocked).
   // Riêng URL cấp 1 vẫn mở editor để đổi "Thuộc loại" (có modal xác nhận); URL cấp 2 theo loại cấp 1 nên không có gì để sửa.
   URL_SEED() { return [
+    { id: 'u901', level: 1, slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026', type: 'page', pid: null, createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
+    { id: 'u902', level: 2, slug: 'dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', pid: 'u901', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
+    { id: 'u903', level: 2, slug: 'qc-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', pid: 'u14', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
     // ── Trang thường (đồng bộ từ "Mã code (Slug)" của Quản lý Trang) ──
     { id: 'u1',  level: 1, slug: 'truyen-hinh-fpt-play', type: 'page', pid: null, createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
     { id: 'u2',  level: 2, slug: 'detail',               pid: 'u1',                createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
@@ -4928,8 +5042,23 @@ class Component extends DCLogic {
     return h(DS.Badge, { theme: t === 'ldp' ? 'brand' : t === 'page' ? 'info' : 'neutral' }, this.urlTypeLabel(t));
   }
   // Bản nháp mặc định của form "Tạo URL": mode 'existing' = chọn URL cấp 1 có sẵn (pid) + nhập URL cấp 2 (slug2, bắt buộc);
-  // mode 'new' = nhập URL cấp 1 mới (slug1) + URL cấp 2 tuỳ chọn (slug2). type chỉ dùng khi tạo URL cấp 1 mới; mặc định để trống.
-  urlNewDraft() { return { level: 0, mode: 'existing', pid: '', slug1: '', slug2: '', type: '', active: true }; }
+  // mode 'new' = nhập URL cấp 1 mới (slug1) + URL cấp 2 tuỳ chọn (slug2). URL tạo tại module này luôn là Landing Page (Trang thường chỉ được đồng bộ từ Quản lý Trang).
+  urlNewDraft() { return { level: 0, mode: 'existing', pid: '', slug1: '', slug2: '', type: 'ldp', active: true, utm: {} }; }
+  // 5 tham số UTM chính của URL (lưu ở bản ghi URL dạng { source, medium, campaign, term, content }, khoá nào trống thì bỏ).
+  URL_UTM_KEYS() {
+    return [
+      { key: 'source', param: 'utm_source', label: 'UTM Source', placeholder: 'VD: facebook', hint: 'Nguồn lưu lượng truy cập (facebook, google, email…).' },
+      { key: 'medium', param: 'utm_medium', label: 'UTM Medium', placeholder: 'VD: cpc', hint: 'Phương tiện / kênh (cpc, banner, email, social…).' },
+      { key: 'campaign', param: 'utm_campaign', label: 'UTM Campaign', placeholder: 'VD: khuyen-mai-thang-11', hint: 'Tên chiến dịch.' },
+      { key: 'term', param: 'utm_term', label: 'UTM Term', placeholder: 'VD: internet-fpt', hint: 'Từ khóa trả phí (nếu có).' },
+      { key: 'content', param: 'utm_content', label: 'UTM Content', placeholder: 'VD: banner-a', hint: 'Phân biệt nội dung / biến thể quảng cáo.' },
+    ];
+  }
+  // Giá trị UTM đi vào query string nên cấm khoảng trắng và ký tự đặc biệt (& = ? # " ' ` < > \ /).
+  URL_UTM_RE() { return /^[A-Za-z0-9._~%+-]*$/; }
+  urlUtmQuery(utm) {
+    return this.URL_UTM_KEYS().filter(k => utm && utm[k.key]).map(k => k.param + '=' + utm[k.key]).join('&');
+  }
   URL_SLUG_RE() { return /^[a-z0-9]+(?:-[a-z0-9]+)*$/; }
   // Quyền "Thay đổi" module Quản lý URL của vai trò đang đăng nhập (ma trận Phân quyền tính năng). Không có quyền → chỉ xem: ẩn Tạo/Sửa.
   urlCanEdit() { return this.rbacPerm('Quản lý URL', this.state.currentRole || 'Super Admin').edit; }
@@ -5075,11 +5204,11 @@ class Component extends DCLogic {
   }
   openUrlEditor(r) {
     if (!this.urlCanEdit()) { this.toast('warning', 'Không có quyền chỉnh sửa', 'Tài khoản của bạn chỉ được xem Quản lý URL. Liên hệ Super Admin để được cấp quyền "Thay đổi".'); return; }
-    // URL Trang thường vẫn mở được editor: cấp 1 chỉ đổi được "Thuộc loại" (slug khoá); cấp 2 mở ở chế độ chỉ xem (renderUrlEditor → viewOnly).
+    // URL Trang thường (đồng bộ từ Quản lý Trang) mở editor ở chế độ chỉ xem (renderUrlEditor → viewOnly).
     this.setState({
       urlEditor: r || null, urlTried: false,
-      // Tạo mới: chọn "Có sẵn" / "Tạo mới" (urlNewDraft), Thuộc loại để trống — người dùng phân loại sau khi chỉnh sửa URL.
-      urlDraft: r ? { level: r.level, slug: r.slug, type: r.level === 1 ? this.urlTypeOf(r) : '', pid: r.pid || '', active: this.urlIsActive(r) } : this.urlNewDraft(),
+      // Tạo mới: chọn "Có sẵn" / "Tạo mới" (urlNewDraft), Thuộc loại mặc định Landing Page. Sửa: loại giữ nguyên, không đổi được.
+      urlDraft: r ? { level: r.level, slug: r.slug, type: r.level === 1 ? this.urlTypeOf(r) : '', pid: r.pid || '', active: this.urlIsActive(r), utm: { ...(r.utm || {}) } } : this.urlNewDraft(),
     });
   }
   // Bật/tắt nhanh ở cột "Hoạt động" của bảng. Không đổi ngày chỉnh sửa (tránh nhóm cấp 1 tự nhảy lên đầu bảng khi bấm công tắc).
@@ -5134,10 +5263,13 @@ class Component extends DCLogic {
     const nextId = () => 'u' + (next.reduce((m, n) => Math.max(m, parseInt(String(n.id).slice(1), 10) || 0), 0) + 1);
     const created = [];
     let saved;
+    // UTM gắn với URL đích cuối cùng của lần lưu (URL cấp 2 nếu có, ngược lại URL cấp 1); chỉ giữ khoá có giá trị.
+    const utm = {};
+    this.URL_UTM_KEYS().forEach(k => { const v = String((d.utm || {})[k.key] || '').trim(); if (v) utm[k.key] = v; });
     if (!r) {
       let parent;
       if (d.mode === 'new') {
-        parent = { id: nextId(), level: 1, slug: s1, type: d.type || '', pid: null, active: d.active !== false, createdBy: by, createdAt: now, updatedBy: by, updatedAt: now };
+        parent = { id: nextId(), level: 1, slug: s1, type: 'ldp', pid: null, active: d.active !== false, createdBy: by, createdAt: now, updatedBy: by, updatedAt: now };
         next.push(parent); created.push(parent);
       } else {
         parent = next.find(n => n.id === d.pid);
@@ -5148,11 +5280,12 @@ class Component extends DCLogic {
         touch(parent.id);
       }
       saved = created[created.length - 1];
+      if (saved) saved.utm = utm;
     } else {
       saved = next.find(x => x.id === r.id);
       const oldPid = saved.pid;
-      saved.updatedAt = now; saved.updatedBy = by; saved.active = d.active !== false;
-      if (r.level === 1) { saved.slug = s1; saved.type = d.type || ''; }
+      saved.updatedAt = now; saved.updatedBy = by; saved.active = d.active !== false; saved.utm = utm;
+      if (r.level === 1) { saved.slug = s1; }   // Thuộc loại không đổi được khi sửa
       else { saved.slug = s2; saved.pid = d.pid; touch(d.pid); if (oldPid) touch(oldPid); }
     }
     const res = this.urlCommit(all, next, { urlEditor: undefined, urlDraft: undefined, urlTried: false });
@@ -5221,14 +5354,14 @@ class Component extends DCLogic {
               onChange: v => this.urlSetActive(r.id, v) }));
         } },
       { key: 'act', header: 'Thao tác', width: 60, align: 'right', render: (_, r) => {
-          // URL Trang thường (đồng bộ từ Quản lý Trang): cấp 1 vào editor để đổi "Thuộc loại" (slug vẫn khoá); cấp 2 vẫn là nút Sửa nhưng editor mở ở chế độ chỉ xem (mọi ô disabled, không có nút Lưu).
+          // URL Trang thường (đồng bộ từ Quản lý Trang): vẫn là nút Sửa nhưng editor mở ở chế độ chỉ xem (mọi ô disabled, không có nút Lưu).
           if (!canEdit) {
             const lockMsg = 'Bạn không có quyền chỉnh sửa';
             return h('div', { title: lockMsg, style: { display: 'flex', justifyContent: 'flex-end' } },
               h(DS.IconButton, { icon: 'lock-01-line', label: lockMsg, title: lockMsg, level: 'tertiary', size: 'sm', disabled: true }));
           }
           const locked = this.urlIsLocked(r, all);
-          return this.rowActions([{ icon: 'edit-01-line', label: locked && r.level === 1 ? 'Đổi loại URL' : 'Sửa', onClick: () => this.openUrlEditor(r) }]);
+          return this.rowActions([{ icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openUrlEditor(r) }]);
         } },
     ];
     const typeLabel = { page: 'Trang thường', ldp: 'Landing Page', none: 'Chưa phân loại' };
@@ -5295,6 +5428,10 @@ class Component extends DCLogic {
             mono('└─ ' + c.slug), this.statusBadge(this.urlIsActive(c) ? 'active' : 'inactive'))))
         : h('span', { style: { fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Trống — chưa có URL cấp 2')));
     }
+    const utmSet = this.URL_UTM_KEYS().filter(k => r.utm && r.utm[k.key]);
+    rows.push(this.detailRow('Tham số UTM', utmSet.length
+      ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, utmSet.map(k => h('div', { key: k.key }, h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 12 } }, k.param + ' = '), mono(r.utm[k.key]))))
+      : h('span', { style: { fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Chưa cấu hình')));
     rows.push(this.detailRow('Đang dùng bởi', usage.length
       ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, usage.map((u, i) => h('div', { key: i }, this.urlUsageLabel(u))))
       : h('span', { style: { fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, (r.level === 1 && kids.length) ? '—' : 'Chưa sử dụng')));
@@ -5303,9 +5440,9 @@ class Component extends DCLogic {
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } }, rows),
       footer: () => h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-end' } },
         locked ? h('span', { style: { flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-subtle)' } },
-          h(DS.Icon, { name: 'lock-01-line', size: 14, style: { flexShrink: 0 } }), r.level === 1 ? 'Đồng bộ từ Quản lý Trang — tại đây chỉ đổi được Thuộc loại' : 'Đồng bộ từ Quản lý Trang — chỉ xem, muốn đổi loại hãy chỉnh sửa URL cấp 1 cha') : null,
+          h(DS.Icon, { name: 'lock-01-line', size: 14, style: { flexShrink: 0 } }), 'Đồng bộ từ Quản lý Trang — chỉ xem, muốn đổi hãy chỉnh sửa ở Quản lý Trang') : null,
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
-        this.urlCanEdit() ? h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openUrlEditor(r); } }, 'Chỉnh sửa') : null
+        this.urlCanEdit() && !locked ? h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openUrlEditor(r); } }, 'Chỉnh sửa') : null
       )
     });
   }
@@ -5321,10 +5458,10 @@ class Component extends DCLogic {
     const usedBy = r ? this.urlUsageDeep(r, all) : [];
     // Đang có LDP "Đang chạy" dùng URL này → khoá slug / nhánh cha như ô URL Slug ở Quản lý LDP (đổi sẽ làm đổi đường dẫn trang đang chạy).
     const liveLdp = usedBy.find(u => u.kind === 'ldp' && u.status === 'publish');
-    // URL cấp 1 Trang thường (đồng bộ từ Quản lý Trang): slug + trạng thái chỉ đọc, chỉ đổi được "Thuộc loại" (qua modal xác nhận).
+    // URL Trang thường (đồng bộ từ Quản lý Trang, cấp 1 lẫn cấp 2): Thuộc loại không đổi được sang Landing Page nên không còn gì để sửa tại đây
+    // → editor mở ở chế độ chỉ xem (mọi ô disabled, không có nút Lưu).
     const slugLocked = !isNew && this.urlIsLocked(r, all);
-    // URL cấp 2 của Trang thường: loại theo URL cấp 1 cha nên không có gì để sửa → editor mở ở chế độ chỉ xem (mọi ô disabled, không có nút Lưu).
-    const viewOnly = slugLocked && r.level === 2;
+    const viewOnly = slugLocked;
     const mono = { fontFamily: 'var(--font-dev)' };
     const req = t => h(React.Fragment, null, t, h('span', { style: { color: 'var(--color-danger)' } }, ' *'));
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
@@ -5368,8 +5505,12 @@ class Component extends DCLogic {
       else if (!this.URL_SLUG_RE().test(s2)) errs.slug2 = SLUG_FMT_MSG;
       else if (!lv1AsInput && d.pid && all.some(n => n.level === 2 && n.pid === d.pid && (!r || n.id !== r.id) && n.slug === s2)) errs.slug2 = 'URL cấp 2 "' + s2 + '" đã tồn tại trong nhánh "' + (parent ? parent.slug : '') + '". Vui lòng nhập slug khác.';
     }
+    // UTM (không bắt buộc): chỉ kiểm ký tự hợp lệ vì giá trị đi vào query string.
+    const utmDef = this.URL_UTM_KEYS();
+    const utmVal = k => String((d.utm || {})[k] || '');
+    utmDef.forEach(u => { if (!this.URL_UTM_RE().test(utmVal(u.key))) errs['utm_' + u.key] = 'Chỉ dùng chữ, số và các ký tự . _ ~ % + - (không có khoảng trắng hoặc & = ? # / ").'; });
     // Lỗi định dạng / trùng hiện ngay khi gõ; lỗi "bắt buộc" + ô chọn chỉ hiện sau khi bấm Lưu.
-    const showErr = k => !!errs[k] && (tried || ((k === 'slug1' || k === 'slug2') && errs[k] !== FPT_REQ_MSG));
+    const showErr = k => !!errs[k] && (tried || ((k === 'slug1' || k === 'slug2' || k.indexOf('utm_') === 0) && errs[k] !== FPT_REQ_MSG));
     const errAttr = k => ({ 'data-url-err': showErr(k) ? '1' : undefined });
 
     // DS.Segmented chưa có prop disabled: khoá bằng style + bỏ qua onChange (phím Enter vẫn bấm được nút bên trong).
@@ -5386,9 +5527,9 @@ class Component extends DCLogic {
     const slugInput = (key, errKey, placeholder, prefix) => h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
       prefixBox(prefix),
       h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { value: d[key] || '', disabled: !!liveLdp || slugLocked, placeholder, error: showErr(errKey) ? errs[errKey] : undefined, onChange: e => setD({ [key]: this.ldpSlugify(e && e.target ? e.target.value : e) }) })));
-    // Danh sách URL cấp 1 có sẵn: tạo mới → mọi URL cấp 1. Sửa URL cấp 2 → chỉ các URL cấp 1 cùng loại với cha hiện tại để không vô tình đổi loại.
+    // Danh sách URL cấp 1 có sẵn: tạo mới → chỉ URL cấp 1 Landing Page (URL tạo tại đây luôn là Landing Page). Sửa URL cấp 2 → chỉ các URL cấp 1 cùng loại với cha hiện tại để không vô tình đổi loại.
     const origParent = (!isNew && r.level === 2) ? this.urlNode(r.pid, all) : null;
-    const parentPool = all.filter(n => n.level === 1 && (isNew || this.urlTypeOf(n, all) === this.urlTypeOf(origParent, all)))
+    const parentPool = all.filter(n => n.level === 1 && this.urlTypeOf(n, all) === (isNew ? 'ldp' : this.urlTypeOf(origParent, all)))
       .sort((a, b) => a.slug.localeCompare(b.slug));
     const parentOpts = parentPool.map(n => ({ value: n.id, label: h('span', { style: mono }, n.slug), searchText: n.slug }));
     const lv1Field = lv1AsInput
@@ -5408,72 +5549,31 @@ class Component extends DCLogic {
       ? h('div', { key: 'lv2', ...errAttr('slug2') }, this.field(lv2Label, slugInput(k2, 'slug2', 'VD: detail', '/')))
       : null;
 
-    // ── Thuộc loại (trường cuối): Trang thường / Landing Page, mặc định để trống — phân loại sau bằng cách chỉnh sửa URL.
-    //    Chỉ gán được khi đang tạo / sửa URL cấp 1; URL cấp 2 luôn theo URL cấp 1 đã chọn (cấp 2 không có loại riêng). ──
-    const origType = r && r.level === 1 ? this.urlTypeOf(r, all) : null;
-    const typeDirty = !isNew && lv1AsInput && (d.type || '') !== origType;
-    const typeEditable = lv1AsInput;
-    // URL cấp 1 đã phân loại (Trang thường / Landing Page) vẫn đổi được loại, nhưng phải qua modal xác nhận trước khi nhận giá trị mới vào form.
-    // Chưa phân loại → chọn lần đầu, hoặc đang tạo mới, hoặc quay về đúng loại gốc → nhận luôn, không hỏi.
-    const askChangeType = v => {
-      if (v === (d.type || '')) return;
-      if (isNew || !origType || v === origType) { setD({ type: v }); return; }
-      const stLabel = { publish: 'Đang chạy', hidden: 'Tạm ẩn', draft: 'Nháp', expired: 'Hết hạn', scheduled: 'Đặt lịch', pending: 'Chờ duyệt' };
-      const MAXROW = 6;
-      const from = d.type || '', fromLabel = this.urlTypeLabel(from), toLabel = this.urlTypeLabel(v);
-      const effect = {
-        'page>ldp': 'URL sẽ thôi là URL Trang thường (đồng bộ từ Quản lý Trang) và trở thành URL Landing Page, được chọn ở ô URL Slug của Quản lý Landing Page.',
-        'ldp>page': 'URL sẽ trở thành URL Trang thường (đồng bộ từ Quản lý Trang, chỉ đọc) và không còn xuất hiện ở ô URL Slug của Quản lý Landing Page.',
-      }[from + '>' + v] || '';
-      this.openModal({
-        title: 'Xác nhận đổi loại URL',
-        description: 'Bạn đang đổi loại của URL "fpt.vn/' + this.urlFull(r, all) + '" từ "' + fromLabel + '" sang "' + toLabel + '"' + (children.length ? ' (áp dụng cho cả ' + children.length + ' URL cấp 2 bên dưới)' : '') + '.',
-        render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-          h(DS.Alert, { theme: 'warning', title: usedBy.length ? 'Việc đổi loại có thể ảnh hưởng đến nội dung đang dùng URL này' : 'Việc đổi loại sẽ thay đổi cách URL này được sử dụng', style: { borderRadius: 10 } },
-            effect + (usedBy.length ? ' Các nội dung đang dùng URL bên dưới có thể bị ảnh hưởng.' : '') + ' Thay đổi chỉ có hiệu lực sau khi bạn bấm "Lưu URL".'),
-          liveLdp ? h(DS.Alert, { theme: 'danger', title: 'Có Landing Page đang chạy', style: { borderRadius: 10 } },
-            'Landing Page "' + liveLdp.name + '" đang chạy cho người dùng cuối. Đổi loại có thể ảnh hưởng đến đường dẫn đang chạy này.') : null,
-          usedBy.length ? h('div', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Đang được sử dụng bởi (' + usedBy.length + ')') : null,
-          usedBy.length ? h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
-            usedBy.slice(0, MAXROW).map((u, i, arr) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: (i < arr.length - 1 || usedBy.length > MAXROW) ? '1px solid var(--color-border-pale)' : 'none', fontSize: 13 } },
-              h(DS.Badge, { theme: 'neutral', style: { flexShrink: 0 } }, u.kind === 'ldp' ? 'LDP' : 'Trang'),
-              h('span', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 } }, u.name),
-              u.kind === 'ldp' ? h('span', { style: { fontSize: 12, flexShrink: 0, color: u.status === 'publish' ? 'var(--color-success-text)' : 'var(--color-text-subtle)' } }, stLabel[u.status] || u.status) : null)),
-            usedBy.length > MAXROW ? h('div', { style: { padding: '8px 12px', fontSize: 12, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, '+ ' + (usedBy.length - MAXROW) + ' bản ghi khác') : null) : null,
-          h('div', { style: { fontSize: 13.5, fontWeight: 600 } }, 'Bạn có chắc chắn muốn đổi loại URL này không?'),
-          // Modal cảnh báo nghiêm trọng (CLAUDE.md §17): cụm nút căn phải, nút chính (phá hoại) đứng TRƯỚC (bên trái cụm), "Hủy" sau.
-          h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 } },
-            h(DS.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { setD({ type: v }); this.closeModal(); } }, 'Vẫn đổi loại'),
-            h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy')))
-      });
-    };
-    // Radio có viền: cả khung là <label> của DS.Radio (bấm đâu cũng chọn, chỉ 1 onChange nên modal xác nhận không mở 2 lần). Chưa phân loại → chưa khung nào sáng.
-    const effTypeVal = typeEditable ? (d.type || '') : parentType;
+    // ── Thuộc loại: Trang thường / Landing Page. KHÔNG đổi được:
+    //    • Tạo mới: mặc định Landing Page, "Trang thường" bị khoá (URL Trang thường chỉ được đồng bộ từ Quản lý Trang).
+    //    • Sửa: cả 2 lựa chọn bị khoá. URL Trang thường đồng bộ từ Quản lý Trang không chuyển được sang Landing Page.
+    //    URL cấp 2 luôn theo URL cấp 1 (cấp 2 không có loại riêng). ──
+    // Loại hiệu lực: tạo mới → luôn Landing Page; sửa URL cấp 1 → loại đã lưu; sửa URL cấp 2 → loại của URL cấp 1 cha.
+    const effTypeVal = isNew ? 'ldp' : (r.level === 1 ? this.urlTypeOf(r, all) : parentType);
+    // Radio có viền: cả khung là <label> của DS.Radio (bấm đâu cũng chọn). Tạo mới: chỉ "Trang thường" bị khoá · Sửa: cả hai bị khoá (đổi onChange thành no-op vì loại không đổi được).
     const typeRadio = (val, title) => {
       const on = effTypeVal === val;
-      return h(DS.Radio, { key: val, name: 'urlType', label: title, checked: on, disabled: !typeEditable, onChange: () => askChangeType(val),
+      return h(DS.Radio, { key: val, name: 'urlType', label: title, checked: on, disabled: !isNew || val === 'page', onChange: () => {},
         style: { display: 'flex', padding: '12px 16px', borderRadius: 10, border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-border)'),
           background: on ? 'var(--color-accent-bg)' : 'var(--color-surface)', boxShadow: on ? '0 0 0 1px var(--color-accent)' : 'none',
           transition: 'border-color var(--dur-fast), background var(--dur-fast), box-shadow var(--dur-fast)' } });
     };
     const typeRadios = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, maxWidth: 560 } },
       typeRadio('page', 'Trang thường'), typeRadio('ldp', 'Landing Page'));
-    const typeNote = typeEditable
-      ? (typeDirty
-          ? { msg: 'Loại sẽ đổi từ "' + this.urlTypeLabel(origType) + '" sang "' + this.urlTypeLabel(d.type || '') + '" khi bạn bấm "Lưu URL".', color: 'var(--color-warning-text)' }
-          : (!d.type ? { msg: 'Có thể để trống — bạn phân loại sau bằng cách chỉnh sửa URL này.' }
-            : (children.length ? { msg: 'Loại này áp dụng cho cả ' + children.length + ' URL cấp 2 bên dưới.' } : null)))
-      : null;
+    const typeNote = isNew
+      ? 'URL tạo tại Quản lý URL luôn là Landing Page. URL Trang thường được đồng bộ tự động từ Quản lý Trang.'
+      : (effTypeVal === 'page'
+          ? 'URL Trang thường được đồng bộ từ Quản lý Trang nên không đổi sang Landing Page được.'
+          : 'Không thể đổi phân loại khi chỉnh sửa' + (children.length ? ' — loại này áp dụng cho cả ' + children.length + ' URL cấp 2 bên dưới.' : '.'));
     const typeField = h('div', { key: 'type' }, this.field('Thuộc loại',
       h('div', null,
         typeRadios,
-        typeNote ? h('div', { style: { fontSize: 12, color: typeNote.color || 'var(--color-text-subtle)', marginTop: 8 } }, typeNote.msg) : null)));
-    // Đang sửa / xem URL Trang thường đã lưu (slugLocked): không hiện khung gợi ý (người dùng đã yêu cầu bỏ thanh giải thích khoá) — ô slug disabled + tiêu đề tự nói lên.
-    const pageHint = !slugLocked && (typeEditable ? d.type === 'page' : parentType === 'page')
-      ? h('div', { key: 'typePage' }, hintBox(typeEditable
-          ? 'Trang thường — URL của nhánh này được đồng bộ từ "Mã code (Slug)" của Quản lý Trang, nên sau khi lưu chỉ còn đổi được "Thuộc loại" tại Quản lý URL (muốn đổi slug, hãy sửa ở Quản lý Trang).'
-          : 'URL cấp 1 này thuộc Trang thường (đồng bộ từ Quản lý Trang) nên URL cấp 2 mới tạo cũng là Trang thường — sau khi lưu sẽ không chỉnh sửa được; muốn đổi loại, hãy đổi ở URL cấp 1.'))
-      : null;
+        h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 8 } }, typeNote))));
 
     // ── Xem trước URL sẽ tạo ──
     // Chỉ tô đoạn thuộc cấp đang tạo / sửa: cấp 1 = màu thương hiệu (cam), cấp 2 = xanh info; đoạn còn lại giữ màu chữ thường (VD URL cấp 2: cấp 1 là URL cha có sẵn → không tô).
@@ -5503,12 +5603,29 @@ class Component extends DCLogic {
           showLv2Seg ? h(DS.Badge, { theme: 'info' }, 'Cấp 2') : null))
     ));
     sections.push(section(2, 'folder-line', 'Phân loại',
-      typeField,
-      pageHint
+      typeField
+    ));
+
+    // ── 3. UTM: đứng trước "Danh sách URL con" (ưu tiên cao hơn). 5 tham số chính, đều tuỳ chọn; có xem trước URL kèm query. ──
+    const utmPath = (s1 || '…') + (showLv2Seg ? '/' + (s2 || '…') : '');
+    const utmQuery = this.urlUtmQuery(d.utm);
+    const utmCell = u => h('div', { key: u.key, ...errAttr('utm_' + u.key) }, this.field(u.label,
+      h('div', null,
+        h(DS.Input, { value: utmVal(u.key), placeholder: u.placeholder, disabled: viewOnly,
+          error: showErr('utm_' + u.key) ? errs['utm_' + u.key] : undefined,
+          onChange: e => setD({ utm: { ...(d.utm || {}), [u.key]: (e && e.target ? e.target.value : e) } }) }),
+        showErr('utm_' + u.key) ? null : h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 4 } }, u.hint))));
+    sections.push(section(3, 'bar-chart-square-02-line', 'Tham số UTM',
+      h('div', { key: 'utmgrid', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 } }, utmDef.map(utmCell)),
+      h('div', { key: 'utmprev', style: { display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 12px', borderRadius: 8, background: 'var(--color-surface-alt)' } },
+        h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', flexShrink: 0, paddingTop: 1 } }, 'URL kèm UTM:'),
+        h('span', { style: { ...mono, flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, wordBreak: 'break-all' } },
+          h('span', { style: sepSt }, 'fpt.vn/'), h('span', { style: { color: 'var(--color-text)' } }, utmPath),
+          utmQuery ? h('span', { style: { color: 'var(--color-info-text)' } }, '?' + utmQuery) : h('span', { style: { ...sepSt, fontWeight: 400, fontStyle: 'italic' } }, '  (chưa nhập tham số UTM nào)')))
     ));
 
     if (!isNew && r.level === 1) {
-      sections.push(section(3, 'menu-01-line', 'Danh sách URL con',
+      sections.push(section(4, 'menu-01-line', 'Danh sách URL con',
         children.length === 0
           ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10, lineHeight: 1.6 } },
               'Chưa có URL con nào.', h('br'), 'URL cấp 2 sẽ được thêm vào đây khi bạn tạo URL mới, chọn "Có sẵn" và chọn URL cấp 1 này.')
@@ -5527,7 +5644,7 @@ class Component extends DCLogic {
     }
 
     // Trạng thái hoạt động: thanh nổi bật đứng đầu form, ngoài mọi thẻ (CLAUDE.md §10). Loại hiệu lực của URL cấp 2 theo URL cấp 1 cha.
-    const effType = typeEditable ? (d.type || '') : parentType;
+    const effType = effTypeVal;
     const statusBar = h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
       h('div', null,
         h('div', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
@@ -7103,8 +7220,10 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.menuSearch || '').toLowerCase();
     const statusF = this.state.menuStatusFilter || 'all';
+    const posF = this.state.menuPosFilter || 'all';
     const all = this.MENU();
     const data = all.filter(m => {
+      if (posF !== 'all' && m.pos !== posF) return false;
       if (q && !(m.name.toLowerCase().includes(q) || (m.url || '').toLowerCase().includes(q))) return false;
       if (statusF !== 'all' && m.status !== statusF) return false;
       return true;
@@ -7139,6 +7258,7 @@ class Component extends DCLogic {
       { key: 'name',   header: 'Tên menu',             render: (_, r) => treeCell(r) },
       { key: 'type',   header: 'Loại',     width: 110, render: (_, r) => typeBadge(r.type) },
       { key: 'url',    header: 'Link URL',             render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-text-subtle)' }, title: r.url }, r.url && r.url !== '—' ? (r.url.length > 38 ? r.url.slice(0, 38) + '…' : r.url) : '—') },
+      { key: 'pos',    header: 'Vị trí',   width: 100, render: (_, r) => h(DS.Badge, { theme: r.pos === 'Footer' ? 'neutral' : 'brand' }, r.pos || '—') },
       { key: 'target', header: 'Target',   width: 90,  align: 'center', render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: r.target === '_blank' ? 'var(--color-warning-text)' : 'var(--color-text-muted)' } }, r.target) },
       ...this.auditCols({ createdKey: 'date' }),
       { key: 'active', header: 'Hoạt động', width: 64,  align: 'center', render: (_, r) => {
@@ -7159,6 +7279,11 @@ class Component extends DCLogic {
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
           this.search('Tìm theo tên / URL…', 'menuSearch'),
+          h('div', { style: { width: 160, flexShrink: 0 } }, h(DS.Select, {
+            options: [{ value: 'all', label: 'Tất cả vị trí' }, { value: 'Header', label: 'Header' }, { value: 'Footer', label: 'Footer' }],
+            value: posF,
+            onChange: v => this.setState({ menuPosFilter: v, menu_pg: 1 })
+          })),
           h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
             options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }],
             value: statusF,
@@ -7467,8 +7592,8 @@ class Component extends DCLogic {
       { key: 'link', header: 'Link URL', width: 190, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-subtle)' } }, r.link) },
       { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, whiteSpace: 'nowrap' } }, r.period) },
       { key: 'order', header: 'Thứ tự', width: 72, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
-      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', width: 110, render: (_, r) => this.statusBadge(this.effStatus(this.state.bannerActiveMap, r, 'active')) },
+      ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
           const isOn = this.effStatus(this.state.bannerActiveMap, r, 'active') !== 'hidden';
@@ -7573,8 +7698,8 @@ class Component extends DCLogic {
       { key: 'name', header: 'Tên Popup', width: 200, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
       { key: 'type', header: 'Trang áp dụng', width: 190, render: (_, r) => this.popupTypeCell(r) },
       { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, r.period) },
-      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', width: 120, render: (_, r) => this.statusBadge(this.effStatus(this.state.popupActiveMap, r, 'running')) },
+      ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
           const isOn = this.effStatus(this.state.popupActiveMap, r, 'running') !== 'hidden';
@@ -7787,9 +7912,9 @@ class Component extends DCLogic {
           h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(sku.code) })
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 1 } },
             h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(sku.code).name || '—'),
-            h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
+            h('span', { style: { flexShrink: 0, whiteSpace: 'nowrap', fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
           ),
           h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(sku.code).route || '—')
         )
@@ -7842,7 +7967,10 @@ class Component extends DCLogic {
     const frequency = this.state.popupEditorFrequency !== undefined ? this.state.popupEditorFrequency : (r ? r.frequency : '');
     const selectedPages = this.state.popupEditorPages || (r && r.pages) || [];
     const selectedPkgs = this.state.popupEditorPkgs || (r && r.pkgs) || [];
-    const setPkgUrl = (code, url) => this.setState(sv => ({ popupEditorPkgs: (sv.popupEditorPkgs || []).map(p => p.code === code ? { ...p, url } : p) }));
+    const setPkgUrl = (code, url) => this.setState(sv => ({ popupEditorPkgs: (sv.popupEditorPkgs || selectedPkgs).map(p => p.code === code ? { ...p, url } : p) }));
+    // Tick "Dùng link mặc định" (mặc định) → ô URL khoá, giữ link route name của gói; bỏ tick → nhập link riêng. Bản ghi cũ chưa có cờ auto: coi là mặc định nếu url trùng link mặc định.
+    const pkgIsAuto = p => p.auto !== undefined ? !!p.auto : (p.url || '') === this.popupPkgDefaultUrl(p.code);
+    const setPkgAuto = (code, auto) => this.setState(sv => ({ popupEditorPkgs: (sv.popupEditorPkgs || selectedPkgs).map(p => p.code === code ? { ...p, auto, url: auto ? this.popupPkgDefaultUrl(code) : p.url } : p) }));
     const isPkg = type === 'pkg-detail';
     const showPages = type !== 'checkout' && type !== 'pkg-detail';
     const showLink = type !== 'checkout' && type !== 'pkg-detail';
@@ -7891,9 +8019,12 @@ class Component extends DCLogic {
                 ? selectedPkgs.map(p => h('div', { key: p.code, style: { display: 'flex', flexDirection: 'column', gap: 4, padding: 10, border: '1px solid var(--color-border)', borderRadius: 10 } },
                     h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 } },
                       h('span', { style: { fontWeight: 700, fontSize: 12.5, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, this.PKG_SKU_PICKER_LABELS().get(p.code).name || p.code),
-                      h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11, color: 'var(--color-text-subtle)', flexShrink: 0 } }, p.code)
+                      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
+                        h('span', { onClick: () => setPkgAuto(p.code, !pkgIsAuto(p)), style: { fontSize: 12, color: 'var(--color-text-muted)', cursor: 'pointer', userSelect: 'none' } }, 'Dùng link mặc định'),
+                        h(DS.Checkbox, { checked: pkgIsAuto(p), onChange: v => setPkgAuto(p.code, v), 'aria-label': 'Dùng link mặc định' })
+                      )
                     ),
-                    h(FptUrlInput, { value: p.url || '', placeholder: 'VD: /int-lux800-fptvn hoặc https://fpt.vn/...', onChange: e => setPkgUrl(p.code, e && e.target ? e.target.value : e) })
+                    h(FptUrlInput, { value: pkgIsAuto(p) ? this.popupPkgDefaultUrl(p.code) : (p.url || ''), disabled: pkgIsAuto(p), placeholder: 'VD: /int-lux800-fptvn hoặc https://fpt.vn/...', onChange: e => setPkgUrl(p.code, e && e.target ? e.target.value : e) })
                   ))
                 : h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Chưa chọn gói nào. Tick gói ở danh sách bên trái để thêm.')
             )
@@ -8025,6 +8156,7 @@ class Component extends DCLogic {
       { key: 'url', header: 'URL', width: 200, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: 190 } }, r.url || '—') },
       { key: 'period', header: 'Thời gian quảng cáo', width: 190, render: (_, r) => this.adPeriodCell(r) },
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(this.adEffStatus(r)) },
+      ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           if (this.adEffStatus(r) === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
           const isOn = this.adEffStatus(r) !== 'hidden';
@@ -8035,7 +8167,6 @@ class Component extends DCLogic {
             } })
           );
         } },
-      ...this.auditCols(),
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openAdEditor(r) },
       ]) },
@@ -8078,6 +8209,7 @@ class Component extends DCLogic {
       { key: 'type', header: 'Vị trí', width: 200, render: (_, r) => r.type ? h('span', { style: { background: 'var(--color-accent-bg)', color: 'var(--color-accent-text)', padding: '2px 8px', borderRadius: 6, fontSize: 12, fontWeight: 600 } }, this.adTypeLabel(r.type)) : '—' },
       { key: 'count', header: 'Số quảng cáo', width: 110, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, adsAll.filter(a => a.catCode === r.code).length) },
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(r.status === 'inactive' ? 'hidden' : r.status) },
+      ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -8087,7 +8219,6 @@ class Component extends DCLogic {
             } })
           );
         } },
-      ...this.auditCols(),
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ adCatEditor: r, adCatDraft: null }) },
       ]) },
@@ -8581,8 +8712,8 @@ class Component extends DCLogic {
       { key: 'categories', header: 'Phân loại', width: 240, render: (_, r) => categoryCell(r.categories) },
       { key: 'bgColor', header: 'Màu nền', width: 150, render: (_, r) => colorCell(r.bgColor) },
       { key: 'textColor', header: 'Màu chữ', width: 150, render: (_, r) => colorCell(r.textColor) },
-      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', width: 150, render: (_, r) => this.statusBadge(r.status) },
+      ...this.auditCols(),
       { key: 'act', header: 'Thao tác', width: 90, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openBadgeEditor(r) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa Badge/Tag?', 'Badge "' + r.name + '" sẽ bị xóa khỏi thư viện. Nơi đang dùng badge này (Card gói / Trang chi tiết / Check out) sẽ không còn hiển thị tag.', () => {
@@ -8811,8 +8942,8 @@ class Component extends DCLogic {
         r.a ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } }, r.a) : null
       )},
       { key: 'cat', header: 'Danh mục', width: 150, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, r.cat) },
-      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', width: 120, render: (_, r) => this.statusBadge(r.status) },
+      ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -8832,7 +8963,7 @@ class Component extends DCLogic {
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center' } },
           h('div', { style: { width: 200 } },
-            h(DS.Input, { value: this.state.faqSearch || '', onChange: v => this.setState({ faqSearch: v, faqQ_pg: 1 }), placeholder: 'Tìm câu hỏi...', leadingIcon: 'search-medium-line' })
+            h(DS.Input, { value: this.state.faqSearch || '', onChange: e => this.setState({ faqSearch: e && e.target ? e.target.value : (e || ''), faqQ_pg: 1 }), placeholder: 'Tìm câu hỏi...', leadingIcon: 'search-medium-line' })
           ),
           h('div', { style: { width: 220 } },
             h(DS.Select, { value: catF, options: [
@@ -8864,12 +8995,12 @@ class Component extends DCLogic {
     const columns = [
       { key: 'name', header: 'Tên danh mục', width: 260, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
       { key: 'lang', header: 'Ngôn ngữ', width: 110, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.lang || 'Tiếng Việt') },
-      ...this.auditCols(),
       { key: 'count', header: 'Số câu hỏi', width: 100, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
       { key: 'status', header: 'Trạng thái', width: 120, render: (_, r) => {
           const isOn = (this.state.faqCatActiveMap || {})[r.id] !== undefined ? !!(this.state.faqCatActiveMap || {})[r.id] : r.status !== 'inactive';
           return this.statusBadge(isOn ? 'active' : 'inactive');
         } },
+      ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.faqCatActiveMap || {})[r.id] !== undefined ? !!(this.state.faqCatActiveMap || {})[r.id] : r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -8887,7 +9018,7 @@ class Component extends DCLogic {
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center' } },
           h('div', { style: { flex: '1 1 220px', minWidth: 200 } },
-            h(DS.Input, { value: search, onChange: v => this.setState({ faqCatSearch: v, faqCat_pg: 1 }), placeholder: 'Tìm danh mục...', leadingIcon: 'search-medium-line' })
+            h(DS.Input, { value: search, onChange: e => this.setState({ faqCatSearch: e && e.target ? e.target.value : (e || ''), faqCat_pg: 1 }), placeholder: 'Tìm danh mục...', leadingIcon: 'search-medium-line' })
           )
         ),
         h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ faqCatEditor: null }) }, 'Thêm Danh Mục')
@@ -9447,8 +9578,8 @@ class Component extends DCLogic {
           h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-accent)' } }, r.url) },
       { key: 'period', header: 'Thời gian hiệu lực', width: 150, render: (_, r) =>
           h('span', { style: { whiteSpace: 'nowrap', color: 'var(--color-text-muted)' } }, r.startDate + ' – ' + r.endDate) },
-      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', width: 110, render: (_, r) => { const curSt = ldpSt(r.id) || r.status; return stBadge(curSt); } },
+      ...this.auditCols(),
       { key: 'visible', header: 'Hiển thị', width: 64, align: 'center', render: (_, r) => {
           const curSt = ldpSt(r.id) || r.status;
           const isOn = curSt === 'publish';
@@ -13934,9 +14065,9 @@ class Component extends DCLogic {
           h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(sku.code) })
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 1 } },
             h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(sku.code).name || '—'),
-            h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
+            h('span', { style: { flexShrink: 0, whiteSpace: 'nowrap', fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
           ),
           h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(sku.code).route || '—')
         )
@@ -14105,6 +14236,10 @@ class Component extends DCLogic {
   }
   getPayConfigList() { return this.state.payConfigList || this.PAYMENT_CONFIG_LIST_DATA(); }
   PAYMENT_CONFIG_LIST_DATA() {
+    const __base = this.PAYMENT_CONFIG_LIST_DATA_SEED();
+    return [{ ...__base[0], id: 901, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', skus: ['INT-GIGA','INT-SKY','INT-META','INT-LUX500','INT-LUX800','CAM-IQ3','CAM-IQ4S','SA-SMAX','SA-SVIP'], createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' }, ...__base];
+  }
+  PAYMENT_CONFIG_LIST_DATA_SEED() {
     return [
       { id: 1, name: 'Cấu hình 1', applyAll: false, skus: ['INT-GIGA', 'INT-SKY', 'INT-META'],
         methods: { vietqr: { start: '2026-07-01', end: '2026-07-31', descriptions: ['Ưu đãi thanh toán 50K'] }, 'foxpay-atm': { start: '2026-07-01', end: '2026-07-16', descriptions: ['Ưu đãi thanh toán 50K'] }, 'foxpay-token': { start: '2026-07-01', end: '2026-07-16', descriptions: ['Ưu đãi thanh toán 50K'] }, 'zalopay-bank': { start: '2026-07-15', end: '2026-08-14', descriptions: [] }, zalopay: { start: '2026-07-01', end: '2026-07-16', descriptions: ['Ưu đãi thanh toán 50K'] }, 'onepay-apple': { start: '2026-07-15', end: '2026-08-14', descriptions: [] }, cod: { start: '2026-07-15', end: '2026-08-14', descriptions: [] }, momo: { start: '2026-07-15', end: '2026-08-14', descriptions: [] } },
@@ -14234,7 +14369,7 @@ class Component extends DCLogic {
       { key: 'stt', header: 'STT', width: 56, align: 'center',
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (pg - 1) * sz + sliced.indexOf(r) + 1) },
       { key: 'name', header: 'Tên cấu hình', width: 220, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
-      { key: 'skus', header: 'Gói bán', width: 280, render: (_, r) => chipList('neutral', 5, r.skus, r.applyAll ? 'Tất cả gói' : null) },
+      { key: 'skus', header: 'Gói bán', width: 280, render: (_, r) => chipList('neutral', 3, r.skus, r.applyAll ? 'Tất cả gói' : null) },
       ...this.auditCols(),
       { key: 'act', header: 'Thao tác', width: 100, align: 'right', render: (_, r) => this.rowActions([
           { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openPayEditor(r) },
@@ -14262,6 +14397,7 @@ class Component extends DCLogic {
 
   // ===== News (4 tabs) =====
   NEWS_ARTICLES() { return [
+    { id: 901, title: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', cat: 'Tin khuyến mãi', subCat: '', type: 'article', author: 'Nguyễn Thị Thùy Linh Phương Anh', channel: 'fpt-telecom', lang: 'vi', status: 'published', featured: false, views: 12345678, date: '27/10/2026', sapo: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc. Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc.' },
     { id: 1, title: 'Lắp đặt mạng FPT khuyến mãi hè 2026 cực sốc', slug: 'lap-dat-mang-fpt-khuyen-mai-he-2026', cat: 'Tin khuyến mãi', subCat: '', type: 'article', author: 'Admin', channel: 'fpt-telecom', lang: 'vi', status: 'published', featured: false, views: 342, date: '22/05/2026', sapo: 'FPT Telecom triển khai chương trình khuyến mãi lắp đặt internet hè 2026 với nhiều ưu đãi hấp dẫn.' },
     { id: 2, title: 'FPT Camera ra mắt tính năng nhận diện AI thông minh mới', slug: 'fpt-camera-ra-mat-nhan-dien-ai', cat: 'Tin công nghệ', subCat: '', type: 'video', author: 'Phương Nam', channel: 'fpt-camera', lang: 'vi', status: 'published', featured: true, views: 1205, date: '20/05/2026', sapo: 'Camera IQ4S mới nhất của FPT tích hợp AI nhận diện khuôn mặt và cảnh báo thông minh.' },
     { id: 3, title: 'ASTON VILLA CHÍNH THỨC ĐĂNG QUANG CHAMPION UEFA EUROPA LEAGUE', slug: 'aston-villa-dang-quang-europa-league', cat: 'Sự kiện', subCat: '', type: 'article', author: 'Đức Nguyễn', channel: 'fpt-play', lang: 'vi', status: 'draft', featured: false, views: 0, date: '21/05/2026', sapo: 'Aston Villa lần đầu tiên vô địch UEFA Europa League sau màn trình diễn xuất sắc.' },
@@ -14270,6 +14406,7 @@ class Component extends DCLogic {
     { id: 6, title: 'Hướng dẫn cài đặt FPT Camera IQ3 tại nhà chỉ trong 5 phút', slug: 'huong-dan-cai-dat-camera-iq3', cat: 'Hướng dẫn', subCat: '', type: 'guide', author: 'Phương Nam', channel: 'fpt-camera', lang: 'vi', status: 'hidden', featured: false, views: 198, date: '01/05/2026', sapo: 'Video hướng dẫn đơn giản giúp bạn tự lắp đặt FPT Camera IQ3 tại nhà mà không cần kỹ thuật viên.' },
   ]; }
   NEWS_CATS() { return [
+    { id: 901, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', count: 123456, status: 'active', parent: 'Khách hàng cá nhân', layout: 'grid', lang: 'vi', order: 9 },
     { id: 1, name: 'Tin khuyến mãi', slug: 'tin-khuyen-mai', count: 8, status: 'active', parent: '', layout: 'grid', lang: 'vi', order: 1 },
     { id: 2, name: 'Tin công nghệ', slug: 'tin-cong-nghe', count: 5, status: 'active', parent: '', layout: 'grid', lang: 'vi', order: 2 },
     { id: 3, name: 'Hướng dẫn', slug: 'huong-dan', count: 3, status: 'active', parent: '', layout: 'list', lang: 'vi', order: 3 },
@@ -14282,6 +14419,7 @@ class Component extends DCLogic {
     { id: 10, name: 'Dịch vụ kỹ thuật', slug: 'dich-vu-ky-thuat', count: 0, status: 'inactive', parent: 'Sản phẩm dịch vụ', layout: 'default', lang: 'vi', order: 4 },
   ]; }
   NEWS_TAGS() { return [
+    { id: 901, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', count: 123456, status: 'active' },
     { id: 1, name: 'internet', slug: 'internet', count: 2, status: 'active' },
     { id: 2, name: 'camera', slug: 'camera', count: 2, status: 'active' },
     { id: 3, name: 'wifi7', slug: 'wifi7', count: 1, status: 'active' },
@@ -14402,9 +14540,9 @@ class Component extends DCLogic {
       { key: 'date',   header: 'Ngày đăng', width: 90 },
       { key: 'views',  header: 'Lượt xem', width: 78, align: 'right',
         render: (_, r) => h('span', { style: { fontWeight: 600, fontVariantNumeric: 'tabular-nums' } }, r.views.toLocaleString()) },
-      ...this.auditCols({ postedKey: 'date', byKey: 'author' }),
       { key: 'status', header: 'Trạng thái', width: 96,
         render: (_, r) => this.statusBadge(this.effStatus(this.state.newsArtActiveMap, r, 'published')) },
+      ...this.auditCols({ postedKey: 'date', byKey: 'author' }),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           if (r.status === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
           const isOn = this.effStatus(this.state.newsArtActiveMap, r, 'published') !== 'hidden';
@@ -14481,9 +14619,9 @@ class Component extends DCLogic {
           h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(sku.code) })
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 1 } },
             h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(sku.code).name || '—'),
-            h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
+            h('span', { style: { flexShrink: 0, whiteSpace: 'nowrap', fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
           ),
           h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(sku.code).route || '—')
         )
@@ -14635,7 +14773,7 @@ class Component extends DCLogic {
               ),
               h(DS.Checkbox, { label: 'Áp dụng cho tất cả các gói', checked: seoSkuApplyAll, onChange: v => this.setState({ newsSeoSkuApplyAll: v }) })
             ),
-            h('div', { style: { display: 'grid', gridTemplateColumns: '1.1fr 2fr', gap: 20, alignItems: 'start' } },
+            h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 2fr)', gap: 20, alignItems: 'start' } },
               // Trái: cùng picker "DANH SÁCH SẢN PHẨM" (ECP/FCP + danh mục + tìm kiếm) dùng ở module Thông tin checkout / PTTT
               h('div', null,
                 seoSkuApplyAll
@@ -14706,11 +14844,11 @@ class Component extends DCLogic {
       { key: 'level',  header: 'Cấp', width: 64, align: 'center', render: (_, r) => h('span', null, String(levelOf(r))) },
       { key: 'order',  header: 'Thứ tự', width: 80, align: 'center', render: (_, r) => h('span', null, String(r.order || 0)) },
       { key: 'count',  header: 'Số bài', width: 80, align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
-      ...this.auditCols(),
       { key: 'status', header: 'Tình trạng', width: 120, render: (_, r) => {
           const isOn = (this.state.newsCatActiveMap || {})[r.id] !== undefined ? !!(this.state.newsCatActiveMap || {})[r.id] : r.status !== 'inactive';
           return this.statusBadge(isOn ? 'active' : 'inactive');
         } },
+      ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.newsCatActiveMap || {})[r.id] !== undefined ? !!(this.state.newsCatActiveMap || {})[r.id] : r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -14750,11 +14888,11 @@ class Component extends DCLogic {
       { key: 'name', header: 'Tên Tag', render: (_, r) => h('span', { style: { fontWeight: 600 } }, '#' + r.name) },
       { key: 'slug', header: 'Slug', render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.slug) },
       { key: 'count', header: 'Số bài dùng', align: 'center', render: (_, r) => h(DS.Badge, { theme: 'info' }, r.count) },
-      ...this.auditCols(),
       { key: 'status', header: 'Trạng thái', render: (_, r) => {
           const isOn = (this.state.newsTagActiveMap || {})[r.id] !== undefined ? !!(this.state.newsTagActiveMap || {})[r.id] : r.status !== 'inactive';
           return this.statusBadge(isOn ? 'active' : 'inactive');
         } },
+      ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.newsTagActiveMap || {})[r.id] !== undefined ? !!(this.state.newsTagActiveMap || {})[r.id] : r.status !== 'inactive';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
@@ -14848,7 +14986,7 @@ class Component extends DCLogic {
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4, width: 520, maxWidth: '100%' } },
       // Search + filter
       h('div', { style: { display: 'flex', gap: 8 } },
-        h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Tìm SKU…', leadingIcon: 'search-medium-line', value: this.state.tagSkuQ || '', onChange: v => this.setState({ tagSkuQ: v }) })),
+        h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'Tìm SKU…', leadingIcon: 'search-medium-line', value: this.state.tagSkuQ || '', onChange: e => this.setState({ tagSkuQ: e && e.target ? e.target.value : (e || '') }) })),
         h('div', { style: { width: 148 } }, h(DS.Select, {
           options: cats.map(c => ({ value: c, label: c === 'all' ? 'Tất cả loại' : c })),
           value: cat, searchable: true, searchPlaceholder: 'Tìm loại…', onChange: v => this.setState({ tagSkuCat: v })
@@ -14990,9 +15128,9 @@ class Component extends DCLogic {
           h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(sku.code) })
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 1 } },
             h('span', { style: { fontWeight: 700, fontSize: 12.5, color: isSel ? 'var(--color-accent)' : 'var(--color-text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, pkgLbl.get(sku.code).name || '—'),
-            h('span', { style: { fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
+            h('span', { style: { flexShrink: 0, whiteSpace: 'nowrap', fontSize: 10, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)', padding: '1px 5px', borderRadius: 4, fontWeight: 500 } }, sku.group)
           ),
           h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, pkgLbl.get(sku.code).route || '—')
         )
@@ -15188,6 +15326,7 @@ class Component extends DCLogic {
 
   // ===== Users =====
   USERS() { return [
+    { id: 901, name: 'Nguyễn Thị Thùy Linh Phương Anh Trần Hoàng Minh Đức Quang', email: 'nguyen.thi.thuy.linh.phuong.anh.tran.hoang.minh.duc.quang@fpt.vn', phone: '0901234567', role: 'Admin CMS', channel: 'FPT Telecom', status: 'active', last: '27/10 09:40' },
     { id: 1, name: 'Nguyễn Thị Thùy', email: 'thuy.nguyen@fpt.vn', phone: '0901234567', role: 'Admin CMS', channel: 'FPT Telecom', status: 'active', last: '16/06 09:40' },
     { id: 2, name: 'Trần Minh Khoa', email: 'khoa.tran@fpt.vn', phone: '0987654321', role: 'Biên tập viên', channel: 'FPT Play', status: 'active', last: '15/06 17:22' },
     { id: 3, name: 'Lê Hoàng Nam', email: 'nam.le@fpt.vn', phone: '0912345678', role: 'Người duyệt', channel: 'Global', status: 'active', last: '14/06 10:05' },
@@ -15682,11 +15821,18 @@ class Component extends DCLogic {
       [39,"23/09/2026","23:19:02",null,"HCMPN0068WGW","0912765438","Bán cho người tiêu dùng",null,"Nam","Nhà Phố",null,"Hồ Chí Minh","07.Hồ Chí Minh","","","Chưa thanh toán","Khách bình thường ở HIFPT","OK","NOT OK","NOT OK","NOT OK",null,"NOT OK","","","",null,"Đã cập nhật thông tin khách hàng","Ultra Fast Stand Alone","Khách hàng tự hủy","","",0,"","",null,null,null,null,null,null,null,null,null,null,null,"HCM.ECOM.hifpt","Ultra Fast Stand Alone","https://hifpt-api.fpt.net","Bán mới",null,null,null,null,null]
     ];
     const keys = this.salesReportOnlineOrderFieldDefs().map(d => d[0]);
-    return rows.map((r, i) => {
+    const out = rows.map((r, i) => {
       const o = { id: 'sroo' + i };
       keys.forEach((k, idx) => { o[k] = r[idx]; });
       return o;
     });
+    // Hàng demo cực đoan (QC bảng): chữ rất dài có dấu cách + chuỗi liền không dấu cách (URL/UTM/ID) ở mọi cột văn bản
+    const LONG = 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh';
+    const NOSP = 'https://fpt.vn/shop/internet/register/goi-cuoc-giga-sieu-toc-do-cho-gia-dinh-khuyen-mai-dac-biet-2026-abcdefghijklmnopqrstuvwxyz0123456789';
+    const ext = { ...out[0], id: 'sroo-extreme', stt: out.length + 1 };
+    ['customerName', 'houseType', 'aptName', 'province', 'region', 'pttPlanned', 'pttActual', 'regChannel', 'orderStatus', 'activeService', 'stopReasonWeb', 'notOkReasonBingo', 'cancelReasonBeforeUse', 'policyName', 'policyGroup', 'serviceList', 'gift'].forEach(k => { ext[k] = LONG; });
+    ['referralCode', 'voucher', 'utmSource', 'utmMedium', 'utmCampaign', 'utmContent', 'url', 'trackingId', 'domain'].forEach(k => { ext[k] = NOSP; });
+    return [ext, ...out];
   }
   openSalesReportOnlineOrderDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -16420,11 +16566,13 @@ class Component extends DCLogic {
       ["AGG67004CWF1",null,"FPT Play Stands Alone","V.VIP 1","Trả trước 1 tháng",null]
     ];
     const keys = this.salesReportOnlineServiceFieldDefs().map(d => d[0]);
-    return rows.map((r, i) => {
+    const out = rows.map((r, i) => {
       const o = { id: 'sros' + i };
       keys.forEach((k, idx) => { o[k] = r[idx]; });
       return o;
     });
+    // Hàng demo cực đoan (QC bảng): chữ rất dài + mã liền không dấu cách
+    return [{ ...out[0], id: 'sros-extreme', orderCode: 'DKOL-ORDER-CODE-RAT-DAI-KHONG-DAU-CACH-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ', contractNo: 'HD-FPT-TELECOM-2026-0000000000000000000000000000000000001', service: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao', servicePackage: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6', subscriptionType: 'Trả trước 12 tháng kèm ưu đãi tặng thêm 2 tháng cước dành cho khách hàng thân thiết' }, ...out];
   }
   openSalesReportOnlineServiceDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
