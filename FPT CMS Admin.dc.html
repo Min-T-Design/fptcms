@@ -7589,7 +7589,7 @@ class Component extends DCLogic {
           h('span', { style: { fontSize: 13 } }, r.pages[0]),
           r.pages.length > 1 && h(DS.Badge, { theme: 'neutral' }, '+' + (r.pages.length - 1) + ' khác')
         ) },
-      { key: 'link', header: 'Link URL', width: 190, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-subtle)' } }, r.link) },
+      { key: 'link', header: 'Link URL', width: 190, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-subtle)' } }, r.link || '—') },
       { key: 'period', header: 'Thời gian', width: 170, render: (_, r) => h('span', { style: { fontSize: 12.5, whiteSpace: 'nowrap' } }, r.period) },
       { key: 'order', header: 'Thứ tự', width: 72, align: 'center', render: (_, r) => h('span', { style: { fontWeight: 700, color: 'var(--color-text-subtle)' } }, r.order) },
       { key: 'status', header: 'Trạng thái', width: 110, render: (_, r) => this.statusBadge(this.effStatus(this.state.bannerActiveMap, r, 'active')) },
@@ -7759,7 +7759,7 @@ class Component extends DCLogic {
         h('div', { style: { width: '100%', height: 80, background: 'linear-gradient(135deg,var(--fpt-7),var(--fpt-9))', borderRadius: 8, marginBottom: 12 } }),
         this.detailRow('Tên Banner', r.name),
         this.detailRow('Loại banner', r.bannerType === 'checkout' ? 'Trang Checkout' : 'Trang thường (Menu Trang)'),
-        this.detailRow('Link URL đích', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5 } }, r.link)),
+        this.detailRow('Link URL đích', h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5 } }, r.link || '—')),
         this.detailRow('Target', r.target),
         this.detailRow('Danh sách trang áp dụng (' + r.pages.length + ')', h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 } }, r.pages.map(p => h(DS.Tag, { key: p, size: 'sm' }, p)))),
         this.detailRow('Thời gian hiển thị', r.period),
@@ -7831,7 +7831,7 @@ class Component extends DCLogic {
               searchable: true, searchPlaceholder: 'Tìm target…',
               onChange: v => this.setState({ bannerEditorTarget: v })
             }), true)),
-            h('div', { style: { flex: 1 } }, this.field('Link URL đích', h(FptUrlInput, { defaultValue: r ? r.link : '', placeholder: 'VD: https://fpt.vn/khuyen-mai/thang-6' }), true))
+            h('div', { style: { flex: 1 } }, this.field('Link URL đích', h(FptUrlInput, { defaultValue: r ? r.link : '', placeholder: 'VD: https://fpt.vn/khuyen-mai/thang-6' })))
           )
         )
       ),
