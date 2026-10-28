@@ -7643,7 +7643,7 @@ class Component extends DCLogic {
     { value: 'checkout', label: 'Trang Checkout' },
     { value: 'pkg-detail', label: 'Trang chi tiết gói' },
     // Trigger: chọn trang + ảnh + link như Trang thường, không chọn gói; Hành vi hiển thị chỉ còn "Thời gian tự đóng" (không có Kiểu kích hoạt / Tần suất).
-    { value: 'trigger', label: 'Trigger' },
+    { value: 'trigger', label: 'Không tương tác' },
   ]; }
   // Link điều hướng mặc định của 1 gói trong popup "Trang chi tiết gói": route name của gói (thiếu → mã SKU), dạng đường dẫn nội bộ.
   popupPkgDefaultUrl(code) {
@@ -7670,7 +7670,7 @@ class Component extends DCLogic {
     return h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' } },
       h('span', { style: { fontSize: 13 } }, pages[0] || '—'),
       pages.length > 1 && h(DS.Badge, { theme: 'neutral' }, '+' + (pages.length - 1) + ' khác'),
-      r.type === 'trigger' && h(DS.Badge, { theme: 'info' }, 'Trigger')
+      r.type === 'trigger' && h(DS.Badge, { theme: 'info' }, 'Không tương tác')
     );
   }
   openPopupEditor(r) {
