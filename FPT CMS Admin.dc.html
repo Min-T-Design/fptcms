@@ -8061,8 +8061,9 @@ class Component extends DCLogic {
               options: this.POPUP_TRIGGERS(), value: trigger, placeholder: 'Chọn kiểu kích hoạt…', onChange: v => this.setState({ popupEditorTrigger: v })
             }), true)),
             !isTrigger && trigger === 'delay' && h('div', { style: { width: 170 } }, this.field('Thời gian trễ (giây)', h(DS.Input, { type: 'number', defaultValue: r ? String(r.delaySec || 5) : '5' }), true)),
-            h('div', { style: isTrigger ? { width: 'calc(50% - 6px)', minWidth: 260 } : { width: 200 } }, this.field('Thời gian tự đóng (giây)',
-              h(DS.Input, { type: 'number', min: 0, step: 1, value: autoClose, placeholder: isTrigger ? 'Để trống hoặc 0 nếu không tự đóng' : 'Để trống nếu không tự đóng', error: autoCloseErr,
+            // Ô chỉ nhập số nguyên → rộng cố định 200px cho mọi loại popup (kể cả "Không tương tác").
+            h('div', { style: { width: 200 } }, this.field('Thời gian tự đóng (giây)',
+              h(DS.Input, { type: 'number', min: 0, step: 1, value: autoClose, placeholder: 'Không tự đóng', error: autoCloseErr,
                 onChange: e => this.setState({ popupEditorAutoClose: String(e && e.target ? e.target.value : e) }) })))
           ),
           !isTrigger && this.field('Tần suất hiển thị', h(DS.Select, { options: this.POPUP_FREQUENCIES(), value: frequency, placeholder: 'Chọn tần suất hiển thị…', onChange: v => this.setState({ popupEditorFrequency: v }) }), true)
