@@ -451,6 +451,8 @@ function Table({
       textAlign: c.align || "left",
       padding: pad,
       width: c.width,
+      // minWidth (tuỳ chọn): cột ưu tiên (vd. Tên menu) không bị co dưới mức này khi bảng hẹp — width chỉ là mức ưu tiên
+      ...(c.minWidth ? { minWidth: c.minWidth } : null),
       fontSize: 12,
       fontWeight: 700,
       letterSpacing: "0.03em",

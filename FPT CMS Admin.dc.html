@@ -4119,7 +4119,7 @@ class Component extends DCLogic {
   tbl(columns, data, rowKey, onRowClick) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const cols = this.stickyCols(columns);
-    const minW = cols.reduce((s, c) => s + (c.width || 150), 0);
+    const minW = cols.reduce((s, c) => s + Math.max(c.width || 150, c.minWidth || 0), 0);
     return h('div', {
       className: 'fpt-scroll fpt-drag-scroll',
       style: { overflowX: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' },
@@ -4135,7 +4135,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const zoom = this.state[zoomKey] || 100;
     const cols = this.stickyCols(columns);
-    const minW = cols.reduce((s, c) => s + (c.width || 150), 0);
+    const minW = cols.reduce((s, c) => s + Math.max(c.width || 150, c.minWidth || 0), 0);
     return h('div', {
       className: 'fpt-scroll fpt-drag-scroll',
       style: { overflowX: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' },
@@ -6007,7 +6007,7 @@ class Component extends DCLogic {
           return chipList('brand', 2, bl);
         } },
       { key: 'type', header: 'Loại', width: 110,
-        render: (_, r) => h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'var(--font-dev)' } }, r.type) },
+        render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-sans)' } }, r.type) },
       ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = (this.state.secActiveMap || {})[r.id] !== undefined ? !!(this.state.secActiveMap || {})[r.id] : r.status !== 'inactive';
@@ -7255,11 +7255,12 @@ class Component extends DCLogic {
 
     const columns = [
       { key: 'idx',    header: '#',        width: 44,  render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)' } }, idxMap.get(r.id)) },
-      { key: 'name',   header: 'Tên menu',             render: (_, r) => treeCell(r) },
-      { key: 'type',   header: 'Loại',     width: 110, render: (_, r) => typeBadge(r.type) },
-      { key: 'url',    header: 'Link URL',             render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-text-subtle)' }, title: r.url }, r.url && r.url !== '—' ? (r.url.length > 38 ? r.url.slice(0, 38) + '…' : r.url) : '—') },
-      { key: 'pos',    header: 'Vị trí',   width: 100, render: (_, r) => h(DS.Badge, { theme: r.pos === 'Footer' ? 'neutral' : 'brand' }, r.pos || '—') },
-      { key: 'target', header: 'Target',   width: 90,  align: 'center', render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: r.target === '_blank' ? 'var(--color-warning-text)' : 'var(--color-text-muted)' } }, r.target) },
+      // Cột ưu tiên: Tên menu giữ tối thiểu 280px (không bị các cột cố định bóp lại khi màn hẹp, vd. MacBook 14" ≈ 1502px → bảng cuộn ngang)
+      { key: 'name',   header: 'Tên menu', width: 280, minWidth: 280, render: (_, r) => treeCell(r) },
+      { key: 'type',   header: 'Loại',     width: 100, render: (_, r) => typeBadge(r.type) },
+      { key: 'url',    header: 'Link URL', width: 140, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: 'var(--color-text-subtle)' }, title: r.url }, r.url && r.url !== '—' ? (r.url.length > 38 ? r.url.slice(0, 38) + '…' : r.url) : '—') },
+      { key: 'pos',    header: 'Vị trí',   width: 92,  render: (_, r) => h(DS.Badge, { theme: r.pos === 'Footer' ? 'neutral' : 'brand' }, r.pos || '—') },
+      { key: 'target', header: 'Target',   width: 84,  align: 'center', render: (_, r) => h('span', { style: { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: r.target === '_blank' ? 'var(--color-warning-text)' : 'var(--color-text-muted)' } }, r.target) },
       ...this.auditCols({ createdKey: 'date' }),
       { key: 'active', header: 'Hoạt động', width: 64,  align: 'center', render: (_, r) => {
           const isOn = (this.state.menuActiveMap || {})[r.id] !== undefined ? !!(this.state.menuActiveMap || {})[r.id] : r.status !== 'inactive';
