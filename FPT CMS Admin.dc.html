@@ -7674,10 +7674,10 @@ class Component extends DCLogic {
     );
   }
   openPopupEditor(r) {
-    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupEditorAutoClose: r && r.autoCloseSec ? String(r.autoCloseSec) : '', popupEditorPkgs: r ? (r.pkgs || []).map(p => ({ ...p })) : [], popupSkuSource: 'ecp', popupSkuFilter: 'internet', popupSkuSearch: '' });
+    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupEditorAutoClose: r && r.autoCloseSec ? String(r.autoCloseSec) : '', popupEditorPkgs: r ? (r.pkgs || []).map(p => ({ ...p })) : [], popupPkgAttempted: false, popupSkuSource: 'ecp', popupSkuFilter: 'internet', popupSkuSearch: '' });
   }
   closePopupEditor() {
-    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupEditorAutoClose: undefined, popupEditorPkgs: undefined, popupSkuSource: undefined, popupSkuFilter: undefined, popupSkuSearch: undefined });
+    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupEditorAutoClose: undefined, popupEditorPkgs: undefined, popupPkgAttempted: false, popupSkuSource: undefined, popupSkuFilter: undefined, popupSkuSearch: undefined });
   }
   renderPopup() {
     if (this.state.popupEditor !== undefined) return this.renderPopupEditor(this.state.popupEditor);
@@ -7978,6 +7978,8 @@ class Component extends DCLogic {
     const setPkgAuto = (code, auto) => this.setState(sv => ({ popupEditorPkgs: (sv.popupEditorPkgs || selectedPkgs).map(p => p.code === code ? { ...p, auto, url: auto ? this.popupPkgDefaultUrl(code) : p.url } : p) }));
     const isPkg = type === 'pkg-detail';
     const isTrigger = type === 'trigger';
+    // Popup "Trang chi tiết gói" bắt buộc chọn ≥ 1 gói (§14, control ghép): chỉ báo lỗi sau khi bấm Lưu, tự mất ngay khi đã chọn gói.
+    const pkgErr = !!this.state.popupPkgAttempted && isPkg && !selectedPkgs.length;
     // Thời gian tự đóng: số nguyên ≥ 0 (trống / 0 = không tự đóng). Controlled để báo lỗi ngay khi gõ sai (âm, thập phân, ký hiệu e…).
     const autoClose = this.state.popupEditorAutoClose !== undefined ? this.state.popupEditorAutoClose : (r && r.autoCloseSec ? String(r.autoCloseSec) : '');
     const autoCloseErr = autoClose !== '' && !/^\d+$/.test(autoClose) ? 'Chỉ nhập số nguyên từ 0 trở lên.' : undefined;
@@ -8018,10 +8020,16 @@ class Component extends DCLogic {
               : null
         ),
         type === 'pkg-detail' && section(2, 'apps-2-line', 'Gói cước áp dụng',
-          h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Chọn các gói cước hiển thị popup ở trang chi tiết gói.'),
+          h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Chọn ít nhất 1 gói cước hiển thị popup ở trang chi tiết gói.'),
           // Cột trái bọc ngoài cao bằng hàng grid (alignItems stretch) để picker bên trong "sticky" bám lại khi danh sách link bên phải dài hơn.
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(300px, 440px) minmax(0, 1fr)', gap: 16, alignItems: 'stretch' } },
-            h('div', null, h('div', { style: { position: 'sticky', top: 80 } }, this.renderPopupPkgPicker())),
+            h('div', null, h('div', { 'data-popup-pkg-field': '', style: { position: 'sticky', top: 80, display: 'flex', flexDirection: 'column', gap: 12 } },
+              h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Chọn gói cước', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+              h('div', { className: pkgErr ? 'fpt-req-box-err' : undefined, style: { display: 'flex', flexDirection: 'column', gap: 4 } },
+                this.renderPopupPkgPicker(),
+                pkgErr && h('div', { className: 'fpt-req-err-msg' }, 'Vui lòng chọn ít nhất một gói cước áp dụng cho Popup.')
+              )
+            )),
             h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
               h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Link điều hướng theo gói' + (selectedPkgs.length ? ' (' + selectedPkgs.length + ')' : '')),
               selectedPkgs.length
@@ -8061,7 +8069,16 @@ class Component extends DCLogic {
         )
       ),
       () => {
+        // Đặt cờ trước để lỗi gói hiện cùng lúc với lỗi khác (nếu có); nút Lưu không bao giờ bị disabled (§14).
+        const pkgMissing = isPkg && !selectedPkgs.length;
+        if (pkgMissing) this.setState({ popupPkgAttempted: true });
         if (autoCloseErr) { this.toast('danger', 'Thời gian tự đóng không hợp lệ', autoCloseErr); return; }
+        if (pkgMissing) {
+          this.toast('danger', 'Chưa chọn gói cước', 'Popup "Trang chi tiết gói" cần chọn ít nhất 1 gói cước áp dụng.');
+          const el = this._editorShellRoot && this._editorShellRoot.querySelector('[data-popup-pkg-field]');
+          if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
         back(); this.toast('success', 'Đã lưu Popup', isNew ? 'Popup mới đã được tạo.' : 'Popup "' + r.name + '" đã được cập nhật.');
       },
       isNew ? 'Tạo Popup' : 'Lưu Popup'
