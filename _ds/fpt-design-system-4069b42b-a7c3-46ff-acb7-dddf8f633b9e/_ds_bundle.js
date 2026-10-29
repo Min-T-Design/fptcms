@@ -2863,7 +2863,7 @@ function Select({
       onMouseLeave: e => {
         if (!active) e.currentTarget.style.background = "transparent";
       }
-    }, /*#__PURE__*/React.createElement("span", null, o.label), active && /*#__PURE__*/React.createElement(__ds_scope.Icon, {
+    }, /*#__PURE__*/React.createElement("span", { style: { minWidth: 0 } }, o.label), active && /*#__PURE__*/React.createElement(__ds_scope.Icon, {
       name: "check-line",
       size: 18,
       color: "var(--color-accent-text)"

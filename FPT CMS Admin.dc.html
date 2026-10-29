@@ -4758,14 +4758,15 @@ class Component extends DCLogic {
     };
   }
   LDP_PROVINCES() { return Object.keys(this.LDP_REGION_DATA()); }
-  // Tag phân loại nguồn của một mục trong dropdown "Breadcrumb trang trước": Page (xanh dương) / LDP (cam).
+  // Tag phân loại nguồn của một mục trong dropdown: Trang thường (xanh dương) / LDP (cam). Dùng cho "Breadcrumb trang trước" (Quản lý Trang + LDP)
+  // và ô chọn "URL cấp 1" có sẵn của Quản lý URL — cùng một kiểu tag để 2 nơi đọc giống nhau.
   breadcrumbKindTag(kind) {
     const h = React.createElement;
     const isLdp = kind === 'ldp';
-    return h('span', { key: kind, style: { flexShrink: 0, padding: '1px 8px', borderRadius: 99, fontSize: 10.5, fontWeight: 700, lineHeight: '16px', background: isLdp ? 'var(--color-accent-bg)' : 'var(--color-info-bg)', color: isLdp ? 'var(--color-accent-text)' : 'var(--color-info-text)' } }, isLdp ? 'LDP' : 'Page');
+    return h('span', { key: kind, style: { flexShrink: 0, padding: '1px 8px', borderRadius: 99, fontSize: 10.5, fontWeight: 700, lineHeight: '16px', whiteSpace: 'nowrap', background: isLdp ? 'var(--color-accent-bg)' : 'var(--color-info-bg)', color: isLdp ? 'var(--color-accent-text)' : 'var(--color-info-text)' } }, isLdp ? 'LDP' : 'Trang thường');
   }
   // Danh sách "Breadcrumb trang trước" dùng chung (Quản lý Trang + LDP): gộp Breadcrumb trang hiện tại (bcLv2) của các trang và các LDP khác
-  // (opts.pageSlug / opts.ldpId = bản ghi đang sửa, bỏ qua chính nó). Mỗi mục gắn tag Page / LDP; trùng tên ở cả hai nguồn thì hiện cả hai tag.
+  // (opts.pageSlug / opts.ldpId = bản ghi đang sửa, bỏ qua chính nó). Mỗi mục gắn tag Trang thường / LDP; trùng tên ở cả hai nguồn thì hiện cả hai tag.
   breadcrumbPrevOptions(opts, current) {
     const h = React.createElement; const o = opts || {};
     const names = new Map();
@@ -5066,6 +5067,9 @@ class Component extends DCLogic {
     { id: 'u18', level: 2, slug: 'camera-ai-thang-6',    pid: 'u17',               createdBy: 'Admin User',    createdAt: '19/05/2026 10:35', updatedAt: '19/05/2026 10:35' },
     { id: 'u19', level: 1, slug: 'su-kien',              type: 'ldp', pid: null,  createdBy: 'Minh Tú',       createdAt: '18/12/2025 15:00', updatedAt: '18/12/2025 15:05' },
     { id: 'u20', level: 2, slug: 'fpt-play-2026',        pid: 'u19',               createdBy: 'Minh Tú',       createdAt: '18/12/2025 15:05', updatedAt: '18/12/2025 15:05' },
+    { id: 'u32', level: 1, slug: 'tri-an-khach-hang',    type: 'ldp', pid: null,  createdBy: 'Hà Linh',       createdAt: '08/06/2026 09:30', updatedAt: '08/06/2026 09:30' },
+    { id: 'u33', level: 1, slug: 'dang-ky-lap-dat',      type: 'ldp', pid: null,  createdBy: 'Minh Tú',       createdAt: '22/05/2026 14:00', updatedAt: '22/05/2026 14:00' },
+    { id: 'u34', level: 1, slug: 'combo-internet-truyen-hinh', type: 'ldp', pid: null, createdBy: 'Admin User', createdAt: '10/05/2026 10:15', updatedAt: '10/05/2026 10:15' },
     // URL cấp 2 của các LDP Khu vực demo
     { id: 'u29', level: 2, slug: 'internet-ben-thanh',   pid: 'u14',               createdBy: 'Hà Linh',       createdAt: '28/09/2026 09:00', updatedAt: '28/09/2026 09:00' },
     { id: 'u30', level: 2, slug: 'camera-ai-hoan-kiem',  pid: 'u17',               createdBy: 'Minh Tú',       createdAt: '12/10/2026 14:30', updatedAt: '12/10/2026 14:30' },
@@ -5539,11 +5543,17 @@ class Component extends DCLogic {
     const slugInput = (key, errKey, placeholder, prefix, off) => h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
       prefixBox(prefix),
       h('div', { style: { flex: 1, minWidth: 0 } }, h(DS.Input, { value: d[key] || '', disabled: !!liveLdp || slugLocked || !!off, placeholder, error: showErr(errKey) ? errs[errKey] : undefined, onChange: e => setD({ [key]: this.ldpSlugify(e && e.target ? e.target.value : e) }) })));
-    // Danh sách URL cấp 1 có sẵn: tạo mới → chỉ URL cấp 1 Landing Page (URL tạo tại đây luôn là Landing Page). Sửa URL cấp 2 → chỉ các URL cấp 1 cùng loại với cha hiện tại để không vô tình đổi loại.
+    // Danh sách URL cấp 1 có sẵn: mỗi mục gắn tag loại (Trang thường / LDP — cùng kiểu tag với dropdown "Breadcrumb trang trước").
+    // Tạo mới → liệt kê cả 2 loại, LDP đứng trước, mỗi nhóm theo A–Z (URL cấp 2 tạo dưới URL Trang thường kế thừa loại đó nên sau khi lưu là chỉ-đọc).
+    // Sửa URL cấp 2 → chỉ các URL cấp 1 cùng loại với cha hiện tại để không vô tình đổi loại.
     const origParent = (!isNew && r.level === 2) ? this.urlNode(r.pid, all) : null;
-    const parentPool = all.filter(n => n.level === 1 && this.urlTypeOf(n, all) === (isNew ? 'ldp' : this.urlTypeOf(origParent, all)))
-      .sort((a, b) => a.slug.localeCompare(b.slug));
-    const parentOpts = parentPool.map(n => ({ value: n.id, label: h('span', { style: mono }, n.slug), searchText: n.slug }));
+    const poolType = n => this.urlTypeOf(n, all);
+    const parentPool = all.filter(n => n.level === 1 && (isNew || poolType(n) === poolType(origParent)))
+      .sort((a, b) => ((poolType(a) === 'ldp' ? 0 : 1) - (poolType(b) === 'ldp' ? 0 : 1)) || a.slug.localeCompare(b.slug));
+    const parentOpts = parentPool.map(n => ({ value: n.id, searchText: n.slug,
+      label: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0, maxWidth: '100%' } },
+        h('span', { style: { ...mono, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, n.slug),
+        this.breadcrumbKindTag(poolType(n))) }));
     const lv1Field = lv1AsInput
       ? h('div', { key: 'lv1', ...errAttr('slug1') }, this.field(req('URL cấp 1'), slugInput(k1, 'slug1', 'VD: truyen-hinh-fpt-play', 'fpt.vn/')))
       : h('div', { key: 'lv1', ...errAttr('pid') }, this.field(req('URL cấp 1'),
@@ -5556,22 +5566,24 @@ class Component extends DCLogic {
               error: showErr('pid') ? errs.pid : undefined,
               onChange: v => setD({ pid: v })
             })))));
-    const lv2Label = lv2Required ? req('URL cấp 2') : h(React.Fragment, null, 'URL cấp 2', h('span', { style: { fontWeight: 400, color: 'var(--color-text-subtle)' } }, ' (tùy chọn)'));
+    const lv2Label = lv2Required ? req('URL cấp 2') : 'URL cấp 2';
     const lv2Field = hasLv2Field
       ? h('div', { key: 'lv2', ...errAttr('slug2') }, this.field(lv2Label, slugInput(k2, 'slug2', 'VD: detail', '/', lv2Waiting)))
       : null;
 
     // ── Thuộc loại: Trang thường / Landing Page. KHÔNG đổi được:
-    //    • Tạo mới: mặc định Landing Page, "Trang thường" bị khoá (URL Trang thường chỉ được đồng bộ từ Quản lý Trang).
-    //    • Sửa: cả 2 lựa chọn bị khoá. URL Trang thường đồng bộ từ Quản lý Trang không chuyển được sang Landing Page.
+    //    • Tạo mới "Tạo mới" (URL cấp 1 mới): luôn Landing Page, "Trang thường" bị ẩn (URL Trang thường chỉ được đồng bộ từ Quản lý Trang).
+    //    • Tạo mới "Có sẵn": ô khoá, theo loại của URL cấp 1 đã chọn (chưa chọn → trống).
+    //    • Sửa: cả ô bị khoá. URL Trang thường đồng bộ từ Quản lý Trang không chuyển được sang Landing Page.
     //    URL cấp 2 luôn theo URL cấp 1 (cấp 2 không có loại riêng). ──
-    // Loại hiệu lực: tạo mới → luôn Landing Page; sửa URL cấp 1 → loại đã lưu; sửa URL cấp 2 → loại của URL cấp 1 cha.
-    const effTypeVal = isNew ? 'ldp' : (r.level === 1 ? this.urlTypeOf(r, all) : parentType);
-    // Dropdown: tạo mới → lựa chọn bị khoá ("Trang thường") được ẩn, chỉ còn Landing Page · Sửa: cả ô bị khoá, giữ đủ 2 mục để hiện đúng loại đang có.
-    const typeOpts = [{ value: 'page', label: 'Trang thường' }, { value: 'ldp', label: 'Landing Page' }].filter(o => !isNew || o.value !== 'page');
+    // Loại hiệu lực: tạo "Tạo mới" → Landing Page; tạo "Có sẵn" → loại URL cấp 1 đã chọn; sửa URL cấp 1 → loại đã lưu; sửa URL cấp 2 → loại của URL cấp 1 cha.
+    const effTypeVal = isNew ? (mode === 'new' ? 'ldp' : parentType) : (r.level === 1 ? this.urlTypeOf(r, all) : parentType);
+    const followsParent = isNew && mode === 'existing';
+    // Dropdown: chỉ ẩn lựa chọn bị khoá ("Trang thường") khi tạo URL cấp 1 mới; các ô đã khoá hẳn giữ đủ 2 mục để hiện đúng loại đang có.
+    const typeOpts = [{ value: 'page', label: 'Trang thường' }, { value: 'ldp', label: 'Landing Page' }].filter(o => !(isNew && mode === 'new') || o.value !== 'page');
     const typeSelect = h('div', { style: { width: 'calc(50% - 8px)', minWidth: 260 } },
       h(DS.Select, { options: typeOpts,
-        value: effTypeVal, disabled: !isNew, placeholder: 'Chọn loại', onChange: () => {} }));
+        value: effTypeVal, disabled: !isNew || followsParent, placeholder: followsParent ? 'Theo URL cấp 1 đã chọn' : 'Chọn loại', onChange: () => {} }));
     const typeNote = isNew
       ? null
       : (effTypeVal === 'page'
