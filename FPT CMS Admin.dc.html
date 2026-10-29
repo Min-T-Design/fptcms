@@ -5045,22 +5045,7 @@ class Component extends DCLogic {
   }
   // Bản nháp mặc định của form "Tạo URL": mode 'existing' = chọn URL cấp 1 có sẵn (pid) + nhập URL cấp 2 (slug2, bắt buộc);
   // mode 'new' = nhập URL cấp 1 mới (slug1) + URL cấp 2 tuỳ chọn (slug2). URL tạo tại module này luôn là Landing Page (Trang thường chỉ được đồng bộ từ Quản lý Trang).
-  urlNewDraft() { return { level: 0, mode: 'existing', pid: '', slug1: '', slug2: '', type: 'ldp', active: true, utm: {} }; }
-  // 5 tham số UTM chính của URL (lưu ở bản ghi URL dạng { source, medium, campaign, term, content }, khoá nào trống thì bỏ).
-  URL_UTM_KEYS() {
-    return [
-      { key: 'source', param: 'utm_source', label: 'UTM Source', placeholder: 'VD: facebook' },
-      { key: 'medium', param: 'utm_medium', label: 'UTM Medium', placeholder: 'VD: cpc' },
-      { key: 'campaign', param: 'utm_campaign', label: 'UTM Campaign', placeholder: 'VD: khuyen-mai-thang-11' },
-      { key: 'term', param: 'utm_term', label: 'UTM Term', placeholder: 'VD: internet-fpt' },
-      { key: 'content', param: 'utm_content', label: 'UTM Content', placeholder: 'VD: banner-a' },
-    ];
-  }
-  // Giá trị UTM đi vào query string nên cấm khoảng trắng và ký tự đặc biệt (& = ? # " ' ` < > \ /).
-  URL_UTM_RE() { return /^[A-Za-z0-9._~%+-]*$/; }
-  urlUtmQuery(utm) {
-    return this.URL_UTM_KEYS().filter(k => utm && utm[k.key]).map(k => k.param + '=' + utm[k.key]).join('&');
-  }
+  urlNewDraft() { return { level: 0, mode: 'existing', pid: '', slug1: '', slug2: '', type: 'ldp', active: true }; }
   URL_SLUG_RE() { return /^[a-z0-9]+(?:-[a-z0-9]+)*$/; }
   // Quyền "Thay đổi" module Quản lý URL của vai trò đang đăng nhập (ma trận Phân quyền tính năng). Không có quyền → chỉ xem: ẩn Tạo/Sửa.
   urlCanEdit() { return this.rbacPerm('Quản lý URL', this.state.currentRole || 'Super Admin').edit; }
@@ -5210,7 +5195,7 @@ class Component extends DCLogic {
     this.setState({
       urlEditor: r || null, urlTried: false,
       // Tạo mới: chọn "Có sẵn" / "Tạo mới" (urlNewDraft), Thuộc loại mặc định Landing Page. Sửa: loại giữ nguyên, không đổi được.
-      urlDraft: r ? { level: r.level, slug: r.slug, type: r.level === 1 ? this.urlTypeOf(r) : '', pid: r.pid || '', active: this.urlIsActive(r), utm: { ...(r.utm || {}) } } : this.urlNewDraft(),
+      urlDraft: r ? { level: r.level, slug: r.slug, type: r.level === 1 ? this.urlTypeOf(r) : '', pid: r.pid || '', active: this.urlIsActive(r) } : this.urlNewDraft(),
     });
   }
   // Bật/tắt nhanh ở cột "Hoạt động" của bảng. Không đổi ngày chỉnh sửa (tránh nhóm cấp 1 tự nhảy lên đầu bảng khi bấm công tắc).
@@ -5265,9 +5250,6 @@ class Component extends DCLogic {
     const nextId = () => 'u' + (next.reduce((m, n) => Math.max(m, parseInt(String(n.id).slice(1), 10) || 0), 0) + 1);
     const created = [];
     let saved;
-    // UTM gắn với URL đích cuối cùng của lần lưu (URL cấp 2 nếu có, ngược lại URL cấp 1); chỉ giữ khoá có giá trị.
-    const utm = {};
-    this.URL_UTM_KEYS().forEach(k => { const v = String((d.utm || {})[k.key] || '').trim(); if (v) utm[k.key] = v; });
     if (!r) {
       let parent;
       if (d.mode === 'new') {
@@ -5282,11 +5264,10 @@ class Component extends DCLogic {
         touch(parent.id);
       }
       saved = created[created.length - 1];
-      if (saved) saved.utm = utm;
     } else {
       saved = next.find(x => x.id === r.id);
       const oldPid = saved.pid;
-      saved.updatedAt = now; saved.updatedBy = by; saved.active = d.active !== false; saved.utm = utm;
+      saved.updatedAt = now; saved.updatedBy = by; saved.active = d.active !== false;
       if (r.level === 1) { saved.slug = s1; }   // Thuộc loại không đổi được khi sửa
       else { saved.slug = s2; saved.pid = d.pid; touch(d.pid); if (oldPid) touch(oldPid); }
     }
@@ -5430,10 +5411,6 @@ class Component extends DCLogic {
             mono('└─ ' + c.slug), this.statusBadge(this.urlIsActive(c) ? 'active' : 'inactive'))))
         : h('span', { style: { fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Trống — chưa có URL cấp 2')));
     }
-    const utmSet = this.URL_UTM_KEYS().filter(k => r.utm && r.utm[k.key]);
-    rows.push(this.detailRow('Tham số UTM', utmSet.length
-      ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, utmSet.map(k => h('div', { key: k.key }, h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 12 } }, k.param + ' = '), mono(r.utm[k.key]))))
-      : h('span', { style: { fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, 'Chưa cấu hình')));
     rows.push(this.detailRow('Đang dùng bởi', usage.length
       ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, usage.map((u, i) => h('div', { key: i }, this.urlUsageLabel(u))))
       : h('span', { style: { fontStyle: 'italic', color: 'var(--color-text-subtle)' } }, (r.level === 1 && kids.length) ? '—' : 'Chưa sử dụng')));
@@ -5507,12 +5484,8 @@ class Component extends DCLogic {
       else if (!this.URL_SLUG_RE().test(s2)) errs.slug2 = SLUG_FMT_MSG;
       else if (!lv1AsInput && d.pid && all.some(n => n.level === 2 && n.pid === d.pid && (!r || n.id !== r.id) && n.slug === s2)) errs.slug2 = 'URL cấp 2 "' + s2 + '" đã tồn tại trong nhánh "' + (parent ? parent.slug : '') + '". Vui lòng nhập slug khác.';
     }
-    // UTM (không bắt buộc): chỉ kiểm ký tự hợp lệ vì giá trị đi vào query string.
-    const utmDef = this.URL_UTM_KEYS();
-    const utmVal = k => String((d.utm || {})[k] || '');
-    utmDef.forEach(u => { if (!this.URL_UTM_RE().test(utmVal(u.key))) errs['utm_' + u.key] = 'Chỉ dùng chữ, số và các ký tự . _ ~ % + - (không có khoảng trắng hoặc & = ? # / ").'; });
     // Lỗi định dạng / trùng hiện ngay khi gõ; lỗi "bắt buộc" + ô chọn chỉ hiện sau khi bấm Lưu.
-    const showErr = k => !!errs[k] && (tried || ((k === 'slug1' || k === 'slug2' || k.indexOf('utm_') === 0) && errs[k] !== FPT_REQ_MSG));
+    const showErr = k => !!errs[k] && (tried || ((k === 'slug1' || k === 'slug2') && errs[k] !== FPT_REQ_MSG));
     const errAttr = k => ({ 'data-url-err': showErr(k) ? '1' : undefined });
 
     // DS.Segmented chưa có prop disabled: khoá bằng style + bỏ qua onChange (phím Enter vẫn bấm được nút bên trong).
@@ -5557,16 +5530,10 @@ class Component extends DCLogic {
     //    URL cấp 2 luôn theo URL cấp 1 (cấp 2 không có loại riêng). ──
     // Loại hiệu lực: tạo mới → luôn Landing Page; sửa URL cấp 1 → loại đã lưu; sửa URL cấp 2 → loại của URL cấp 1 cha.
     const effTypeVal = isNew ? 'ldp' : (r.level === 1 ? this.urlTypeOf(r, all) : parentType);
-    // Radio có viền: cả khung là <label> của DS.Radio (bấm đâu cũng chọn). Tạo mới: chỉ "Trang thường" bị khoá · Sửa: cả hai bị khoá (đổi onChange thành no-op vì loại không đổi được).
-    const typeRadio = (val, title) => {
-      const on = effTypeVal === val;
-      return h(DS.Radio, { key: val, name: 'urlType', label: title, checked: on, disabled: !isNew || val === 'page', onChange: () => {},
-        style: { display: 'flex', padding: '12px 16px', borderRadius: 10, border: '1px solid ' + (on ? 'var(--color-accent)' : 'var(--color-border)'),
-          background: on ? 'var(--color-accent-bg)' : 'var(--color-surface)', boxShadow: on ? '0 0 0 1px var(--color-accent)' : 'none',
-          transition: 'border-color var(--dur-fast), background var(--dur-fast), box-shadow var(--dur-fast)' } });
-    };
-    const typeRadios = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, maxWidth: 560 } },
-      typeRadio('page', 'Trang thường'), typeRadio('ldp', 'Landing Page'));
+    // Dropdown: tạo mới → "Trang thường" mờ/không chọn được (DS.Select option.disabled), chỉ còn Landing Page · Sửa: cả ô bị khoá, giữ nguyên loại đang có.
+    const typeSelect = h('div', { style: { width: 'calc(50% - 8px)', minWidth: 260 } },
+      h(DS.Select, { options: [{ value: 'page', label: 'Trang thường', disabled: true }, { value: 'ldp', label: 'Landing Page' }],
+        value: effTypeVal, disabled: !isNew, placeholder: 'Chọn loại', onChange: () => {} }));
     const typeNote = isNew
       ? 'URL tạo tại Quản lý URL luôn là Landing Page. URL Trang thường được đồng bộ tự động từ Quản lý Trang.'
       : (effTypeVal === 'page'
@@ -5574,7 +5541,7 @@ class Component extends DCLogic {
           : 'Không thể đổi phân loại khi chỉnh sửa' + (children.length ? ' — loại này áp dụng cho cả ' + children.length + ' URL cấp 2 bên dưới.' : '.'));
     const typeField = h('div', { key: 'type' }, this.field('Thuộc loại',
       h('div', null,
-        typeRadios,
+        typeSelect,
         h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 8 } }, typeNote))));
 
     // ── Xem trước URL sẽ tạo ──
@@ -5608,24 +5575,8 @@ class Component extends DCLogic {
       typeField
     ));
 
-    // ── 3. UTM: đứng trước "Danh sách URL con" (ưu tiên cao hơn). 5 tham số chính, đều tuỳ chọn; có xem trước URL kèm query. ──
-    const utmPath = (s1 || '…') + (showLv2Seg ? '/' + (s2 || '…') : '');
-    const utmQuery = this.urlUtmQuery(d.utm);
-    const utmCell = u => h('div', { key: u.key, ...errAttr('utm_' + u.key) }, this.field(u.label,
-      h(DS.Input, { value: utmVal(u.key), placeholder: u.placeholder, disabled: viewOnly,
-        error: showErr('utm_' + u.key) ? errs['utm_' + u.key] : undefined,
-        onChange: e => setD({ utm: { ...(d.utm || {}), [u.key]: (e && e.target ? e.target.value : e) } }) })));
-    sections.push(section(3, 'bar-chart-square-02-line', 'Tham số UTM',
-      h('div', { key: 'utmgrid', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 } }, utmDef.map(utmCell)),
-      h('div', { key: 'utmprev', style: { display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 12px', borderRadius: 8, background: 'var(--color-surface-alt)' } },
-        h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', flexShrink: 0, paddingTop: 1 } }, 'URL kèm UTM:'),
-        h('span', { style: { ...mono, flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, wordBreak: 'break-all' } },
-          h('span', { style: sepSt }, 'fpt.vn/'), h('span', { style: { color: 'var(--color-text)' } }, utmPath),
-          utmQuery ? h('span', { style: { color: 'var(--color-info-text)' } }, '?' + utmQuery) : h('span', { style: { ...sepSt, fontWeight: 400, fontStyle: 'italic' } }, '  (chưa nhập tham số UTM nào)')))
-    ));
-
     if (!isNew && r.level === 1) {
-      sections.push(section(4, 'menu-01-line', 'Danh sách URL con',
+      sections.push(section(3, 'menu-01-line', 'Danh sách URL con',
         children.length === 0
           ? h('div', { style: { padding: '20px 16px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 12.5, fontStyle: 'italic', border: '1px dashed var(--color-border)', borderRadius: 10, lineHeight: 1.6 } },
               'Chưa có URL con nào.', h('br'), 'URL cấp 2 sẽ được thêm vào đây khi bạn tạo URL mới, chọn "Có sẵn" và chọn URL cấp 1 này.')

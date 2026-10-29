@@ -2778,9 +2778,14 @@ function Select({
     }
   }, "Không tìm thấy kết quả"), visible.map(o => {
     const active = o.value === current;
+    // Lựa chọn có cờ disabled: hiện mờ, không chọn được (VD "Trang thường" khi tạo URL ở Quản lý URL).
+    const optOff = !!o.disabled;
     return /*#__PURE__*/React.createElement("div", {
       key: o.value,
-      onClick: () => pick(o.value),
+      "aria-disabled": optOff || undefined,
+      onClick: () => {
+        if (!optOff) pick(o.value);
+      },
       style: {
         display: "flex",
         alignItems: "center",
@@ -2788,14 +2793,15 @@ function Select({
         gap: 8,
         padding: "9px 10px",
         borderRadius: "var(--radius-sm)",
-        cursor: "pointer",
+        cursor: optOff ? "not-allowed" : "pointer",
+        opacity: optOff ? 0.5 : 1,
         fontFamily: "var(--font-sans)",
         fontSize: s.fs,
         color: "var(--color-text)",
         background: active ? "var(--color-accent-bg)" : "transparent"
       },
       onMouseEnter: e => {
-        if (!active) e.currentTarget.style.background = "var(--color-surface-alt)";
+        if (!active && !optOff) e.currentTarget.style.background = "var(--color-surface-alt)";
       },
       onMouseLeave: e => {
         if (!active) e.currentTarget.style.background = "transparent";
