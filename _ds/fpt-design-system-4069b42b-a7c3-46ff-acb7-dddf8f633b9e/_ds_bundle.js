@@ -287,9 +287,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 
 // ── Bảo vệ ô bảng trước dữ liệu dài (chữ dài / chuỗi liền / nhiều chip) ──
 // Chạy tập trung trên MỌI DS.Table (không cần từng module tự xử lý):
-//  • Chữ dài  → giới hạn 2 dòng + "…" (slug/URL/monospace → 1 dòng), kèm title (tooltip) chứa nội dung đầy đủ.
+//  • Chữ dài  → giới hạn 2 dòng + "…" (slug/URL/monospace → 1 dòng), kèm tooltip nhanh (data-fpt-tip, xem __fptRowTip) chứa nội dung đầy đủ.
 //  • Chuỗi liền (URL, slug không dấu cách) → ngắt bằng overflow-wrap:anywhere + max-width, không làm bảng nở ngang.
-//  • Nhiều chip trong 1 ô → hiện tối đa 3 chip + chip "+N" (title liệt kê đủ các chip còn lại).
+//  • Nhiều chip trong 1 ô → hiện tối đa 3 chip + chip "+N" (tooltip liệt kê đủ các chip còn lại).
 // Ghi đè theo cột: columns[i].lines (số dòng), .maxWidth (px), .chips (số chip tối đa; 0 = không gom), .noClamp:true.
 // Chỉ đổi class/attribute (không đụng cây React); MutationObserver chạy lại khi nội dung bảng đổi.
 function __fptIsChip(el) {
@@ -311,7 +311,7 @@ function __fptGuardTable(root) {
   if (!root || !root.isConnected) return;
   root.querySelectorAll(".fpt-cl,.fpt-chip-long,.fpt-chip-hidden,.fpt-chips-more").forEach(el => {
     el.classList.remove("fpt-cl", "fpt-cl-1", "fpt-chip-long", "fpt-chip-hidden", "fpt-chips-more");
-    if (el.hasAttribute("data-fpt-title")) { el.removeAttribute("title"); el.removeAttribute("data-fpt-title"); }
+    if (el.hasAttribute("data-fpt-title")) { el.removeAttribute("data-fpt-tip"); el.removeAttribute("data-fpt-title"); }
     el.removeAttribute("data-more");
   });
   root.querySelectorAll("tbody td").forEach(td => {
@@ -324,7 +324,7 @@ function __fptGuardTable(root) {
     const groups = new Map();
     chips.forEach(c => { const p = c.parentElement; if (!groups.has(p)) groups.set(p, []); groups.get(p).push(c); });
     // Chip có chữ dài → 1 dòng + "…" (không để chip phình ngang / vỡ thành 2 dòng trong viên thuốc)
-    chips.forEach(c => { const t = (c.textContent || "").trim(); if (t.length > 28) { c.style.setProperty("--fpt-chip-h", Math.round(c.getBoundingClientRect().height) + "px"); c.classList.add("fpt-cl", "fpt-cl-1", "fpt-chip-long"); if (!c.hasAttribute("title")) { c.setAttribute("title", t); c.setAttribute("data-fpt-title", "1"); } } });
+    chips.forEach(c => { const t = (c.textContent || "").trim(); if (t.length > 28) { c.style.setProperty("--fpt-chip-h", Math.round(c.getBoundingClientRect().height) + "px"); c.classList.add("fpt-cl", "fpt-cl-1", "fpt-chip-long"); if (!c.hasAttribute("title") && !c.hasAttribute("data-fpt-tip")) { c.setAttribute("data-fpt-tip", t); c.setAttribute("data-fpt-title", "1"); } } });
     if (chipLimit > 0) groups.forEach((list, parent) => {
       if (list.length <= chipLimit + 1) return; // dư đúng 1 chip thì hiện luôn, không đổi thành "+1"
       // Module đã tự có chip "+N" (FptChipList / chipList…) → nó đã gom rồi, không gom thêm lần 2 (tránh hai chip "+N" cạnh nhau)
@@ -332,7 +332,7 @@ function __fptGuardTable(root) {
       list.slice(chipLimit).forEach(c => c.classList.add("fpt-chip-hidden"));
       parent.classList.add("fpt-chips-more");
       parent.setAttribute("data-more", "+" + (list.length - chipLimit));
-      if (!parent.hasAttribute("title")) { parent.setAttribute("title", list.map(c => (c.textContent || "").trim()).join(", ")); parent.setAttribute("data-fpt-title", "1"); }
+      if (!parent.hasAttribute("title") && !parent.hasAttribute("data-fpt-tip")) { parent.setAttribute("data-fpt-tip", list.map(c => (c.textContent || "").trim()).join(", ")); parent.setAttribute("data-fpt-title", "1"); }
     });
     // 2) Giới hạn dòng cho chữ dài (lá văn bản, không phải chip / nút / ô nhập)
     td.querySelectorAll("*").forEach(el => {
@@ -353,7 +353,7 @@ function __fptGuardTable(root) {
       }
       target.classList.add("fpt-cl");
       if (mono || lines === 1) target.classList.add("fpt-cl-1");
-      if (!target.hasAttribute("title")) { target.setAttribute("title", (target.textContent || "").trim()); target.setAttribute("data-fpt-title", "1"); }
+      if (!target.hasAttribute("title") && !target.hasAttribute("data-fpt-tip")) { target.setAttribute("data-fpt-tip", (target.textContent || "").trim()); target.setAttribute("data-fpt-title", "1"); }
     });
   });
 }
@@ -370,6 +370,69 @@ function __fptUseTableGuard(ref, deps) {
     return () => { mo.disconnect(); cancelAnimationFrame(raf); };
   }, deps);
 }
+// Tooltip nhanh cho ô bảng: tooltip mặc định của trình duyệt (thuộc tính title) phải đợi ~1 giây mới hiện nên guard không đặt title nữa,
+// mà ghi nội dung đầy đủ vào data-fpt-tip; một bộ lắng nghe duy nhất trên document vẽ hộp tooltip sau ~120ms (đang xem ô này mà rê sang ô khác thì hiện ngay).
+// Chỉ hiện khi chữ thực sự bị cắt (hoặc là chip "+N"). title do module tự đặt trong ô bảng (không phải nút/link/cột ghim) mà khác chữ hiển thị hoặc đang bị cắt chữ cũng được chuyển sang tooltip này (title trùng chữ và không bị cắt thì giữ nguyên).
+(function __fptRowTip() {
+  if (typeof document === "undefined" || window.__fptRowTipOn) return;
+  window.__fptRowTipOn = true;
+  const DELAY = 120;
+  let box = null, cur = null, timer = 0, shown = false, swapped = null;
+  const isCut = el => el.classList.contains("fpt-chips-more") || el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1;
+  const pick = t => {
+    for (let el = t && t.nodeType === 1 ? t : t && t.parentElement; el && el !== document.body; el = el.parentElement) {
+      if (el.hasAttribute("data-fpt-tip")) return el;
+      if (el.hasAttribute("title") && el.closest("td") && !el.closest("button,[role=button],a,.fpt-table-sticky-col,.fpt-table-sticky-inner") && (el.getAttribute("title").trim() !== (el.textContent || "").trim() || isCut(el) || Array.from(el.querySelectorAll(".fpt-cl,.fpt-chips-more")).some(isCut))) return el;
+      if (el.tagName === "TD" || el.tagName === "TH") return null;
+    }
+    return null;
+  };
+  const needed = el => {
+    if (!el.hasAttribute("data-fpt-title")) return true;
+    if (el.classList.contains("fpt-chips-more")) return true;
+    return isCut(el);
+  };
+  const hide = () => {
+    clearTimeout(timer); timer = 0;
+    if (box) box.style.display = "none";
+    if (swapped) { swapped.el.setAttribute("title", swapped.text); swapped = null; }
+    shown = false; cur = null;
+  };
+  const show = el => {
+    if (!el.isConnected || !needed(el)) return;
+    const text = ((swapped && swapped.el === el ? swapped.text : el.getAttribute("data-fpt-tip")) || "").trim();
+    if (!text) return;
+    if (!box) {
+      box = document.createElement("div");
+      box.setAttribute("role", "tooltip");
+      box.style.cssText = "position:fixed;z-index:100000;left:0;top:0;max-width:min(360px,calc(100vw - 16px));padding:8px 10px;border-radius:var(--radius-sm,6px);background:var(--gray-12,#1f2328);color:var(--gray-1,#fff);font:500 13px/1.4 var(--font-sans,Inter,system-ui,sans-serif);box-shadow:var(--shadow-md,0 4px 12px rgba(0,0,0,.2));white-space:pre-wrap;overflow-wrap:anywhere;pointer-events:none;display:none";
+      document.body.appendChild(box);
+    }
+    box.textContent = text;
+    box.style.display = "block";
+    const r = el.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight, vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+    let top = r.bottom + 6;
+    if (top + bh > vh - 8 && r.top - bh - 6 >= 8) top = r.top - bh - 6; // không đủ chỗ phía dưới → lật lên trên
+    box.style.left = Math.max(8, Math.min(r.left, vw - bw - 8)) + "px";
+    box.style.top = Math.max(8, top) + "px";
+    shown = true;
+  };
+  document.addEventListener("mouseover", e => {
+    const el = pick(e.target);
+    if (el === cur) return;
+    const wasShown = shown;
+    hide();
+    if (!el) return;
+    cur = el;
+    if (el.hasAttribute("title")) { swapped = { el, text: el.getAttribute("title") }; el.removeAttribute("title"); } // chặn tooltip mặc định; trả lại title khi rời ô
+    if (wasShown) show(el); else timer = setTimeout(() => show(el), DELAY);
+  });
+  document.addEventListener("mouseout", e => { if (!e.relatedTarget) hide(); });
+  window.addEventListener("scroll", hide, true);
+  window.addEventListener("resize", hide);
+  document.addEventListener("mousedown", hide, true);
+  document.addEventListener("keydown", hide, true);
+})();
 /** Table — lightweight data table. columns: [{key,header,align?,width?,render?,sticky?}]. `sticky: true|'right'` pins that column to the right edge (e.g. an actions column; several adjacent sticky columns stack leftwards, e.g. a Hoạt động toggle + Thao tác — a sticky column's `width` is a fixed, non-shrinking, non-wrapping width) so it stays reachable while other columns scroll underneath — pair with a horizontally scrolling ancestor whose overflow isn't clipped by this component's own wrapper (pass `overflow: 'visible'` via `style`). */
 function Table({
   columns = [],
@@ -2778,14 +2841,9 @@ function Select({
     }
   }, "Không tìm thấy kết quả"), visible.map(o => {
     const active = o.value === current;
-    // Lựa chọn có cờ disabled: hiện mờ, không chọn được (VD "Trang thường" khi tạo URL ở Quản lý URL).
-    const optOff = !!o.disabled;
     return /*#__PURE__*/React.createElement("div", {
       key: o.value,
-      "aria-disabled": optOff || undefined,
-      onClick: () => {
-        if (!optOff) pick(o.value);
-      },
+      onClick: () => pick(o.value),
       style: {
         display: "flex",
         alignItems: "center",
@@ -2793,15 +2851,14 @@ function Select({
         gap: 8,
         padding: "9px 10px",
         borderRadius: "var(--radius-sm)",
-        cursor: optOff ? "not-allowed" : "pointer",
-        opacity: optOff ? 0.5 : 1,
+        cursor: "pointer",
         fontFamily: "var(--font-sans)",
         fontSize: s.fs,
         color: "var(--color-text)",
         background: active ? "var(--color-accent-bg)" : "transparent"
       },
       onMouseEnter: e => {
-        if (!active && !optOff) e.currentTarget.style.background = "var(--color-surface-alt)";
+        if (!active) e.currentTarget.style.background = "var(--color-surface-alt)";
       },
       onMouseLeave: e => {
         if (!active) e.currentTarget.style.background = "transparent";
