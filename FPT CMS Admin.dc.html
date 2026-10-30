@@ -8737,6 +8737,14 @@ class Component extends DCLogic {
     if (start && start.getTime() > Date.now()) return 'scheduled';
     return 'running';
   }
+  // Badge riêng của Omisell (nhãn khác this.statusBadge() dùng chung): "Chưa bắt đầu"/"Đã kết thúc" thay vì
+  // "Đặt lịch"/"Hết hạn", khớp với bộ lọc Trạng thái ở toolbar bảng danh sách.
+  omisellStatusBadge(status) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const map = { running: ['success', 'Đang chạy'], scheduled: ['info', 'Chưa bắt đầu'], expired: ['danger', 'Đã kết thúc'] };
+    const [theme, label] = map[status] || ['neutral', status];
+    return h('div', { style: { display: 'flex' } }, h(DS.Badge, { theme, dot: true, style: { whiteSpace: 'nowrap' } }, label));
+  }
   omisellPeriodCell(r) {
     const h = React.createElement;
     const line = (lbl, v) => h('div', { style: { display: 'flex', gap: 6, whiteSpace: 'nowrap' } },
@@ -8788,7 +8796,7 @@ class Component extends DCLogic {
         this.detailRow('Phụ trách', (r.sales || []).length ? h(FptChipList, { theme: 'neutral', max: 8, list: r.sales }) : '—'),
         this.detailRow('Quy tắc phân phối', this.omisellRuleLabel(r.rule)),
         this.detailRow('Thời gian hiệu lực', this.omisellPeriodCell(r)),
-        this.detailRow('Trạng thái', this.statusBadge(this.omisellEffStatus(r))),
+        this.detailRow('Trạng thái', this.omisellStatusBadge(this.omisellEffStatus(r))),
         this.detailRow('Mã chiến dịch', this.omisellCopyValue(r.code, 'Sao chép mã chiến dịch')),
         this.detailRow('Nội dung', this.omisellCopyValue(this.omisellTrackingLink(r), 'Sao chép link tracking')),
         ...this.auditRows(r)
@@ -8827,7 +8835,7 @@ class Component extends DCLogic {
       { key: 'campSource', header: 'utm_campaign', width: 170, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5 } }, r.campSource || '—') },
       { key: 'sales', header: 'Phụ trách', width: 220, render: (_, r) => (r.sales || []).length ? h(FptChipList, { theme: 'neutral', max: 3, list: r.sales }) : '—' },
       { key: 'rule', header: 'Quy tắc phân phối', width: 140, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, this.omisellRuleLabel(r.rule)) },
-      { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(this.omisellEffStatus(r)) },
+      { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.omisellStatusBadge(this.omisellEffStatus(r)) },
       ...this.auditCols(),
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openOmisellEditor(r) },
@@ -8920,7 +8928,7 @@ class Component extends DCLogic {
         showOutput && section(4, 'lock-01-line', 'Kết quả',
           h('div', null, outputLabel('Mã chiến dịch'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: 220, height: 40, radius: 8 }) : this.omisellCopyValue(d.code, 'Sao chép mã chiến dịch')),
           h('div', null, outputLabel('Nội dung'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: '100%', height: 40, radius: 8 }) : this.omisellCopyValue(this.omisellTrackingLink(d), 'Sao chép link tracking')),
-          h('div', null, outputLabel('Trạng thái'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: 90, height: 24, radius: 999 }) : this.statusBadge(this.omisellEffStatus({ dateStart: d.dateStart, dateEnd: d.dateEnd })))
+          h('div', null, outputLabel('Trạng thái'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: 90, height: 24, radius: 999 }) : this.omisellStatusBadge(this.omisellEffStatus({ dateStart: d.dateStart, dateEnd: d.dateEnd })))
         )
       ),
       () => {
@@ -9251,7 +9259,7 @@ class Component extends DCLogic {
           );
         } },
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
-        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' } }) },
+        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' }, faqCatErr: false }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa câu hỏi?', 'Câu hỏi "' + (r.q.length > 70 ? r.q.slice(0, 70) + '…' : r.q) + '" sẽ bị xóa khỏi danh sách FAQ.', () => {
           const base = this.state.faqItems || this.FAQS();
           this.setState({ faqItems: base.filter(f => f.id !== r.id) });
@@ -9277,7 +9285,7 @@ class Component extends DCLogic {
           ),
         ),
         h('div', { style: { display: 'flex', gap: 8 } },
-          h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ faqEditor: null, faqDraft: { cat: '', lang: '', q: '', answer: '', order: '1', active: true } }) }, 'Thêm Câu hỏi (FAQ)')
+          h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ faqEditor: null, faqDraft: { cat: '', lang: 'Tiếng Việt', q: '', answer: '', order: '1', active: true }, faqCatErr: false }) }, 'Thêm Câu hỏi (FAQ)')
         )
       ),
       this.filterChipsBar([
@@ -9312,7 +9320,7 @@ class Component extends DCLogic {
           );
         } },
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
-        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqCatEditor: r }) },
+        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqCatEditor: r, faqCatDraft: { name: r.name, lang: r.lang || 'Tiếng Việt' }, faqCatNameErr: '' }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa danh mục?', 'Danh mục "' + r.name + '" sẽ bị xóa khỏi danh sách.' + (r.count > 0 ? ' Danh mục này đang có ' + r.count + ' câu hỏi — các câu hỏi đó sẽ không còn thuộc danh mục nào.' : ''), () => {
           this.setState({ faqCatsData: this.getFaqCats().filter(c => c.id !== r.id) });
           this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa danh mục "' + r.name + '".');
@@ -9326,7 +9334,7 @@ class Component extends DCLogic {
             h(DS.Input, { value: search, onChange: e => this.setState({ faqCatSearch: e && e.target ? e.target.value : (e || ''), faqCat_pg: 1 }), placeholder: 'Tìm danh mục...', leadingIcon: 'search-medium-line' })
           )
         ),
-        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ faqCatEditor: null }) }, 'Thêm Danh Mục')
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ faqCatEditor: null, faqCatDraft: { name: '', lang: 'Tiếng Việt' }, faqCatNameErr: '' }) }, 'Thêm Danh Mục')
       ),
       search ? this.filterChipsBar([
         this.filterChip('Tìm: ' + search, 'neutral', () => this.setState({ faqCatSearch: '', faqCat_pg: 1 })),
@@ -9347,7 +9355,7 @@ class Component extends DCLogic {
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' } }); } }, 'Chỉnh sửa')
+        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' }, faqCatErr: false }); } }, 'Chỉnh sửa')
       )
     });
   }
@@ -9356,7 +9364,8 @@ class Component extends DCLogic {
     const isNew = !r; const back = () => this.setState({ faqEditor: undefined, faqDraft: null });
     const setD = patch => this.setState(s => ({ faqDraft: Object.assign({}, s.faqDraft, patch) }));
     const catOpts = this.getFaqCats().map(c => ({ value: c.name, label: c.name }));
-    const d = this.state.faqDraft || { cat: '', lang: '', q: '', answer: '', order: '1', active: true };
+    const d = this.state.faqDraft || { cat: '', lang: 'Tiếng Việt', q: '', answer: '', order: '1', active: true };
+    const catErr = !!this.state.faqCatErr;
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -9373,8 +9382,8 @@ class Component extends DCLogic {
         ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { flex: 1 } }, this.field('Thuộc danh mục', h(DS.Select, { options: catOpts, value: d.cat, placeholder: 'Chọn danh mục…', onChange: v => setD({ cat: v }), searchable: true, searchPlaceholder: 'Tìm danh mục…' }), true)),
-            h('div', { style: { flex: 1 } }, this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], value: d.lang, placeholder: 'Chọn ngôn ngữ…', onChange: v => setD({ lang: v }) }), true))
+            h('div', { style: { flex: 1, minWidth: 0 } }, this.field('Thuộc danh mục', h(DS.Select, { options: catOpts, value: d.cat, placeholder: 'Chọn danh mục…', onChange: v => { setD({ cat: v }); if (v && this.state.faqCatErr) this.setState({ faqCatErr: false }); }, searchable: true, searchPlaceholder: 'Tìm danh mục…', error: catErr ? 'Trường bắt buộc — vui lòng chọn.' : undefined }), true)),
+            h('div', { style: { flex: 1, minWidth: 0 } }, this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], value: d.lang, placeholder: 'Chọn ngôn ngữ…', onChange: v => setD({ lang: v }) })))
           )
         ),
         section(2, 'menu-01-line', 'Nội dung câu hỏi và trả lời',
@@ -9383,6 +9392,12 @@ class Component extends DCLogic {
         )
       ),
       () => {
+        // Thuộc danh mục là DS.Select (composite) nên không được this.validateReqFields tự kiểm — kiểm tay (CLAUDE.md §14). Ngôn ngữ không bắt buộc, mặc định Tiếng Việt.
+        if (!d.cat) {
+          this.setState({ faqCatErr: true });
+          this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng chọn danh mục.');
+          return;
+        }
         const base = this.state.faqItems || this.FAQS();
         const nowD = new Date(); const pad = n => String(n).padStart(2, '0');
         const today = pad(nowD.getDate()) + '/' + pad(nowD.getMonth() + 1) + '/' + nowD.getFullYear();
@@ -9404,13 +9419,24 @@ class Component extends DCLogic {
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.setState({ faqCatEditor: r }); } }, 'Chỉnh sửa')
+        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.setState({ faqCatEditor: r, faqCatDraft: { name: r.name, lang: r.lang || 'Tiếng Việt' }, faqCatNameErr: '' }); } }, 'Chỉnh sửa')
       )
     });
   }
   renderFaqCatEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.setState({ faqCatEditor: undefined });
+    const setD = patch => this.setState(s => ({ faqCatDraft: Object.assign({}, s.faqCatDraft, patch) }));
+    const d = this.state.faqCatDraft || { name: r ? r.name : '', lang: r ? (r.lang || 'Tiếng Việt') : 'Tiếng Việt' };
+    const nameErr = this.state.faqCatNameErr || '';
+    // Trùng tên + ngôn ngữ chặn tại trường Tên danh mục — kiểm tay (DS.Select không có <input> để this.validateReqFields tự đọc, CLAUDE.md §14), chạy live cả khi gõ tên lẫn khi chọn ngôn ngữ.
+    const checkDup = (nameVal, langVal) => {
+      const name = (nameVal || '').trim();
+      if (!name || !langVal) { if (this.state.faqCatNameErr) this.setState({ faqCatNameErr: '' }); return; }
+      const base = this.getFaqCats();
+      const dup = base.find(c => c.name.trim().toLowerCase() === name.toLowerCase() && c.lang === langVal && (!r || c.id !== r.id));
+      this.setState({ faqCatNameErr: dup ? 'Tên "' + name + '" đã tồn tại. Vui lòng đổi tên khác hoặc đổi ngôn ngữ.' : '' });
+    };
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -9442,8 +9468,16 @@ class Component extends DCLogic {
         ),
         section(1, 'folder-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { flex: 1 } }, this.field('Tên danh mục', h(DS.Input, { defaultValue: r ? r.name : '' }), true)),
-            h('div', { style: { flex: 1 } }, this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }], defaultValue: r ? (r.lang || '') : '', placeholder: 'Chọn ngôn ngữ…' })))
+            h('div', { style: { flex: 1, minWidth: 0 } }, this.field('Tên danh mục', h(DS.Input, {
+              value: d.name, placeholder: 'Nhập tên danh mục',
+              onChange: e => { const v = e && e.target ? e.target.value : e; setD({ name: v }); checkDup(v, d.lang); },
+              error: nameErr || undefined
+            }), true)),
+            h('div', { style: { flex: 1, minWidth: 0 } }, this.field('Ngôn ngữ', h(DS.Select, {
+              options: [{ value: 'Tiếng Việt', label: 'Tiếng Việt' }, { value: 'English', label: 'English' }],
+              value: d.lang, placeholder: 'Chọn ngôn ngữ…',
+              onChange: v => { setD({ lang: v }); checkDup(d.name, v); }
+            })))
           )
         ),
         section(2, 'message-circle-line', 'Danh sách câu hỏi',
@@ -9469,7 +9503,22 @@ class Component extends DCLogic {
               )
         )
       ),
-      () => { back(); this.toast('success', 'Đã lưu', 'Danh mục đã được lưu.'); },
+      () => {
+        // Cùng tên được phép nếu khác ngôn ngữ; trùng cả tên lẫn ngôn ngữ thì chặn tại trường Tên danh mục (đã validate live ở checkDup, kiểm lại lần cuối trước khi lưu).
+        const name = (d.name || '').trim();
+        const lang = d.lang || 'Tiếng Việt';
+        const base = this.getFaqCats();
+        const dup = base.find(c => c.name.trim().toLowerCase() === name.toLowerCase() && c.lang === lang && (!r || c.id !== r.id));
+        if (dup) {
+          this.setState({ faqCatNameErr: 'Tên "' + name + '" đã tồn tại. Vui lòng đổi tên khác hoặc đổi ngôn ngữ.' });
+          return;
+        }
+        const nowD = new Date(); const pad = n => String(n).padStart(2, '0');
+        const today = pad(nowD.getDate()) + '/' + pad(nowD.getMonth() + 1) + '/' + nowD.getFullYear();
+        if (r) { this.setState({ faqCatsData: base.map(c => c.id === r.id ? Object.assign({}, c, { name, lang, updatedAt: today, updatedBy: 'Admin User' }) : c) }); }
+        else { const newId = Math.max(0, ...base.map(c => c.id)) + 1; this.setState({ faqCatsData: base.concat([{ id: newId, name, lang, order: base.length + 1, count: 0, status: 'active', createdAt: today, createdBy: 'Admin User', updatedAt: today, updatedBy: 'Admin User' }]) }); }
+        back(); this.toast('success', 'Đã lưu', 'Danh mục đã được lưu.');
+      },
       isNew ? 'Thêm danh mục' : 'Lưu danh mục'
     );
   }
