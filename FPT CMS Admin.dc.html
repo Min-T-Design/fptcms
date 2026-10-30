@@ -155,16 +155,16 @@ function FptUrlInput(props) {
 
 // Chip đường dẫn URL 2 cấp trong 1 pill (dựng trên DS.Badge — không phải biến thể có sẵn của DS): cấp 1 đậm + màu chữ chính,
 // cấp 2 thường + màu chữ phụ, ngăn bằng dấu "/". Không icon, không in chữ "Cấp 1/Cấp 2/đã có/tạo mới" — cấp thể hiện bằng độ đậm nhạt, trạng thái có sẵn/tạo mới nằm ở tooltip.
-function FptUrlPathChip({ l1, l2, l1Exists, l2Exists }) {
+function FptUrlPathChip({ l1, l2, l1Exists, l2Exists, style }) {
   const h = React.createElement;
   const DS = window.ZENKaizenDesignSystem_4069b4;
   const seg = (lv, text, exists) => h('span', {
     title: 'URL cấp ' + lv + (exists ? ' · đã có trong Quản lý URL' : ' · sẽ được tạo mới trong Quản lý URL'),
     style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-dev)', fontWeight: lv === 1 ? 700 : 500, color: lv === 1 ? 'var(--color-text)' : 'var(--color-text-muted)' }
   }, text);
-  return h(DS.Badge, { theme: 'neutral', size: 'md', style: { gap: 6, maxWidth: '100%' } },
+  return h(DS.Badge, { theme: 'neutral', size: 'md', style: { gap: 6, maxWidth: '100%', minWidth: 0, ...style } },
     seg(1, l1, l1Exists),
-    l2 ? h('span', { 'aria-hidden': true, style: { fontFamily: 'var(--font-dev)', color: 'var(--color-text-subtle)', fontWeight: 500 } }, '/') : null,
+    l2 ? h('span', { 'aria-hidden': true, style: { flexShrink: 0, fontFamily: 'var(--font-dev)', color: 'var(--color-text-subtle)', fontWeight: 500 } }, '/') : null,
     l2 ? seg(2, l2, l2Exists) : null);
 }
 
@@ -5852,9 +5852,9 @@ class Component extends DCLogic {
     const slugChk = val.slug ? this.urlCheckPageSlug(val.slug, r ? r.slug : null) : null;
     const slugMsg = slugChk && !slugChk.ok ? slugChk.msg : undefined;
     const slugExtras = slugChk && slugChk.ok
-      ? h('div', { style: { marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 12, color: 'var(--color-text-subtle)' } },
-          h('span', null, 'Đồng bộ sang Quản lý URL:'),
-          h(FptUrlPathChip, { l1: slugChk.l1, l2: slugChk.l2, l1Exists: slugChk.lv1Exists, l2Exists: slugChk.lv2Exists }))
+      ? h('div', { style: { marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 12, color: 'var(--color-text-subtle)', minWidth: 0 } },
+          h('span', { style: { flexShrink: 0 } }, 'Đồng bộ sang Quản lý URL:'),
+          h(FptUrlPathChip, { l1: slugChk.l1, l2: slugChk.l2, l1Exists: slugChk.lv1Exists, l2Exists: slugChk.lv2Exists, style: { minWidth: 0, flex: '0 1 auto' } }))
       : null;
 
     // Lưu thật: ghi trang vào state.pagesData, đồng bộ URL cấp 1 / cấp 2 sang Quản lý URL, giữ liên kết Section khi đổi tên trang.
@@ -5892,8 +5892,8 @@ class Component extends DCLogic {
         ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'start' } },
-            h('div', null, this.field('Tên trang', h(DS.Input, { value: val.name, onChange: e => setDv('name', evVal(e)), placeholder: 'VD: Trang chủ' }), true)),
-            h('div', null,
+            h('div', { style: { minWidth: 0 } }, this.field('Tên trang', h(DS.Input, { value: val.name, onChange: e => setDv('name', evVal(e)), placeholder: 'VD: Trang chủ' }), true)),
+            h('div', { style: { minWidth: 0 } },
               this.field('Mã code (Slug)', h(DS.Input, { value: val.slug, onChange: e => setDv('slug', this.urlSlugifyPath(evVal(e))), placeholder: 'VD: truyen-hinh-fpt-play/detail', error: slugMsg }), true),
               slugMsg ? null : slugExtras)
           ),
