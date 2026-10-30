@@ -7254,7 +7254,7 @@ class Component extends DCLogic {
     const sliced = this.sliceData(data, 'menu');
 
     const typeBadge = (type) => {
-      const map = { category: ['brand', 'Category'], page: ['success', 'Page'], link: ['warning', 'Link'] };
+      const map = { category: ['brand', 'Danh mục'], page: ['success', 'Trang'], link: ['warning', 'Liên kết'] };
       const [theme, lbl] = map[type] || ['neutral', type];
       return h(DS.Badge, { theme }, lbl);
     };
@@ -7390,7 +7390,7 @@ class Component extends DCLogic {
       this.setState({ menuChildOrder: next });
     };
     const childTypeBadge = (t) => {
-      const map = { category: ['var(--color-accent-bg)', 'var(--color-accent-text)', 'Category'], page: ['var(--color-success-bg)', 'var(--color-success-text)', 'Page'], link: ['var(--color-warning-bg)', 'var(--color-warning-text)', 'Link'] };
+      const map = { category: ['var(--color-accent-bg)', 'var(--color-accent-text)', 'Danh mục'], page: ['var(--color-success-bg)', 'var(--color-success-text)', 'Trang'], link: ['var(--color-warning-bg)', 'var(--color-warning-text)', 'Liên kết'] };
       const [bg, fg, lbl] = map[t] || ['var(--color-surface-alt)', 'var(--color-text-subtle)', t];
       return h('span', { style: { padding: '2px 8px', borderRadius: 5, fontSize: 10, fontWeight: 700, background: bg, color: fg, textTransform: 'uppercase', letterSpacing: '.3px', flexShrink: 0 } }, lbl);
     };
@@ -7471,9 +7471,9 @@ class Component extends DCLogic {
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
             this.field('Loại', h(DS.Select, {
               options: [
-                { value: 'page', label: 'Page' },
-                { value: 'category', label: 'Category' },
-                { value: 'link', label: 'Link' },
+                { value: 'page', label: 'Trang' },
+                { value: 'category', label: 'Danh mục' },
+                { value: 'link', label: 'Liên kết' },
               ],
               value: type,
               placeholder: 'Chọn loại menu…',
@@ -7564,9 +7564,10 @@ class Component extends DCLogic {
 
   openMenuDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const menuTypeLabel = { category: 'Danh mục', page: 'Trang', link: 'Liên kết' }[r.type] || r.type;
     this.openDrawer({ title: r.name, subtitle: 'Chi tiết Menu', width: 440,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
-        this.detailRow('Tên menu', r.name), this.detailRow('Loại', r.type),
+        this.detailRow('Tên menu', r.name), this.detailRow('Loại', menuTypeLabel),
         this.detailRow('Vị trí', r.pos), this.detailRow('Cấp độ', String(r.level)),
         this.detailRow('Thứ tự', String(r.order)), this.detailRow('Trạng thái', this.statusBadge(r.status)),
         ...this.auditRows(r, { createdKey: 'date' })
