@@ -253,7 +253,7 @@ function fptRevealTabErrors(comp, mainThis, keyPrefix, missFn) {
 // the trigger's getBoundingClientRect() and kept anchored on scroll/resize, same mechanics as
 // DS.Select. Defined once at module scope (not per-render) so its own open/query hook state
 // survives parent re-renders instead of remounting on every keystroke elsewhere in the editor.
-function FptTagPicker({ options, selected, onChange, placeholder, searchPlaceholder, hideSelectAll }) {
+function FptTagPicker({ options, selected, onChange, placeholder, searchPlaceholder, hideSelectAll, disabledMap, onDisabledClick }) {
   const h = React.createElement;
   const DS = window.ZENKaizenDesignSystem_4069b4;
   const [open, setOpen] = React.useState(false);
@@ -329,9 +329,17 @@ function FptTagPicker({ options, selected, onChange, placeholder, searchPlacehol
           ? h('div', { style: { padding: '14px 4px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy kết quả')
           : visible.map(o => {
               const isSel = selected.includes(o);
-              return h('div', { key: o, onClick: () => toggle(o), style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 8px', borderRadius: 8, cursor: 'pointer', background: isSel ? 'var(--color-accent-bg)' : 'transparent' } },
+              const reason = !isSel && disabledMap ? disabledMap[o] : undefined;
+              const rowClick = () => { if (reason) { if (onDisabledClick) onDisabledClick(o, reason); return; } toggle(o); };
+              return h('div', {
+                key: o, onClick: rowClick,
+                title: reason ? 'Không khả dụng: ' + reason : undefined,
+                style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 8px', borderRadius: 8, cursor: reason ? 'not-allowed' : 'pointer', background: isSel ? 'var(--color-accent-bg)' : 'transparent', opacity: reason ? 0.45 : 1 }
+              },
                 h('span', { style: { fontSize: 13.5 } }, o),
-                h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggle(o) }))
+                reason
+                  ? h('span', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, reason)
+                  : h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggle(o) }))
               );
             })
       ),
@@ -2778,7 +2786,7 @@ class Component extends DCLogic {
   renderSkuEditorFaq(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const faqCat = this.state.pkgForm.faqCat || '';
-    const faqCats = this.FAQ_CATS();
+    const faqCats = this.getFaqCats();
     const allFaqs = this.state.faqItems || this.FAQS();
     const savedList = this.state.pkgForm.faqList || [];
     // Danh sách hiển thị luôn đồng bộ với toàn bộ câu hỏi đang có trong danh mục đã chọn,
@@ -4299,7 +4307,7 @@ class Component extends DCLogic {
   tagPicker(options, selected, onChange, opts) {
     const h = React.createElement;
     opts = opts || {};
-    return h(FptTagPicker, { options, selected, onChange, placeholder: opts.placeholder, searchPlaceholder: opts.searchPlaceholder, hideSelectAll: opts.hideSelectAll });
+    return h(FptTagPicker, { options, selected, onChange, placeholder: opts.placeholder, searchPlaceholder: opts.searchPlaceholder, hideSelectAll: opts.hideSelectAll, disabledMap: opts.disabledMap, onDisabledClick: opts.onDisabledClick });
   }
   editorShell(title, subtitle, onBack, content, onSave, saveLabel, headerExtra, shellKey) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -4561,6 +4569,7 @@ class Component extends DCLogic {
     { id: 3, name: 'Chính sách & Thủ tục', order: 3, count: 3, lang: 'Tiếng Việt', status: 'active', createdAt: '05/01/2026', createdBy: 'Lê Minh Hoàng', updatedAt: '22/06/2026', updatedBy: 'Phạm Thu Hà' },
     { id: 4, name: 'Dịch vụ GTGT', order: 4, count: 3, lang: 'Tiếng Việt', status: 'active', createdAt: '10/01/2026', createdBy: 'Phạm Thu Hà', updatedAt: '10/01/2026', updatedBy: 'Phạm Thu Hà' },
   ]; }
+  getFaqCats() { return this.state.faqCatsData || this.FAQ_CATS(); }
   BADGE_TAG_CATEGORIES() {
     return [
       { value: 'card', label: 'Card gói' },
@@ -6085,7 +6094,7 @@ class Component extends DCLogic {
   }
   renderSectionEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const isNew = !r; const back = () => this.setState({ secEditor: undefined, secEditorBlocks: undefined, secEditorPages: undefined, secEditorType: undefined });
+    const isNew = !r; const back = () => this.setState({ secEditor: undefined, secEditorBlocks: undefined, secEditorPages: undefined, secEditorType: undefined, secBlockDragIdx: undefined, secBlockDragOverIdx: undefined });
     const PAGES = this.PAGES().map(p => p.name);
     const selPages = this.state.secEditorPages || (r ? (r.pages || []) : []);
     const SEC_TYPES = this.SEC_TYPES();
@@ -6093,9 +6102,6 @@ class Component extends DCLogic {
     // FAQ: chỉ cho gắn Block thuộc "Loại dữ liệu" = Câu hỏi (datasourceKey 'faq') — không hiển thị các block khác loại.
     const allBlocks = (secType === 'question' ? this.BLOCKS().filter(b => b.datasourceKey === 'faq') : this.BLOCKS()).map(b => b.name);
     const selBlocks = this.state.secEditorBlocks || [];
-    const toggleBlock = (b) => { const cur = this.state.secEditorBlocks || []; this.setState({ secEditorBlocks: cur.includes(b) ? cur.filter(x => x !== b) : [...cur, b] }); };
-    const blockQuery = (this.state.secBlockSearch || '').toLowerCase();
-    const shownBlocks = blockQuery ? allBlocks.filter(b => b.toLowerCase().includes(blockQuery)) : allBlocks;
     const secCodeRef = React.createRef();
     const secTitlePlaceholder = 'Hero Banner Trang chủ';
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
@@ -6185,38 +6191,50 @@ class Component extends DCLogic {
     if (TEXT_EDITOR_TYPES.includes(secType)) blocks.push({ icon: 'edit-01-line', title: 'Nội dung section', content: [
       this.richTextEditor(r ? (r.html || '') : '')
     ] });
-    if (GAN_BLOCK_TYPES.includes(secType)) blocks.push({ icon: 'dots-grid-line', title: 'Gắn Blocks', content: [
-      lockDatasourceKey && h(DS.Alert, { theme: 'info', key: 'gan-block-lock-hint' }, 'Chỉ cho gắn các Block cùng "Loại dữ liệu": ' + lockDatasourceLabel + '.'),
-      allBlocks.length > 10 ? h(DS.Input, { placeholder: 'Tìm kiếm block...', leadingIcon: 'search-medium-line', value: this.state.secBlockSearch || '', onChange: e => this.setState({ secBlockSearch: e.target ? e.target.value : e }) }) : null,
-      selBlocks.length > 0 && h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
-        selBlocks.map(b => h(DS.Tag, {
-          key: b, size: 'sm',
-          style: { background: 'var(--color-accent-bg)', border: '1px solid var(--color-accent)', color: 'var(--color-accent-text)', fontWeight: 600 },
-          onClose: () => toggleBlock(b)
-        }, b))
-      ),
-      h('div', { className: 'fpt-scroll', style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', maxHeight: 220, overflowY: 'auto' } },
-        shownBlocks.length === 0 ? h('div', { style: { padding: 14, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center' } }, allBlocks.length === 0 ? 'Chưa có block nào.' : 'Không tìm thấy block phù hợp.')
-          : shownBlocks.map(b => {
-            const ck = selBlocks.includes(b);
-            const bDs = blockDatasourceByName.get(b) || {};
-            const mismatched = !ck && lockDatasourceKey && bDs.key !== lockDatasourceKey;
-            const onPick = () => {
-              if (mismatched) { this.toast('warning', 'Khác loại dữ liệu', 'Block "' + b + '" thuộc loại dữ liệu "' + (bDs.label || '—') + '", khác với "' + lockDatasourceLabel + '" đã chọn. Chỉ cho gắn các Block cùng loại dữ liệu.'); return; }
-              toggleBlock(b);
-            };
-            return h('div', {
-              key: b, onClick: onPick,
-              title: mismatched ? 'Khác loại dữ liệu (' + (bDs.label || '—') + ') với block đã chọn (' + lockDatasourceLabel + ')' : undefined,
-              style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: mismatched ? 'not-allowed' : 'pointer', borderBottom: '1px solid var(--color-border-pale)', background: ck ? 'var(--color-accent-bg)' : 'transparent', opacity: mismatched ? 0.45 : 1, transition: 'background .15s' }
-            },
-              h('div', { style: { width: 16, height: 16, borderRadius: 4, flexShrink: 0, border: '1.5px solid', borderColor: ck ? 'var(--color-accent)' : 'var(--color-border-strong)', background: ck ? 'var(--color-accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, ck && h(DS.Icon, { name: 'check-line', size: 11, color: '#fff' })),
-              h('span', { style: { fontSize: 13, fontWeight: ck ? 600 : 400, userSelect: 'none' } }, b),
-              mismatched && h('span', { style: { marginLeft: 'auto', fontSize: 11.5, color: 'var(--color-text-subtle)' } }, bDs.label || '—')
-            );
-          })
-      )
-    ] });
+    if (GAN_BLOCK_TYPES.includes(secType)) {
+      // Dropdown chọn block (cùng mẫu FptTagPicker với "Thuộc trang") + bảng kéo-thả sắp xếp thứ tự các block đã chọn, không đánh số.
+      const blockDisabledMap = {};
+      if (lockDatasourceKey) allBlocks.forEach(b => {
+        if (selBlocks.includes(b)) return;
+        const bDs = blockDatasourceByName.get(b) || {};
+        if (bDs.key !== lockDatasourceKey) blockDisabledMap[b] = bDs.label || '—';
+      });
+      const moveBlock = (from, to) => {
+        if (to < 0 || to >= selBlocks.length || from === to) return;
+        const next = selBlocks.slice(); const [moved] = next.splice(from, 1); next.splice(to, 0, moved);
+        this.setState({ secEditorBlocks: next });
+      };
+      const gbDragIdx = this.state.secBlockDragIdx;
+      const gbDragOverIdx = this.state.secBlockDragOverIdx;
+      blocks.push({ icon: 'dots-grid-line', title: 'Gắn Blocks', content: [
+        lockDatasourceKey && h(DS.Alert, { theme: 'info', key: 'gan-block-lock-hint' }, 'Chỉ cho gắn các Block cùng "Loại dữ liệu": ' + lockDatasourceLabel + '.'),
+        this.tagPicker(allBlocks, selBlocks, v => this.setState({ secEditorBlocks: v }), {
+          placeholder: 'Chọn block gắn vào section...', searchPlaceholder: 'Tìm kiếm block...', hideSelectAll: true,
+          disabledMap: blockDisabledMap,
+          onDisabledClick: (b, reason) => this.toast('warning', 'Khác loại dữ liệu', 'Block "' + b + '" thuộc loại dữ liệu "' + reason + '", khác với "' + lockDatasourceLabel + '" đã chọn. Chỉ cho gắn các Block cùng loại dữ liệu.')
+        }),
+        selBlocks.length > 0 && h('div', { key: 'gan-block-hint', style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Kéo thả để sắp xếp lại thứ tự hiển thị của block.'),
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+          selBlocks.length === 0
+            ? h('div', { style: { padding: 16, fontSize: 13, color: 'var(--color-text-subtle)', textAlign: 'center', fontStyle: 'italic' } }, 'Chưa gắn block nào.')
+            : h('div', null,
+                selBlocks.map((b, i) => h('div', {
+                    key: b, draggable: true,
+                    onDragStart: e => { e.dataTransfer.effectAllowed = 'move'; this.setState({ secBlockDragIdx: i }); },
+                    onDragOver: e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.setState({ secBlockDragOverIdx: i }); },
+                    onDragLeave: () => this.setState({ secBlockDragOverIdx: null }),
+                    onDrop: e => { e.preventDefault(); const from = this.state.secBlockDragIdx; if (from != null && from !== i) moveBlock(from, i); this.setState({ secBlockDragIdx: null, secBlockDragOverIdx: null }); },
+                    onDragEnd: () => this.setState({ secBlockDragIdx: null, secBlockDragOverIdx: null }),
+                    style: { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderBottom: i < selBlocks.length - 1 ? '1px solid var(--color-border-pale)' : 'none', background: gbDragOverIdx === i ? 'var(--color-accent-bg)' : 'transparent', opacity: gbDragIdx === i ? 0.4 : 1, cursor: 'grab', transition: 'all .12s' }
+                  },
+                    h(DS.Icon, { name: 'dots-grid-line', size: 15, color: 'var(--color-text-subtle)', style: { flexShrink: 0 }, title: 'Kéo để sắp xếp vị trí' }),
+                    h('span', { style: { flex: 1, fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, b)
+                  )
+                )
+              )
+        )
+      ] });
+    }
     if (showFilterBlock) blocks.push({ icon: 'zap-line', title: 'Bộ lọc (Filter)', content: [
       h('div', null, h(DS.Switch, { label: 'Hiển thị Bộ lọc (Filter)' }))
     ] });
@@ -8732,10 +8750,10 @@ class Component extends DCLogic {
     const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
     return 'OMI-' + datePart + '-' + rand;
   }
-  // Link tracking luôn tính trực tiếp từ utm_source/camp_source/mã chiến dịch hiện tại — không lưu field riêng.
+  // Link tracking luôn tính trực tiếp từ utm_source/utm_campaign/mã chiến dịch hiện tại — không lưu field riêng.
   omisellTrackingLink(r) {
     return 'https://fpt.vn?utm_source=' + encodeURIComponent(r.utmSource || '') +
-      '&camp_source=' + encodeURIComponent(r.campSource || '') + '&camp_code=' + (r.code || '');
+      '&utm_campaign=' + encodeURIComponent(r.campSource || '') + '&camp_code=' + (r.code || '');
   }
   // Ô giá trị read-only kèm nút copy (tái dùng this.copyText + icon copy-docs-line đã có cho link ảnh S3).
   omisellCopyValue(value, copyTitle) {
@@ -8749,14 +8767,14 @@ class Component extends DCLogic {
   }
   openOmisellEditor(r) {
     this.setState({
-      omisellEditor: r, omisellSalesErr: false, omisellDateErr: false,
+      omisellEditor: r, omisellSalesErr: false, omisellCreatedId: null, omisellResultLoading: false,
       omisellDraft: r
         ? { name: r.name, desc: r.desc || '', utmSource: r.utmSource || '', campSource: r.campSource || '', sales: r.sales || [], rule: r.rule || 'assigned', code: r.code, dateStart: this.omisellParseDate(r.startAt), dateEnd: this.omisellParseDate(r.endAt) }
         : { name: '', desc: '', utmSource: '', campSource: '', sales: [], rule: 'assigned', code: this.genOmisellCode(), dateStart: null, dateEnd: null }
     });
   }
   closeOmisellEditor() {
-    this.setState({ omisellEditor: undefined, omisellDraft: null, omisellSalesErr: false, omisellDateErr: false });
+    this.setState({ omisellEditor: undefined, omisellDraft: null, omisellSalesErr: false, omisellCreatedId: null, omisellResultLoading: false });
   }
   openOmisellDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -8766,7 +8784,7 @@ class Component extends DCLogic {
         this.detailRow('Tên chiến dịch', r.name),
         this.detailRow('Mô tả', r.desc || '—'),
         this.detailRow('utm_source', r.utmSource || '—'),
-        this.detailRow('camp_source', r.campSource || '—'),
+        this.detailRow('utm_campaign', r.campSource || '—'),
         this.detailRow('Phụ trách', (r.sales || []).length ? h(FptChipList, { theme: 'neutral', max: 8, list: r.sales }) : '—'),
         this.detailRow('Quy tắc phân phối', this.omisellRuleLabel(r.rule)),
         this.detailRow('Thời gian hiệu lực', this.omisellPeriodCell(r)),
@@ -8806,7 +8824,7 @@ class Component extends DCLogic {
       { key: 'name', header: 'Tên chiến dịch', width: 240, render: (_, r) => h('span', { style: { fontWeight: 600, fontSize: 13 } }, r.name) },
       { key: 'desc', header: 'Mô tả', width: 220, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.desc || '—') },
       { key: 'utmSource', header: 'utm_source', width: 170, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5 } }, r.utmSource || '—') },
-      { key: 'campSource', header: 'camp_source', width: 170, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5 } }, r.campSource || '—') },
+      { key: 'campSource', header: 'utm_campaign', width: 170, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5 } }, r.campSource || '—') },
       { key: 'sales', header: 'Phụ trách', width: 220, render: (_, r) => (r.sales || []).length ? h(FptChipList, { theme: 'neutral', max: 3, list: r.sales }) : '—' },
       { key: 'rule', header: 'Quy tắc phân phối', width: 140, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, this.omisellRuleLabel(r.rule)) },
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(this.omisellEffStatus(r)) },
@@ -8818,7 +8836,7 @@ class Component extends DCLogic {
     return this.listCard(
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
-          h('div', { style: { width: 320, flexShrink: 0 } }, h(DS.Input, { value: this.state.omisellSearch || '', onChange: e => this.setState({ omisellSearch: e && e.target ? e.target.value : e, omisell_pg: 1 }), placeholder: 'Tìm tên, mã, utm_source, camp_source...', leadingIcon: 'search-medium-line' })),
+          h('div', { style: { width: 320, flexShrink: 0 } }, h(DS.Input, { value: this.state.omisellSearch || '', onChange: e => this.setState({ omisellSearch: e && e.target ? e.target.value : e, omisell_pg: 1 }), placeholder: 'Tìm tên, mã, utm_source, utm_campaign...', leadingIcon: 'search-medium-line' })),
           h('div', { style: { width: 180, flexShrink: 0 } }, h(DS.Select, {
             value: statusF, options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'running', label: 'Đang chạy' }, { value: 'scheduled', label: 'Chưa bắt đầu' }, { value: 'expired', label: 'Đã kết thúc' }],
             onChange: v => this.setState({ omisellStatusFilter: v, omisell_pg: 1 })
@@ -8847,11 +8865,12 @@ class Component extends DCLogic {
     const setD = patch => this.setState(s => ({ omisellDraft: Object.assign({}, s.omisellDraft, patch) }));
     const d = this.state.omisellDraft || { name: '', desc: '', utmSource: '', campSource: '', sales: [], rule: 'assigned', code: this.genOmisellCode(), dateStart: null, dateEnd: null };
     const salesErr = !!this.state.omisellSalesErr && !(d.sales || []).length;
-    const dateErr = !!this.state.omisellDateErr && (!d.dateStart || !d.dateEnd);
+    const justCreated = isNew && this.state.omisellCreatedId != null;
+    const showOutput = !isNew || justCreated;
     const NAME_MAX = 255;
     const nameLen = (d.name || '').length;
     const nameAtMax = nameLen >= NAME_MAX;
-    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num, id: num === 4 ? 'omisell-result-card' : undefined },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
         h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
@@ -8859,6 +8878,7 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
     );
     const outputLabel = lbl => h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, lbl);
+    const resultLoading = !!this.state.omisellResultLoading;
     return this.editorShell(
       isNew ? 'Tạo chiến dịch Omisell' : 'Chỉnh sửa chiến dịch: ' + r.name, 'Chiến dịch marketing phân phối lead cho sale qua Omisell', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -8871,7 +8891,7 @@ class Component extends DCLogic {
           this.field('Mô tả', h(DS.Textarea, { value: d.desc, rows: 3, placeholder: 'Nhập mô tả…', onChange: e => setD({ desc: e && e.target ? e.target.value : e }) })),
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 } },
             this.field('utm_source', h(DS.Input, { value: d.utmSource, placeholder: 'Nhập utm_source…', onChange: e => setD({ utmSource: e && e.target ? e.target.value : e }) }), true),
-            this.field('camp_source', h(DS.Input, { value: d.campSource, placeholder: 'Nhập camp_source…', onChange: e => setD({ campSource: e && e.target ? e.target.value : e }) }), true)
+            this.field('utm_campaign', h(DS.Input, { value: d.campSource, placeholder: 'Nhập utm_campaign…', onChange: e => setD({ campSource: e && e.target ? e.target.value : e }) }), true)
           )
         ),
         section(2, 'user-circle-line', 'Phân phối lead',
@@ -8886,37 +8906,32 @@ class Component extends DCLogic {
         ),
         section(3, 'calendar-line', 'Thời gian hiệu lực',
           h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Thời gian hiệu lực', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
-            h('div', { className: dateErr ? 'fpt-req-box-err' : undefined, style: dateErr ? { padding: 2 } : undefined },
-              h(DS.DateRangePicker, {
-                allowPast: true, placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' },
-                startDate: d.dateStart || null, endDate: d.dateEnd || null,
-                onChange: v => {
-                  const ds = v && v.start ? v.start : null; const de = v && v.end ? v.end : null;
-                  setD({ dateStart: ds, dateEnd: de });
-                  if (ds && de && this.state.omisellDateErr) this.setState({ omisellDateErr: false });
-                }
-              })
-            ),
-            dateErr && h('div', { className: 'fpt-req-err-msg' }, 'Vui lòng chọn ngày bắt đầu và ngày kết thúc.')
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Thời gian hiệu lực'),
+            h(DS.DateRangePicker, {
+              allowPast: true, placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' },
+              startDate: d.dateStart || null, endDate: d.dateEnd || null,
+              onChange: v => {
+                const ds = v && v.start ? v.start : null; const de = v && v.end ? v.end : null;
+                setD({ dateStart: ds, dateEnd: de });
+              }
+            })
           )
         ),
-        section(4, 'lock-01-line', 'Output',
-          h('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Các trường dưới đây do hệ thống tự sinh, không thể chỉnh sửa.'),
-          h('div', null, outputLabel('Mã chiến dịch'), this.omisellCopyValue(d.code, 'Sao chép mã chiến dịch')),
-          h('div', null, outputLabel('Nội dung'), this.omisellCopyValue(this.omisellTrackingLink(d), 'Sao chép link tracking')),
-          h('div', null, outputLabel('Trạng thái'), this.statusBadge(this.omisellEffStatus({ dateStart: d.dateStart, dateEnd: d.dateEnd })))
+        showOutput && section(4, 'lock-01-line', 'Kết quả',
+          h('div', null, outputLabel('Mã chiến dịch'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: 220, height: 40, radius: 8 }) : this.omisellCopyValue(d.code, 'Sao chép mã chiến dịch')),
+          h('div', null, outputLabel('Nội dung'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: '100%', height: 40, radius: 8 }) : this.omisellCopyValue(this.omisellTrackingLink(d), 'Sao chép link tracking')),
+          h('div', null, outputLabel('Trạng thái'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: 90, height: 24, radius: 999 }) : this.statusBadge(this.omisellEffStatus({ dateStart: d.dateStart, dateEnd: d.dateEnd })))
         )
       ),
       () => {
+        if (justCreated) { back(); return; }
         const salesMissing = !(d.sales || []).length;
-        const dateMissing = !d.dateStart || !d.dateEnd;
-        if (salesMissing || dateMissing) {
-          this.setState({ omisellSalesErr: salesMissing, omisellDateErr: dateMissing });
-          this.toast('danger', 'Thiếu thông tin', salesMissing && dateMissing ? 'Vui lòng chọn sale phụ trách và thời gian hiệu lực.' : salesMissing ? 'Vui lòng chọn ít nhất 1 sale phụ trách.' : 'Vui lòng chọn ngày bắt đầu và ngày kết thúc.');
+        if (salesMissing) {
+          this.setState({ omisellSalesErr: true });
+          this.toast('danger', 'Thiếu thông tin', 'Vui lòng chọn ít nhất 1 sale phụ trách.');
           return;
         }
-        if (this.state.omisellSalesErr || this.state.omisellDateErr) this.setState({ omisellSalesErr: false, omisellDateErr: false });
+        if (this.state.omisellSalesErr) this.setState({ omisellSalesErr: false });
         const list = this.getOmisellCampaignList();
         const rec = {
           name: d.name, desc: d.desc, utmSource: d.utmSource, campSource: d.campSource,
@@ -8924,15 +8939,25 @@ class Component extends DCLogic {
           startAt: this.omisellFmtDate(d.dateStart), endAt: this.omisellFmtDate(d.dateEnd),
           updatedAt: this.nowStr(), updatedBy: 'Admin User'
         };
-        if (r) this.setState({ omisellCampaignListData: list.map(x => x.id === r.id ? Object.assign({}, x, rec) : x) });
-        else {
+        if (r) {
+          this.setState({ omisellCampaignListData: list.map(x => x.id === r.id ? Object.assign({}, x, rec) : x) });
+          back();
+          this.toast('success', 'Đã lưu', 'Chiến dịch Omisell đã được cập nhật.');
+        } else {
           const newId = Math.max(0, ...list.map(x => x.id)) + 1;
-          this.setState({ omisellCampaignListData: list.concat([Object.assign({ id: newId, createdAt: this.nowStr(), createdBy: 'Admin User' }, rec)]) });
+          this.setState({
+            omisellCampaignListData: list.concat([Object.assign({ id: newId, createdAt: this.nowStr(), createdBy: 'Admin User' }, rec)]),
+            omisellCreatedId: newId,
+            omisellResultLoading: true
+          }, () => {
+            const el = document.getElementById('omisell-result-card');
+            if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => this.setState({ omisellResultLoading: false }), 700);
+          });
+          this.toast('success', 'Đã tạo', 'Chiến dịch Omisell mới đã được tạo. Xem kết quả bên dưới.');
         }
-        back();
-        this.toast('success', 'Đã lưu', isNew ? 'Chiến dịch Omisell mới đã được tạo.' : 'Chiến dịch Omisell đã được cập nhật.');
       },
-      isNew ? 'Tạo chiến dịch' : 'Cập nhật'
+      isNew ? (justCreated ? 'Quay lại danh sách' : 'Tạo chiến dịch') : 'Cập nhật'
     );
   }
 
@@ -9234,7 +9259,7 @@ class Component extends DCLogic {
         }, true) },
       ]) },
     ];
-    const cats = this.FAQ_CATS().map(c => c.name);
+    const cats = this.getFaqCats().map(c => c.name);
     return this.listCard(
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center' } },
@@ -9267,7 +9292,7 @@ class Component extends DCLogic {
   renderFaqCats() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const search = (this.state.faqCatSearch || '').toLowerCase();
-    const data = this.FAQ_CATS().filter(c => c.name.toLowerCase().includes(search));
+    const data = this.getFaqCats().filter(c => c.name.toLowerCase().includes(search));
     const columns = [
       { key: 'name', header: 'Tên danh mục', width: 260, render: (_, r) => h('span', { style: { fontWeight: 600 } }, r.name) },
       { key: 'lang', header: 'Ngôn ngữ', width: 110, render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-muted)' } }, r.lang || 'Tiếng Việt') },
@@ -9288,6 +9313,10 @@ class Component extends DCLogic {
         } },
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqCatEditor: r }) },
+        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa danh mục?', 'Danh mục "' + r.name + '" sẽ bị xóa khỏi danh sách.' + (r.count > 0 ? ' Danh mục này đang có ' + r.count + ' câu hỏi — các câu hỏi đó sẽ không còn thuộc danh mục nào.' : ''), () => {
+          this.setState({ faqCatsData: this.getFaqCats().filter(c => c.id !== r.id) });
+          this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa danh mục "' + r.name + '".');
+        }, true) },
       ]) },
     ];
     return this.listCard(
@@ -9326,7 +9355,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.setState({ faqEditor: undefined, faqDraft: null });
     const setD = patch => this.setState(s => ({ faqDraft: Object.assign({}, s.faqDraft, patch) }));
-    const catOpts = this.FAQ_CATS().map(c => ({ value: c.name, label: c.name }));
+    const catOpts = this.getFaqCats().map(c => ({ value: c.name, label: c.name }));
     const d = this.state.faqDraft || { cat: '', lang: '', q: '', answer: '', order: '1', active: true };
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
@@ -10345,8 +10374,8 @@ class Component extends DCLogic {
     const lv2Nodes = lv1Node ? urlAll.filter(n => n.level === 2 && n.pid === lv1Node.id) : [];
     const lv2Options = lv2Nodes.filter(n => this.urlIsActive(n) || n.slug === slug2).map(n => ({ value: n.slug, label: n.slug }));
     if (slug2 && !lv2Options.some(o => o.value === slug2)) lv2Options.push({ value: slug2, label: slug2 });
-    // Đã chọn Level 2 rồi thì thêm lựa chọn "Bỏ chọn" ở đầu để quay lại URL 1 cấp (DS.Select không có nút xoá).
-    const lv2Menu = slug2 ? [{ value: '', label: '— Bỏ chọn URL cấp 2 —' }, ...lv2Options] : lv2Options;
+    // Bỏ chọn Level 2 dùng nút × gốc của DS.Select (giống Level 1) — không tự chèn thêm lựa chọn "Bỏ chọn" vào
+    // menu nữa, vì value '' trong options khiến DS.Select coi đây là select kiểu "Tất cả" và tự ẩn nút × (§11).
     const slug  = [slug1, slug2].filter(s => s).join('/') || 'khuyen-mai/km-t5';
     const tplDefaultColors = { internet: '#ffffff', sa: '#0a1628', landingpage: '#f4f6fa', customhtml: '#ffffff' };
     const defaultBgColor = tplDefaultColors[this.state.ldpTpl] || '#ffffff';
@@ -10412,7 +10441,7 @@ class Component extends DCLogic {
                   h('span', { style: { display: 'flex', alignItems: 'center', height: 48, color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
                   h('div', { style: { flex: '1 1 170px', minWidth: 150 } },
                     h(DS.Select, {
-                      value: slug2, options: lv2Menu, error: slug2Err, disabled: !slug1 || !lv2Options.length,
+                      value: slug2, options: lv2Options, error: slug2Err, disabled: !slug1 || !lv2Options.length,
                       placeholder: !slug1 ? 'Chọn nhánh Level 1 trước' : (lv2Options.length ? 'Chọn nhánh Level 2' : 'Chưa có URL cấp 2'),
                       searchable: true, searchPlaceholder: 'Tìm nhánh Level 2…',
                       onChange: v => set('urlSlug2', v),
