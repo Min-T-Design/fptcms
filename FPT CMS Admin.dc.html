@@ -8069,7 +8069,7 @@ class Component extends DCLogic {
         section(isPkg ? 3 : 2, 'image-line', showLink ? 'Hình ảnh & liên kết' : 'Hình ảnh',
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
             this.uploadBox('Popup Desktop', 'JPG, PNG, WEBP · ≤200KB'),
-            this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · ≤150KB')
+            this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · ≤200KB')
           ),
           showLink && this.field('Link điều hướng', h(FptUrlInput, { defaultValue: r ? (r.url || '') : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai' }))
         ),
