@@ -7689,8 +7689,7 @@ class Component extends DCLogic {
     const pages = r.pages || [];
     return h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' } },
       h('span', { style: { fontSize: 13 } }, pages[0] || '—'),
-      pages.length > 1 && h(DS.Badge, { theme: 'neutral' }, '+' + (pages.length - 1) + ' khác'),
-      r.type === 'trigger' && h(DS.Badge, { theme: 'info' }, 'Không tương tác')
+      pages.length > 1 && h(DS.Badge, { theme: 'neutral' }, '+' + (pages.length - 1) + ' khác')
     );
   }
   openPopupEditor(r) {
