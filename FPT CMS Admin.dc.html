@@ -9227,6 +9227,11 @@ class Component extends DCLogic {
         } },
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' } }) },
+        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa câu hỏi?', 'Câu hỏi "' + (r.q.length > 70 ? r.q.slice(0, 70) + '…' : r.q) + '" sẽ bị xóa khỏi danh sách FAQ.', () => {
+          const base = this.state.faqItems || this.FAQS();
+          this.setState({ faqItems: base.filter(f => f.id !== r.id) });
+          this.closeModal(); this.toast('success', 'Đã xóa', 'Đã xóa câu hỏi FAQ.');
+        }, true) },
       ]) },
     ];
     const cats = this.FAQ_CATS().map(c => c.name);
