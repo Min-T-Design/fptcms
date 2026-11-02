@@ -7695,10 +7695,10 @@ class Component extends DCLogic {
     );
   }
   openPopupEditor(r) {
-    this.setState({ popupEditor: r, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupEditorAutoClose: r && r.autoCloseSec ? String(r.autoCloseSec) : '', popupEditorPkgs: r ? (r.pkgs || []).map(p => ({ ...p })) : [], popupPkgAttempted: false, popupSkuSource: 'ecp', popupSkuFilter: 'internet', popupSkuSearch: '' });
+    this.setState({ popupEditor: r, popupEditorName: r ? r.name : '', popupNameErr: '', popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupEditorAutoClose: r && r.autoCloseSec ? String(r.autoCloseSec) : '', popupEditorPkgs: r ? (r.pkgs || []).map(p => ({ ...p })) : [], popupPkgAttempted: false, popupSkuSource: 'ecp', popupSkuFilter: 'internet', popupSkuSearch: '' });
   }
   closePopupEditor() {
-    this.setState({ popupEditor: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupEditorAutoClose: undefined, popupEditorPkgs: undefined, popupPkgAttempted: false, popupSkuSource: undefined, popupSkuFilter: undefined, popupSkuSearch: undefined });
+    this.setState({ popupEditor: undefined, popupEditorName: undefined, popupNameErr: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupEditorAutoClose: undefined, popupEditorPkgs: undefined, popupPkgAttempted: false, popupSkuSource: undefined, popupSkuFilter: undefined, popupSkuSearch: undefined });
   }
   renderPopup() {
     if (this.state.popupEditor !== undefined) return this.renderPopupEditor(this.state.popupEditor);
@@ -7991,6 +7991,15 @@ class Component extends DCLogic {
   renderPopupEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.closePopupEditor();
+    const name = this.state.popupEditorName !== undefined ? this.state.popupEditorName : (r ? r.name : '');
+    const nameErr = this.state.popupNameErr || '';
+    // Trùng tên popup (không phân biệt hoa/thường, bỏ khoảng trắng đầu-cuối) → báo lỗi ngay tại trường Tên Popup, nêu rõ trùng với popup nào (CLAUDE.md §14 kiểu tay, như renderFaqCatEditor).
+    const checkPopupNameDup = nameVal => {
+      const nm = (nameVal || '').trim();
+      if (!nm) { if (this.state.popupNameErr) this.setState({ popupNameErr: '' }); return; }
+      const dup = this.POPUPS().find(p => p.name.trim().toLowerCase() === nm.toLowerCase() && (!r || p.id !== r.id));
+      this.setState({ popupNameErr: dup ? 'Tên "' + nm + '" đã trùng với popup "' + dup.name + '". Vui lòng đổi tên khác.' : '' });
+    };
     const type = this.state.popupEditorType !== undefined ? this.state.popupEditorType : (r ? r.type : '');
     const trigger = this.state.popupEditorTrigger !== undefined ? this.state.popupEditorTrigger : (r ? r.trigger : '');
     const frequency = this.state.popupEditorFrequency !== undefined ? this.state.popupEditorFrequency : (r ? r.frequency : '');
@@ -8027,7 +8036,10 @@ class Component extends DCLogic {
         ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { flex: 1 } }, this.field('Tên Popup', h(DS.Input, { defaultValue: r ? r.name : '', placeholder: 'VD: Flash Sale T6' }), true)),
+            h('div', { style: { flex: 1 } }, this.field('Tên Popup', h(DS.Input, {
+              value: name, placeholder: 'VD: Flash Sale T6', error: nameErr || undefined,
+              onChange: e => { const v = e && e.target ? e.target.value : e; this.setState({ popupEditorName: v }); checkPopupNameDup(v); }
+            }), true)),
             h('div', { style: { width: 230 } }, this.field('Loại popup', h(DS.Select, {
               options: this.POPUP_TYPES(), value: type, placeholder: 'Chọn loại popup…', onChange: v => this.setState({ popupEditorType: v })
             }), true))
@@ -8098,6 +8110,13 @@ class Component extends DCLogic {
         // Đặt cờ trước để lỗi gói hiện cùng lúc với lỗi khác (nếu có); nút Lưu không bao giờ bị disabled (§14).
         const pkgMissing = isPkg && !selectedPkgs.length;
         if (pkgMissing) this.setState({ popupPkgAttempted: true });
+        const nm = (name || '').trim();
+        const dupPopup = this.POPUPS().find(p => p.name.trim().toLowerCase() === nm.toLowerCase() && (!r || p.id !== r.id));
+        if (dupPopup) {
+          this.setState({ popupNameErr: 'Tên "' + nm + '" đã trùng với popup "' + dupPopup.name + '". Vui lòng đổi tên khác.' });
+          this.toast('danger', 'Trùng tên Popup', 'Tên "' + nm + '" đã trùng với popup "' + dupPopup.name + '".');
+          return;
+        }
         if (autoCloseErr) { this.toast('danger', 'Thời gian tự đóng không hợp lệ', autoCloseErr); return; }
         if (pkgMissing) {
           this.toast('danger', 'Chưa chọn gói cước', 'Popup "Trang chi tiết gói" cần chọn ít nhất 1 gói cước áp dụng.');
@@ -8105,7 +8124,7 @@ class Component extends DCLogic {
           if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           return;
         }
-        back(); this.toast('success', 'Đã lưu Popup', isNew ? 'Popup mới đã được tạo.' : 'Popup "' + r.name + '" đã được cập nhật.');
+        back(); this.toast('success', 'Đã lưu Popup', isNew ? 'Popup mới đã được tạo.' : 'Popup "' + nm + '" đã được cập nhật.');
       },
       isNew ? 'Tạo Popup' : 'Lưu Popup'
     );
