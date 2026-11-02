@@ -7926,6 +7926,9 @@ class Component extends DCLogic {
     });
     // "Chọn tất cả" áp dụng cho danh sách đang lọc (tab nguồn + danh mục + ô tìm kiếm); gói đã chọn ở danh mục khác được giữ nguyên.
     const allChk = filteredSkus.length > 0 && filteredSkus.every(x => selected.some(p => p.code === x.code));
+    // Số đã chọn / tổng số gói đang hiển thị trong danh mục này — vì "Chọn tất cả" chỉ tác động tới danh sách đang lọc/hiển thị,
+    // không phải toàn bộ danh mục, nên hiện rõ tỉ lệ này để người dùng biết vì sao ô "Chọn tất cả" đang tích hay chưa.
+    const selInTab = filteredSkus.filter(x => selected.some(p => p.code === x.code)).length;
     const toggleAll = v => this.setState(sv => {
       const cur = sv.popupEditorPkgs || [];
       if (!v) return { popupEditorPkgs: cur.filter(p => !filteredSkus.some(x => x.code === p.code)) };
@@ -7970,7 +7973,7 @@ class Component extends DCLogic {
         })
       ),
       filteredSkus.length > 0 && h('div', { style: { padding: '0 10px', marginBottom: 8 } },
-        h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChk, onChange: toggleAll })
+        h(DS.Checkbox, { label: 'Chọn tất cả (' + selInTab + '/' + filteredSkus.length + ')', checked: allChk, onChange: toggleAll })
       ),
       h('div', { style: { marginBottom: 8 } },
         h(DS.Input, { placeholder: 'Lọc tên hiển thị/route name...', leadingIcon: 'search-medium-line', value: this.state.popupSkuSearch || '', onChange: e => this.setState({ popupSkuSearch: e.target ? e.target.value : e }) })
