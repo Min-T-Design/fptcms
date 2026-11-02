@@ -4464,7 +4464,7 @@ class Component extends DCLogic {
     { id: 4, name: 'Popup Tết 2026', type: 'menu-page', pages: ['Trang chủ', 'Danh mục Camera'], period: '20/01/2026 – 05/02/2026', trigger: 'scroll', delaySec: 0, autoCloseSec: 0, frequency: 'always', status: 'hidden' },
     { id: 5, name: 'Popup Khuyến mãi Tháng 10', type: 'menu-page', url: 'https://fpt.vn/khuyen-mai/thang-10', pages: ['Trang chủ'], period: '01/10/2026 – 15/10/2026', trigger: 'delay', delaySec: 5, autoCloseSec: 10, frequency: 'every-session', status: 'scheduled' },
     { id: 6, name: 'Ưu đãi gói Internet LUX', type: 'pkg-detail', pkgs: [{ code: 'INT-LUX800', url: '/int-lux800-fptvn' }, { code: 'INT-LUX1000', url: '/int-lux1000-fptvn' }, { code: 'INT-BIZ500', url: '/int-biz500' }], period: '01/10/2026 – 31/12/2026', trigger: 'delay', delaySec: 4, autoCloseSec: 0, frequency: 'every-session', status: 'running' },
-    { id: 7, name: 'Trigger giữ chân khách xem gói Internet', type: 'trigger', url: '/internet-ca-nhan/uu-dai-lap-moi', pages: ['Trang chủ', 'Internet - Wifi'], period: '15/10/2026 – 30/11/2026', autoCloseSec: 8, status: 'running' },
+    { id: 7, name: 'Trigger giữ chân khách xem gói Internet', type: 'trigger', url: '/internet-ca-nhan/uu-dai-lap-moi', pages: ['Trang chủ', 'Internet - Wifi'], pkgs: [{ code: 'INT-LUX800', url: '/int-lux800-fptvn' }, { code: 'INT-LUX1000', url: '/int-lux1000-fptvn' }], period: '15/10/2026 – 30/11/2026', autoCloseSec: 8, status: 'running' },
     { id: 8, name: 'Trigger Camera AI', type: 'trigger', pages: ['Danh mục Camera'], period: '01/11/2026 – 15/11/2026', autoCloseSec: 0, status: 'scheduled' },
   ]; }
   AD_TARGETS() { return [
@@ -7873,7 +7873,7 @@ class Component extends DCLogic {
         r.type === 'checkout' && this.detailRow('Phạm vi Checkout', r.checkoutScope || '—'),
         this.detailRow('Thời gian hiển thị', r.period),
         (r.type === 'menu-page' || r.type === 'trigger') && this.detailRow('Link điều hướng', r.url || '—'),
-        r.type === 'pkg-detail' && this.detailRow('Gói cước áp dụng (' + (r.pkgs || []).length + ')', (r.pkgs || []).length
+        (r.type === 'pkg-detail' || r.type === 'trigger') && this.detailRow('Gói cước áp dụng (' + (r.pkgs || []).length + ')', (r.pkgs || []).length
           ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 2 } }, (r.pkgs || []).map(p => h('div', { key: p.code },
               h('div', { style: { fontWeight: 600, fontSize: 13 } }, this.PKG_SKU_PICKER_LABELS().get(p.code).name || p.code),
               h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5, color: 'var(--color-text-subtle)' } }, p.code + ' · ' + (p.url || '—'))
@@ -8017,8 +8017,11 @@ class Component extends DCLogic {
     const setPkgAuto = (code, auto) => this.setState(sv => ({ popupEditorPkgs: (sv.popupEditorPkgs || selectedPkgs).map(p => p.code === code ? { ...p, auto, url: auto ? this.popupPkgDefaultUrl(code) : '' } : p) }));
     const isPkg = type === 'pkg-detail';
     const isTrigger = type === 'trigger';
-    // Popup "Trang chi tiết gói" bắt buộc chọn ≥ 1 gói (§14, control ghép): chỉ báo lỗi sau khi bấm Lưu, tự mất ngay khi đã chọn gói.
-    const pkgErr = !!this.state.popupPkgAttempted && isPkg && !selectedPkgs.length;
+    // "Không tương tác" (trigger) cũng có block chọn gói giống "Trang chi tiết gói" — chỉ khác là vẫn giữ thêm
+    // Trang áp dụng hiển thị / Link điều hướng / ảnh (showPages, showLink không loại trigger, chỉ loại pkg-detail).
+    const showPkgBlock = isPkg || isTrigger;
+    // Bắt buộc chọn ≥ 1 gói (§14, control ghép): chỉ báo lỗi sau khi bấm Lưu, tự mất ngay khi đã chọn gói.
+    const pkgErr = !!this.state.popupPkgAttempted && showPkgBlock && !selectedPkgs.length;
     // Loại popup / Kiểu kích hoạt / Tần suất hiển thị là DS.Select (control ghép) nên this.field(..., true) không tự kiểm được (§14) — kiểm tay, báo lỗi qua prop error của DS.Select.
     const typeErr = !!this.state.popupTypeErr;
     const triggerErr = !!this.state.popupTriggerErr && !isTrigger;
@@ -8080,8 +8083,8 @@ class Component extends DCLogic {
               ? h('div', { style: { padding: 12, borderRadius: 10, background: 'var(--color-surface-alt)', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Popup Trang Checkout áp dụng theo cấu hình Gói bán tại module Checkout, không cần chọn trang riêng.')
               : null
         ),
-        type === 'pkg-detail' && section(2, 'apps-2-line', 'Gói cước áp dụng',
-          h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Chọn ít nhất 1 gói cước hiển thị popup ở trang chi tiết gói.'),
+        showPkgBlock && section(2, 'apps-2-line', 'Gói cước áp dụng',
+          h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Chọn ít nhất 1 gói cước áp dụng cho popup.'),
           // Cột trái bọc ngoài cao bằng hàng grid (alignItems stretch) để picker bên trong "sticky" bám lại khi danh sách link bên phải dài hơn.
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(300px, 440px) minmax(0, 1fr)', gap: 16, alignItems: 'stretch' } },
             h('div', null, h('div', { 'data-popup-pkg-field': '', style: { position: 'sticky', top: 80, display: 'flex', flexDirection: 'column', gap: 12 } },
@@ -8107,14 +8110,14 @@ class Component extends DCLogic {
             )
           )
         ),
-        section(isPkg ? 3 : 2, 'image-line', showLink ? 'Hình ảnh & liên kết' : 'Hình ảnh',
+        section(showPkgBlock ? 3 : 2, 'image-line', showLink ? 'Hình ảnh & liên kết' : 'Hình ảnh',
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
             this.uploadBox('Popup Desktop', 'JPG, PNG, WEBP · ≤200KB'),
             this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · ≤200KB')
           ),
           showLink && this.field('Link điều hướng', h(FptUrlInput, { defaultValue: r ? (r.url || '') : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai' }))
         ),
-        type !== 'checkout' && section(isPkg ? 4 : 3, 'zap-line', 'Hành vi hiển thị',
+        type !== 'checkout' && section(showPkgBlock ? 4 : 3, 'zap-line', 'Hành vi hiển thị',
           h('div', { style: { display: 'flex', gap: 12 } },
             // Trigger: ẩn Kiểu kích hoạt / Thời gian trễ / Tần suất, chỉ còn Thời gian tự đóng.
             !isTrigger && h('div', { style: { flex: 1 } }, this.field('Kiểu kích hoạt', h(DS.Select, {
@@ -8153,7 +8156,7 @@ class Component extends DCLogic {
         // ĐỒNG LOẠT trong đúng 1 lần bấm Lưu/Tạo, thay vì hiện lần lượt từng lỗi qua nhiều lần bấm.
         const nameMissing = !(name || '').trim();
         const typeMissing = !type;
-        const pkgMissing = isPkg && !selectedPkgs.length;
+        const pkgMissing = showPkgBlock && !selectedPkgs.length;
         const delayMissing = !isTrigger && trigger === 'delay' && !String(delay || '').trim();
         const triggerMissing = !isTrigger && !trigger;
         const freqMissing = !isTrigger && !frequency;
