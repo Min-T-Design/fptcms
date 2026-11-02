@@ -8041,10 +8041,7 @@ class Component extends DCLogic {
                 value: name, placeholder: 'VD: Flash Sale T6',
                 onChange: e => { const v = e && e.target ? e.target.value : e; this.setState({ popupEditorName: v }); checkPopupNameDup(v); }
               }), true),
-              nameErr && h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: -6, marginBottom: 10, padding: '8px 10px', borderRadius: 8, background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', fontSize: 12 } },
-                h(DS.Icon, { name: 'alert-triangle-line', size: 14, style: { flexShrink: 0, marginTop: 1 } }),
-                h('span', null, nameErr)
-              )
+              nameErr && h('div', { style: { marginTop: 4, marginBottom: 8, fontSize: 13, lineHeight: 1.4, color: 'var(--color-warning-text)', fontFamily: 'var(--font-sans, inherit)' } }, nameErr)
             ),
             h('div', { style: { width: 230 } }, this.field('Loại popup', h(DS.Select, {
               options: this.POPUP_TYPES(), value: type, placeholder: 'Chọn loại popup…', onChange: v => this.setState({ popupEditorType: v })
