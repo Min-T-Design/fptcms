@@ -7695,10 +7695,10 @@ class Component extends DCLogic {
     );
   }
   openPopupEditor(r) {
-    this.setState({ popupEditor: r, popupEditorName: r ? r.name : '', popupNameErr: '', popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupEditorAutoClose: r && r.autoCloseSec ? String(r.autoCloseSec) : '', popupEditorPkgs: r ? (r.pkgs || []).map(p => ({ ...p })) : [], popupPkgAttempted: false, popupTypeErr: false, popupTriggerErr: false, popupFreqErr: false, popupSkuSource: 'ecp', popupSkuFilter: 'internet', popupSkuSearch: '' });
+    this.setState({ popupEditor: r, popupEditorName: r ? r.name : '', popupNameErr: '', popupNameReqErr: false, popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupEditorAutoClose: r && r.autoCloseSec ? String(r.autoCloseSec) : '', popupEditorDelay: r && r.delaySec ? String(r.delaySec) : '5', popupDelayErr: false, popupEditorPkgs: r ? (r.pkgs || []).map(p => ({ ...p })) : [], popupPkgAttempted: false, popupTypeErr: false, popupTriggerErr: false, popupFreqErr: false, popupSkuSource: 'ecp', popupSkuFilter: 'internet', popupSkuSearch: '' });
   }
   closePopupEditor() {
-    this.setState({ popupEditor: undefined, popupEditorName: undefined, popupNameErr: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupEditorAutoClose: undefined, popupEditorPkgs: undefined, popupPkgAttempted: false, popupTypeErr: false, popupTriggerErr: false, popupFreqErr: false, popupSkuSource: undefined, popupSkuFilter: undefined, popupSkuSearch: undefined });
+    this.setState({ popupEditor: undefined, popupEditorName: undefined, popupNameErr: undefined, popupNameReqErr: false, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupEditorAutoClose: undefined, popupEditorDelay: undefined, popupDelayErr: false, popupEditorPkgs: undefined, popupPkgAttempted: false, popupTypeErr: false, popupTriggerErr: false, popupFreqErr: false, popupSkuSource: undefined, popupSkuFilter: undefined, popupSkuSearch: undefined });
   }
   renderPopup() {
     if (this.state.popupEditor !== undefined) return this.renderPopupEditor(this.state.popupEditor);
@@ -7993,6 +7993,10 @@ class Component extends DCLogic {
     const isNew = !r; const back = () => this.closePopupEditor();
     const name = this.state.popupEditorName !== undefined ? this.state.popupEditorName : (r ? r.name : '');
     const nameErr = this.state.popupNameErr || '';
+    // Tên Popup để trống: không dùng this.field(..., true) — cơ chế chung (this.validateReqFields) sẽ chặn Save
+    // ngay khi gặp field rỗng đầu tiên, khiến các lỗi composite khác (Loại popup, Gói cước, Kiểu kích hoạt…) không
+    // kịp hiện cùng lúc. Kiểm tay như các field composite khác để mọi lỗi bắt buộc hiện đồng loạt trong 1 lần bấm Lưu.
+    const nameReqErr = !!this.state.popupNameReqErr;
     // Trùng tên popup (không phân biệt hoa/thường, bỏ khoảng trắng đầu-cuối) → chỉ cảnh báo màu vàng ngay dưới trường Tên Popup, nêu rõ trùng với popup nào; không chặn lưu (khác §14 — đây là warning, không phải lỗi bắt buộc).
     const checkPopupNameDup = nameVal => {
       const nm = (nameVal || '').trim();
@@ -8019,6 +8023,9 @@ class Component extends DCLogic {
     const typeErr = !!this.state.popupTypeErr;
     const triggerErr = !!this.state.popupTriggerErr && !isTrigger;
     const freqErr = !!this.state.popupFreqErr && !isTrigger;
+    // Thời gian trễ: bắt buộc khi Kiểu kích hoạt = "delay". Controlled (lý do như Tên Popup ở trên) để kiểm tay cùng lúc với các field composite khác.
+    const delay = this.state.popupEditorDelay !== undefined ? this.state.popupEditorDelay : (r && r.delaySec ? String(r.delaySec) : '5');
+    const delayErr = !!this.state.popupDelayErr && !isTrigger && trigger === 'delay';
     // Thời gian tự đóng: số nguyên ≥ 0 (trống / 0 = không tự đóng). Controlled để báo lỗi ngay khi gõ sai (âm, thập phân, ký hiệu e…).
     const autoClose = this.state.popupEditorAutoClose !== undefined ? this.state.popupEditorAutoClose : (r && r.autoCloseSec ? String(r.autoCloseSec) : '');
     const autoCloseErr = autoClose !== '' && !/^\d+$/.test(autoClose) ? 'Chỉ nhập số nguyên từ 0 trở lên.' : undefined;
@@ -8041,10 +8048,17 @@ class Component extends DCLogic {
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'flex', gap: 12 } },
             h('div', { style: { flex: 1 } },
-              this.field('Tên Popup', h(DS.Input, {
+              h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Tên Popup', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+              h(DS.Input, {
                 value: name, placeholder: 'VD: Flash Sale T6',
-                onChange: e => { const v = e && e.target ? e.target.value : e; this.setState({ popupEditorName: v }); checkPopupNameDup(v); }
-              }), true),
+                error: nameReqErr ? 'Trường bắt buộc — vui lòng nhập.' : undefined,
+                onChange: e => {
+                  const v = e && e.target ? e.target.value : e;
+                  this.setState({ popupEditorName: v });
+                  if (v && v.trim() && this.state.popupNameReqErr) this.setState({ popupNameReqErr: false });
+                  checkPopupNameDup(v);
+                }
+              }),
               nameErr && h('div', { style: { marginTop: 4, marginBottom: 8, fontSize: 13, lineHeight: 1.4, color: 'var(--color-warning-text)', fontFamily: 'var(--font-sans, inherit)' } }, nameErr)
             ),
             h('div', { style: { width: 230 } }, this.field('Loại popup', h(DS.Select, {
@@ -8108,7 +8122,18 @@ class Component extends DCLogic {
               error: triggerErr ? 'Trường bắt buộc — vui lòng chọn.' : undefined,
               onChange: v => { this.setState({ popupEditorTrigger: v }); if (v && this.state.popupTriggerErr) this.setState({ popupTriggerErr: false }); }
             }), true)),
-            !isTrigger && trigger === 'delay' && h('div', { style: { width: 170 } }, this.field('Thời gian trễ (giây)', h(DS.Input, { type: 'number', defaultValue: r ? String(r.delaySec || 5) : '5' }), true)),
+            !isTrigger && trigger === 'delay' && h('div', { style: { width: 170 } },
+              h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Thời gian trễ (giây)', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+              h(DS.Input, {
+                type: 'number', value: delay,
+                error: delayErr ? 'Trường bắt buộc — vui lòng nhập.' : undefined,
+                onChange: e => {
+                  const v = e && e.target ? e.target.value : e;
+                  this.setState({ popupEditorDelay: v });
+                  if (String(v || '').trim() && this.state.popupDelayErr) this.setState({ popupDelayErr: false });
+                }
+              })
+            ),
             // Ô chỉ nhập số nguyên → rộng cố định 200px cho mọi loại popup (kể cả "Không tương tác").
             h('div', { style: { width: 200 } }, this.field('Thời gian tự đóng (giây)',
               h(DS.Input, { type: 'number', min: 0, step: 1, value: autoClose, placeholder: 'Không tự đóng', error: autoCloseErr,
@@ -8122,28 +8147,31 @@ class Component extends DCLogic {
         )
       ),
       () => {
-        // Đặt cờ trước để mọi lỗi hiện cùng lúc (nếu có nhiều lỗi) khi bấm Lưu; nút Lưu không bao giờ bị disabled (§14).
+        // Mọi field bắt buộc ở editor này là composite (Select) hoặc đã cố tình bỏ this.field(..., true)
+        // (Tên Popup, Thời gian trễ) — nên this.validateReqFields (cơ chế chung của editorShell) luôn thấy 0
+        // field cần kiểm và KHÔNG chặn trước khi gọi tới đây. Nhờ vậy tất cả lỗi bắt buộc được gom và báo
+        // ĐỒNG LOẠT trong đúng 1 lần bấm Lưu/Tạo, thay vì hiện lần lượt từng lỗi qua nhiều lần bấm.
+        const nameMissing = !(name || '').trim();
         const typeMissing = !type;
         const pkgMissing = isPkg && !selectedPkgs.length;
+        const delayMissing = !isTrigger && trigger === 'delay' && !String(delay || '').trim();
         const triggerMissing = !isTrigger && !trigger;
         const freqMissing = !isTrigger && !frequency;
+        const missingCount = [nameMissing, typeMissing, pkgMissing, delayMissing, triggerMissing, freqMissing].filter(Boolean).length;
+        if (nameMissing) this.setState({ popupNameReqErr: true });
         if (typeMissing) this.setState({ popupTypeErr: true });
         if (pkgMissing) this.setState({ popupPkgAttempted: true });
+        if (delayMissing) this.setState({ popupDelayErr: true });
         if (triggerMissing) this.setState({ popupTriggerErr: true });
         if (freqMissing) this.setState({ popupFreqErr: true });
         const nm = (name || '').trim();
-        if (typeMissing) { this.toast('danger', 'Chưa chọn loại popup', 'Vui lòng chọn loại popup trước khi lưu.'); return; }
-        if (autoCloseErr) { this.toast('danger', 'Thời gian tự đóng không hợp lệ', autoCloseErr); return; }
-        if (pkgMissing) {
-          this.toast('danger', 'Chưa chọn gói cước', 'Popup "Trang chi tiết gói" cần chọn ít nhất 1 gói cước áp dụng.');
-          const el = this._editorShellRoot && this._editorShellRoot.querySelector('[data-popup-pkg-field]');
+        if (missingCount) {
+          this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng điền đầy đủ ' + missingCount + ' trường bắt buộc trước khi lưu.');
+          const el = pkgMissing && this._editorShellRoot && this._editorShellRoot.querySelector('[data-popup-pkg-field]');
           if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           return;
         }
-        if (triggerMissing || freqMissing) {
-          this.toast('danger', 'Thiếu thông tin bắt buộc', triggerMissing ? 'Vui lòng chọn kiểu kích hoạt.' : 'Vui lòng chọn tần suất hiển thị.');
-          return;
-        }
+        if (autoCloseErr) { this.toast('danger', 'Thời gian tự đóng không hợp lệ', autoCloseErr); return; }
         const doSave = () => { back(); this.toast('success', 'Đã lưu Popup', isNew ? 'Popup mới đã được tạo.' : 'Popup "' + nm + '" đã được cập nhật.'); };
         // Tên vẫn trùng lúc bấm Lưu → không chặn, nhưng hỏi lại 1 lần vì sẽ ghi đè nội dung của popup trùng tên (§17: hành động ghi đè → nút chính đỏ đứng trước "Hủy").
         const dup = nm ? this.POPUPS().find(p => p.name.trim().toLowerCase() === nm.toLowerCase() && (!r || p.id !== r.id)) : null;
