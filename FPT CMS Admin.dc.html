@@ -7993,7 +7993,7 @@ class Component extends DCLogic {
     const isNew = !r; const back = () => this.closePopupEditor();
     const name = this.state.popupEditorName !== undefined ? this.state.popupEditorName : (r ? r.name : '');
     const nameErr = this.state.popupNameErr || '';
-    // Trùng tên popup (không phân biệt hoa/thường, bỏ khoảng trắng đầu-cuối) → báo lỗi ngay tại trường Tên Popup, nêu rõ trùng với popup nào (CLAUDE.md §14 kiểu tay, như renderFaqCatEditor).
+    // Trùng tên popup (không phân biệt hoa/thường, bỏ khoảng trắng đầu-cuối) → chỉ cảnh báo màu vàng ngay dưới trường Tên Popup, nêu rõ trùng với popup nào; không chặn lưu (khác §14 — đây là warning, không phải lỗi bắt buộc).
     const checkPopupNameDup = nameVal => {
       const nm = (nameVal || '').trim();
       if (!nm) { if (this.state.popupNameErr) this.setState({ popupNameErr: '' }); return; }
@@ -8036,10 +8036,16 @@ class Component extends DCLogic {
         ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { flex: 1 } }, this.field('Tên Popup', h(DS.Input, {
-              value: name, placeholder: 'VD: Flash Sale T6', error: nameErr || undefined,
-              onChange: e => { const v = e && e.target ? e.target.value : e; this.setState({ popupEditorName: v }); checkPopupNameDup(v); }
-            }), true)),
+            h('div', { style: { flex: 1 } },
+              this.field('Tên Popup', h(DS.Input, {
+                value: name, placeholder: 'VD: Flash Sale T6',
+                onChange: e => { const v = e && e.target ? e.target.value : e; this.setState({ popupEditorName: v }); checkPopupNameDup(v); }
+              }), true),
+              nameErr && h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: -6, marginBottom: 10, padding: '8px 10px', borderRadius: 8, background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', fontSize: 12 } },
+                h(DS.Icon, { name: 'alert-triangle-line', size: 14, style: { flexShrink: 0, marginTop: 1 } }),
+                h('span', null, nameErr)
+              )
+            ),
             h('div', { style: { width: 230 } }, this.field('Loại popup', h(DS.Select, {
               options: this.POPUP_TYPES(), value: type, placeholder: 'Chọn loại popup…', onChange: v => this.setState({ popupEditorType: v })
             }), true))
@@ -8111,12 +8117,6 @@ class Component extends DCLogic {
         const pkgMissing = isPkg && !selectedPkgs.length;
         if (pkgMissing) this.setState({ popupPkgAttempted: true });
         const nm = (name || '').trim();
-        const dupPopup = this.POPUPS().find(p => p.name.trim().toLowerCase() === nm.toLowerCase() && (!r || p.id !== r.id));
-        if (dupPopup) {
-          this.setState({ popupNameErr: 'Tên "' + nm + '" đã trùng với popup "' + dupPopup.name + '". Vui lòng đổi tên khác.' });
-          this.toast('danger', 'Trùng tên Popup', 'Tên "' + nm + '" đã trùng với popup "' + dupPopup.name + '".');
-          return;
-        }
         if (autoCloseErr) { this.toast('danger', 'Thời gian tự đóng không hợp lệ', autoCloseErr); return; }
         if (pkgMissing) {
           this.toast('danger', 'Chưa chọn gói cước', 'Popup "Trang chi tiết gói" cần chọn ít nhất 1 gói cước áp dụng.');
