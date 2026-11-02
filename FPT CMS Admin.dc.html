@@ -8121,7 +8121,14 @@ class Component extends DCLogic {
           if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           return;
         }
-        back(); this.toast('success', 'Đã lưu Popup', isNew ? 'Popup mới đã được tạo.' : 'Popup "' + nm + '" đã được cập nhật.');
+        const doSave = () => { back(); this.toast('success', 'Đã lưu Popup', isNew ? 'Popup mới đã được tạo.' : 'Popup "' + nm + '" đã được cập nhật.'); };
+        // Tên vẫn trùng lúc bấm Lưu → không chặn, nhưng hỏi lại 1 lần vì sẽ ghi đè nội dung của popup trùng tên (§17: hành động ghi đè → nút chính đỏ đứng trước "Hủy").
+        const dup = nm ? this.POPUPS().find(p => p.name.trim().toLowerCase() === nm.toLowerCase() && (!r || p.id !== r.id)) : null;
+        if (dup) {
+          this.confirm('Tên Popup bị trùng', 'Tên "' + nm + '" đã trùng với popup "' + dup.name + '". Nếu tiếp tục, nội dung trùng tên này sẽ bị ghi đè. Bạn có chắc muốn tạo?', () => { this.closeModal(); doSave(); }, true);
+          return;
+        }
+        doSave();
       },
       isNew ? 'Tạo Popup' : 'Lưu Popup'
     );
