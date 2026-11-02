@@ -7695,10 +7695,10 @@ class Component extends DCLogic {
     );
   }
   openPopupEditor(r) {
-    this.setState({ popupEditor: r, popupEditorName: r ? r.name : '', popupNameErr: '', popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupEditorAutoClose: r && r.autoCloseSec ? String(r.autoCloseSec) : '', popupEditorPkgs: r ? (r.pkgs || []).map(p => ({ ...p })) : [], popupPkgAttempted: false, popupSkuSource: 'ecp', popupSkuFilter: 'internet', popupSkuSearch: '' });
+    this.setState({ popupEditor: r, popupEditorName: r ? r.name : '', popupNameErr: '', popupEditorPages: r ? [...(r.pages || [])] : [], popupEditorType: r ? r.type : '', popupEditorTrigger: r ? r.trigger : '', popupEditorFrequency: r ? r.frequency : '', popupEditorAutoClose: r && r.autoCloseSec ? String(r.autoCloseSec) : '', popupEditorPkgs: r ? (r.pkgs || []).map(p => ({ ...p })) : [], popupPkgAttempted: false, popupTypeErr: false, popupTriggerErr: false, popupFreqErr: false, popupSkuSource: 'ecp', popupSkuFilter: 'internet', popupSkuSearch: '' });
   }
   closePopupEditor() {
-    this.setState({ popupEditor: undefined, popupEditorName: undefined, popupNameErr: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupEditorAutoClose: undefined, popupEditorPkgs: undefined, popupPkgAttempted: false, popupSkuSource: undefined, popupSkuFilter: undefined, popupSkuSearch: undefined });
+    this.setState({ popupEditor: undefined, popupEditorName: undefined, popupNameErr: undefined, popupEditorPages: undefined, popupEditorType: undefined, popupEditorTrigger: undefined, popupEditorFrequency: undefined, popupEditorAutoClose: undefined, popupEditorPkgs: undefined, popupPkgAttempted: false, popupTypeErr: false, popupTriggerErr: false, popupFreqErr: false, popupSkuSource: undefined, popupSkuFilter: undefined, popupSkuSearch: undefined });
   }
   renderPopup() {
     if (this.state.popupEditor !== undefined) return this.renderPopupEditor(this.state.popupEditor);
@@ -8015,6 +8015,10 @@ class Component extends DCLogic {
     const isTrigger = type === 'trigger';
     // Popup "Trang chi tiết gói" bắt buộc chọn ≥ 1 gói (§14, control ghép): chỉ báo lỗi sau khi bấm Lưu, tự mất ngay khi đã chọn gói.
     const pkgErr = !!this.state.popupPkgAttempted && isPkg && !selectedPkgs.length;
+    // Loại popup / Kiểu kích hoạt / Tần suất hiển thị là DS.Select (control ghép) nên this.field(..., true) không tự kiểm được (§14) — kiểm tay, báo lỗi qua prop error của DS.Select.
+    const typeErr = !!this.state.popupTypeErr;
+    const triggerErr = !!this.state.popupTriggerErr && !isTrigger;
+    const freqErr = !!this.state.popupFreqErr && !isTrigger;
     // Thời gian tự đóng: số nguyên ≥ 0 (trống / 0 = không tự đóng). Controlled để báo lỗi ngay khi gõ sai (âm, thập phân, ký hiệu e…).
     const autoClose = this.state.popupEditorAutoClose !== undefined ? this.state.popupEditorAutoClose : (r && r.autoCloseSec ? String(r.autoCloseSec) : '');
     const autoCloseErr = autoClose !== '' && !/^\d+$/.test(autoClose) ? 'Chỉ nhập số nguyên từ 0 trở lên.' : undefined;
@@ -8044,7 +8048,9 @@ class Component extends DCLogic {
               nameErr && h('div', { style: { marginTop: 4, marginBottom: 8, fontSize: 13, lineHeight: 1.4, color: 'var(--color-warning-text)', fontFamily: 'var(--font-sans, inherit)' } }, nameErr)
             ),
             h('div', { style: { width: 230 } }, this.field('Loại popup', h(DS.Select, {
-              options: this.POPUP_TYPES(), value: type, placeholder: 'Chọn loại popup…', onChange: v => this.setState({ popupEditorType: v })
+              options: this.POPUP_TYPES(), value: type, placeholder: 'Chọn loại popup…',
+              error: typeErr ? 'Trường bắt buộc — vui lòng chọn.' : undefined,
+              onChange: v => { this.setState({ popupEditorType: v }); if (v && this.state.popupTypeErr) this.setState({ popupTypeErr: false }); }
             }), true))
           ),
           this.field('Thời gian hiển thị', h(DS.DateRangePicker, { placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' } })),
@@ -8098,7 +8104,9 @@ class Component extends DCLogic {
           h('div', { style: { display: 'flex', gap: 12 } },
             // Trigger: ẩn Kiểu kích hoạt / Thời gian trễ / Tần suất, chỉ còn Thời gian tự đóng.
             !isTrigger && h('div', { style: { flex: 1 } }, this.field('Kiểu kích hoạt', h(DS.Select, {
-              options: this.POPUP_TRIGGERS(), value: trigger, placeholder: 'Chọn kiểu kích hoạt…', onChange: v => this.setState({ popupEditorTrigger: v })
+              options: this.POPUP_TRIGGERS(), value: trigger, placeholder: 'Chọn kiểu kích hoạt…',
+              error: triggerErr ? 'Trường bắt buộc — vui lòng chọn.' : undefined,
+              onChange: v => { this.setState({ popupEditorTrigger: v }); if (v && this.state.popupTriggerErr) this.setState({ popupTriggerErr: false }); }
             }), true)),
             !isTrigger && trigger === 'delay' && h('div', { style: { width: 170 } }, this.field('Thời gian trễ (giây)', h(DS.Input, { type: 'number', defaultValue: r ? String(r.delaySec || 5) : '5' }), true)),
             // Ô chỉ nhập số nguyên → rộng cố định 200px cho mọi loại popup (kể cả "Không tương tác").
@@ -8106,19 +8114,34 @@ class Component extends DCLogic {
               h(DS.Input, { type: 'number', min: 0, step: 1, value: autoClose, placeholder: 'Không tự đóng', error: autoCloseErr,
                 onChange: e => this.setState({ popupEditorAutoClose: String(e && e.target ? e.target.value : e) }) })))
           ),
-          !isTrigger && this.field('Tần suất hiển thị', h(DS.Select, { options: this.POPUP_FREQUENCIES(), value: frequency, placeholder: 'Chọn tần suất hiển thị…', onChange: v => this.setState({ popupEditorFrequency: v }) }), true)
+          !isTrigger && this.field('Tần suất hiển thị', h(DS.Select, {
+            options: this.POPUP_FREQUENCIES(), value: frequency, placeholder: 'Chọn tần suất hiển thị…',
+            error: freqErr ? 'Trường bắt buộc — vui lòng chọn.' : undefined,
+            onChange: v => { this.setState({ popupEditorFrequency: v }); if (v && this.state.popupFreqErr) this.setState({ popupFreqErr: false }); }
+          }), true)
         )
       ),
       () => {
-        // Đặt cờ trước để lỗi gói hiện cùng lúc với lỗi khác (nếu có); nút Lưu không bao giờ bị disabled (§14).
+        // Đặt cờ trước để mọi lỗi hiện cùng lúc (nếu có nhiều lỗi) khi bấm Lưu; nút Lưu không bao giờ bị disabled (§14).
+        const typeMissing = !type;
         const pkgMissing = isPkg && !selectedPkgs.length;
+        const triggerMissing = !isTrigger && !trigger;
+        const freqMissing = !isTrigger && !frequency;
+        if (typeMissing) this.setState({ popupTypeErr: true });
         if (pkgMissing) this.setState({ popupPkgAttempted: true });
+        if (triggerMissing) this.setState({ popupTriggerErr: true });
+        if (freqMissing) this.setState({ popupFreqErr: true });
         const nm = (name || '').trim();
+        if (typeMissing) { this.toast('danger', 'Chưa chọn loại popup', 'Vui lòng chọn loại popup trước khi lưu.'); return; }
         if (autoCloseErr) { this.toast('danger', 'Thời gian tự đóng không hợp lệ', autoCloseErr); return; }
         if (pkgMissing) {
           this.toast('danger', 'Chưa chọn gói cước', 'Popup "Trang chi tiết gói" cần chọn ít nhất 1 gói cước áp dụng.');
           const el = this._editorShellRoot && this._editorShellRoot.querySelector('[data-popup-pkg-field]');
           if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+        if (triggerMissing || freqMissing) {
+          this.toast('danger', 'Thiếu thông tin bắt buộc', triggerMissing ? 'Vui lòng chọn kiểu kích hoạt.' : 'Vui lòng chọn tần suất hiển thị.');
           return;
         }
         const doSave = () => { back(); this.toast('success', 'Đã lưu Popup', isNew ? 'Popup mới đã được tạo.' : 'Popup "' + nm + '" đã được cập nhật.'); };
