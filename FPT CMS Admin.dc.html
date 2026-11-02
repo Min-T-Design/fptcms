@@ -7973,7 +7973,7 @@ class Component extends DCLogic {
         })
       ),
       filteredSkus.length > 0 && h('div', { style: { padding: '0 10px', marginBottom: 8 } },
-        h(DS.Checkbox, { label: 'Chọn tất cả (' + selInTab + '/' + filteredSkus.length + ')', checked: allChk, onChange: toggleAll })
+        h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChk, onChange: toggleAll })
       ),
       h('div', { style: { marginBottom: 8 } },
         h(DS.Input, { placeholder: 'Lọc tên hiển thị/route name...', leadingIcon: 'search-medium-line', value: this.state.popupSkuSearch || '', onChange: e => this.setState({ popupSkuSearch: e.target ? e.target.value : e }) })
