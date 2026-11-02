@@ -7997,9 +7997,11 @@ class Component extends DCLogic {
     const selectedPages = this.state.popupEditorPages || (r && r.pages) || [];
     const selectedPkgs = this.state.popupEditorPkgs || (r && r.pkgs) || [];
     const setPkgUrl = (code, url) => this.setState(sv => ({ popupEditorPkgs: (sv.popupEditorPkgs || selectedPkgs).map(p => p.code === code ? { ...p, url } : p) }));
-    // Tick "Dùng link mặc định" (mặc định) → ô URL khoá, giữ link route name của gói; bỏ tick → nhập link riêng. Bản ghi cũ chưa có cờ auto: coi là mặc định nếu url trùng link mặc định.
+    // Chọn "Mặc định" → ô URL ẩn, giữ link route name của gói; chọn "Link khác" → hiện ô trống (placeholder), không tự điền sẵn link mặc định
+    // (tránh nhìn như đã nhập/đã xác nhận trong khi người dùng chưa gõ gì). Bản ghi cũ chưa có cờ auto: coi là mặc định nếu url trùng link mặc định,
+    // ngược lại giữ nguyên link riêng đã lưu khi mở lại để sửa.
     const pkgIsAuto = p => p.auto !== undefined ? !!p.auto : (p.url || '') === this.popupPkgDefaultUrl(p.code);
-    const setPkgAuto = (code, auto) => this.setState(sv => ({ popupEditorPkgs: (sv.popupEditorPkgs || selectedPkgs).map(p => p.code === code ? { ...p, auto, url: auto ? this.popupPkgDefaultUrl(code) : p.url } : p) }));
+    const setPkgAuto = (code, auto) => this.setState(sv => ({ popupEditorPkgs: (sv.popupEditorPkgs || selectedPkgs).map(p => p.code === code ? { ...p, auto, url: auto ? this.popupPkgDefaultUrl(code) : '' } : p) }));
     const isPkg = type === 'pkg-detail';
     const isTrigger = type === 'trigger';
     // Popup "Trang chi tiết gói" bắt buộc chọn ≥ 1 gói (§14, control ghép): chỉ báo lỗi sau khi bấm Lưu, tự mất ngay khi đã chọn gói.
