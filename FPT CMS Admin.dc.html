@@ -1702,7 +1702,6 @@ class Component extends DCLogic {
       midBanners: r && r.midBanners ? r.midBanners.map(x => ({ ...x })) : [],
       metaTitle: r && r.metaTitle ? r.metaTitle : '',
       metaDesc: r && r.metaDesc ? r.metaDesc : '',
-      metaKeywords: r && r.metaKeywords ? r.metaKeywords : '',
       images: r && r.images ? { ...r.images } : {},
     };
   }
@@ -2661,19 +2660,11 @@ class Component extends DCLogic {
       const v = e && e.target ? e.target.value : e;
       this.setState(s => ({ pkgForm: { ...s.pkgForm, metaDesc: (v || '').slice(0, META_DESC_MAX) } }));
     };
-    const META_KEYWORDS_MAX = 150;
-    const metaKeywordsVal = this.state.pkgForm.metaKeywords || '';
-    const metaKeywordsAtMax = metaKeywordsVal.length >= META_KEYWORDS_MAX;
-    const setMetaKeywords = e => {
-      const v = e && e.target ? e.target.value : e;
-      this.setState(s => ({ pkgForm: { ...s.pkgForm, metaKeywords: (v || '').slice(0, META_KEYWORDS_MAX) } }));
-    };
     const metaOgImageVal = this.state.pkgForm.metaOgImage || '';
     const setMetaOgImage = e => {
       const v = e && e.target ? e.target.value : e;
       this.setState(s => ({ pkgForm: { ...s.pkgForm, metaOgImage: v } }));
     };
-    // Mô tả và Thumbnail chung 1 hàng: 2 ô cao bằng nhau (textarea ≈ 3 dòng) để thẳng hàng.
     const META_ROW_H = 96;
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       this.renderPkgWebSettings(r),
@@ -2763,28 +2754,20 @@ class Component extends DCLogic {
             metaTitleAtMax && h('div', { style: { fontSize: 12, color: 'var(--color-danger-text)', marginTop: 4 } }, `Đã đạt giới hạn ${META_TITLE_MAX} ký tự.`)
           ),
           h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Từ khóa (Meta keywords)'),
-            h(DS.Input, {
-              value: metaKeywordsVal, maxLength: META_KEYWORDS_MAX, placeholder: 'VD: combo giga, internet fpt, truyền hình fpt',
-              onChange: setMetaKeywords
-            }),
-            metaKeywordsAtMax && h('div', { style: { fontSize: 12, color: 'var(--color-danger-text)', marginTop: 4 } }, `Đã đạt giới hạn ${META_KEYWORDS_MAX} ký tự.`)
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Thumbnail'),
+            h('div', { style: { display: 'flex', gap: 8 } },
+              h(DS.Input, { value: metaOgImageVal, onChange: setMetaOgImage, placeholder: 'URL ảnh', style: { flex: 1 } }),
+              h(DS.Button, { level: 'secondary', size: 'sm' }, 'Upload')
+            )
           ),
-          h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Mô tả (Meta description)'),
+          h('div', { style: { gridColumn: '1 / -1' } },
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Meta description'),
             h(DS.Textarea, {
               value: metaDescVal, maxLength: META_DESC_MAX, placeholder: 'Mô tả ngắn hiển thị trên kết quả tìm kiếm Google…',
               style: { height: META_ROW_H, resize: 'none' },
               onChange: setMetaDesc
             }),
             metaDescAtMax && h('div', { style: { fontSize: 12, color: 'var(--color-danger-text)', marginTop: 4 } }, `Đã đạt giới hạn ${META_DESC_MAX} ký tự.`)
-          ),
-          h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Thumbnail'),
-            h('div', { style: { display: 'flex', gap: 8 } },
-              h(DS.Input, { value: metaOgImageVal, onChange: setMetaOgImage, placeholder: 'URL ảnh', style: { flex: 1 } }),
-              h(DS.Button, { level: 'secondary', size: 'sm' }, 'Upload')
-            )
           )
       ))
     );
