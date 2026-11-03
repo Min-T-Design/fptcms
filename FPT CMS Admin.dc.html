@@ -2668,6 +2668,11 @@ class Component extends DCLogic {
       const v = e && e.target ? e.target.value : e;
       this.setState(s => ({ pkgForm: { ...s.pkgForm, metaKeywords: (v || '').slice(0, META_KEYWORDS_MAX) } }));
     };
+    const metaOgImageVal = this.state.pkgForm.metaOgImage || '';
+    const setMetaOgImage = e => {
+      const v = e && e.target ? e.target.value : e;
+      this.setState(s => ({ pkgForm: { ...s.pkgForm, metaOgImage: v } }));
+    };
     // Mô tả và Thumbnail chung 1 hàng: 2 ô cao bằng nhau (textarea ≈ 3 dòng) để thẳng hàng.
     const META_ROW_H = 96;
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -2750,7 +2755,7 @@ class Component extends DCLogic {
       )),
       this.collapsibleCard('pkgSecSeoOpen', 'Meta SEO', h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '14px 12px' } },
           h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Tiêu đề (Meta title)'),
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Meta Title'),
             h(DS.Input, {
               value: metaTitleVal, maxLength: META_TITLE_MAX, placeholder: 'VD: Đăng ký Combo Internet truyền hình GIGA V.VIP',
               onChange: setMetaTitle
@@ -2775,8 +2780,11 @@ class Component extends DCLogic {
             metaDescAtMax && h('div', { style: { fontSize: 12, color: 'var(--color-danger-text)', marginTop: 4 } }, `Đã đạt giới hạn ${META_DESC_MAX} ký tự.`)
           ),
           h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Ảnh đại diện (Thumbnail)'),
-            this.pkgImgBox('metaThumb', 'Thumbnail', 'JPG / PNG / WebP · ≤200KB', null, 200, META_ROW_H)
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Thumbnail'),
+            h('div', { style: { display: 'flex', gap: 8 } },
+              h(DS.Input, { value: metaOgImageVal, onChange: setMetaOgImage, placeholder: 'URL ảnh', style: { flex: 1 } }),
+              h(DS.Button, { level: 'secondary', size: 'sm' }, 'Upload')
+            )
           )
       ))
     );
@@ -9354,7 +9362,7 @@ class Component extends DCLogic {
     const columns = [
       { key: 'q', header: 'Câu hỏi', width: 340, render: (_, r) => h('div', null,
         h('div', { style: { fontWeight: 600, fontSize: 13.5 } }, r.q),
-        r.a ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } }, r.a) : null
+        r.a ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }, dangerouslySetInnerHTML: { __html: r.a } }) : null
       )},
       { key: 'cat', header: 'Danh mục', width: 150, render: (_, r) => h('span', { style: { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' } }, r.cat) },
       { key: 'status', header: 'Trạng thái', width: 120, render: (_, r) => this.statusBadge(r.status) },
@@ -9370,7 +9378,7 @@ class Component extends DCLogic {
           );
         } },
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
-        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' }, faqCatErr: false }) },
+        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' }, faqCatErr: false, faqAnswerErr: false }) },
         { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa câu hỏi?', 'Câu hỏi "' + (r.q.length > 70 ? r.q.slice(0, 70) + '…' : r.q) + '" sẽ bị xóa khỏi danh sách FAQ.', () => {
           const base = this.state.faqItems || this.FAQS();
           this.setState({ faqItems: base.filter(f => f.id !== r.id) });
@@ -9396,7 +9404,7 @@ class Component extends DCLogic {
           ),
         ),
         h('div', { style: { display: 'flex', gap: 8 } },
-          h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ faqEditor: null, faqDraft: { cat: '', lang: 'Tiếng Việt', q: '', answer: '', order: '1', active: true }, faqCatErr: false }) }, 'Thêm Câu hỏi (FAQ)')
+          h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.setState({ faqEditor: null, faqDraft: { cat: '', lang: 'Tiếng Việt', q: '', answer: '', order: '1', active: true }, faqCatErr: false, faqAnswerErr: false }) }, 'Thêm Câu hỏi (FAQ)')
         )
       ),
       this.filterChipsBar([
@@ -9459,14 +9467,14 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     this.openDrawer({ title: r.q ? r.q.slice(0, 55) + (r.q.length > 55 ? '…' : '') : 'Chi tiết FAQ', subtitle: 'Danh mục: ' + r.cat, width: 540,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
-        this.detailRow('Câu hỏi', r.q), this.detailRow('Câu trả lời', r.a || r.answer),
+        this.detailRow('Câu hỏi', r.q), this.detailRow('Câu trả lời', (r.a || r.answer) ? h('div', { style: { fontSize: 13.5 }, dangerouslySetInnerHTML: { __html: r.a || r.answer } }) : '—'),
         this.detailRow('Danh mục', r.cat), this.detailRow('Ngôn ngữ', r.lang || 'Tiếng Việt'),
         this.detailRow('Trạng thái', this.statusBadge(r.status)),
         ...this.auditRows(r)
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
         h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
-        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' }, faqCatErr: false }); } }, 'Chỉnh sửa')
+        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.setState({ faqEditor: r, faqDraft: { cat: r.cat, lang: r.lang || 'Tiếng Việt', q: r.q, answer: r.answer || r.a || '', order: String(r.order), active: r.status === 'active' }, faqCatErr: false, faqAnswerErr: false }); } }, 'Chỉnh sửa')
       )
     });
   }
@@ -9477,6 +9485,14 @@ class Component extends DCLogic {
     const catOpts = this.getFaqCats().map(c => ({ value: c.name, label: c.name }));
     const d = this.state.faqDraft || { cat: '', lang: 'Tiếng Việt', q: '', answer: '', order: '1', active: true };
     const catErr = !!this.state.faqCatErr;
+    const answerErr = !!this.state.faqAnswerErr;
+    // Câu trả lời là vùng soạn thảo (WYSIWYG, richTextEditor) nên không có <textarea> thật để this.validateReqFields tự đọc — kiểm tay (CLAUDE.md §14), đọc HTML qua ref khi Lưu.
+    const clearAnswerErr = () => {
+      if (!this.state.faqAnswerErr) return;
+      const ref = this._faqAnswerHtmlRef;
+      const html = ref && ref.current ? ref.current.innerHTML : '';
+      if (fptHasHtml(html)) this.setState({ faqAnswerErr: false });
+    };
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -9499,21 +9515,29 @@ class Component extends DCLogic {
         ),
         section(2, 'menu-01-line', 'Nội dung câu hỏi và trả lời',
           this.field('Câu hỏi', h(DS.Input, { value: d.q, onChange: e => setD({ q: e && e.target ? e.target.value : e }), placeholder: 'Nhập nội dung câu hỏi' }), true),
-          this.field('Câu trả lời', h(DS.Textarea, { rows: 6, value: d.answer, onChange: e => setD({ answer: e && e.target ? e.target.value : e }), placeholder: 'Nhập nội dung câu trả lời' }), true)
+          h('div', null,
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Câu trả lời', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+            h('div', { className: answerErr ? 'fpt-req-box-err' : undefined, onInput: clearAnswerErr },
+              this.richTextEditor(d.answer || '', 'faqAnswer')
+            ),
+            answerErr && h('div', { className: 'fpt-req-err-msg' }, 'Trường bắt buộc — vui lòng nhập.')
+          )
         )
       ),
       () => {
-        // Thuộc danh mục là DS.Select (composite) nên không được this.validateReqFields tự kiểm — kiểm tay (CLAUDE.md §14). Ngôn ngữ không bắt buộc, mặc định Tiếng Việt.
-        if (!d.cat) {
-          this.setState({ faqCatErr: true });
-          this.toast('danger', 'Thiếu thông tin bắt buộc', 'Vui lòng chọn danh mục.');
+        // Thuộc danh mục (DS.Select) và Câu trả lời (richTextEditor) là control ghép, không có <input>/<textarea> thật để this.validateReqFields tự kiểm — kiểm tay (CLAUDE.md §14). Ngôn ngữ không bắt buộc, mặc định Tiếng Việt.
+        const answerHtml = this._faqAnswerHtmlRef && this._faqAnswerHtmlRef.current ? this._faqAnswerHtmlRef.current.innerHTML : (d.answer || '');
+        const answerMissing = !fptHasHtml(answerHtml);
+        if (!d.cat || answerMissing) {
+          this.setState({ faqCatErr: !d.cat, faqAnswerErr: answerMissing });
+          this.toast('danger', 'Thiếu thông tin bắt buộc', !d.cat && answerMissing ? 'Vui lòng chọn danh mục và nhập câu trả lời.' : !d.cat ? 'Vui lòng chọn danh mục.' : 'Vui lòng nhập câu trả lời.');
           return;
         }
         const base = this.state.faqItems || this.FAQS();
         const nowD = new Date(); const pad = n => String(n).padStart(2, '0');
         const today = pad(nowD.getDate()) + '/' + pad(nowD.getMonth() + 1) + '/' + nowD.getFullYear();
-        if (r) { this.setState({ faqItems: base.map(f => f.id === r.id ? Object.assign({}, f, { cat: d.cat, lang: d.lang, q: d.q, a: d.answer, answer: d.answer, order: Number(d.order) || f.order, status: d.active ? 'active' : 'inactive', updatedAt: today, updatedBy: 'Admin User' }) : f) }); }
-        else { const newId = Math.max(0, ...base.map(f => f.id)) + 1; this.setState({ faqItems: base.concat([{ id: newId, cat: d.cat, lang: d.lang, q: d.q, a: d.answer, answer: d.answer, order: Number(d.order) || 1, status: d.active ? 'active' : 'inactive', createdAt: today, createdBy: 'Admin User', updatedAt: today, updatedBy: 'Admin User' }]) }); }
+        if (r) { this.setState({ faqItems: base.map(f => f.id === r.id ? Object.assign({}, f, { cat: d.cat, lang: d.lang, q: d.q, a: answerHtml, answer: answerHtml, order: Number(d.order) || f.order, status: d.active ? 'active' : 'inactive', updatedAt: today, updatedBy: 'Admin User' }) : f) }); }
+        else { const newId = Math.max(0, ...base.map(f => f.id)) + 1; this.setState({ faqItems: base.concat([{ id: newId, cat: d.cat, lang: d.lang, q: d.q, a: answerHtml, answer: answerHtml, order: Number(d.order) || 1, status: d.active ? 'active' : 'inactive', createdAt: today, createdBy: 'Admin User', updatedAt: today, updatedBy: 'Admin User' }]) }); }
         back(); this.toast('success', 'Đã lưu', 'Câu hỏi đã được lưu.');
       },
       isNew ? 'Thêm câu hỏi' : 'Lưu câu hỏi'
@@ -10690,7 +10714,7 @@ class Component extends DCLogic {
           h(DS.Input, { value: sv.metaTitle, maxLength: 60, onChange: e => set('metaTitle', e.target.value), placeholder: 'Tiêu đề hiển thị trên Google (60 ký tự)' })
         ),
         h('div', null,
-          h('label', { style: lbSt }, 'OG Image — ảnh share mạng xã hội'),
+          h('label', { style: lbSt }, 'Thumbnail'),
           h('div', { style: { display: 'flex', gap: 8 } },
             h(DS.Input, { value: get('ogImage'), onChange: e => set('ogImage', e.target.value), placeholder: 'URL ảnh', style: { flex: 1 } }),
             h(DS.Button, { level: 'secondary', size: 'sm' }, 'Upload')
