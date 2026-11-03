@@ -8101,7 +8101,19 @@ class Component extends DCLogic {
                     h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 } },
                       h('span', { style: { fontWeight: 700, fontSize: 12.5, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, this.PKG_SKU_PICKER_LABELS().get(p.code).name || p.code),
                       h('div', { style: { flexShrink: 0 } },
-                        h(DS.Segmented, { size: 'sm', items: [{ value: 'auto', label: 'Mặc định' }, { value: 'custom', label: 'Link khác' }], value: pkgIsAuto(p) ? 'auto' : 'custom', onChange: v => setPkgAuto(p.code, v === 'auto') })
+                        h(DS.Segmented, {
+                          size: 'sm',
+                          items: [
+                            { value: 'auto', label: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 4 } },
+                                'Mặc định',
+                                h(DS.Tooltip, { label: 'Điều hướng trực tiếp về trang đăng ký (Checkout) của chính gói cước này', onClick: e => e.stopPropagation() },
+                                  h(DS.Icon, { name: 'info-circle-line', size: 13, color: 'var(--color-text-subtle)' })
+                                )
+                              ) },
+                            { value: 'custom', label: 'Link khác' }
+                          ],
+                          value: pkgIsAuto(p) ? 'auto' : 'custom', onChange: v => setPkgAuto(p.code, v === 'auto')
+                        })
                       )
                     ),
                     !pkgIsAuto(p) && h(FptUrlInput, { value: p.url || '', placeholder: 'Nhập link điều hướng', onChange: e => setPkgUrl(p.code, e && e.target ? e.target.value : e) })
