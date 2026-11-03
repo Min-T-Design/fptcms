@@ -10535,7 +10535,12 @@ class Component extends DCLogic {
     const urlAll = this.URLS();
     // URL ngừng hoạt động (cờ active ở Quản lý URL) không được đưa vào danh sách chọn; riêng giá trị đang chọn của bản ghi vẫn được giữ.
     const lv1Nodes = urlAll.filter(n => n.level === 1 && n.type === 'ldp');
-    const lv1Options = lv1Nodes.filter(n => this.urlIsActive(n) || n.slug === slug1).map(n => ({ value: n.slug, label: n.slug }));
+    // Mỗi nhánh gắn badge "Landing Page" (cùng kiểu tag với dropdown "Breadcrumb trang trước" / "Có sẵn" của Quản lý URL — breadcrumbKindTag)
+    // để nhất quán cách đọc dù danh sách này hiện chỉ gồm nhánh loại Landing Page.
+    const lv1Options = lv1Nodes.filter(n => this.urlIsActive(n) || n.slug === slug1).map(n => ({ value: n.slug, searchText: n.slug,
+      label: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 } },
+        h('span', { style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, n.slug),
+        this.breadcrumbKindTag('ldp')) }));
     if (slug1 && !lv1Options.some(o => o.value === slug1)) lv1Options.push({ value: slug1, label: slug1 });
     const lv1Node = lv1Nodes.find(n => n.slug === slug1);
     const lv2Nodes = lv1Node ? urlAll.filter(n => n.level === 2 && n.pid === lv1Node.id) : [];
