@@ -779,7 +779,10 @@ Object.assign(__ds_scope, { Spinner });
 // components/feedback/Tooltip.jsx
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/** Tooltip — hover/focus label on a wrapped trigger. */
+/** Tooltip — hover/focus label on a wrapped trigger. Measured from the trigger and
+ * rendered fixed-to-viewport (not confined to the relatively-positioned wrapper), so an
+ * ancestor's overflow:hidden/auto or the viewport edge can never clip it; flips to the
+ * opposite side when there isn't enough room in the preferred `placement` direction. */
 function Tooltip({
   label,
   children,
@@ -788,29 +791,44 @@ function Tooltip({
   ...rest
 }) {
   const [open, setOpen] = React.useState(false);
-  const pos = {
-    top: {
-      bottom: "calc(100% + 8px)",
-      left: "50%",
-      transform: "translateX(-50%)"
-    },
-    bottom: {
-      top: "calc(100% + 8px)",
-      left: "50%",
-      transform: "translateX(-50%)"
-    },
-    left: {
-      right: "calc(100% + 8px)",
-      top: "50%",
-      transform: "translateY(-50%)"
-    },
-    right: {
-      left: "calc(100% + 8px)",
-      top: "50%",
-      transform: "translateY(-50%)"
-    }
-  }[placement] || {};
+  const [pos, setPos] = React.useState(null);
+  const wrapRef = React.useRef(null);
+  const boxRef = React.useRef(null);
+  React.useLayoutEffect(() => {
+    if (!open) { setPos(null); return; }
+    const MARGIN = 8;
+    const reposition = () => {
+      if (!wrapRef.current || !boxRef.current) return;
+      const r = wrapRef.current.getBoundingClientRect();
+      const bw = boxRef.current.offsetWidth, bh = boxRef.current.offsetHeight;
+      const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+      let top, left;
+      if (placement === "left" || placement === "right") {
+        top = Math.max(MARGIN, Math.min(r.top + r.height / 2 - bh / 2, vh - bh - MARGIN));
+        left = placement === "left" ? r.left - bw - 8 : r.right + 8;
+        if (left < MARGIN) left = r.right + 8; // không đủ chỗ bên trái → lật sang phải
+        if (left + bw > vw - MARGIN) left = r.left - bw - 8; // không đủ chỗ bên phải → lật sang trái
+        left = Math.max(MARGIN, Math.min(left, vw - bw - MARGIN));
+      } else {
+        left = Math.max(MARGIN, Math.min(r.left + r.width / 2 - bw / 2, vw - bw - MARGIN));
+        const above = r.top - bh - 8, below = r.bottom + 8;
+        top = placement === "bottom" ? below : above;
+        if (placement !== "bottom" && above < MARGIN) top = below; // không đủ chỗ phía trên → xuống dưới
+        if (placement === "bottom" && below + bh > vh - MARGIN) top = above; // không đủ chỗ phía dưới → lên trên
+        top = Math.max(MARGIN, Math.min(top, vh - bh - MARGIN));
+      }
+      setPos({ top, left });
+    };
+    reposition();
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open, placement, label]);
   return /*#__PURE__*/React.createElement("span", _extends({
+    ref: wrapRef,
     style: {
       position: "relative",
       display: "inline-flex",
@@ -821,12 +839,17 @@ function Tooltip({
     onFocus: () => setOpen(true),
     onBlur: () => setOpen(false)
   }, rest), children, open && label && /*#__PURE__*/React.createElement("span", {
+    ref: boxRef,
     role: "tooltip",
     style: {
-      position: "absolute",
-      zIndex: 50,
-      ...pos,
-      whiteSpace: "nowrap",
+      position: "fixed",
+      zIndex: 1300,
+      top: pos ? pos.top : -9999,
+      left: pos ? pos.left : -9999,
+      visibility: pos ? "visible" : "hidden",
+      maxWidth: "min(360px, calc(100vw - 16px))",
+      whiteSpace: "normal",
+      overflowWrap: "anywhere",
       padding: "6px 10px",
       borderRadius: "var(--radius-sm)",
       background: "var(--gray-12)",
