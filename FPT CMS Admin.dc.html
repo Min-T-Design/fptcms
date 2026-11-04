@@ -4917,10 +4917,15 @@ class Component extends DCLogic {
   LDP_FIXED_LV1() {
     return this.URLS().filter(u => u.level === 1 && u.type === 'ldp').map(u => u.slug);
   }
-  // Tập slug Level 1 đã hợp lệ = 7 nhánh cố định + các nhánh đã được Super Admin duyệt.
+  // Nhánh Level 1 loại "Trang thường" cũng chọn được cho LDP (ô URL Slug ở renderLdpStep2) — khác nhánh Landing Page ở chỗ
+  // Level 2 LUÔN bắt buộc (xem isPageBranch trong ldpSlugValidate) để LDP không ghi đè thẳng lên URL gốc của trang thường đó.
+  LDP_PAGE_LV1() {
+    return this.URLS().filter(u => u.level === 1 && u.type === 'page').map(u => u.slug);
+  }
+  // Tập slug Level 1 đã hợp lệ = nhánh Landing Page + nhánh Trang thường (đều chọn được trực tiếp từ ô URL Slug, không qua duyệt) + các nhánh đã được Super Admin duyệt.
   ldpApprovedLv1Set() {
     const approved = this.LDP_APPROVALS().filter(a => a.status === 'approved').map(a => a.lv1);
-    return new Set([...this.LDP_FIXED_LV1(), ...approved, ...(this.state.ldpExtraApprovedLv1 || [])]);
+    return new Set([...this.LDP_FIXED_LV1(), ...this.LDP_PAGE_LV1(), ...approved, ...(this.state.ldpExtraApprovedLv1 || [])]);
   }
   // Slug bị khoá (không cho sửa) chỉ khi LDP đang "Đang chạy" (publish).
   // Nháp / Tạm ẩn / Hết hạn vẫn chỉnh sửa được URL Slug bình thường (theo cấu trúc URL Route mới).
@@ -4963,6 +4968,13 @@ class Component extends DCLogic {
         msg: 'Vui lòng chọn một nhánh Level 1 có sẵn.' };
     }
     const isFixedCategory = this.LDP_FIXED_LV1().includes(slug1);
+    // Nhánh Cấp 1 loại "Trang thường" (LDP_PAGE_LV1) — URL gốc của nhánh này thuộc về trang thường đó, không phải LDP,
+    // nên LDP KHÔNG được ghi đè thẳng lên fpt.vn/{slug1}: Slug Cấp 2 luôn bắt buộc để LDP chỉ là 1 trang con riêng.
+    const isPageBranch = this.LDP_PAGE_LV1().includes(slug1);
+    if (isPageBranch && !slug2) {
+      return { ok: false, block: true, kind: 'needL2Page', bad1: false, bad2: true,
+        msg: 'Nhánh fpt.vn/' + slug1 + ' là URL của một trang thường — vui lòng chọn thêm Slug Cấp 2 để LDP không ghi đè lên URL gốc của trang đó.' };
+    }
     if (isFixedCategory && !slug2) {
       const liveAtLv1 = this.ldpLv1LiveLdp(slug1, currentId);
       if (liveAtLv1) {
@@ -5027,7 +5039,8 @@ class Component extends DCLogic {
   // Liên kết với các module khác:
   //  • Trang thường ⇄ "Mã code (Slug)" của Quản lý Trang, nhập theo định dạng lv1/lv2 (VD truyen-hinh-fpt-play/detail → cấp 1 + cấp 2).
   //    Đồng bộ 2 chiều: lưu trang → tự tạo/đổi tên URL (urlSyncFromPage); sửa URL → tự cập nhật slug các trang đang dùng (urlCommit).
-  //  • Landing Page → ô "URL Slug" nhánh Level 1 / Level 2 của Quản lý LDP chỉ cho chọn các URL loại Landing Page (LDP_FIXED_LV1, renderLdpStep2).
+  //  • Landing Page → ô "URL Slug" nhánh Level 1 / Level 2 của Quản lý LDP cho chọn URL cấp 1 loại Landing Page (LDP_FIXED_LV1) lẫn Trang thường
+  //    (LDP_PAGE_LV1); chọn nhánh Trang thường thì Level 2 bắt buộc để không ghi đè URL gốc của trang đó (renderLdpStep2, ldpSlugValidate).
   // Dữ liệu ở state.urlData (null = dùng URL_SEED). Cấp 2 lưu pid = id của URL cấp 1. Chỉnh sửa cần quyền "Thay đổi" (urlCanEdit → rbacPerm).
   // Mỗi URL có cờ active (thiếu = bật). URL ngừng hoạt động không còn hiện trong ô chọn URL Slug Level 1/2 khi tạo Landing Page mới (renderLdpStep2).
   // URL loại Trang thường (cấp 1 + toàn bộ cấp 2 con) do Quản lý Trang đồng bộ sang → slug / trạng thái CHỈ ĐỌC ở module này (urlIsLocked).
@@ -10281,8 +10294,9 @@ class Component extends DCLogic {
     const slugLocked = !!(editRow && this.ldpSlugLocked(effStatus));
     const slugCheck = slugLocked ? { ok: true } : this.ldpSlugValidate(curLv1, curL2, editRow ? editRow.id : null);
     const slugBlocked = !!slugCheck.block;
-    // Level 1 chỉ được chọn từ danh sách nhánh portal có sẵn, nên không phát sinh luồng duyệt nhánh mới.
-    const needsApproval = !slugLocked && !!curLv1 && !this.LDP_FIXED_LV1().includes(curLv1);
+    // Level 1 chỉ được chọn từ danh sách nhánh portal có sẵn (Landing Page lẫn Trang thường — ldpApprovedLv1Set),
+    // nên không phát sinh luồng duyệt nhánh mới.
+    const needsApproval = !slugLocked && !!curLv1 && !this.ldpApprovedLv1Set().has(curLv1);
     const isResubmit = !!(editRow && effStatus === 'rejected');
     const topActions = h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
       step > minStep && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'arrow-left-line', onClick: () => this.setState({ ldpStep: step - 1 }) }, step === 2 ? 'Quay lại Template' : 'Quay lại Thông tin'),
@@ -10527,20 +10541,24 @@ class Component extends DCLogic {
     const slug2Err = !!(slugCheck.block && slugCheck.bad2);
     // Lỗi chỉ nói riêng về nhánh Cấp 1 (bad1 mà không phải bad2, VD "đang có chiến dịch chạy" / "chưa chọn nhánh hợp
     // lệ") thì giới hạn chiều rộng dòng thông báo trong khoảng ~ thanh Lv1 (badge fpt.vn/ + Select) thay vì tràn hết
-    // cả dòng URL Slug — tránh nhìn như đang lấn sang phần Level 2 dù nội dung không liên quan tới Level 2.
-    const scopeL1Only = !!(slugCheck.block && slugCheck.bad1 && !slugCheck.bad2);
-    // Nhánh Level 1 / Level 2 lấy từ module Quản lý URL: Level 1 = URL cấp 1 loại "Landing Page"; Level 2 = các URL cấp 2 đã tạo dưới nhánh
-    // Level 1 đang chọn. Cả hai chọn bằng DS.Select (searchable). Nhãn dùng đúng định dạng URL slug để người dùng thấy đúng segment sẽ dùng.
-    // Bản ghi cũ trỏ tới slug không còn trong danh mục vẫn giữ lại 1 lựa chọn tương ứng để ô không bị trống.
+    // cả dòng URL Slug — tránh nhìn như đang lấn sang phần Level 2. Riêng 'needL2Page' (nhánh Trang thường yêu cầu
+    // thêm Level 2) tuy đánh dấu đỏ ở ô Level 2 (bad2) nhưng câu chữ dài (chứa slug Cấp 1) nên cũng giới hạn cùng
+    // chiều rộng này, tránh tràn xuống ngay dưới ô Level 2 nhìn như đang che lấp nó.
+    const scopeL1Only = !!(slugCheck.block && (slugCheck.kind === 'needL2Page' || (slugCheck.bad1 && !slugCheck.bad2)));
+    // Nhánh Level 1 / Level 2 lấy từ module Quản lý URL: Level 1 = URL cấp 1 loại "Landing Page" HOẶC "Trang thường"
+    // (chọn nhánh Trang thường thì Slug Cấp 2 bắt buộc — xem isPageBranch trong ldpSlugValidate); Level 2 = các URL cấp 2
+    // đã tạo dưới nhánh Level 1 đang chọn. Cả hai chọn bằng DS.Select (searchable). Nhãn dùng đúng định dạng URL slug để
+    // người dùng thấy đúng segment sẽ dùng. Bản ghi cũ trỏ tới slug không còn trong danh mục vẫn giữ lại 1 lựa chọn tương ứng để ô không bị trống.
     const urlAll = this.URLS();
     // URL ngừng hoạt động (cờ active ở Quản lý URL) không được đưa vào danh sách chọn; riêng giá trị đang chọn của bản ghi vẫn được giữ.
-    const lv1Nodes = urlAll.filter(n => n.level === 1 && n.type === 'ldp');
-    // Mỗi nhánh gắn badge "Landing Page" (cùng kiểu tag với dropdown "Breadcrumb trang trước" / "Có sẵn" của Quản lý URL — breadcrumbKindTag)
-    // để nhất quán cách đọc dù danh sách này hiện chỉ gồm nhánh loại Landing Page.
+    const lv1Nodes = urlAll.filter(n => n.level === 1 && (n.type === 'ldp' || n.type === 'page'))
+      .sort((a, b) => ((a.type === 'ldp' ? 0 : 1) - (b.type === 'ldp' ? 0 : 1)) || a.slug.localeCompare(b.slug));
+    // Mỗi nhánh gắn badge LDP (cam) / Trang thường (xanh) — cùng kiểu tag với dropdown "Breadcrumb trang trước" / "Có sẵn"
+    // của Quản lý URL (breadcrumbKindTag) để nhất quán cách đọc; nhánh Landing Page xếp trước, Trang thường xếp sau.
     const lv1Options = lv1Nodes.filter(n => this.urlIsActive(n) || n.slug === slug1).map(n => ({ value: n.slug, searchText: n.slug,
       label: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 } },
         h('span', { style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, n.slug),
-        this.breadcrumbKindTag('ldp')) }));
+        this.breadcrumbKindTag(n.type)) }));
     if (slug1 && !lv1Options.some(o => o.value === slug1)) lv1Options.push({ value: slug1, label: slug1 });
     const lv1Node = lv1Nodes.find(n => n.slug === slug1);
     const lv2Nodes = lv1Node ? urlAll.filter(n => n.level === 2 && n.pid === lv1Node.id) : [];
