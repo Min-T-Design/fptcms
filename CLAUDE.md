@@ -378,7 +378,7 @@ Use this when the action is **destructive, an important change, or has wide impa
 
 Footer layout: `display: 'flex', gap: 10, justifyContent: 'flex-end'`, children in this order — **primary (confirm) button first, "Hủy" (`level: 'tertiary'`) second** (so the group reads `[Vẫn tắt URL] [Hủy]` at the right edge). The primary button is the danger-red variant (`background/borderColor: 'var(--color-danger)'`) with a specific action label ("Vẫn tắt URL", "Vẫn đổi loại"), so the dangerous action is never in the usual right-most "proceed" spot that people click on autopilot. (An earlier revision left-aligned the whole group with `flex-start`; the user rejected that — keep the group right-aligned.)
 
-Reference implementations: `askChangeType` in `renderUrlEditor` (đổi loại URL đang dùng) and `urlConfirmDeactivate` (tắt URL có LDP đang chạy) in `FPT CMS Admin.dc.html`.
+Reference implementations: `urlConfirmEdit` (bấm vào ô slug / URL cấp 1 / Thuộc loại của URL đang có LDP chạy → modal chi tiết, "Xác nhận tiếp tục" mới cho sửa; lớp chặn `guard()` trong `renderUrlEditor`) and `urlConfirmDeactivate` (tắt URL có LDP đang chạy) in `FPT CMS Admin.dc.html`.
 
 ### Simple, low-severity confirmations → normal order, primary LAST (right-most)
 
@@ -388,7 +388,7 @@ Use the usual layout (`justifyContent: 'flex-end'`, **"Hủy" first, primary las
 
 * **Shared confirm modal — `this.confirm(title, message, onYes, danger)`** (`renderModal`, `kind: 'confirm'`, and `openModal({ kind: 'confirm', danger: true, … })`): the 4th argument / `danger` flag **is** the severity switch. `danger: true` → footer `flex-end`, `[Xác nhận (red), Hủy]`; omitted → `flex-end`, `[Hủy, Xác nhận]`. So any new serious confirm must pass `true` — never leave the flag off on a delete / overwrite / turn-off-what's-live dialog.
 * **Hand-built `DS.Modal` dialogs** (the `confirmIdx` delete dialogs in Section/Block editors, LDP reject footer `footerRowDanger`, URL modals): lay out the footer by hand exactly as above.
-* Already on the primary-first layout: every `danger: true` confirm (xóa chương trình/Badge/vai trò/cấu hình/section/chu kỳ, đổi danh mục FAQ, đồng bộ/xóa cấu hình riêng về Global, tắt Landing Page, phát hành đè lên URL cũ), the "Xóa …?" `DS.Modal` dialogs in Section/Block editors, "Xác nhận từ chối" (LDP approval), the route-name "Nếu tiếp tục" dialog, and the two URL modals (đổi loại URL đang dùng, tắt URL đang có LDP chạy).
+* Already on the primary-first layout: every `danger: true` confirm (xóa chương trình/Badge/vai trò/cấu hình/section/chu kỳ, đổi danh mục FAQ, đồng bộ/xóa cấu hình riêng về Global, tắt Landing Page, phát hành đè lên URL cũ), the "Xóa …?" `DS.Modal` dialogs in Section/Block editors, "Xác nhận từ chối" (LDP approval), the route-name "Nếu tiếp tục" dialog, and the two URL modals (sửa URL đang có nội dung chạy, tắt URL đang có LDP chạy).
 * Intentionally **primary-last** (simple / form / picker dialogs): bật Landing Page, gửi duyệt LDP, tạo tùy chỉnh riêng cho kênh, xác nhận route name, các modal chọn dữ liệu (chọn bài viết/FAQ/banner/gói/trang, thêm gói vào tab, chọn ảnh), form Thêm/Sửa vai trò & tài khoản, hộp thoại Thu phóng.
 
 ---
