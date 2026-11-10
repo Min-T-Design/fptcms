@@ -153,21 +153,19 @@ function FptUrlInput(props) {
   }, h(DS.Input, Object.assign({}, inputProps, { error: invalid ? FPT_URL_ERROR : inputProps.error })));
 }
 
-// Chip đường dẫn URL (1–2 đoạn ngăn bằng "/") trong 1 pill (dựng trên DS.Badge — không phải biến thể có sẵn của DS): đoạn đầu đậm + màu chữ chính,
-// đoạn sau thường + màu chữ phụ. Không icon, không in chữ "đã có/tạo mới" — trạng thái nằm ở tooltip. Cả đường dẫn là MỘT URL độc lập trong Quản lý URL
-// (không phải 2 URL cấp 1 + cấp 2 riêng), nên `exists` áp dụng cho toàn bộ đường dẫn.
-function FptUrlPathChip({ l1, l2, exists, style }) {
+// Chip đường dẫn URL 2 cấp trong 1 pill (dựng trên DS.Badge — không phải biến thể có sẵn của DS): cấp 1 đậm + màu chữ chính,
+// cấp 2 thường + màu chữ phụ, ngăn bằng dấu "/". Không icon, không in chữ "Cấp 1/Cấp 2/đã có/tạo mới" — cấp thể hiện bằng độ đậm nhạt, trạng thái có sẵn/tạo mới nằm ở tooltip.
+function FptUrlPathChip({ l1, l2, l1Exists, l2Exists, style }) {
   const h = React.createElement;
   const DS = window.ZENKaizenDesignSystem_4069b4;
-  const tip = exists ? 'Đã có trong Quản lý URL' : 'Sẽ được tạo mới trong Quản lý URL';
-  const seg = (first, text) => h('span', {
-    title: tip,
-    style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-dev)', fontWeight: first ? 700 : 500, color: first ? 'var(--color-text)' : 'var(--color-text-muted)' }
+  const seg = (lv, text, exists) => h('span', {
+    title: 'URL cấp ' + lv + (exists ? ' · đã có trong Quản lý URL' : ' · sẽ được tạo mới trong Quản lý URL'),
+    style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-dev)', fontWeight: lv === 1 ? 700 : 500, color: lv === 1 ? 'var(--color-text)' : 'var(--color-text-muted)' }
   }, text);
   return h(DS.Badge, { theme: 'neutral', size: 'md', style: { gap: 6, maxWidth: '100%', minWidth: 0, ...style } },
-    seg(true, l1),
+    seg(1, l1, l1Exists),
     l2 ? h('span', { 'aria-hidden': true, style: { flexShrink: 0, fontFamily: 'var(--font-dev)', color: 'var(--color-text-subtle)', fontWeight: 500 } }, '/') : null,
-    l2 ? seg(false, l2) : null);
+    l2 ? seg(2, l2, l2Exists) : null);
 }
 
 // Required fields use the same native DS error state as the Landing Page module.
@@ -4910,29 +4908,19 @@ class Component extends DCLogic {
   ldpNormalizePath(path) {
     return (path || '').replace(/\/+/g, '/').replace(/^\/+|\/+$/g, '');
   }
-  // URL Slug có sẵn cho LDP = các URL loại "Landing Page" đã tạo ở module Quản lý URL. Mỗi URL là một đường dẫn ĐỘC LẬP đầy đủ ("a" hoặc "a/b"),
-  // ô URL Slug của LDP chỉ còn MỘT ô chọn trong danh sách này (renderLdpStep2); LDP vẫn lưu lv1 / l2 = 2 đoạn của đường dẫn đã chọn.
-  LDP_URL_PATHS() {
-    return this.URLS().filter(u => u.type === 'ldp').map(u => u.slug);
-  }
-  // URL chọn được ở ô URL Slug của LDP: URL Landing Page + URL Trang thường (mỗi mục gắn badge loại; URL Chưa phân loại không chọn được).
-  // URL Trang thường đang là đường dẫn của một trang thì bị chặn khi chọn (ldpSlugValidate, kind 'pageUrl') để LDP không ghi đè lên trang đó.
-  LDP_PICK_URLS() {
-    return this.URLS().filter(u => u.type === 'ldp' || u.type === 'page');
-  }
-  // Đoạn đầu (trước dấu "/" đầu tiên) của các URL Landing Page — chỉ dùng cho cờ "nhánh mới" ở màn Duyệt LDP (đang ẩn).
+  // Nhánh Level 1 có sẵn cho LDP = các URL cấp 1 loại "Landing Page" đã tạo ở module Quản lý URL (không còn là danh sách cố định 7 nhánh).
   LDP_FIXED_LV1() {
-    return [...new Set(this.LDP_URL_PATHS().map(p => p.split('/')[0]))];
+    return this.URLS().filter(u => u.level === 1 && u.type === 'ldp').map(u => u.slug);
   }
-  // Các đoạn đầu đã được Super Admin duyệt (luồng Duyệt LDP đang ẩn; ô chọn URL Slug mới không còn phát sinh nhánh cần duyệt).
+  // Nhánh Level 1 loại "Trang thường" cũng chọn được cho LDP (ô URL Slug ở renderLdpStep2) — khác nhánh Landing Page ở chỗ
+  // Level 2 LUÔN bắt buộc (xem isPageBranch trong ldpSlugValidate) để LDP không ghi đè thẳng lên URL gốc của trang thường đó.
+  LDP_PAGE_LV1() {
+    return this.URLS().filter(u => u.level === 1 && u.type === 'page').map(u => u.slug);
+  }
+  // Tập slug Level 1 đã hợp lệ = nhánh Landing Page + nhánh Trang thường (đều chọn được trực tiếp từ ô URL Slug, không qua duyệt) + các nhánh đã được Super Admin duyệt.
   ldpApprovedLv1Set() {
     const approved = this.LDP_APPROVALS().filter(a => a.status === 'approved').map(a => a.lv1);
-    return new Set([...approved, ...(this.state.ldpExtraApprovedLv1 || [])]);
-  }
-  // URL Slug hợp lệ = nằm trong danh sách URL chọn được đã tạo ở Quản lý URL (LDP_PICK_URLS), hoặc đoạn đầu đã được duyệt.
-  ldpSlugRegistered(slug1, slug2) {
-    const path = this.ldpNormalizePath([slug1, slug2].filter(Boolean).join('/'));
-    return this.LDP_PICK_URLS().some(u => u.slug === path) || this.ldpApprovedLv1Set().has(slug1);
+    return new Set([...this.LDP_FIXED_LV1(), ...this.LDP_PAGE_LV1(), ...approved, ...(this.state.ldpExtraApprovedLv1 || [])]);
   }
   // Slug bị khoá (không cho sửa) chỉ khi LDP đang "Đang chạy" (publish).
   // Nháp / Tạm ẩn / Hết hạn vẫn chỉnh sửa được URL Slug bình thường (theo cấu trúc URL Route mới).
@@ -4946,33 +4934,57 @@ class Component extends DCLogic {
       'tin-tuc/uu-dai-thang-9': 'Bài viết tin tức sẵn có trên portal',
     };
   }
-  // Kiểm tra URL Slug của LDP. URL Slug là MỘT đường dẫn độc lập ("a" hoặc "a/b") chọn từ danh sách URL Landing Page đã tạo ở Quản lý URL
-  // (slug1 / slug2 = 2 đoạn của đường dẫn đó):
-  //  • Phải là URL có sẵn trong danh sách (ldpSlugRegistered) — không gõ tay được.
-  //  • URL Trang thường đang là đường dẫn của một trang thì không chọn được (kind 'pageUrl'); URL Trang thường chưa có trang dùng thì chọn được.
-  //  • Không trùng trang sẵn có trên portal (LDP_PORTAL_URLS).
-  //  • Chặn xung đột routing — một đường dẫn chỉ được gán cho duy nhất 1 LDP "Đang chạy" tại 1 thời điểm (kind 'clashL2');
-  //    LDP cũ hết hạn/đã xoá thì cho tái dùng kèm cảnh báo vàng. Bỏ qua chính bản ghi đang sửa (currentId).
-  //  Mỗi URL độc lập nên không còn luật "nhánh Level 1 phải kèm Level 2" — muốn LDP nằm dưới một nhánh thì tạo URL dạng "nhánh/slug" ở Quản lý URL.
-  //  bad1 = true khi lỗi nằm ở chính ô URL Slug (ô duy nhất) → tô viền đỏ; thông báo text hiện ở dòng dưới ô.
+  // Tìm LDP đang CHẠY (publish) ngay trên nhánh Level 1 đã chọn — bỏ qua bản ghi đang sửa.
+  // Trả về bản ghi đầu tiên tìm thấy, hoặc null nếu nhánh không có LDP nào đang chạy.
+  ldpLv1LiveLdp(slug1, currentId) {
+    slug1 = (slug1 || '').trim();
+    if (!slug1) return null;
+    const statusOf = r => (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
+    return this.LDP_LIST().find(r => r.lv1 === slug1 && (currentId == null || r.id !== currentId) && statusOf(r) === 'publish') || null;
+  }
+  // Kiểm tra ràng buộc slug LDP theo cấu trúc URL Route mới:
+  //  Cấu trúc 1 cấp (fpt.vn/{slug}) — chỉ áp dụng khi Level 1 là nhánh đã được ISC duyệt (ldpApprovedLv1Set(),
+  //           trừ 7 nhánh cố định) → Level 2 tuỳ chọn. Module Duyệt LDP đang tạm ẩn phase này nên nhánh loại
+  //           này chưa xuất hiện trong danh sách chọn — logic vẫn giữ để dùng lại khi mở lại module.
+  //  Cấu trúc 2 cấp (fpt.vn/{lv1}/{lv2}) — tuỳ chọn với 1 URL cấp 1 loại Landing Page ở Quản lý URL (LDP_FIXED_LV1); Level 2 chọn từ các URL cấp 2 đã tạo dưới nhánh đó:
+  //           Level 2 KHÔNG bắt buộc nếu nhánh Cấp 1 đó hiện chưa có LDP nào "Đang chạy" (case 1A) — chỉ bắt
+  //           buộc nhập thêm khi nhánh đang bị 1 LDP khác chiếm dụng (case 1B, xem needL2 bên dưới).
+  //  Chặn xung đột routing — một slug 1 cấp chỉ được gán cho duy nhất 1 LDP "Đang chạy" tại 1 thời điểm:
+  //    Trường hợp 1B (trùng nhánh Cấp 1 độc lập, slug2 còn trống, nhánh đang có LDP khác chạy) → bad1: true.
+  //    Trường hợp 2 (trùng toàn bộ đường dẫn 2 cấp) → bad2: true.
+  //  Ngoại lệ — bỏ qua chính bản ghi đang sửa (currentId); LDP cũ hết hạn/đã xoá thì cho tái dùng kèm cảnh báo vàng.
+  //  bad1/bad2 dùng để tô viền đỏ đúng field (slug1Err/slug2Err) trong renderLdpStep2; thông báo text luôn hiện
+  //  chung ở dòng dưới cả 2 field (căn trái, thẳng hàng với "Xem trước"), không tách theo field nữa.
   ldpSlugValidate(slug1, slug2, currentId) {
     slug1 = (slug1 || '').trim(); slug2 = (slug2 || '').trim();
     if (!slug1) return { ok: false, block: true, kind: 'empty1' };
-    if (!this.ldpSlugRegistered(slug1, slug2)) {
-      return { ok: false, block: true, kind: 'invalidLv1', bad1: true,
-        msg: 'Vui lòng chọn một URL Slug có sẵn.' };
+    if (!this.ldpApprovedLv1Set().has(slug1)) {
+      return { ok: false, block: true, kind: 'invalidLv1', bad1: true, bad2: false,
+        msg: 'Vui lòng chọn một nhánh Level 1 có sẵn.' };
+    }
+    const isFixedCategory = this.LDP_FIXED_LV1().includes(slug1);
+    // Nhánh Cấp 1 loại "Trang thường" (LDP_PAGE_LV1) — URL gốc của nhánh này thuộc về trang thường đó, không phải LDP,
+    // nên LDP KHÔNG được ghi đè thẳng lên fpt.vn/{slug1}: Slug Cấp 2 luôn bắt buộc để LDP chỉ là 1 trang con riêng.
+    const isPageBranch = this.LDP_PAGE_LV1().includes(slug1);
+    if (isPageBranch && !slug2) {
+      return { ok: false, block: true, kind: 'needL2Page', bad1: false, bad2: true,
+        msg: 'Nhánh fpt.vn/' + slug1 + ' là URL của một trang thường — vui lòng chọn thêm Slug Cấp 2 để LDP không ghi đè lên URL gốc của trang đó.' };
+    }
+    if (isFixedCategory && !slug2) {
+      const liveAtLv1 = this.ldpLv1LiveLdp(slug1, currentId);
+      if (liveAtLv1) {
+        return { ok: false, block: true, kind: 'needL2', bad1: true, bad2: false,
+          msg: 'Nhánh Cấp 1 fpt.vn/' + slug1 + ' hiện đang có chiến dịch [' + liveAtLv1.name + '] đang chạy. Vui lòng chọn thêm Slug Cấp 2 hoặc chọn nhánh khác để không ghi đè lên trang đang chạy.' };
+      }
+      // Trường hợp 1A: nhánh Cấp 1 hiện không có LDP nào đang chạy → URL 1 cấp (fpt.vn/{slug1}) hợp lệ luôn,
+      // không còn bắt buộc nhập thêm Slug Cấp 2 — rơi xuống các bước kiểm tra dùng chung bên dưới (portal/clash)
+      // để double-check path = slug1 không trùng trang tĩnh portal hay LDP khác.
     }
     const path = this.ldpNormalizePath([slug1, slug2].filter(Boolean).join('/'));
-    const urlNode = this.URLS().find(u => u.slug === path);
-    if (urlNode && urlNode.type === 'page') {
-      const pg = this.PAGES().find(p => this.ldpNormalizePath(p.slug) === path);
-      if (pg) return { ok: false, block: true, kind: 'pageUrl', bad1: true,
-        msg: 'URL "fpt.vn/' + path + '" đang là đường dẫn của trang "' + pg.name + '" (Trang thường) — Landing Page không được ghi đè lên trang này. Vui lòng chọn URL khác.' };
-    }
     const portal = this.LDP_PORTAL_URLS()[path];
     if (portal) {
-      return { ok: false, block: true, kind: 'portal', bad1: true,
-        msg: 'URL "fpt.vn/' + path + '" trùng với trang sẵn có trên portal (' + portal + '). Vui lòng chọn URL Slug khác.' };
+      return { ok: false, block: true, kind: 'portal', bad1: true, bad2: !!slug2,
+        msg: 'URL "fpt.vn/' + path + '" trùng với trang sẵn có trên portal (' + portal + '). Vui lòng đổi slug Level 2 hoặc Level 1.' };
     }
     const statusOf = r => (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
     const clash = this.LDP_LIST().find(r => {
@@ -4986,7 +4998,7 @@ class Component extends DCLogic {
       // Nháp / Tạm ẩn / Chờ duyệt không chặn lưu ở bước này; xung đột thực với 1 LDP đang chạy được chặn
       // riêng khi bật lại "Tạm ẩn → Đang chạy" từ danh sách (xem ldpLiveUrlClash).
       if (st === 'publish') {
-        return { ok: false, block: true, kind: 'clashL2', bad1: true,
+        return { ok: false, block: true, kind: 'clashL2', bad1: false, bad2: true,
           msg: 'Đường dẫn fpt.vn/' + path + ' hiện đang được sử dụng bởi chiến dịch [' + clash.name + '] (Đang chạy). Vui lòng đổi URL Slug khác hoặc tắt chiến dịch cũ để tiếp tục.' };
       }
       if (['expired', 'deleted'].includes(st)) {
@@ -5015,73 +5027,74 @@ class Component extends DCLogic {
     ];
   }
 
-  // ===== URLs (Quản lý URL: danh mục đường dẫn ĐỘC LẬP) =====
-  // Danh mục URL gốc của website fpt.vn. MỖI URL LÀ MỘT BẢN GHI ĐỘC LẬP { id, slug, type, active, createdBy/At, updatedBy/At } với slug = đường dẫn đầy đủ sau "fpt.vn/",
-  // tối đa 2 cấp ngăn bằng "/" ("khuyen-mai" hoặc "khuyen-mai/wifi-7"). Không có cha–con (pid) hay "URL cấp 1 / cấp 2" riêng: "khuyen-mai" và "khuyen-mai/wifi-7" là
-  // 2 URL không phụ thuộc nhau — tạo / sửa / tắt URL này không kéo theo URL kia. Trùng = cùng đường dẫn đầy đủ (urlCheckPath, kiểm ngay khi gõ).
-  // type: 'page' = Trang thường, 'ldp' = Landing Page, '' = Chưa phân loại (thiếu type = Trang thường). Mỗi URL có loại riêng.
+  // ===== URLs (Quản lý URL: URL cấp 1 / cấp 2) =====
+  // Danh mục URL gốc của website fpt.vn, chia 2 cấp:
+  //  • URL cấp 1 (Lv1) — nhánh gốc fpt.vn/{slug}. Có "Loại": 'page' = Trang thường, 'ldp' = Landing Page.
+  //  • URL cấp 2 (Lv2) — nhánh con fpt.vn/{slug cấp 1}/{slug}. KHÔNG có loại riêng, luôn kế thừa loại của URL cấp 1 (pid).
   // Liên kết với các module khác:
-  //  • Trang thường ⇄ "Mã code (Slug)" của Quản lý Trang, nhập theo định dạng a hoặc a/b (VD truyen-hinh-fpt-play/detail → MỘT URL).
+  //  • Trang thường ⇄ "Mã code (Slug)" của Quản lý Trang, nhập theo định dạng lv1/lv2 (VD truyen-hinh-fpt-play/detail → cấp 1 + cấp 2).
   //    Đồng bộ 2 chiều: lưu trang → tự tạo/đổi tên URL (urlSyncFromPage); sửa URL → tự cập nhật slug các trang đang dùng (urlCommit).
-  //  • Landing Page → ô "URL Slug" của Quản lý LDP là MỘT ô chọn trong các URL loại Landing Page đang hoạt động (LDP_URL_PATHS, renderLdpStep2, ldpSlugValidate).
-  // Dữ liệu ở state.urlData (null = dùng URL_SEED). Chỉnh sửa cần quyền "Thay đổi" (urlCanEdit → rbacPerm).
-  // Mỗi URL có cờ active (thiếu = bật). URL ngừng hoạt động không còn hiện trong ô chọn URL Slug khi tạo Landing Page mới (renderLdpStep2).
-  // URL loại Trang thường do Quản lý Trang đồng bộ sang → slug / trạng thái CHỈ ĐỌC ở module này (urlIsLocked).
-  // URL Landing Page (và Chưa phân loại) sửa được slug + "Thuộc loại" (URL đang có nội dung chạy → modal xác nhận).
+  //  • Landing Page → ô "URL Slug" nhánh Level 1 / Level 2 của Quản lý LDP cho chọn URL cấp 1 loại Landing Page (LDP_FIXED_LV1) lẫn Trang thường
+  //    (LDP_PAGE_LV1); chọn nhánh Trang thường thì Level 2 bắt buộc để không ghi đè URL gốc của trang đó (renderLdpStep2, ldpSlugValidate).
+  // Dữ liệu ở state.urlData (null = dùng URL_SEED). Cấp 2 lưu pid = id của URL cấp 1. Chỉnh sửa cần quyền "Thay đổi" (urlCanEdit → rbacPerm).
+  // Mỗi URL có cờ active (thiếu = bật). URL ngừng hoạt động không còn hiện trong ô chọn URL Slug Level 1/2 khi tạo Landing Page mới (renderLdpStep2).
+  // URL loại Trang thường (cấp 1 + toàn bộ cấp 2 con) do Quản lý Trang đồng bộ sang → slug / trạng thái CHỈ ĐỌC ở module này (urlIsLocked).
+  // URL Landing Page (cấp 1 lẫn cấp 2) sửa được slug + "Thuộc loại" (URL đang có nội dung chạy → modal xác nhận); URL cấp 2 mặc định theo loại cấp 1, đổi loại thì lưu loại riêng (n.type).
   URL_SEED() { return [
-    { id: 'u901', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026', type: 'page', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
-    { id: 'u902', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026/dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', type: 'page', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
-    { id: 'u903', slug: 'khuyen-mai/qc-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', type: 'ldp', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
+    { id: 'u901', level: 1, slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026', type: 'page', pid: null, createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
+    { id: 'u902', level: 2, slug: 'dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', pid: 'u901', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
+    { id: 'u903', level: 2, slug: 'qc-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', pid: 'u14', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
     // ── Trang thường (đồng bộ từ "Mã code (Slug)" của Quản lý Trang) ──
-    { id: 'u1',  slug: 'truyen-hinh-fpt-play',        type: 'page', createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
-    { id: 'u2',  slug: 'truyen-hinh-fpt-play/detail', type: 'page', createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
-    { id: 'u3',  slug: 'dich-vu-so',                  type: 'page', createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
-    { id: 'u4',  slug: 'dich-vu-so/detail',           type: 'page', createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
-    { id: 'u5',  slug: 'internet-detail',             type: 'page', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
-    { id: 'u6',  slug: 'internet-detail/sections2',   type: 'page', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
-    { id: 'u7',  slug: 'internet',                    type: 'page', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:25', updatedAt: '20/04/2026 09:40' },
-    { id: 'u8',  slug: 'internet/detail2',            type: 'page', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:25', updatedAt: '26/03/2026 08:26' },
-    { id: 'u9',  slug: 'dich-vu-f-safe',              type: 'page', createdBy: 'Phạm Thu Hà',   createdAt: '03/02/2026 16:40', updatedAt: '03/02/2026 16:40' },
-    { id: 'u10', slug: 'camera-an-ninh',              type: 'page', createdBy: 'Phạm Thu Hà',   createdAt: '03/02/2026 16:33', updatedAt: '03/02/2026 16:33' },
-    { id: 'u11', slug: 'home',                        type: 'page', createdBy: 'Admin User',    createdAt: '01/01/2026 08:00', updatedAt: '01/01/2026 08:00' },
-    { id: 'u12', slug: 'tin-tuc',                     type: 'page', createdBy: 'Admin User',    createdAt: '01/01/2026 08:00', updatedAt: '01/01/2026 08:00' },
-    { id: 'u13', slug: 'lien-he',                     type: 'page', createdBy: 'Trần Thị Bích', createdAt: '01/01/2026 08:00', updatedAt: '01/01/2026 08:00' },
-    // URL đã tạo sẵn cho Trang thường nhưng chưa có trang nào dùng
-    { id: 'u21', slug: 'internet/ca-nhan',            type: 'page', createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:10', updatedAt: '20/04/2026 09:10' },
-    { id: 'u22', slug: 'internet/gia-dinh',           type: 'page', createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:20', updatedAt: '20/04/2026 09:20' },
-    { id: 'u23', slug: 'internet/game-thu',           type: 'page', createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:30', updatedAt: '20/04/2026 09:30' },
-    { id: 'u24', slug: 'internet/doanh-nghiep',       type: 'page', active: false, createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:40', updatedAt: '20/04/2026 09:40' },
-    { id: 'u25', slug: 'fpt-camera',                  type: 'page', createdBy: 'Phạm Thu Hà',   createdAt: '12/04/2026 10:00', updatedAt: '12/04/2026 10:00' },
-    { id: 'u26', slug: 'fpt-smart-home',              type: 'page', active: false, createdBy: 'Phạm Thu Hà',   createdAt: '12/04/2026 10:05', updatedAt: '12/04/2026 10:05' },
-    // ── Landing Page (chọn ở ô "URL Slug" của Quản lý LDP) ──
-    { id: 'u14', slug: 'khuyen-mai',                         type: 'ldp', createdBy: 'Hà Linh',       createdAt: '28/04/2026 09:00', updatedAt: '12/06/2026 11:20' },
-    { id: 'u15', slug: 'khuyen-mai/internet-thang-5',        type: 'ldp', createdBy: 'Hà Linh',       createdAt: '28/04/2026 09:05', updatedAt: '28/04/2026 09:05' },
-    { id: 'u16', slug: 'khuyen-mai/wifi-7-launch',           type: 'ldp', createdBy: 'Minh Tú',       createdAt: '30/05/2026 14:10', updatedAt: '30/05/2026 14:10' },
-    { id: 'u27', slug: 'khuyen-mai/uu-dai-sinh-vien',        type: 'ldp', active: false, createdBy: 'Hà Linh',       createdAt: '12/06/2026 11:00', updatedAt: '12/06/2026 11:00' },
-    { id: 'u28', slug: 'khuyen-mai/combo-gia-dinh',          type: 'ldp', createdBy: 'Hà Linh',       createdAt: '12/06/2026 11:20', updatedAt: '12/06/2026 11:20' },
-    { id: 'u17', slug: 'thiet-bi-thong-minh',                type: 'ldp', createdBy: 'Admin User',    createdAt: '19/05/2026 10:30', updatedAt: '19/05/2026 10:35' },
-    { id: 'u18', slug: 'thiet-bi-thong-minh/camera-ai-thang-6', type: 'ldp', createdBy: 'Admin User', createdAt: '19/05/2026 10:35', updatedAt: '19/05/2026 10:35' },
-    { id: 'u19', slug: 'su-kien',                            type: 'ldp', createdBy: 'Minh Tú',       createdAt: '18/12/2025 15:00', updatedAt: '18/12/2025 15:05' },
-    { id: 'u20', slug: 'su-kien/fpt-play-2026',              type: 'ldp', createdBy: 'Minh Tú',       createdAt: '18/12/2025 15:05', updatedAt: '18/12/2025 15:05' },
-    { id: 'u32', slug: 'tri-an-khach-hang',                  type: 'ldp', createdBy: 'Hà Linh',       createdAt: '08/06/2026 09:30', updatedAt: '08/06/2026 09:30' },
-    { id: 'u33', slug: 'dang-ky-lap-dat',                    type: 'ldp', createdBy: 'Minh Tú',       createdAt: '22/05/2026 14:00', updatedAt: '22/05/2026 14:00' },
-    { id: 'u34', slug: 'combo-internet-truyen-hinh',         type: 'ldp', createdBy: 'Admin User',    createdAt: '10/05/2026 10:15', updatedAt: '10/05/2026 10:15' },
-    // URL của các LDP Khu vực demo
-    { id: 'u29', slug: 'khuyen-mai/internet-ben-thanh',      type: 'ldp', createdBy: 'Hà Linh',       createdAt: '28/09/2026 09:00', updatedAt: '28/09/2026 09:00' },
-    { id: 'u30', slug: 'thiet-bi-thong-minh/camera-ai-hoan-kiem', type: 'ldp', createdBy: 'Minh Tú',  createdAt: '12/10/2026 14:30', updatedAt: '12/10/2026 14:30' },
-    { id: 'u31', slug: 'khuyen-mai/wifi-7-hai-chau',         type: 'ldp', createdBy: 'Hà Linh',       createdAt: '25/08/2026 10:15', updatedAt: '25/08/2026 10:15' },
+    { id: 'u1',  level: 1, slug: 'truyen-hinh-fpt-play', type: 'page', pid: null, createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
+    { id: 'u2',  level: 2, slug: 'detail',               pid: 'u1',                createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
+    { id: 'u3',  level: 1, slug: 'dich-vu-so',           type: 'page', pid: null, createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
+    { id: 'u4',  level: 2, slug: 'detail',               pid: 'u3',                createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
+    { id: 'u5',  level: 1, slug: 'internet-detail',      type: 'page', pid: null, createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
+    { id: 'u6',  level: 2, slug: 'sections2',            pid: 'u5',                createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
+    { id: 'u7',  level: 1, slug: 'internet',             type: 'page', pid: null, createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:25', updatedAt: '20/04/2026 09:40' },
+    { id: 'u8',  level: 2, slug: 'detail2',              pid: 'u7',                createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:25', updatedAt: '26/03/2026 08:26' },
+    { id: 'u9',  level: 1, slug: 'dich-vu-f-safe',       type: 'page', pid: null, createdBy: 'Phạm Thu Hà',   createdAt: '03/02/2026 16:40', updatedAt: '03/02/2026 16:40' },
+    { id: 'u10', level: 1, slug: 'camera-an-ninh',       type: 'page', pid: null, createdBy: 'Phạm Thu Hà',   createdAt: '03/02/2026 16:33', updatedAt: '03/02/2026 16:33' },
+    { id: 'u11', level: 1, slug: 'home',                 type: 'page', pid: null, createdBy: 'Admin User',    createdAt: '01/01/2026 08:00', updatedAt: '01/01/2026 08:00' },
+    { id: 'u12', level: 1, slug: 'tin-tuc',              type: 'page', pid: null, createdBy: 'Admin User',    createdAt: '01/01/2026 08:00', updatedAt: '01/01/2026 08:00' },
+    { id: 'u13', level: 1, slug: 'lien-he',              type: 'page', pid: null, createdBy: 'Trần Thị Bích', createdAt: '01/01/2026 08:00', updatedAt: '01/01/2026 08:00' },
+    // URL đã tạo sẵn cho Trang thường nhưng chưa có trang nào dùng (hiện ở ô gợi ý của "Mã code (Slug)")
+    { id: 'u21', level: 2, slug: 'ca-nhan',              pid: 'u7',                createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:10', updatedAt: '20/04/2026 09:10' },
+    { id: 'u22', level: 2, slug: 'gia-dinh',             pid: 'u7',                createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:20', updatedAt: '20/04/2026 09:20' },
+    { id: 'u23', level: 2, slug: 'game-thu',             pid: 'u7',                createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:30', updatedAt: '20/04/2026 09:30' },
+    { id: 'u24', level: 2, slug: 'doanh-nghiep',         pid: 'u7',                active: false, createdBy: 'Lê Minh Hoàng', createdAt: '20/04/2026 09:40', updatedAt: '20/04/2026 09:40' },
+    { id: 'u25', level: 1, slug: 'fpt-camera',           type: 'page', pid: null, createdBy: 'Phạm Thu Hà',   createdAt: '12/04/2026 10:00', updatedAt: '12/04/2026 10:00' },
+    { id: 'u26', level: 1, slug: 'fpt-smart-home',       type: 'page', pid: null, active: false, createdBy: 'Phạm Thu Hà',   createdAt: '12/04/2026 10:05', updatedAt: '12/04/2026 10:05' },
+    // ── Landing Page (chọn ở ô "URL Slug" nhánh Level 1 / Level 2 của Quản lý LDP) ──
+    { id: 'u14', level: 1, slug: 'khuyen-mai',           type: 'ldp', pid: null,  createdBy: 'Hà Linh',       createdAt: '28/04/2026 09:00', updatedAt: '12/06/2026 11:20' },
+    { id: 'u15', level: 2, slug: 'internet-thang-5',     pid: 'u14',               createdBy: 'Hà Linh',       createdAt: '28/04/2026 09:05', updatedAt: '28/04/2026 09:05' },
+    { id: 'u16', level: 2, slug: 'wifi-7-launch',        pid: 'u14',               createdBy: 'Minh Tú',       createdAt: '30/05/2026 14:10', updatedAt: '30/05/2026 14:10' },
+    { id: 'u27', level: 2, slug: 'uu-dai-sinh-vien',     pid: 'u14',               active: false, createdBy: 'Hà Linh',       createdAt: '12/06/2026 11:00', updatedAt: '12/06/2026 11:00' },
+    { id: 'u28', level: 2, slug: 'combo-gia-dinh',       pid: 'u14',               createdBy: 'Hà Linh',       createdAt: '12/06/2026 11:20', updatedAt: '12/06/2026 11:20' },
+    { id: 'u17', level: 1, slug: 'thiet-bi-thong-minh',  type: 'ldp', pid: null,  createdBy: 'Admin User',    createdAt: '19/05/2026 10:30', updatedAt: '19/05/2026 10:35' },
+    { id: 'u18', level: 2, slug: 'camera-ai-thang-6',    pid: 'u17',               createdBy: 'Admin User',    createdAt: '19/05/2026 10:35', updatedAt: '19/05/2026 10:35' },
+    { id: 'u19', level: 1, slug: 'su-kien',              type: 'ldp', pid: null,  createdBy: 'Minh Tú',       createdAt: '18/12/2025 15:00', updatedAt: '18/12/2025 15:05' },
+    { id: 'u20', level: 2, slug: 'fpt-play-2026',        pid: 'u19',               createdBy: 'Minh Tú',       createdAt: '18/12/2025 15:05', updatedAt: '18/12/2025 15:05' },
+    { id: 'u32', level: 1, slug: 'tri-an-khach-hang',    type: 'ldp', pid: null,  createdBy: 'Hà Linh',       createdAt: '08/06/2026 09:30', updatedAt: '08/06/2026 09:30' },
+    { id: 'u33', level: 1, slug: 'dang-ky-lap-dat',      type: 'ldp', pid: null,  createdBy: 'Minh Tú',       createdAt: '22/05/2026 14:00', updatedAt: '22/05/2026 14:00' },
+    { id: 'u34', level: 1, slug: 'combo-internet-truyen-hinh', type: 'ldp', pid: null, createdBy: 'Admin User', createdAt: '10/05/2026 10:15', updatedAt: '10/05/2026 10:15' },
+    // URL cấp 2 của các LDP Khu vực demo
+    { id: 'u29', level: 2, slug: 'internet-ben-thanh',   pid: 'u14',               createdBy: 'Hà Linh',       createdAt: '28/09/2026 09:00', updatedAt: '28/09/2026 09:00' },
+    { id: 'u30', level: 2, slug: 'camera-ai-hoan-kiem',  pid: 'u17',               createdBy: 'Minh Tú',       createdAt: '12/10/2026 14:30', updatedAt: '12/10/2026 14:30' },
+    { id: 'u31', level: 2, slug: 'wifi-7-hai-chau',      pid: 'u14',               createdBy: 'Hà Linh',       createdAt: '25/08/2026 10:15', updatedAt: '25/08/2026 10:15' },
   ]; }
   URLS() { return this.state.urlData || this.URL_SEED(); }
   URL_TYPES() { return [{ value: 'page', label: 'Trang thường' }, { value: 'ldp', label: 'Landing Page' }]; }
-  // Loại rỗng ('') = "Chưa phân loại": URL chưa gán Trang thường / Landing Page, người dùng phân loại sau bằng cách chỉnh sửa URL.
+  // Loại rỗng ('') = "Chưa phân loại": URL tạo tay ở module này chưa gán Trang thường / Landing Page, người dùng phân loại sau bằng cách chỉnh sửa URL.
   urlTypeLabel(t) { return (this.URL_TYPES().find(x => x.value === t) || {}).label || 'Chưa phân loại'; }
   urlTypeBadge(t) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     return h(DS.Badge, { theme: t === 'ldp' ? 'brand' : t === 'page' ? 'info' : 'neutral' }, this.urlTypeLabel(t));
   }
-  // Bản nháp mặc định của form "Tạo URL": MỘT ô "URL Slug" (slug = "a" hoặc "a/b", tối đa 2 cấp). URL tạo tại module này luôn là Landing Page
-  // (Trang thường chỉ được đồng bộ từ Quản lý Trang); lưu xong URL tự nằm trong ô chọn URL Slug của Quản lý LDP.
-  urlNewDraft() { return { slug: '', type: 'ldp', active: true }; }
+  // Bản nháp mặc định của form "Tạo URL": mode 'existing' = chọn URL cấp 1 có sẵn (pid) + nhập URL cấp 2 (slug2, bắt buộc);
+  // mode 'new' = chỉ nhập URL cấp 1 mới (slug1) — lưu xong nó thành một URL độc lập và nằm trong kho dropdown "URL cấp 1" của chế độ "Có sẵn".
+  // URL tạo tại module này luôn là Landing Page (Trang thường chỉ được đồng bộ từ Quản lý Trang).
+  urlNewDraft() { return { level: 0, mode: 'existing', pid: '', slug1: '', slug2: '', type: 'ldp', active: true }; }
   URL_SLUG_RE() { return /^[a-z0-9]+(?:-[a-z0-9]+)*$/; }
   // Quyền "Thay đổi" module Quản lý URL của vai trò đang đăng nhập (ma trận Phân quyền tính năng). Không có quyền → chỉ xem: ẩn Tạo/Sửa.
   urlCanEdit() { return this.rbacPerm('Quản lý URL', this.state.currentRole || 'Super Admin').edit; }
@@ -5090,103 +5103,122 @@ class Component extends DCLogic {
   // URL Trang thường được đồng bộ từ Quản lý Trang (Mã code (Slug)) → không chỉnh sửa tại Quản lý URL; muốn đổi thì sửa slug ở Quản lý Trang.
   urlIsLocked(n, all) { return !!n && this.urlTypeOf(n, all) === 'page'; }
   URL_LOCK_MSG() { return 'URL Trang thường được đồng bộ từ Quản lý Trang nên không thể chỉnh sửa tại đây.'; }
-  // Đường dẫn đầy đủ (không có "fpt.vn/") — chính là slug của bản ghi (mỗi URL độc lập, đã chứa đủ 1–2 cấp).
-  urlFull(n) { return n ? n.slug : ''; }
-  // Loại của URL: thiếu type = Trang thường (dữ liệu cũ); '' = Chưa phân loại.
-  urlTypeOf(n) { return !n ? 'page' : ((n.type === undefined || n.type === null) ? 'page' : n.type); }
+  // Đường dẫn đầy đủ (không có "fpt.vn/"): cấp 1 = slug, cấp 2 = slug cha + "/" + slug.
+  urlFull(n, all) {
+    if (!n) return '';
+    if (n.level === 1) return n.slug;
+    const p = this.urlNode(n.pid, all);
+    return (p ? p.slug : '?') + '/' + n.slug;
+  }
+  // URL cấp 1 luôn có loại riêng. URL cấp 2 mặc định theo URL cấp 1 cha; khi người dùng đổi "Thuộc loại" ở editor thì cấp 2 lưu loại riêng (n.type) và không còn theo cha nữa.
+  urlTypeOf(n, all) {
+    if (!n) return 'page';
+    if (n.level === 1) return (n.type === undefined || n.type === null) ? 'page' : n.type; // '' = Chưa phân loại (khác với dữ liệu cũ thiếu type = Trang thường)
+    if (n.type !== undefined && n.type !== null) return n.type;   // cấp 2 đã đặt loại riêng
+    const p = this.urlNode(n.pid, all);
+    return p ? this.urlTypeOf(p, all) : 'page';
+  }
   // Bản ghi đang dùng đúng URL này: Landing Page → LDP có lv1/l2 khớp; Trang thường → trang có Mã code (Slug) = đường dẫn.
   urlUsage(n, all) {
     all = all || this.URLS();
-    const full = this.urlFull(n);
-    if (this.urlTypeOf(n) === 'ldp') {
+    const full = this.urlFull(n, all);
+    if (this.urlTypeOf(n, all) === 'ldp') {
       const stOf = r => (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
       return this.LDP_LIST().filter(r => this.ldpNormalizePath((r.lv1 || '') + (r.l2 ? '/' + r.l2 : '')) === full).map(r => ({ kind: 'ldp', name: r.name, status: stOf(r) }));
     }
     // status 'active' / 'hidden' theo công tắc Hoạt động của Quản lý Trang (cùng cách tính với cột Hoạt động ở bảng Trang).
-    const pages = this.PAGES().filter(p => this.ldpNormalizePath(p.slug) === full).map(p => {
+    return this.PAGES().filter(p => this.ldpNormalizePath(p.slug) === full).map(p => {
       const m = (this.state.pageActiveMap || {})[p.slug];
       return { kind: 'page', name: p.name, status: (m !== undefined ? !!m : p.status !== 'hidden') ? 'active' : 'hidden' };
     });
-    if (this.urlTypeOf(n) !== 'page') return pages;
-    // URL Trang thường cũng chọn được ở ô URL Slug của LDP (khi chưa có trang nào dùng) → LDP đang dùng đường dẫn này cũng hiện ở "Đang dùng bởi".
-    const stOf = r => (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
-    return pages.concat(this.LDP_LIST().filter(r => this.ldpNormalizePath((r.lv1 || '') + (r.l2 ? '/' + r.l2 : '')) === full).map(r => ({ kind: 'ldp', name: r.name, status: stOf(r) })));
+  }
+  // Như urlUsage nhưng URL cấp 1 cộng thêm mọi URL cấp 2 con (đổi loại / đổi slug cấp 1 sẽ kéo theo cả nhánh).
+  urlUsageDeep(n, all) {
+    all = all || this.URLS();
+    const self = this.urlUsage(n, all);
+    if (n.level !== 1) return self;
+    return all.filter(c => c.level === 2 && c.pid === n.id).reduce((acc, c) => acc.concat(this.urlUsage(c, all)), self);
   }
   urlUsageLabel(u) { return (u.kind === 'ldp' ? 'LDP · ' : 'Trang · ') + u.name; }
   // Chuẩn hoá khi gõ "Mã code (Slug)" của trang: cho phép "/" ngăn cấp, mỗi cấp tự bỏ dấu / chữ hoa / khoảng trắng → gạch ngang.
   urlSlugifyPath(raw) {
     return String(raw || '').split('/').map(s => this.ldpSlugify(s)).join('/').replace(/\/{2,}/g, '/').replace(/^\//, '');
   }
-  // Kiểm tra ô "URL Slug" của Quản lý URL khi gõ. raw = chuỗi người dùng nhập ("a" hoặc "a/b"); selfId = id URL đang sửa (bỏ qua khi tìm trùng).
-  // Trả về { ok, path } khi hợp lệ; ngược lại { ok:false, empty } / { ok:false, incomplete, msg } / { ok:false, msg }:
-  //  • tối đa 2 cấp; mỗi cấp chỉ gồm chữ thường không dấu, số và dấu gạch ngang;
-  //  • trùng = đã có URL khác có CÙNG đường dẫn đầy đủ ("a" và "a/b" là 2 URL khác nhau, không trùng nhau);
-  //  • incomplete = đã gõ "/" nhưng chưa có đoạn sau (đang gõ dở) — chỉ báo lỗi khi bấm Lưu, không báo ngay lúc gõ.
-  urlCheckPath(raw, selfId) {
-    const text = String(raw || '');
-    const segs = text.split('/').map(s => s.replace(/-+$/, '')).filter(Boolean);
-    if (!segs.length) return { ok: false, empty: true };
-    const trailing = /\/\s*$/.test(text);
-    if (segs.length > 2 || (segs.length === 2 && trailing)) return { ok: false, msg: 'Tối đa 2 cấp, ngăn cách bằng dấu "/" (VD: khuyen-mai/wifi-7).' };
-    if (segs.some(s => !this.URL_SLUG_RE().test(s))) return { ok: false, msg: 'Mỗi cấp chỉ gồm chữ thường không dấu, số và dấu gạch ngang (VD: khuyen-mai/wifi-7).' };
-    if (trailing) return { ok: false, incomplete: true, msg: 'Nhập slug sau dấu "/" hoặc xoá dấu "/" để dùng URL 1 cấp.' };
-    const path = segs.join('/');
-    const dup = this.URLS().find(n => n.id !== selfId && n.slug === path);
-    if (dup) return { ok: false, path, msg: 'URL "fpt.vn/' + path + '" đã tồn tại. Vui lòng nhập slug khác.' };
-    return { ok: true, path };
-  }
-  // Kiểm tra "Mã code (Slug)" của trang theo định dạng a hoặc a/b (tối đa 2 cấp). selfSlug = slug hiện tại của trang đang sửa (bỏ qua khi tìm trùng).
-  // Trả về { ok, msg } hoặc, khi hợp lệ, thêm path / l1 / l2 / exists để hiện bản xem trước đồng bộ sang Quản lý URL (cả đường dẫn là MỘT URL).
+  // Kiểm tra "Mã code (Slug)" của trang theo định dạng lv1/lv2 (tối đa 2 cấp). selfSlug = slug hiện tại của trang đang sửa (bỏ qua khi tìm trùng).
+  // Trả về { ok, msg } hoặc, khi hợp lệ, thêm path / l1 / l2 / lv1Exists / lv2Exists để hiện bản xem trước đồng bộ sang Quản lý URL.
   urlCheckPageSlug(raw, selfSlug) {
     const segs = String(raw || '').split('/').map(s => s.replace(/-+$/, '')).filter(Boolean);
     if (!segs.length) return { ok: false, empty: true };
-    if (segs.length > 2) return { ok: false, msg: 'Chỉ hỗ trợ tối đa 2 cấp theo định dạng a/b (VD: truyen-hinh-fpt-play/detail).' };
+    if (segs.length > 2) return { ok: false, msg: 'Chỉ hỗ trợ tối đa 2 cấp theo định dạng lv1/lv2 (VD: truyen-hinh-fpt-play/detail).' };
     if (segs.some(s => !this.URL_SLUG_RE().test(s))) return { ok: false, msg: 'Mỗi cấp chỉ gồm chữ thường không dấu, số và dấu gạch ngang (VD: truyen-hinh-fpt-play).' };
     const path = segs.join('/');
     const self = selfSlug ? this.ldpNormalizePath(selfSlug) : null;
     const dup = this.PAGES().find(p => { const pp = this.ldpNormalizePath(p.slug); return pp === path && pp !== self; });
     if (dup) return { ok: false, msg: 'Mã code (Slug) "' + path + '" đã được dùng bởi trang "' + dup.name + '".' };
-    const node = this.URLS().find(n => n.slug === path);
-    if (node && this.urlTypeOf(node) === 'ldp') return { ok: false, msg: 'URL "' + path + '" đã được tạo ở Quản lý URL cho Landing Page nên không dùng được cho Trang thường. Vui lòng nhập slug khác.' };
-    return { ok: true, path, l1: segs[0], l2: segs[1] || '', exists: !!node };
+    const all = this.URLS();
+    const lv1 = all.find(n => n.level === 1 && n.slug === segs[0]);
+    if (lv1 && lv1.type === 'ldp') return { ok: false, msg: 'Nhánh cấp 1 "' + segs[0] + '" thuộc loại Landing Page nên không dùng được cho Trang thường. Vui lòng nhập slug cấp 1 khác.' };
+    const lv2 = (lv1 && segs[1]) ? all.find(n => n.level === 2 && n.pid === lv1.id && n.slug === segs[1]) : null;
+    return { ok: true, path, l1: segs[0], l2: segs[1] || '', lv1Exists: !!lv1, lv2Exists: !!lv2 };
   }
   // Quản lý Trang → Quản lý URL: trả về danh sách URL mới sau khi lưu trang có Mã code (Slug) đổi từ oldPath ('' nếu trang mới) sang newPath.
-  //  • URL đích đã có → dùng lại, không tạo thêm. Chưa có → tạo MỘT URL mới loại Trang thường (đường dẫn đầy đủ, mỗi URL độc lập).
-  //  • Đang sửa slug 1 trang: nếu URL cũ của trang đó còn và chưa bị URL khác chiếm chỗ thì đổi tên chính URL cũ thay vì để lại bản cũ và tạo thêm bản mới
-  //    — đúng nghĩa "sửa Mã code (Slug) → URL tự cập nhật theo".
+  //  • URL đích đã có → dùng lại, không tạo thêm. Chưa có → tạo mới (cấp 1 loại Trang thường + cấp 2 nếu có).
+  //  • Đang sửa slug 1 trang: nếu URL cũ của riêng trang đó (cấp 2, hoặc cấp 1 không có URL con) chưa bị URL khác chiếm chỗ thì đổi tên / chuyển nhánh
+  //    chính URL cũ thay vì để lại bản cũ và tạo thêm bản mới — đúng nghĩa "sửa Mã code (Slug) → URL tự cập nhật theo".
   urlSyncFromPage(all, oldPath, newPath, by, now) {
     const list = all.map(n => ({ ...n }));
-    if (list.some(n => n.slug === newPath)) return list;      // URL đích đã có
-    const old = oldPath ? list.find(n => n.slug === oldPath) : null;
-    if (old && this.urlTypeOf(old) !== 'ldp') { old.slug = newPath; old.updatedAt = now; old.updatedBy = by; return list; }
-    const nextId = 'u' + (list.reduce((m, n) => Math.max(m, parseInt(String(n.id).slice(1), 10) || 0), 0) + 1);
-    list.push({ id: nextId, slug: newPath, type: 'page', active: true, createdBy: by, createdAt: now, updatedBy: by, updatedAt: now });
+    const lv1Of = slug => list.find(n => n.level === 1 && n.slug === slug);
+    const lv2Of = (pid, slug) => list.find(n => n.level === 2 && n.pid === pid && n.slug === slug);
+    const nextId = () => 'u' + (list.reduce((m, n) => Math.max(m, parseInt(String(n.id).slice(1), 10) || 0), 0) + 1);
+    const [n1, n2] = newPath.split('/');
+    const [o1, o2] = oldPath ? oldPath.split('/') : [];
+    const oldL1 = o1 ? lv1Of(o1) : null;
+    const oldNode = oldL1 ? (o2 ? lv2Of(oldL1.id, o2) : oldL1) : null;
+    let L1 = lv1Of(n1);
+    if (n2 === undefined) {                                   // đích là URL cấp 1
+      if (L1) return list;
+      if (oldNode && oldNode.level === 1 && !list.some(c => c.level === 2 && c.pid === oldNode.id)) { oldNode.slug = n1; oldNode.updatedAt = now; return list; }
+      list.push({ id: nextId(), level: 1, slug: n1, type: 'page', pid: null, active: true, createdBy: by, createdAt: now, updatedBy: by, updatedAt: now });
+      return list;
+    }
+    if (!L1) { L1 = { id: nextId(), level: 1, slug: n1, type: 'page', pid: null, active: true, createdBy: by, createdAt: now, updatedBy: by, updatedAt: now }; list.push(L1); }
+    if (lv2Of(L1.id, n2)) return list;                        // đích là URL cấp 2 đã có
+    if (oldNode && oldNode.level === 2) {                     // chuyển / đổi tên URL cấp 2 cũ
+      const oldParent = list.find(n => n.id === oldNode.pid);
+      oldNode.slug = n2; oldNode.pid = L1.id; oldNode.updatedAt = now; L1.updatedAt = now;
+      if (oldParent) oldParent.updatedAt = now;
+      return list;
+    }
+    list.push({ id: nextId(), level: 2, slug: n2, pid: L1.id, active: true, createdBy: by, createdAt: now, updatedBy: by, updatedAt: now });
+    L1.updatedAt = now;
     return list;
   }
   // Quản lý URL → Quản lý Trang / Quản lý LDP: ghi danh sách URL mới rồi đẩy thay đổi slug sang mọi trang / LDP đang dùng URL đó.
-  // Mỗi trang / LDP được nhận diện bằng đường dẫn CŨ → tìm bản ghi URL tương ứng ở danh sách cũ → lấy đường dẫn MỚI của đúng bản ghi đó ở danh sách mới.
-  // Mỗi URL độc lập nên đổi "a" không kéo theo "a/b" (chỉ nội dung dùng đúng URL "a" đổi theo). extra = state khác cần ghi cùng lúc.
+  // Mỗi trang / LDP được nhận diện bằng đường dẫn CŨ → tìm nút URL tương ứng ở danh sách cũ → lấy đường dẫn MỚI của đúng nút đó ở danh sách mới
+  // (nên đổi tên URL cấp 1 kéo theo toàn bộ URL cấp 2 con, chuyển URL cấp 2 sang cha khác cũng đi theo). extra = state khác cần ghi cùng lúc.
   urlCommit(prev, next, extra) {
-    const nodeAt = (list, path) => list.find(n => n.slug === path) || null;
+    const nodeAt = (list, a, b) => {
+      const l1 = list.find(n => n.level === 1 && n.slug === a);
+      if (!l1) return null;
+      return b ? (list.find(n => n.level === 2 && n.pid === l1.id && n.slug === b) || null) : l1;
+    };
     const now = this.nowStr();
     const renamed = {};
     let pagesChanged = 0, ldpChanged = 0;
     const pages = this.PAGES().map(p => {
       const cur = this.ldpNormalizePath(p.slug);
-      const node = nodeAt(prev, cur);
-      if (!node || this.urlTypeOf(node) === 'ldp') return p; // URL Chưa phân loại vẫn kéo theo trang đang dùng nó
-      const nn = next.find(n => n.id === node.id);
-      const np = nn ? nn.slug : '';
+      const [a, b] = cur.split('/');
+      const node = nodeAt(prev, a, b);
+      if (!node || this.urlTypeOf(node, prev) === 'ldp') return p; // URL Chưa phân loại vẫn kéo theo trang đang dùng nó
+      const np = this.urlFull(next.find(n => n.id === node.id), next);
       if (!np || np === cur) return p;
       pagesChanged++; renamed[p.slug] = np;
       return { ...p, slug: np, updatedAt: now, updatedBy: 'Admin User' };
     });
     const ldps = this.LDP_LIST().map(r => {
-      const node = nodeAt(prev, this.ldpNormalizePath((r.lv1 || '') + (r.l2 ? '/' + r.l2 : '')));
-      if (!node || this.urlTypeOf(node) !== 'ldp') return r;
-      const nn = next.find(n => n.id === node.id);
-      const full = nn ? nn.slug : '';
-      if (!full) return r;
+      const node = nodeAt(prev, r.lv1 || '', r.l2 || '');
+      if (!node || this.urlTypeOf(node, prev) !== 'ldp') return r;
+      const full = this.urlFull(next.find(n => n.id === node.id), next);
       const [a, b] = full.split('/');
       if (a === (r.lv1 || '') && (b || '') === (r.l2 || '')) return r;
       ldpChanged++;
@@ -5208,12 +5240,12 @@ class Component extends DCLogic {
     // URL Trang thường (đồng bộ từ Quản lý Trang) mở editor ở chế độ chỉ xem (renderUrlEditor → viewOnly).
     this.setState({
       urlEditor: r || null, urlTried: false, urlLiveOk: false,   // urlLiveOk: đã xác nhận "tiếp tục sửa" URL đang có nội dung chạy (urlConfirmEdit)
-      // Tạo mới: 1 ô URL Slug trống, Thuộc loại mặc định Landing Page (urlNewDraft). Sửa: lấy theo bản ghi.
-      urlDraft: r ? { slug: r.slug, type: this.urlTypeOf(r), active: this.urlIsActive(r) } : this.urlNewDraft(),
+      // Tạo mới: chọn "Có sẵn" / "Tạo mới" (urlNewDraft), Thuộc loại mặc định Landing Page. Sửa: loại giữ nguyên, không đổi được.
+      urlDraft: r ? { level: r.level, slug: r.slug, type: this.urlTypeOf(r), pid: r.pid || '', active: this.urlIsActive(r) } : this.urlNewDraft(),
     });
   }
-  // Bật/tắt nhanh ở cột "Hoạt động" của bảng. Không đổi ngày chỉnh sửa.
-  // Tắt URL đang có Landing Page "Đang chạy" → hỏi xác nhận trước vì người dùng cuối sẽ gặp 404.
+  // Bật/tắt nhanh ở cột "Hoạt động" của bảng. Không đổi ngày chỉnh sửa (tránh nhóm cấp 1 tự nhảy lên đầu bảng khi bấm công tắc).
+  // Tắt URL đang có Landing Page "Đang chạy" (URL cấp 1: tính cả các URL cấp 2 còn bật bên dưới) → hỏi xác nhận trước vì người dùng cuối sẽ gặp 404.
   urlSetActive(id, v, confirmed) {
     if (!this.urlCanEdit()) return;
     const n = this.urlNode(id);
@@ -5225,26 +5257,32 @@ class Component extends DCLogic {
     this.setState({ urlData: this.URLS().map(x => x.id === id ? { ...x, active: v } : x) });
     this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'URL "' + this.urlFull(n) + '".');
   }
-  // Các Landing Page "Đang chạy" sẽ gặp 404 nếu tắt URL n. Dùng chung cho công tắc ở bảng và công tắc trong editor.
+  // Các Landing Page "Đang chạy" sẽ gặp 404 nếu tắt URL n (URL cấp 1: tính cả các URL cấp 2 còn bật bên dưới). Dùng chung cho công tắc ở bảng và công tắc trong editor.
   urlLiveOnDeactivate(n) {
-    return this.urlUsage(n, this.URLS()).filter(u => u.kind === 'ldp' && u.status === 'publish');
+    const all = this.URLS();
+    const nodes = [n, ...(n.level === 1 ? all.filter(c => c.level === 2 && c.pid === n.id && this.urlIsActive(c)) : [])];
+    return nodes.flatMap(x => this.urlUsage(x, all).filter(u => u.kind === 'ldp' && u.status === 'publish').map(u => ({ ...u, path: this.urlFull(x, all) })));
   }
   // onYes (tuỳ chọn): việc làm khi bấm "Vẫn tắt URL". Mặc định tắt ngay (công tắc ở bảng); editor truyền vào việc đặt nháp "Trạng thái" = tắt (chỉ có hiệu lực sau khi Lưu).
   urlConfirmDeactivate(n, live, onYes) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const mono = { fontFamily: 'var(--font-dev)' };
+    const branch = n.level === 1;
     const MAXROW = 5;
     this.openModal({
       title: 'Tắt URL đang có Landing Page chạy?',
-      description: 'Bạn sắp tắt URL "fpt.vn/' + this.urlFull(n) + '".',
+      description: 'Bạn sắp tắt ' + (branch ? 'URL cấp 1' : 'URL') + ' "fpt.vn/' + this.urlFull(n) + '".',
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
         h(DS.Alert, { theme: 'danger', title: 'Người truy cập sẽ gặp lỗi 404', style: { borderRadius: 10 } },
-          'Landing Page bên dưới đang chạy trên URL này. '
+          (branch ? 'Các Landing Page bên dưới đang chạy trong nhánh này. ' : 'Landing Page bên dưới đang chạy trên URL này. ')
           + 'Nếu tắt, người truy cập đường dẫn sẽ nhận lỗi 404 (không tìm thấy trang). Bạn có thể bật lại URL bất cứ lúc nào để khôi phục.'),
         h('div', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Landing Page đang chạy (' + live.length + ')'),
         h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
           live.slice(0, MAXROW).map((u, i, arr) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: (i < arr.length - 1 || live.length > MAXROW) ? '1px solid var(--color-border-pale)' : 'none', fontSize: 13 } },
             h(DS.Badge, { theme: 'neutral', style: { flexShrink: 0 } }, 'LDP'),
-            h('div', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 } }, u.name))),
+            h('div', { style: { flex: 1, minWidth: 0 } },
+              h('div', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 } }, u.name),
+              branch ? h('div', { style: { ...mono, fontSize: 12, color: 'var(--color-text-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, 'fpt.vn/' + u.path) : null))),
           live.length > MAXROW ? h('div', { style: { padding: '8px 12px', fontSize: 12, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, '+ ' + (live.length - MAXROW) + ' Landing Page khác') : null),
         // Modal cảnh báo nghiêm trọng (CLAUDE.md §17): cụm nút căn phải, nút chính (phá hoại) đứng TRƯỚC (bên trái cụm), "Hủy" sau.
         h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 } },
@@ -5252,26 +5290,30 @@ class Component extends DCLogic {
           h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy')))
     });
   }
-  // Modal hỏi trước khi cho sửa URL (URL Slug / Thuộc loại) đang có Landing Page "Đang chạy" hoặc Trang đang hoạt động dùng.
+  // Modal hỏi trước khi cho sửa URL (slug / URL cấp 1 / Thuộc loại) đang có Landing Page "Đang chạy" hoặc Trang đang hoạt động dùng.
   // Hiện khi người dùng bấm vào ô cần sửa (renderUrlEditor → guard). "Xác nhận tiếp tục" → mở khoá cả URL này trong phiên sửa hiện tại (urlLiveOk), "Hủy" → giữ nguyên.
-  // live = [{ kind, name, status }]; focusKey = ô vừa bấm để mở/focus lại sau khi xác nhận.
+  // live = [{ kind, name, status, path }]; focusKey = ô vừa bấm để mở/focus lại sau khi xác nhận.
   urlConfirmEdit(n, live, focusKey) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const mono = { fontFamily: 'var(--font-dev)' };
+    const branch = n.level === 1;
     const MAXROW = 5;
     const full = this.urlFull(n);
     this.openModal({
       title: 'URL đang có nội dung chạy',
-      description: 'Bạn sắp chỉnh sửa URL "fpt.vn/' + full + '".',
+      description: 'Bạn sắp chỉnh sửa ' + (branch ? 'URL cấp 1' : 'URL') + ' "fpt.vn/' + full + '".',
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
         h(DS.Alert, { theme: 'warning', title: 'Thay đổi sẽ ảnh hưởng nội dung đang chạy', style: { borderRadius: 10 } },
-          'Nội dung bên dưới đang chạy trên URL này. '
+          (branch ? 'Các nội dung bên dưới đang chạy trong nhánh URL này (gồm cả URL cấp 2). ' : 'Nội dung bên dưới đang chạy trên URL này. ')
           + 'Nếu đổi slug, đường dẫn của chúng sẽ đổi theo và được hệ thống tự đồng bộ — người truy cập đường dẫn cũ sẽ gặp lỗi 404 (không tìm thấy trang), các liên kết đã chia sẻ hoặc đang chạy quảng cáo tới đường dẫn cũ sẽ không còn dùng được. '
           + 'Đổi loại URL không tự chuyển các nội dung này sang loại mới.'),
         h('div', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Đang chạy trên URL này (' + live.length + ')'),
         h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
           live.slice(0, MAXROW).map((u, i, arr) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: (i < arr.length - 1 || live.length > MAXROW) ? '1px solid var(--color-border-pale)' : 'none', fontSize: 13 } },
             h(DS.Badge, { theme: 'neutral', style: { flexShrink: 0 } }, u.kind === 'ldp' ? 'LDP' : 'Trang'),
-            h('div', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 } }, u.name),
+            h('div', { style: { flex: 1, minWidth: 0 } },
+              h('div', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 } }, u.name),
+              h('div', { style: { ...mono, fontSize: 12, color: 'var(--color-text-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, 'fpt.vn/' + u.path)),
             h(DS.Badge, { theme: 'success', style: { flexShrink: 0 } }, u.kind === 'ldp' ? 'Đang chạy' : 'Đang hoạt động'))),
           live.length > MAXROW ? h('div', { style: { padding: '8px 12px', fontSize: 12, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, '+ ' + (live.length - MAXROW) + ' nội dung khác') : null),
         // Cảnh báo nghiêm trọng (CLAUDE.md §17): cụm nút căn phải, nút chính đứng TRƯỚC (đỏ), "Hủy" sau.
@@ -5291,26 +5333,46 @@ class Component extends DCLogic {
     });
   }
   closeUrlEditor() { this.setState({ urlEditor: undefined, urlDraft: undefined, urlTried: false, urlLiveOk: false }); }
-  // path = đường dẫn đã chuẩn hoá từ ô "URL Slug" ("a" hoặc "a/b"). Tạo mới: thêm đúng 1 URL độc lập (loại theo d.type, mặc định Landing Page).
-  // Sửa: ghi đè slug / loại / trạng thái của chính bản ghi, rồi đẩy slug mới sang Trang / LDP đang dùng URL này (urlCommit).
-  saveUrl(r, d, path) {
+  // s1/s2 = URL cấp 1 / cấp 2 đã chuẩn hoá từ form. Tạo mới: mode 'new' → chỉ tạo URL cấp 1 (s2 luôn rỗng) · mode 'existing' → chỉ tạo URL cấp 2 dưới URL cấp 1 có sẵn (d.pid).
+  // Sửa: URL cấp 1 lưu s1 (+ Thuộc loại), URL cấp 2 lưu s2 (+ URL cấp 1 cha).
+  saveUrl(r, d, s1, s2) {
     const all = this.URLS();
     const now = this.nowStr(); const by = 'Admin User';
     const next = all.map(n => ({ ...n }));
+    const touch = id => { const n = next.find(x => x.id === id); if (n) { n.updatedAt = now; n.updatedBy = by; } };
     const nextId = () => 'u' + (next.reduce((m, n) => Math.max(m, parseInt(String(n.id).slice(1), 10) || 0), 0) + 1);
+    const created = [];
     let saved;
     if (!r) {
-      saved = { id: nextId(), slug: path, type: d.type || 'ldp', active: d.active !== false, createdBy: by, createdAt: now, updatedBy: by, updatedAt: now };
-      next.push(saved);
+      let parent;
+      if (d.mode === 'new') {
+        parent = { id: nextId(), level: 1, slug: s1, type: 'ldp', pid: null, active: d.active !== false, createdBy: by, createdAt: now, updatedBy: by, updatedAt: now };
+        next.push(parent); created.push(parent);
+      } else {
+        parent = next.find(n => n.id === d.pid);
+      }
+      if (s2) {
+        const kid = { id: nextId(), level: 2, slug: s2, pid: parent.id, active: d.active !== false, createdBy: by, createdAt: now, updatedBy: by, updatedAt: now };
+        next.push(kid); created.push(kid);
+        touch(parent.id);
+      }
+      saved = created[created.length - 1];
     } else {
       saved = next.find(x => x.id === r.id);
-      saved.slug = path; saved.updatedAt = now; saved.updatedBy = by; saved.active = d.active !== false;
-      if (d.type) saved.type = d.type;   // URL Landing Page / Chưa phân loại đổi được Thuộc loại
+      const oldPid = saved.pid;
+      saved.updatedAt = now; saved.updatedBy = by; saved.active = d.active !== false;
+      if (r.level === 1) { saved.slug = s1; if (d.type) saved.type = d.type; }   // URL cấp 1 Landing Page đổi được Thuộc loại
+      else {
+        saved.slug = s2; saved.pid = d.pid; touch(d.pid); if (oldPid) touch(oldPid);
+        // URL cấp 2 cũng đổi được Thuộc loại: chỉ khi người dùng đổi thật mới ghi loại riêng (còn nguyên thì tiếp tục theo URL cấp 1 cha).
+        if (d.type && d.type !== this.urlTypeOf(r, all)) saved.type = d.type;
+      }
     }
     const res = this.urlCommit(all, next, { urlEditor: undefined, urlDraft: undefined, urlTried: false, urlLiveOk: false });
     const synced = [res.pages ? res.pages + ' trang' : '', res.ldps ? res.ldps + ' Landing Page' : ''].filter(Boolean).join(' và ');
-    if (r) this.toast('success', 'Đã cập nhật', 'URL "' + saved.slug + '" đã được cập nhật.' + (synced ? ' Đã đồng bộ ' + synced + ' đang dùng URL này.' : ''));
-    else this.toast('success', 'Đã tạo', 'URL "' + saved.slug + '" đã được tạo.' + (saved.type === 'ldp' && saved.active ? ' URL này đã có trong danh sách chọn URL Slug khi tạo Landing Page.' : ''));
+    if (r) this.toast('success', 'Đã cập nhật', 'URL "' + this.urlFull(saved, next) + '" đã được cập nhật.' + (synced ? ' Đã đồng bộ ' + synced + ' đang dùng URL này.' : ''));
+    else this.toast('success', 'Đã tạo', 'URL cấp ' + saved.level + ' "' + this.urlFull(saved, next) + '" đã được tạo.'
+      + (saved.level === 1 ? ' URL này đã có trong danh sách chọn "URL cấp 1" của chế độ "Có sẵn".' : ''));
   }
 
   renderUrls() {
@@ -5346,8 +5408,8 @@ class Component extends DCLogic {
       if (!u.length) return h('span', { style: muted }, '—');   // chưa có LDP/Trang dùng → "—" (không còn chữ "Chưa sử dụng")
       return h(FptChipList, { theme: 'neutral', max: 2, list: u.map(x => this.urlUsageLabel(x)) });
     };
-    // "Đường dẫn" là cột chính (đứng đầu, sau #): mỗi dòng = 1 URL độc lập, đầy đủ.
-    // Mỗi URL có loại riêng (Trang thường / Landing Page / Chưa phân loại) — badge hiện ở mọi dòng.
+    // "Đường dẫn" là cột chính (đứng đầu, sau #): mỗi dòng = 1 URL đầy đủ, không còn cột Slug URL dạng cây / cột URL con.
+    // Loại hiện ở mọi dòng (URL cấp 2 theo loại của URL cấp 1 chứa nó).
     const columns = [
       { key: 'idx', header: '#', width: 44, render: (_, r) => h('span', { style: { color: 'var(--color-text-subtle)' } }, idxMap.get(r.id)) },
       { key: 'path', header: 'Đường dẫn', width: 340, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 13, fontWeight: 600, color: 'var(--color-text)', whiteSpace: 'nowrap' } }, 'fpt.vn/' + this.urlFull(r, all)) },
@@ -5415,20 +5477,28 @@ class Component extends DCLogic {
   openUrlDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const all = this.URLS();
-    const full = this.urlFull(r);
+    const full = this.urlFull(r, all);
+    const parent = r.level === 2 ? this.urlNode(r.pid, all) : null;
     const usage = this.urlUsage(r, all);
     const locked = this.urlIsLocked(r, all);
     const mono = (t, color) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12.5, color: color || 'var(--color-text)' } }, t);
-    // Mỗi URL là một bản ghi độc lập (1 đường dẫn đầy đủ) — drawer chỉ có các trường của bảng + editor: Đường dẫn (= ô URL Slug), Thuộc loại, Trạng thái, Đang dùng bởi + 4 dòng audit (CLAUDE.md §16, §18).
+    // Mỗi URL là một bản ghi độc lập — drawer không còn danh sách URL con, cũng không còn dòng "Cấp URL" (bảng đã bỏ cây + cột URL con;
+    // cấp vẫn thấy ở phụ đề drawer và 2 dòng URL cấp 1 / URL cấp 2 — đều là trường của editor, CLAUDE.md §16).
     const rows = [];
+    if (r.level === 1) {
+      rows.push(this.detailRow('URL cấp 1', mono(r.slug)));
+    } else {
+      rows.push(this.detailRow('URL cấp 1', mono(parent ? parent.slug : '—')));
+      rows.push(this.detailRow('URL cấp 2', mono(r.slug)));
+    }
     rows.push(this.detailRow('Đường dẫn', mono('fpt.vn/' + full, 'var(--color-accent-text)')));
-    rows.push(this.detailRow('Thuộc loại', this.urlTypeBadge(this.urlTypeOf(r))));
+    rows.push(this.detailRow('Thuộc loại', this.urlTypeBadge(this.urlTypeOf(r, all))));
     rows.push(this.detailRow('Trạng thái', this.statusBadge(this.urlIsActive(r) ? 'active' : 'inactive')));
     rows.push(this.detailRow('Đang dùng bởi', usage.length
       ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, usage.map((u, i) => h('div', { key: i }, this.urlUsageLabel(u))))
       : h('span', { style: { color: 'var(--color-text-subtle)' } }, '—')));
     rows.push(...this.auditRows(r));
-    this.openDrawer({ title: full, subtitle: 'Chi tiết URL', width: 480,
+    this.openDrawer({ title: full, subtitle: 'Chi tiết URL cấp ' + r.level, width: 480,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } }, rows),
       footer: () => h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-end' } },
         locked ? h('span', { style: { flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-subtle)' } },
@@ -5446,14 +5516,16 @@ class Component extends DCLogic {
     const tried = !!this.state.urlTried;
     const d = this.state.urlDraft || this.urlNewDraft();
     const setD = patch => this.setState(s => ({ urlDraft: { ...(s.urlDraft || this.urlNewDraft()), ...patch } }));
-    // URL Trang thường (đồng bộ từ Quản lý Trang): Thuộc loại không đổi được sang Landing Page nên không còn gì để sửa tại đây
+    const children = (r && r.level === 1) ? all.filter(n => n.level === 2 && n.pid === r.id) : [];
+    // URL Trang thường (đồng bộ từ Quản lý Trang, cấp 1 lẫn cấp 2): Thuộc loại không đổi được sang Landing Page nên không còn gì để sửa tại đây
     // → editor mở ở chế độ chỉ xem (mọi ô disabled, không có nút Lưu).
     const slugLocked = !isNew && this.urlIsLocked(r, all);
     const viewOnly = slugLocked;
-    // URL Landing Page (và Chưa phân loại) luôn sửa được URL Slug + Thuộc loại. Nếu URL đang có Landing Page "Đang chạy" / Trang đang hoạt động dùng
-    // thì KHÔNG khoá cứng — bấm vào ô cần sửa sẽ hiện modal chi tiết (urlConfirmEdit); "Xác nhận tiếp tục" → sửa bình thường.
-    const liveUse = (isNew || slugLocked) ? [] : this.urlUsage(r, all)
-      .filter(u => u.kind === 'ldp' ? u.status === 'publish' : u.status === 'active');
+    // URL Landing Page (và Chưa phân loại) luôn sửa được slug + Thuộc loại. Nếu URL đang có Landing Page "Đang chạy" / Trang đang hoạt động dùng
+    // (URL cấp 1: tính cả mọi URL cấp 2 bên dưới) thì KHÔNG khoá cứng — bấm vào ô cần sửa sẽ hiện modal chi tiết (urlConfirmEdit); "Xác nhận tiếp tục" → sửa bình thường.
+    const liveUse = (isNew || slugLocked) ? [] : [r, ...children].flatMap(x => this.urlUsage(x, all)
+      .filter(u => u.kind === 'ldp' ? u.status === 'publish' : u.status === 'active')
+      .map(u => ({ ...u, path: this.urlFull(x, all) })));
     const guardOn = liveUse.length > 0 && !this.state.urlLiveOk;
     const askLive = key => {   // mousedown + click (+ focus khi Tab) cùng lúc bắn → chỉ mở 1 modal
       const t = Date.now();
@@ -5476,53 +5548,137 @@ class Component extends DCLogic {
       ),
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
     );
-    const prefixBox = txt => h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 12px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13, fontFamily: 'var(--font-dev)', color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0 } }, txt);
+    const hintBox = (msg, icon) => h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 8, background: 'var(--color-accent-bg)', color: 'var(--color-accent-text)', fontSize: 12 } },
+      h(DS.Icon, { name: icon || 'info-circle-line', size: 14, style: { flexShrink: 0, marginTop: 1 } }), h('span', null, msg));
+    const prefixBox = txt => h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 12px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13, fontFamily: 'var(--font-dev)', color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0, maxWidth: '55%', overflow: 'hidden', textOverflow: 'ellipsis' } }, txt);
 
-    // ── Ô "URL Slug": MỘT ô nhập đường dẫn sau "fpt.vn/" — sau mỗi "/" là một slug, tối đa 2 cấp (VD: khuyen-mai hoặc khuyen-mai/wifi-7). ──
-    // Kiểm tra tính lại mỗi lần render (CLAUDE.md §14): lỗi tự biến mất khi người dùng sửa xong. Lỗi định dạng / trùng đường dẫn hiện NGAY khi gõ;
-    // lỗi "bắt buộc" và "gõ dở dấu /" chỉ hiện sau khi bấm Lưu. Mỗi URL độc lập nên chỉ trùng khi cùng đường dẫn đầy đủ.
-    const rawSlug = d.slug || '';
-    const chk = this.urlCheckPath(rawSlug, r ? r.id : null);
-    const slugErr = chk.empty ? FPT_REQ_MSG : (chk.ok ? '' : chk.msg);
-    const showSlugErr = !!slugErr && (tried || !(chk.empty || chk.incomplete));
-    const slugField = h('div', { key: 'slug', 'data-url-err': showSlugErr ? '1' : undefined },
-      this.field(req('URL Slug'), h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
-        prefixBox('fpt.vn/'),
-        h('div', { style: { flex: 1, minWidth: 0 } }, guard('slug', h(DS.Input, {
-          value: rawSlug, disabled: slugLocked, placeholder: 'VD: khuyen-mai hoặc khuyen-mai/wifi-7',
-          error: showSlugErr ? slugErr : undefined,
-          onChange: e => setD({ slug: this.urlSlugifyPath(e && e.target ? e.target.value : e) }) }))))));
+    // ── Hình thức & cấp URL ──
+    //  Tạo mới: "Có sẵn" = ô "URL Slug" 1 hàng như Quản lý LDP: fpt.vn/ [chọn URL cấp 1 có sẵn] / [nhập URL cấp 2 — bắt buộc, khoá tới khi chọn cấp 1];
+    //           "Tạo mới" = chỉ 1 ô nhập URL cấp 1. Lưu xong URL cấp 1 này là một URL độc lập và nằm trong kho dropdown "URL cấp 1" của "Có sẵn".
+    //  Sửa: cấp theo bản ghi (URL cấp 1 sửa slug · URL cấp 2 sửa URL cấp 1 cha + slug, cùng layout "Có sẵn"), không có ô chọn hình thức.
+    const mode = isNew ? (d.mode === 'new' ? 'new' : 'existing') : null;
+    const lv1AsInput = isNew ? mode === 'new' : r.level === 1;   // URL cấp 1 là ô nhập (ngược lại: dropdown chọn URL cấp 1 có sẵn)
+    const hasLv2Field = isNew ? mode === 'existing' : r.level === 2;   // có ô URL cấp 2 = luôn bắt buộc
+    const lv2Waiting = hasLv2Field && !d.pid;   // chưa chọn URL cấp 1 → khoá ô URL cấp 2
+    const k1 = isNew ? 'slug1' : 'slug';
+    const k2 = isNew ? 'slug2' : 'slug';
+    const clean = v => String(v || '').replace(/-+$/, '');
+    const parent = lv1AsInput ? null : this.urlNode(d.pid, all);
+    const s1 = lv1AsInput ? clean(d[k1]) : (parent ? parent.slug : '');
+    const s2 = hasLv2Field ? clean(d[k2]) : '';
+    const parentType = parent ? this.urlTypeOf(parent, all) : '';
 
-    // ── Thuộc loại. Tạo mới: luôn Landing Page ("Trang thường" bị ẩn — URL Trang thường chỉ được đồng bộ từ Quản lý Trang).
-    //    Sửa URL Landing Page (hoặc Chưa phân loại): ĐỔI ĐƯỢC (typeEditable); URL đang có nội dung chạy thì bấm vào ô sẽ hiện modal xác nhận (guard).
-    //    Sửa URL Trang thường: chỉ xem (đồng bộ từ Quản lý Trang). ──
+    // ── Kiểm tra (tính lại mỗi lần render → lỗi tự biến mất khi người dùng sửa xong, CLAUDE.md §14). Báo lỗi MỌI trường cùng lúc khi bấm Lưu. ──
+    const SLUG_FMT_MSG = 'Slug chỉ gồm chữ thường không dấu, số và dấu gạch ngang (VD: truyen-hinh-fpt-play).';
+    const errs = {};
+    if (!lv1AsInput && !d.pid) errs.pid = 'Trường bắt buộc — vui lòng chọn URL cấp 1.';
+    if (lv1AsInput) {
+      if (!s1) errs.slug1 = FPT_REQ_MSG;
+      else if (!this.URL_SLUG_RE().test(s1)) errs.slug1 = SLUG_FMT_MSG;
+      else if (all.some(n => n.level === 1 && (!r || n.id !== r.id) && n.slug === s1)) errs.slug1 = 'URL cấp 1 "' + s1 + '" đã tồn tại.' + (isNew ? ' Chọn "Có sẵn" để thêm URL cấp 2 vào nhánh này, hoặc nhập slug khác.' : ' Vui lòng nhập slug khác.');
+    }
+    if (hasLv2Field) {
+      if (!s2) { if (!lv2Waiting) errs.slug2 = FPT_REQ_MSG; }
+      else if (!this.URL_SLUG_RE().test(s2)) errs.slug2 = SLUG_FMT_MSG;
+      else if (!lv1AsInput && d.pid && all.some(n => n.level === 2 && n.pid === d.pid && (!r || n.id !== r.id) && n.slug === s2)) errs.slug2 = 'URL cấp 2 "' + s2 + '" đã tồn tại trong nhánh "' + (parent ? parent.slug : '') + '". Vui lòng nhập slug khác.';
+    }
+    // Lỗi định dạng / trùng hiện ngay khi gõ; lỗi "bắt buộc" + ô chọn chỉ hiện sau khi bấm Lưu.
+    const showErr = k => !!errs[k] && (tried || ((k === 'slug1' || k === 'slug2') && errs[k] !== FPT_REQ_MSG));
+    const errAttr = k => ({ 'data-url-err': showErr(k) ? '1' : undefined });
+
+    // DS.Segmented chưa có prop disabled: khoá bằng style + bỏ qua onChange (phím Enter vẫn bấm được nút bên trong).
+    const segmented = (items, value, onChange, disabled) => h('div', { style: { display: 'flex' } },
+      h(DS.Segmented, { size: 'sm', items, value, 'aria-disabled': disabled ? 'true' : undefined,
+        style: disabled ? { opacity: .6, pointerEvents: 'none' } : undefined,
+        onChange: v => { if (!disabled) onChange(v); } }));
+
+    // ── Chọn hình thức (chỉ khi tạo mới): nút chuyển Segmented ──
+    const modeField = this.field('Hình thức tạo',
+      segmented([{ value: 'existing', label: 'Có sẵn' }, { value: 'new', label: 'Tạo mới' }], mode, v => setD({ mode: v })));
+
+    // ── Ô "URL Slug": 1 ô nhập URL cấp 1 (tạo mới / sửa URL cấp 1) hoặc 1 hàng "fpt.vn/ [URL cấp 1 có sẵn] / [URL cấp 2]" (có sẵn / sửa URL cấp 2) ──
+    const slugCtl = (key, errKey, placeholder, off) => guard(key, h(DS.Input, { value: d[key] || '', disabled: slugLocked || !!off, placeholder, error: showErr(errKey) ? errs[errKey] : undefined, onChange: e => setD({ [key]: this.ldpSlugify(e && e.target ? e.target.value : e) }) }));
+    // Danh sách URL cấp 1 có sẵn: mỗi mục gắn tag loại (Trang thường / LDP — cùng kiểu tag với dropdown "Breadcrumb trang trước").
+    // Tạo mới → liệt kê cả 2 loại, LDP đứng trước, mỗi nhóm theo A–Z (URL cấp 2 tạo dưới URL Trang thường kế thừa loại đó nên sau khi lưu là chỉ-đọc).
+    // Sửa URL cấp 2 → chỉ các URL cấp 1 cùng loại với URL này (loại hiện có) để chuyển nhánh không vô tình đổi loại.
+    const poolType = n => this.urlTypeOf(n, all);
+    const parentPool = all.filter(n => n.level === 1 && (isNew || poolType(n) === poolType(r)))
+      .sort((a, b) => ((poolType(a) === 'ldp' ? 0 : 1) - (poolType(b) === 'ldp' ? 0 : 1)) || a.slug.localeCompare(b.slug));
+    const parentOpts = parentPool.map(n => ({ value: n.id, searchText: n.slug,
+      label: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0, maxWidth: '100%' } },
+        h('span', { style: { ...mono, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, n.slug),
+        this.breadcrumbKindTag(poolType(n))) }));
+    // Layout y hệt ô "URL Slug" của Quản lý LDP: prefix xám "fpt.vn/" · ô cấp 1 · dấu "/" · ô cấp 2 (xám + khoá cho tới khi chọn cấp 1), tự xuống dòng khi hẹp.
+    // DS.Select / DS.Input có sẵn prop error (viền đỏ + thông báo) → mỗi ô tự báo lỗi ngay dưới nó.
+    const slugCell = (key, errKey, node) => h('div', { key, ...errAttr(errKey), style: { flex: '1 1 170px', minWidth: 150 } }, node);
+    const slugField = lv1AsInput
+      // Chỉ 1 ô nhập URL cấp 1 (Tạo mới / sửa URL cấp 1) — nửa hàng như ô đơn khác trong app.
+      ? h('div', { key: 'slug', style: { width: 'calc(50% - 8px)', minWidth: 300 } },
+          this.field(req('URL cấp 1'), h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
+            prefixBox('fpt.vn/'),
+            h('div', { key: 'lv1', ...errAttr('slug1'), style: { flex: 1, minWidth: 0 } }, slugCtl(k1, 'slug1', 'VD: truyen-hinh-fpt-play')))))
+      : h('div', { key: 'slug' }, this.field(req('URL Slug'),
+          h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' } },
+            prefixBox('fpt.vn/'),
+            slugCell('lv1', 'pid', guard('pid', h(DS.Select, {
+              options: parentOpts, value: d.pid || '', placeholder: 'Chọn URL cấp 1', searchable: true, searchPlaceholder: 'Tìm URL cấp 1…',
+              disabled: viewOnly,
+              error: showErr('pid') ? errs.pid : undefined,
+              onChange: v => setD({ pid: v }),
+              containerStyle: { width: '100%' }
+            }))),
+            h('span', { style: { display: 'flex', alignItems: 'center', height: 48, color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
+            slugCell('lv2', 'slug2', slugCtl(k2, 'slug2', lv2Waiting ? 'Chọn URL cấp 1 trước' : 'Nhập URL cấp 2 (VD: detail)', lv2Waiting)))));
+
+    // ── Thuộc loại: Trang thường / Landing Page.
+    //    • Tạo mới "Tạo mới" (URL cấp 1 mới): luôn Landing Page, "Trang thường" bị ẩn (URL Trang thường chỉ được đồng bộ từ Quản lý Trang).
+    //    • Tạo mới "Có sẵn": ô khoá, theo loại của URL cấp 1 đã chọn (chưa chọn → trống).
+    //    • Sửa URL Landing Page (Chưa phân loại) CẢ cấp 1 lẫn cấp 2: ĐỔI ĐƯỢC (typeEditable); URL đang có nội dung chạy thì bấm vào ô sẽ hiện modal xác nhận (guard).
+    //      URL cấp 2 đổi loại thì lưu loại riêng, không còn theo URL cấp 1 cha. Sửa URL Trang thường: chỉ xem (đồng bộ từ Quản lý Trang). ──
+    // Loại hiệu lực: tạo "Tạo mới" → Landing Page; tạo "Có sẵn" → loại URL cấp 1 đã chọn; sửa URL → loại trong bản nháp (bị khoá thì giữ loại hiện có).
     const typeEditable = !isNew && !slugLocked;
-    const origType = !isNew ? this.urlTypeOf(r) : '';
-    const effTypeVal = isNew ? (d.type || 'ldp') : (typeEditable ? (d.type || '') : origType);
-    // Dropdown: "Trang thường" KHÔNG được chọn — ẩn khỏi mọi ô chọn được (tạo mới + sửa); chỉ còn ở ô khoá (URL Trang thường chỉ xem) để hiển thị đúng nhãn.
-    const typeOpts = [{ value: 'page', label: 'Trang thường' }, { value: 'ldp', label: 'Landing Page' }].filter(o => !(isNew || typeEditable) || o.value !== 'page');
+    const origType = !isNew ? this.urlTypeOf(r, all) : '';
+    const effTypeVal = isNew ? (mode === 'new' ? 'ldp' : parentType) : (typeEditable ? (d.type || '') : origType);
+    const followsParent = isNew && mode === 'existing';
+    // Dropdown: "Trang thường" KHÔNG được chọn — URL Trang thường chỉ được đồng bộ từ Quản lý Trang (user chốt 2026-11-04). Nên ẩn khỏi mọi ô chọn được
+    // (tạo URL cấp 1 mới + sửa URL); chỉ còn ở các ô khoá (URL Trang thường chỉ xem / "Có sẵn" theo URL cấp 1 là Trang thường) để hiển thị đúng nhãn giá trị.
+    const typeOpts = [{ value: 'page', label: 'Trang thường' }, { value: 'ldp', label: 'Landing Page' }].filter(o => !((isNew && mode === 'new') || typeEditable) || o.value !== 'page');
     // URL đã là Landing Page thì ô chỉ còn đúng 1 lựa chọn (chính nó) → không đổi được gì, không cần modal xác nhận. Chưa phân loại → Landing Page là thay đổi thật nên vẫn hỏi nếu URL đang có nội dung chạy.
     const typeSelect = h('div', { style: { width: 'calc(50% - 8px)', minWidth: 260 } },
       guard('type', h(DS.Select, { options: typeOpts,
-        value: effTypeVal, disabled: !isNew && !typeEditable, placeholder: 'Chọn loại',
-        onChange: v => { if (isNew || typeEditable) setD({ type: v }); } }), typeEditable && origType === 'ldp'));
+        value: effTypeVal, disabled: !typeEditable && (!isNew || followsParent), placeholder: followsParent ? 'Theo URL cấp 1 đã chọn' : 'Chọn loại',
+        onChange: v => { if (typeEditable) setD({ type: v }); } }), typeEditable && origType === 'ldp'));
+    // Ghi chú khi sửa: Trang thường → vì sao chỉ xem; URL cấp 1 đang đổi loại (Chưa phân loại → Landing Page) → áp dụng cho các URL cấp 2 chưa đặt loại riêng.
     const typeNotes = [];
     if (!isNew && effTypeVal === 'page' && !typeEditable) typeNotes.push('URL Trang thường được đồng bộ từ Quản lý Trang nên không đổi sang Landing Page được.');
+    if (typeEditable && r.level === 1 && (d.type || '') !== origType) {
+      // URL cấp 2 đã đặt loại riêng (n.type) thì giữ nguyên khi cấp 1 đổi loại.
+      const followers = children.filter(c => c.type === undefined || c.type === null).length;
+      if (followers) typeNotes.push('Loại này áp dụng cho ' + followers + ' URL cấp 2 bên dưới chưa đặt loại riêng.');
+    }
     const typeField = h('div', { key: 'type' }, this.field('Thuộc loại',
       h('div', null,
         typeSelect,
-        typeNotes.map((t, i) => h('div', { key: i, style: { fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 8 } }, t)))));
+        typeNotes.map((t, i) => h('div', { key: i, style: { fontSize: 12, color: t.warn ? 'var(--color-warning-text)' : 'var(--color-text-subtle)', marginTop: 8 } }, t.warn || t)))));
 
-    // ── Xem trước URL: phần đã chuẩn hoá của những gì đang gõ (bỏ gạch ngang thừa cuối mỗi đoạn, "…" mờ khi chưa nhập). ──
-    const previewPath = rawSlug.split('/').map(x => x.replace(/-+$/, '')).filter(Boolean).join('/');
+    // ── Xem trước URL sẽ tạo ──
+    // Chỉ tô đoạn thuộc cấp đang tạo / sửa: cấp 1 = màu thương hiệu (cam), cấp 2 = xanh info; đoạn còn lại giữ màu chữ thường (VD URL cấp 2: cấp 1 là URL cha có sẵn → không tô).
+    // Đoạn chưa nhập ("…") mờ hơn. (Chip "Cấp 1/Cấp 2" bên phải đã bỏ.)
+    const C1 = 'var(--color-accent-text)', C2 = 'var(--color-info-text)';
+    const showLv2Seg = hasLv2Field;   // có ô URL cấp 2 là luôn có đoạn cấp 2 ("…" mờ khi chưa nhập)
+    const sepSt = { color: 'var(--color-text-subtle)', fontWeight: 500 };
+    const seg = (txt, color, empty) => h('span', { style: { color, opacity: empty ? 0.55 : 1 } }, txt);
     const previewUrl = h(React.Fragment, null,
-      h('span', { style: { color: 'var(--color-text-subtle)', fontWeight: 500 } }, 'fpt.vn/'),
-      h('span', { style: { opacity: previewPath ? 1 : 0.55 } }, previewPath || '…'));
+      h('span', { style: sepSt }, 'fpt.vn/'),
+      seg(s1 || '…', lv1AsInput ? C1 : 'var(--color-text)', !s1),
+      showLv2Seg ? h(React.Fragment, null, h('span', { style: sepSt }, '/'), seg(s2 || '…', C2, !s2)) : null);
     const sections = [];
     sections.push(section(1, 'globe-01-line', 'Thông tin URL',
+      isNew ? modeField : null,
       slugField,
       h('div', { key: 'preview', style: { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, background: 'var(--color-surface-alt)' } },
         h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', flexShrink: 0 } }, isNew ? 'URL sẽ tạo:' : 'URL:'),
+        // Không còn chip "Cấp 1"/"Cấp 2" bên phải (user bỏ 2026-11-04) — chỉ còn dòng xem trước.
         h('span', { style: { ...mono, flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, previewUrl))
     ));
     sections.push(section(2, 'folder-line', 'Phân loại',
@@ -5542,16 +5698,17 @@ class Component extends DCLogic {
       } }));
 
     const onSave = () => {
-      if (slugErr) {
+      const keys = Object.keys(errs);
+      if (keys.length) {
         this.setState({ urlTried: true });
-        this.toast('danger', 'Thiếu hoặc sai thông tin', 'Vui lòng kiểm tra lại trường URL Slug trước khi lưu.');
+        this.toast('danger', 'Thiếu hoặc sai thông tin', 'Vui lòng kiểm tra ' + keys.length + ' trường chưa hợp lệ trước khi lưu.');
         setTimeout(() => { const el = document.querySelector('[data-url-err="1"]'); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
         return;
       }
-      this.saveUrl(r, d, chk.path);
+      this.saveUrl(r, d, s1, s2);
     };
     return this.editorShell(
-      isNew ? 'Tạo URL mới' : (viewOnly ? 'Xem URL: ' : 'Chỉnh sửa URL: ') + this.urlFull(r),
+      isNew ? 'Tạo URL mới' : (viewOnly ? 'Xem URL cấp ' : 'Chỉnh sửa URL cấp ') + r.level + ': ' + this.urlFull(r, all),
       isNew ? 'Quản lý URL' : 'Cấu trúc đường dẫn',
       () => this.closeUrlEditor(),
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -5733,7 +5890,7 @@ class Component extends DCLogic {
     const slugExtras = slugChk && slugChk.ok
       ? h('div', { style: { marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 12, color: 'var(--color-text-subtle)', minWidth: 0 } },
           h('span', { style: { flexShrink: 0 } }, 'Đồng bộ sang Quản lý URL:'),
-          h(FptUrlPathChip, { l1: slugChk.l1, l2: slugChk.l2, exists: slugChk.exists, style: { minWidth: 0, flex: '0 1 auto' } }))
+          h(FptUrlPathChip, { l1: slugChk.l1, l2: slugChk.l2, l1Exists: slugChk.lv1Exists, l2Exists: slugChk.lv2Exists, style: { minWidth: 0, flex: '0 1 auto' } }))
       : null;
 
     // Lưu thật: ghi trang vào state.pagesData, đồng bộ URL cấp 1 / cấp 2 sang Quản lý URL, giữ liên kết Section khi đổi tên trang.
@@ -10200,9 +10357,9 @@ class Component extends DCLogic {
     const slugLocked = !!(editRow && this.ldpSlugLocked(effStatus));
     const slugCheck = slugLocked ? { ok: true } : this.ldpSlugValidate(curLv1, curL2, editRow ? editRow.id : null);
     const slugBlocked = !!slugCheck.block;
-    // URL Slug chỉ được chọn từ danh sách URL Landing Page đã tạo ở Quản lý URL (ldpSlugRegistered),
+    // Level 1 chỉ được chọn từ danh sách nhánh portal có sẵn (Landing Page lẫn Trang thường — ldpApprovedLv1Set),
     // nên không phát sinh luồng duyệt nhánh mới.
-    const needsApproval = !slugLocked && !!curLv1 && !this.ldpSlugRegistered(curLv1, curL2);
+    const needsApproval = !slugLocked && !!curLv1 && !this.ldpApprovedLv1Set().has(curLv1);
     const isResubmit = !!(editRow && effStatus === 'rejected');
     const topActions = h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
       step > minStep && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'arrow-left-line', onClick: () => this.setState({ ldpStep: step - 1 }) }, step === 2 ? 'Quay lại Template' : 'Quay lại Thông tin'),
@@ -10216,6 +10373,7 @@ class Component extends DCLogic {
           const isRegionType = sv.ldpType === 'region' && !this.ldpTypeLocked();
           const errs = {
             province: isRegionType && !sv.province,
+            ward: isRegionType && !!sv.province && !sv.ward,
             campaignName: !sv.campaignName,
             campaignId: !sv.campaignId,
             goal: !sv.goal,
@@ -10389,6 +10547,7 @@ class Component extends DCLogic {
     const wardOptions = (regionData[province] || []).map(w => ({ value: w, label: w }));
     // Lỗi tính lại mỗi lần render → tự biến mất ngay khi người dùng chọn xong (§14).
     const provinceErr = !!step2Err.province && !province;
+    const wardErr = !!step2Err.ward && !ward;
     // LDP đang chạy (publish) → cả nhóm 1 bị khoá, không cho đổi loại LDP / khu vực (giống ô URL Slug đã khoá).
     const typeLocked = this.ldpTypeLocked();
     // Loại LDP = 1 ô chọn (DS.Select, 2 lựa chọn nên không cần searchable — §11). LDP thường: không có thêm trường nào; LDP Khu vực: mở thêm khối "Khu vực áp dụng" bên dưới.
@@ -10420,12 +10579,13 @@ class Component extends DCLogic {
           })
         ),
         h('div', null,
-          h('label', { style: lbSt }, 'Phường/Xã'),
+          h('label', { style: lbSt }, 'Phường/Xã', province ? req : null),
           h(DS.Select, {
             value: ward, options: wardOptions, disabled: typeLocked || !province,
             placeholder: province ? 'Chọn Phường/Xã' : 'Chọn Tỉnh/Thành phố trước',
             searchable: true, searchPlaceholder: 'Tìm Phường/Xã…',
             onChange: v => set('ward', v),
+            error: wardErr ? 'Trường bắt buộc — vui lòng chọn Phường/Xã.' : undefined,
             containerStyle: { width: '100%' }
           })
         )
@@ -10435,36 +10595,51 @@ class Component extends DCLogic {
         h('span', null, 'Phạm vi áp dụng: ', h('strong', null, ward ? ward + ', ' + province : 'Toàn bộ ' + province))
       ) : null
     ) : null;
-    // Thông báo lỗi/cảnh báo/hợp lệ của URL Slug hiện ở dòng ngay dưới ô chọn (thẳng hàng với dòng "Xem trước");
-    // ô sai được đánh dấu qua viền đỏ (slugErr) trên chính Select.
+    // Thông báo lỗi/cảnh báo/hợp lệ của URL Slug luôn hiện ở dòng chung bên dưới cả 2 field (không lồng trong
+    // từng cột Level 1/Level 2) để mép trái của text thẳng hàng với dòng "Xem trước" ngay dưới nó; field cụ thể
+    // sai vẫn được đánh dấu qua viền đỏ (slug1Err/slug2Err) trên chính Select/Input.
     const editRow = this.state.ldpEditRow;
     const effStatus = editRow ? ((this.state.ldpStatuses && this.state.ldpStatuses[editRow.id] !== undefined) ? this.state.ldpStatuses[editRow.id] : editRow.status) : null;
     const slugLocked = !!(editRow && this.ldpSlugLocked(effStatus));
     const slug1 = get('urlSlug1', editRow ? (editRow.lv1 || '') : '');
     const slug2 = get('urlSlug2', editRow ? (editRow.l2 || '') : '');
     const slugCheck = slugLocked ? { ok: true } : this.ldpSlugValidate(slug1, slug2, editRow ? editRow.id : null);
-    const slugErr = !!(slugCheck.block && slugCheck.bad1);
-    // URL Slug: MỘT ô chọn (searchable). Nguồn = các URL đã tạo ở module Quản lý URL (LDP_PICK_URLS: Landing Page + Trang thường) — mỗi URL là một đường dẫn
-    // độc lập đầy đủ ("a" hoặc "a/b"), không còn chọn Level 1 rồi Level 2. Mỗi mục gắn badge loại (LDP cam / Trang thường xanh — cùng breadcrumbKindTag với
-    // dropdown "Breadcrumb trang trước"), Landing Page xếp trước, mỗi nhóm A–Z. Chọn xong tách đường dẫn thành lv1 / l2 để lưu (urlSlug1 / urlSlug2).
-    // URL ngừng hoạt động (cờ active ở Quản lý URL) không được đưa vào danh sách; riêng giá trị đang chọn của bản ghi vẫn được giữ.
-    const curPath = [slug1, slug2].filter(Boolean).join('/');
-    const urlOptions = this.LDP_PICK_URLS().filter(n => this.urlIsActive(n) || n.slug === curPath)
-      .sort((a, b) => ((a.type === 'ldp' ? 0 : 1) - (b.type === 'ldp' ? 0 : 1)) || a.slug.localeCompare(b.slug))
-      .map(n => ({ value: n.slug, searchText: n.slug,
-        label: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0, maxWidth: '100%' } },
-          h('span', { style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, n.slug),
-          this.breadcrumbKindTag(n.type)) }));
-    // Bản ghi cũ trỏ tới đường dẫn không còn trong danh mục vẫn giữ lại 1 lựa chọn tương ứng để ô không bị trống.
-    if (curPath && !urlOptions.some(o => o.value === curPath)) urlOptions.push({ value: curPath, label: curPath });
-    const setUrlPath = pth => { const parts = String(pth || '').split('/'); this.setState(st => ({ ldpForm2: { ...(st.ldpForm2 || {}), urlSlug1: parts[0] || '', urlSlug2: parts[1] || '' } })); };
+    const slug1Err = !!(slugCheck.block && slugCheck.bad1);
+    const slug2Err = !!(slugCheck.block && slugCheck.bad2);
+    // Lỗi chỉ nói riêng về nhánh Cấp 1 (bad1 mà không phải bad2, VD "đang có chiến dịch chạy" / "chưa chọn nhánh hợp
+    // lệ") thì giới hạn chiều rộng dòng thông báo trong khoảng ~ thanh Lv1 (badge fpt.vn/ + Select) thay vì tràn hết
+    // cả dòng URL Slug — tránh nhìn như đang lấn sang phần Level 2. Riêng 'needL2Page' (nhánh Trang thường yêu cầu
+    // thêm Level 2) tuy đánh dấu đỏ ở ô Level 2 (bad2) nhưng câu chữ dài (chứa slug Cấp 1) nên cũng giới hạn cùng
+    // chiều rộng này, tránh tràn xuống ngay dưới ô Level 2 nhìn như đang che lấp nó.
+    const scopeL1Only = !!(slugCheck.block && (slugCheck.kind === 'needL2Page' || (slugCheck.bad1 && !slugCheck.bad2)));
+    // Nhánh Level 1 / Level 2 lấy từ module Quản lý URL: Level 1 = URL cấp 1 loại "Landing Page" HOẶC "Trang thường"
+    // (chọn nhánh Trang thường thì Slug Cấp 2 bắt buộc — xem isPageBranch trong ldpSlugValidate); Level 2 = các URL cấp 2
+    // đã tạo dưới nhánh Level 1 đang chọn. Cả hai chọn bằng DS.Select (searchable). Nhãn dùng đúng định dạng URL slug để
+    // người dùng thấy đúng segment sẽ dùng. Bản ghi cũ trỏ tới slug không còn trong danh mục vẫn giữ lại 1 lựa chọn tương ứng để ô không bị trống.
+    const urlAll = this.URLS();
+    // URL ngừng hoạt động (cờ active ở Quản lý URL) không được đưa vào danh sách chọn; riêng giá trị đang chọn của bản ghi vẫn được giữ.
+    const lv1Nodes = urlAll.filter(n => n.level === 1 && (n.type === 'ldp' || n.type === 'page'))
+      .sort((a, b) => ((a.type === 'ldp' ? 0 : 1) - (b.type === 'ldp' ? 0 : 1)) || a.slug.localeCompare(b.slug));
+    // Mỗi nhánh gắn badge LDP (cam) / Trang thường (xanh) — cùng kiểu tag với dropdown "Breadcrumb trang trước" / "Có sẵn"
+    // của Quản lý URL (breadcrumbKindTag) để nhất quán cách đọc; nhánh Landing Page xếp trước, Trang thường xếp sau.
+    const lv1Options = lv1Nodes.filter(n => this.urlIsActive(n) || n.slug === slug1).map(n => ({ value: n.slug, searchText: n.slug,
+      label: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 } },
+        h('span', { style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, n.slug),
+        this.breadcrumbKindTag(n.type)) }));
+    if (slug1 && !lv1Options.some(o => o.value === slug1)) lv1Options.push({ value: slug1, label: slug1 });
+    const lv1Node = lv1Nodes.find(n => n.slug === slug1);
+    const lv2Nodes = lv1Node ? urlAll.filter(n => n.level === 2 && n.pid === lv1Node.id) : [];
+    const lv2Options = lv2Nodes.filter(n => this.urlIsActive(n) || n.slug === slug2).map(n => ({ value: n.slug, label: n.slug }));
+    if (slug2 && !lv2Options.some(o => o.value === slug2)) lv2Options.push({ value: slug2, label: slug2 });
+    // Bỏ chọn Level 2 dùng nút × gốc của DS.Select (giống Level 1) — không tự chèn thêm lựa chọn "Bỏ chọn" vào
+    // menu nữa, vì value '' trong options khiến DS.Select coi đây là select kiểu "Tất cả" và tự ẩn nút × (§11).
     const slug  = [slug1, slug2].filter(s => s).join('/') || 'khuyen-mai/km-t5';
     const tplDefaultColors = { internet: '#ffffff', sa: '#0a1628', landingpage: '#f4f6fa', customhtml: '#ffffff' };
     const defaultBgColor = tplDefaultColors[this.state.ldpTpl] || '#ffffff';
     const bgColor = get('bgColor', defaultBgColor);
     // Chiến dịch marketing liên kết (bắt buộc) — nguồn là module Quản lý chiến dịch (getOmisellCampaignList);
     // ≥5 bản ghi và danh mục này chỉ tăng dần nên luôn searchable (§11). Bản ghi cũ trỏ tới chiến dịch đã bị xóa vẫn
-    // giữ lại 1 lựa chọn tương ứng để ô không bị trống, giống cách xử lý urlOptions/bcLv1Options ở trên.
+    // giữ lại 1 lựa chọn tương ứng để ô không bị trống, giống cách xử lý lv1Options/bcLv1Options ở trên.
     const campaignId = sv.campaignId;
     const campaignOptions = this.getOmisellCampaignList().map(c => ({ value: c.id, label: c.name }));
     if (campaignId && !campaignOptions.some(o => o.value === campaignId)) campaignOptions.push({ value: campaignId, label: 'Chiến dịch #' + campaignId });
@@ -10512,36 +10687,49 @@ class Component extends DCLogic {
                 h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } }, 'Slug đã được duyệt — không thể chỉnh sửa. Cập nhật nội dung trang không cần gửi duyệt lại.')
               )
             : h('div', null,
-                h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
+                h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' } },
                   h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 12px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0 } }, 'fpt.vn/'),
-                  h('div', { style: { flex: 1, minWidth: 0 } },
+                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } },
                     h(DS.Select, {
-                      value: curPath,
-                      options: urlOptions,
-                      placeholder: urlOptions.length ? 'Chọn URL Slug' : 'Chưa có URL — hãy tạo ở Quản lý URL',
+                      value: slug1,
+                      options: lv1Options,
+                      placeholder: 'Chọn nhánh Level 1',
                       searchable: true,
-                      searchPlaceholder: 'Tìm URL Slug…',
-                      onChange: setUrlPath,
-                      error: slugErr,
+                      searchPlaceholder: 'Tìm nhánh Level 1…',
+                      onChange: v => { set('urlSlug1', v); if (v !== slug1) set('urlSlug2', ''); },
+                      error: slug1Err,
+                      containerStyle: { width: '100%' }
+                    })
+                  ),
+                  h('span', { style: { display: 'flex', alignItems: 'center', height: 48, color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
+                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } },
+                    h(DS.Select, {
+                      value: slug2, options: lv2Options, error: slug2Err, disabled: !slug1 || !lv2Options.length,
+                      placeholder: !slug1 ? 'Chọn nhánh Level 1 trước' : (lv2Options.length ? 'Chọn nhánh Level 2' : 'Chưa có URL cấp 2'),
+                      searchable: true, searchPlaceholder: 'Tìm nhánh Level 2…',
+                      onChange: v => set('urlSlug2', v),
                       containerStyle: { width: '100%' }
                     })
                   )
                 ),
                 (() => {
                   const tone = slugCheck.block ? 'var(--color-danger-text)' : slugCheck.warn ? 'var(--color-warning-text)' : (!slug1 ? 'var(--color-text-subtle)' : 'var(--color-success-text)');
-                  return h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: tone, fontWeight: (slugCheck.block || slugCheck.warn) ? 600 : 400 } },
+                  return h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: tone, fontWeight: (slugCheck.block || slugCheck.warn) ? 600 : 400, maxWidth: scopeL1Only ? '50%' : undefined } },
                     !slug1
-                      ? h('span', null, 'Chọn một URL Slug có sẵn.')
+                      ? h('span', null, 'Chọn một nhánh Level 1 có sẵn.')
                       : slugCheck.block
                         ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'x-circle-line', size: 14 }), h('span', null, slugCheck.msg))
                         : slugCheck.warn
                           ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, slugCheck.msg))
                           : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'check-circle-line', size: 14 }), h('span', null,
-                              'URL fpt.vn/', h('strong', null, curPath), ' hợp lệ — đã sẵn sàng để tiếp tục.'))
+                              slug2
+                                ? h('span', null, 'Nhánh "', h('strong', null, slug1), '" hợp lệ — URL cấu trúc 2 cấp: fpt.vn/', h('strong', null, slug1 + '/' + slug2), ' đã sẵn sàng để tiếp tục.')
+                                : h('span', null, 'Nhánh fpt.vn/', h('strong', null, slug1), ' hợp lệ URL cấu trúc 1 cấp — Đã sẵn sàng để tiếp tục.')
+                            ))
                   );
                 })(),
                 h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } },
-                  'Xem trước: fpt.vn/', h('strong', null, curPath || 'url-slug')
+                  'Xem trước: fpt.vn/', h('strong', null, slug1 || 'level-1'), slug2 ? h('span', null, '/', h('strong', null, slug2)) : null
                 )
               )
         ),

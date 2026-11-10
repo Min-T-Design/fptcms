@@ -378,7 +378,7 @@ Use this when the action is **destructive, an important change, or has wide impa
 
 Footer layout: `display: 'flex', gap: 10, justifyContent: 'flex-end'`, children in this order — **primary (confirm) button first, "Hủy" (`level: 'tertiary'`) second** (so the group reads `[Vẫn tắt URL] [Hủy]` at the right edge). The primary button is the danger-red variant (`background/borderColor: 'var(--color-danger)'`) with a specific action label ("Vẫn tắt URL", "Vẫn đổi loại"), so the dangerous action is never in the usual right-most "proceed" spot that people click on autopilot. (An earlier revision left-aligned the whole group with `flex-start`; the user rejected that — keep the group right-aligned.)
 
-Reference implementations: `urlConfirmEdit` (bấm vào ô URL Slug / Thuộc loại của URL đang có LDP chạy → modal chi tiết, "Xác nhận tiếp tục" mới cho sửa; lớp chặn `guard()` trong `renderUrlEditor`) and `urlConfirmDeactivate` (tắt URL có LDP đang chạy) in `FPT CMS Admin.dc.html`.
+Reference implementations: `urlConfirmEdit` (bấm vào ô slug / URL cấp 1 / Thuộc loại của URL đang có LDP chạy → modal chi tiết, "Xác nhận tiếp tục" mới cho sửa; lớp chặn `guard()` trong `renderUrlEditor`) and `urlConfirmDeactivate` (tắt URL có LDP đang chạy) in `FPT CMS Admin.dc.html`.
 
 ### Simple, low-severity confirmations → normal order, primary LAST (right-most)
 
