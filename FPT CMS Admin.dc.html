@@ -4579,25 +4579,30 @@ class Component extends DCLogic {
   ]; }
   OMISELL_CAMPAIGNS() { return [
     { id: 901, name: 'Chiến dịch tái tiếp thị khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc dịp cuối năm 2026',
+      campaignSource: 'omisell-app',
       utmSource: 'omisellretargetingkhachhangthanthietinternettocdocaowifi6cameraanninhtoanquoc2026',
       utmMedium: 'retargetingdisplaysocialemailtoanquoccuoinam2026chuongtrinhdacbiet', utmCampaign: 'campcuoinam2026internetwifi6cameratoanquoc', utmTerm: '', utmContent: '',
-      code: 'OMI-20261001-A1B2', startAt: '01/10/2026 00:00', endAt: '31/12/2026 23:59', active: true,
+      code: 'OMI-20261001-A1B2', active: true,
       createdAt: '27/10/2026 09:15', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedAt: '27/10/2026 09:15', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
     { id: 1, name: 'Chiến dịch Black Friday Internet 2026',
+      campaignSource: 'facebook-ads',
       utmSource: 'fbads', utmMedium: 'cpc', utmCampaign: 'blackfriday2026', utmTerm: '', utmContent: '',
-      code: 'OMI-20261005-C3D4', startAt: '05/10/2026 00:00', endAt: '30/11/2026 23:59', active: false,
+      code: 'OMI-20261005-C3D4', active: false,
       createdAt: '05/10/2026 08:30', createdBy: 'Admin User', updatedAt: '12/10/2026 10:15', updatedBy: 'Admin User' },
     { id: 2, name: 'Chiến dịch Camera AI tháng 11',
+      campaignSource: 'zalo-oa',
       utmSource: 'zalooa', utmMedium: 'social', utmCampaign: 'cameraait11', utmTerm: 'cameraai', utmContent: 'bannerzalo',
-      code: 'OMI-20261101-E5F6', startAt: '01/11/2026 00:00', endAt: '30/11/2026 23:59', active: true,
+      code: 'OMI-20261101-E5F6', active: true,
       createdAt: '28/10/2026 14:00', createdBy: 'Trần Minh Khoa', updatedAt: '28/10/2026 14:00', updatedBy: 'Trần Minh Khoa' },
     { id: 3, name: 'Chiến dịch tri ân khách hàng cũ',
+      campaignSource: 'email-crm',
       utmSource: 'emailcrm', utmMedium: 'email', utmCampaign: 'triankhcu', utmTerm: '', utmContent: '',
-      code: 'OMI-20260915-G7H8', startAt: '15/09/2026 00:00', endAt: '15/10/2026 23:59', active: true,
+      code: 'OMI-20260915-G7H8', active: true,
       createdAt: '10/09/2026 09:00', createdBy: 'Admin User', updatedAt: '16/10/2026 08:00', updatedBy: 'Admin User' },
     { id: 4, name: 'Chiến dịch Internet Wi-Fi 7 Lux',
+      campaignSource: 'tiktok-ads',
       utmSource: 'tiktokads', utmMedium: 'video', utmCampaign: 'wifi7luxearlyaccess', utmTerm: 'wifi7', utmContent: 'video15s',
-      code: 'OMI-20261201-I9J0', startAt: '01/12/2026 00:00', endAt: '31/12/2026 23:59', active: true,
+      code: 'OMI-20261201-I9J0', active: true,
       createdAt: '25/10/2026 16:30', createdBy: 'Nguyễn Thị Thùy', updatedAt: '25/10/2026 16:30', updatedBy: 'Nguyễn Thị Thùy' },
   ]; }
   getOmisellCampaignList() { return this.state.omisellCampaignListData || this.OMISELL_CAMPAIGNS(); }
@@ -5621,14 +5626,14 @@ class Component extends DCLogic {
           h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' } },
             prefixBox('fpt.vn/'),
             slugCell('lv1', 'pid', guard('pid', h(DS.Select, {
-              options: parentOpts, value: d.pid || '', placeholder: 'Chọn URL cấp 1', searchable: true, searchPlaceholder: 'Tìm URL cấp 1…',
+              options: parentOpts, value: d.pid || '', placeholder: 'Chọn Slug cấp 1', searchable: true, searchPlaceholder: 'Tìm URL cấp 1…',
               disabled: viewOnly,
               error: showErr('pid') ? errs.pid : undefined,
               onChange: v => setD({ pid: v }),
               containerStyle: { width: '100%' }
             }))),
             h('span', { style: { display: 'flex', alignItems: 'center', height: 48, color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
-            slugCell('lv2', 'slug2', slugCtl(k2, 'slug2', lv2Waiting ? 'Chọn URL cấp 1 trước' : 'Nhập URL cấp 2 (VD: detail)', lv2Waiting)))));
+            slugCell('lv2', 'slug2', slugCtl(k2, 'slug2', lv2Waiting ? 'Chọn Slug cấp 1 trước' : 'Nhập Slug cấp 2 (VD: detail)', lv2Waiting)))));
 
     // ── Thuộc loại: Trang thường / Landing Page.
     //    • Tạo mới "Tạo mới" (URL cấp 1 mới): luôn Landing Page, "Trang thường" bị ẩn (URL Trang thường chỉ được đồng bộ từ Quản lý Trang).
@@ -8864,40 +8869,16 @@ class Component extends DCLogic {
   omisellUtmTrimEdge(v) {
     return (v || '').replace(/[_-]+$/, '');
   }
-  omisellParseDate(str) {
-    const m = /^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?$/.exec(str || '');
-    return m ? new Date(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0)) : null;
-  }
-  omisellFmtDate(d) {
-    if (!d) return '';
-    const pad = n => String(n).padStart(2, '0');
-    return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-  }
-  // Trạng thái phụ thuộc khoảng ngày hiệu lực + công tắc bật/tắt tay (cột "Hoạt động" của bảng) — r có thể là
-  // bản ghi đã lưu (startAt/endAt dạng string, active boolean) hoặc bản nháp trong editor (dateStart/dateEnd dạng
-  // Date, không có active — editor không có công tắc, luôn coi như đang bật).
+  // Trạng thái chỉ phụ thuộc công tắc bật/tắt tay (cột "Hoạt động" của bảng) — bản ghi đã lưu có thể có
+  // active: false; bản nháp trong editor không có công tắc nên luôn coi như đang bật.
   omisellEffStatus(r) {
-    const start = r.dateStart !== undefined ? r.dateStart : this.omisellParseDate(r.startAt);
-    const end = r.dateEnd !== undefined ? r.dateEnd : this.omisellParseDate(r.endAt);
-    if (end && end.getTime() < Date.now()) return 'expired';
-    if (r.active === false) return 'hidden';
-    if (start && start.getTime() > Date.now()) return 'scheduled';
-    return 'running';
+    return r && r.active === false ? 'hidden' : 'running';
   }
-  // Badge riêng của Omisell (nhãn khác this.statusBadge() dùng chung): "Chưa bắt đầu"/"Đã kết thúc" thay vì
-  // "Đặt lịch"/"Hết hạn", khớp với bộ lọc Trạng thái ở toolbar bảng danh sách.
   omisellStatusBadge(status) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const map = { running: ['success', 'Đang chạy'], scheduled: ['info', 'Chưa bắt đầu'], expired: ['danger', 'Đã kết thúc'], hidden: ['warning', 'Tạm ẩn'] };
+    const map = { running: ['success', 'Đang chạy'], hidden: ['warning', 'Tạm ẩn'] };
     const [theme, label] = map[status] || ['neutral', status];
     return h('div', { style: { display: 'flex' } }, h(DS.Badge, { theme, dot: true, style: { whiteSpace: 'nowrap' } }, label));
-  }
-  omisellPeriodCell(r) {
-    const h = React.createElement;
-    const line = (lbl, v) => h('div', { style: { display: 'flex', gap: 6, whiteSpace: 'nowrap' } },
-      h('span', { style: { width: 24, color: 'var(--color-text-subtle)' } }, lbl),
-      h('span', { style: { color: v ? 'var(--color-text-muted)' : 'var(--color-text-subtle)' } }, v || 'Không giới hạn'));
-    return h('div', { style: { fontSize: 12.5, display: 'flex', flexDirection: 'column', gap: 2 } }, line('Từ', r.startAt), line('Đến', r.endAt));
   }
   genOmisellCode() {
     const now = new Date(); const pad = n => String(n).padStart(2, '0');
@@ -8929,8 +8910,8 @@ class Component extends DCLogic {
     this.setState({
       omisellEditor: r, omisellNameErr: '', omisellCreatedId: null, omisellResultLoading: false,
       omisellDraft: r
-        ? { name: r.name, utmSource: r.utmSource || '', utmMedium: r.utmMedium || '', utmCampaign: r.utmCampaign || '', utmTerm: r.utmTerm || '', utmContent: r.utmContent || '', code: r.code, dateStart: this.omisellParseDate(r.startAt), dateEnd: this.omisellParseDate(r.endAt) }
-        : { name: '', utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '', code: this.genOmisellCode(), dateStart: null, dateEnd: null }
+        ? { name: r.name, campaignSource: r.campaignSource || '', utmSource: r.utmSource || '', utmMedium: r.utmMedium || '', utmCampaign: r.utmCampaign || '', utmTerm: r.utmTerm || '', utmContent: r.utmContent || '', code: r.code }
+        : { name: '', campaignSource: '', utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '', code: this.genOmisellCode() }
     });
   }
   closeOmisellEditor() {
@@ -8942,12 +8923,12 @@ class Component extends DCLogic {
       title: r.name.length > 60 ? r.name.slice(0, 60) + '…' : r.name, subtitle: 'Chi tiết chiến dịch', width: 480,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('campaign_name', r.name),
+        this.detailRow('campaign_source', r.campaignSource || '—'),
         this.detailRow('utm_source', r.utmSource || '—'),
         this.detailRow('utm_medium', r.utmMedium || '—'),
         this.detailRow('utm_campaign', r.utmCampaign || '—'),
         this.detailRow('utm_term', r.utmTerm || '—'),
         this.detailRow('utm_content', r.utmContent || '—'),
-        this.detailRow('Thời gian hiệu lực', this.omisellPeriodCell(r)),
         this.detailRow('Trạng thái', this.omisellStatusBadge(this.omisellEffStatus(r))),
         this.detailRow('Mã chiến dịch', this.omisellCopyValue(r.code, 'Sao chép mã chiến dịch')),
         this.detailRow('Nội dung', this.omisellCopyValue(this.omisellTrackingLink(r), 'Sao chép link tracking')),
@@ -8967,7 +8948,7 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const q = (this.state.omisellSearch || '').toLowerCase();
     const statusF = this.state.omisellStatusFilter || 'all';
-    const statusLabel = { running: 'Đang chạy', scheduled: 'Chưa bắt đầu', expired: 'Đã kết thúc', hidden: 'Tạm ẩn' };
+    const statusLabel = { running: 'Đang chạy', hidden: 'Tạm ẩn' };
     const data = this.getOmisellCampaignList().filter(c => {
       if (q && !(c.name + ' ' + c.code + ' ' + (c.utmSource || '') + ' ' + (c.utmCampaign || '')).toLowerCase().includes(q)) return false;
       if (statusF !== 'all' && this.omisellEffStatus(c) !== statusF) return false;
@@ -8991,7 +8972,6 @@ class Component extends DCLogic {
       { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.omisellStatusBadge(this.omisellEffStatus(r)) },
       ...this.auditCols(),
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
-          if (this.omisellEffStatus(r) === 'expired') return h('div', { style: { display: 'flex', justifyContent: 'center', color: 'var(--color-text-subtle)' } }, '—');
           const isOn = this.omisellEffStatus(r) !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { key: 'sw-omisell-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', title: 'Bật/Tắt chiến dịch', onChange: v => {
@@ -9014,7 +8994,7 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
           h('div', { style: { width: 320, flexShrink: 0 } }, h(DS.Input, { value: this.state.omisellSearch || '', onChange: e => this.setState({ omisellSearch: e && e.target ? e.target.value : e, omisell_pg: 1 }), placeholder: 'Tìm campaign_name, mã, utm_source, utm_campaign...', leadingIcon: 'search-medium-line' })),
           h('div', { style: { width: 180, flexShrink: 0 } }, h(DS.Select, {
-            value: statusF, options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'running', label: 'Đang chạy' }, { value: 'scheduled', label: 'Chưa bắt đầu' }, { value: 'expired', label: 'Đã kết thúc' }, { value: 'hidden', label: 'Tạm ẩn' }],
+            value: statusF, options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'running', label: 'Đang chạy' }, { value: 'hidden', label: 'Tạm ẩn' }],
             onChange: v => this.setState({ omisellStatusFilter: v, omisell_pg: 1 })
           }))
         ),
@@ -9034,7 +9014,7 @@ class Component extends DCLogic {
     fptEnsureCopyIcon(DS);
     const isNew = !r; const back = () => this.closeOmisellEditor();
     const setD = patch => this.setState(s => ({ omisellDraft: Object.assign({}, s.omisellDraft, patch) }));
-    const d = this.state.omisellDraft || { name: '', utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '', code: this.genOmisellCode(), dateStart: null, dateEnd: null };
+    const d = this.state.omisellDraft || { name: '', campaignSource: '', utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '', code: this.genOmisellCode() };
     const nameErr = this.state.omisellNameErr || '';
     // Trùng tên campaign_name chặn tại chính trường đó — kiểm live khi gõ, kiểm lại lần cuối trước khi lưu (giống renderFaqCatEditor's checkDup).
     const checkNameDup = nameVal => {
@@ -9046,9 +9026,7 @@ class Component extends DCLogic {
     const justCreated = isNew && this.state.omisellCreatedId != null;
     const showOutput = !isNew || justCreated;
     const NAME_MAX = 255;
-    const nameLen = (d.name || '').length;
-    const nameAtMax = nameLen >= NAME_MAX;
-    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num, id: num === 4 ? 'omisell-result-card' : undefined },
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num, id: num === 3 ? 'omisell-result-card' : undefined },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
         h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
@@ -9061,14 +9039,16 @@ class Component extends DCLogic {
       isNew ? 'Tạo chiến dịch' : 'Chỉnh sửa chiến dịch: ' + r.name, 'Chiến dịch marketing gắn UTM theo dõi hiệu quả', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         section(1, 'file-doc-line', 'Thông tin cơ bản',
-          this.field('campaign_name', h('div', null,
-            h('div', { style: { fontSize: 12, color: nameAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginBottom: 4 } },
-              'Tối đa ' + NAME_MAX + ' ký tự (' + nameLen + '/' + NAME_MAX + ')' + (nameAtMax ? ' — đã đạt giới hạn' : '') + '.'),
-            h(DS.Input, {
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 } },
+            this.field('campaign_name', h(DS.Input, {
               value: d.name, maxLength: NAME_MAX, placeholder: 'Nhập campaign_name…', error: nameErr || undefined,
               onChange: e => { const v = (e && e.target ? e.target.value : (e || '')).slice(0, NAME_MAX); setD({ name: v }); checkNameDup(v); }
-            })
-          ), true)
+            }), true),
+            this.field('campaign_source', h(DS.Input, {
+              value: d.campaignSource, placeholder: 'Nhập campaign_source…',
+              onChange: e => setD({ campaignSource: e && e.target ? e.target.value : e })
+            }))
+          )
         ),
         section(2, 'link-01-line', 'Thông số UTM',
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 } },
@@ -9079,23 +9059,10 @@ class Component extends DCLogic {
             this.field('utm_content', h(DS.Input, { value: d.utmContent, placeholder: 'Nhập utm_content…', onChange: e => setD({ utmContent: this.omisellUtmSanitize(e && e.target ? e.target.value : e) }), onBlur: () => setD({ utmContent: this.omisellUtmTrimEdge(d.utmContent) }) }))
           )
         ),
-        section(3, 'calendar-line', 'Thời gian hiệu lực',
-          h('div', null,
-            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Thời gian hiệu lực'),
-            h(DS.DateRangePicker, {
-              allowPast: true, placeholderStart: 'Ngày bắt đầu', placeholderEnd: 'Ngày kết thúc', containerStyle: { width: '100%' },
-              startDate: d.dateStart || null, endDate: d.dateEnd || null,
-              onChange: v => {
-                const ds = v && v.start ? v.start : null; const de = v && v.end ? v.end : null;
-                setD({ dateStart: ds, dateEnd: de });
-              }
-            })
-          )
-        ),
-        showOutput && section(4, 'lock-01-line', 'Kết quả',
+        showOutput && section(3, 'lock-01-line', 'Kết quả',
           h('div', null, outputLabel('Mã chiến dịch'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: 220, height: 40, radius: 8 }) : this.omisellCopyValue(d.code, 'Sao chép mã chiến dịch')),
           h('div', null, outputLabel('Nội dung'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: '100%', height: 40, radius: 8 }) : this.omisellCopyValue(this.omisellTrackingLink(d), 'Sao chép link tracking')),
-          h('div', null, outputLabel('Trạng thái'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: 90, height: 24, radius: 999 }) : this.omisellStatusBadge(this.omisellEffStatus({ dateStart: d.dateStart, dateEnd: d.dateEnd })))
+          h('div', null, outputLabel('Trạng thái'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: 90, height: 24, radius: 999 }) : this.omisellStatusBadge(this.omisellEffStatus(d)))
         )
       ),
       () => {
@@ -9109,8 +9076,7 @@ class Component extends DCLogic {
         }
         const list = this.getOmisellCampaignList();
         const rec = {
-          name: d.name, utmSource: d.utmSource, utmMedium: d.utmMedium, utmCampaign: d.utmCampaign, utmTerm: d.utmTerm, utmContent: d.utmContent, code: d.code,
-          startAt: this.omisellFmtDate(d.dateStart), endAt: this.omisellFmtDate(d.dateEnd),
+          name: d.name, campaignSource: d.campaignSource, utmSource: d.utmSource, utmMedium: d.utmMedium, utmCampaign: d.utmCampaign, utmTerm: d.utmTerm, utmContent: d.utmContent, code: d.code,
           updatedAt: this.nowStr(), updatedBy: 'Admin User'
         };
         if (r) {
