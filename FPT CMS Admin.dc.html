@@ -4244,12 +4244,12 @@ class Component extends DCLogic {
           ref: editorRef, contentEditable: true, suppressContentEditableWarning: true,
           className: 'fpt-richtext-canvas fpt-scroll', 'data-placeholder': 'Nhập nội dung...',
           dangerouslySetInnerHTML: { __html: initialHtml || '' },
-          style: { minHeight: expanded ? 480 : 220, maxHeight: expanded ? 760 : 420, overflowY: 'auto', padding: '14px 16px', fontSize: 13.5, lineHeight: 1.6, outline: 'none' }
+          style: { minHeight: expanded ? 480 : 220, overflowY: 'auto', padding: '14px 16px', fontSize: 13.5, lineHeight: 1.6, outline: 'none', resize: 'vertical' }
         })
       ),
       codeView && h('textarea', {
         key: 'code', readOnly: true, defaultValue: editorRef.current ? editorRef.current.innerHTML : (initialHtml || ''),
-        style: { display: 'block', width: '100%', boxSizing: 'border-box', minHeight: expanded ? 480 : 220, maxHeight: expanded ? 760 : 420, border: 'none', outline: 'none', resize: 'vertical', padding: '14px 16px', fontFamily: 'var(--font-dev)', fontSize: 12.5, lineHeight: 1.6, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)' }
+        style: { display: 'block', width: '100%', boxSizing: 'border-box', minHeight: expanded ? 480 : 220, border: 'none', outline: 'none', resize: 'vertical', padding: '14px 16px', fontFamily: 'var(--font-dev)', fontSize: 12.5, lineHeight: 1.6, color: 'var(--color-text-subtle)', background: 'var(--color-surface-alt)' }
       })
     );
   }
