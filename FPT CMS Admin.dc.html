@@ -159,7 +159,7 @@ function FptUrlPathChip({ l1, l2, l1Exists, l2Exists, style }) {
   const h = React.createElement;
   const DS = window.ZENKaizenDesignSystem_4069b4;
   const seg = (lv, text, exists) => h('span', {
-    title: 'URL cấp ' + lv + (exists ? ' · đã có trong Quản lý URL' : ' · sẽ được tạo mới trong Quản lý URL'),
+    title: 'Slug cấp ' + lv + (exists ? ' · đã có trong Quản lý URL' : ' · sẽ được tạo mới trong Quản lý URL'),
     style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-dev)', fontWeight: lv === 1 ? 700 : 500, color: lv === 1 ? 'var(--color-text)' : 'var(--color-text-muted)' }
   }, text);
   return h(DS.Badge, { theme: 'neutral', size: 'md', style: { gap: 6, maxWidth: '100%', minWidth: 0, ...style } },
@@ -302,7 +302,7 @@ function FptTagPicker({ options, selected, onChange, placeholder, searchPlacehol
   return h('div', { ref, style: { position: 'relative' } },
     h('div', {
       onClick: () => setOpen(o => !o),
-      style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minHeight: 44, padding: '7px 10px', border: '1px solid ' + (open ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 10, cursor: 'pointer', background: 'var(--color-surface)', boxShadow: open ? 'var(--shadow-focus)' : 'none' }
+      style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minHeight: 'var(--control-h-md)', padding: '7px 10px', border: '1px solid ' + (open ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 10, cursor: 'pointer', background: 'var(--color-surface)', boxShadow: open ? 'var(--shadow-focus)' : 'none' }
     },
       selected.length === 0 && h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 13.5, padding: '2px 4px' } }, placeholder || 'Chọn...'),
       selected.map(o => h(DS.Tag, {
@@ -5021,6 +5021,30 @@ class Component extends DCLogic {
     const statusOf = x => (this.state.ldpStatuses && this.state.ldpStatuses[x.id] !== undefined) ? this.state.ldpStatuses[x.id] : x.status;
     return this.LDP_LIST().find(x => x.id !== r.id && statusOf(x) === 'publish' && this.ldpNormalizePath((x.lv1 || '') + (x.l2 ? '/' + x.l2 : '')) === path) || null;
   }
+  // URL (Quản lý URL) mà LDP đang trỏ tới (slug cấp 1 / cấp 2) có đang bị TẮT không? Slug cấp 1 tắt → cả nhánh coi như tắt.
+  // Trả về URL đang tắt (hoặc null). LDP không bật được khi URL của nó đang tắt (người dùng thường không biết URL đã bị tắt ở Quản lý URL).
+  ldpUrlOff(lv1, l2) {
+    const all = this.URLS();
+    const n1 = lv1 ? all.find(n => n.level === 1 && n.slug === lv1) : null;
+    if (!n1) return null;
+    if (!this.urlIsActive(n1)) return n1;
+    const n2 = l2 ? all.find(n => n.level === 2 && n.pid === n1.id && n.slug === l2) : null;
+    return n2 && !this.urlIsActive(n2) ? n2 : null;
+  }
+  // Modal chặn khi bật LDP mà URL liên kết đang tắt — cùng kiểu modal "Không thể kích hoạt!" của lỗi trùng URL.
+  ldpUrlOffModal() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    this.openModal({ title: 'Không thể kích hoạt!', render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      h('div', { style: { display: 'flex', gap: 10, alignItems: 'flex-start' } },
+        h(DS.Icon, { name: 'alert-triangle-line', size: 20, color: 'var(--color-danger)' }),
+        h('div', { style: { fontSize: 13.5, lineHeight: 1.6, color: 'var(--color-text-muted)' } },
+          'URL liên kết đang bị tắt. Vui lòng kích hoạt lại URL tại Quản lý URL hoặc đổi sang URL khác đang hoạt động.')
+      ),
+      h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
+        h(DS.Button, { level: 'primary', onClick: () => this.closeModal() }, 'Đã hiểu')
+      )
+    ) });
+  }
   LDP_APPROVALS() {
     return this.state.ldpApprovals || [
       { id: 'REQ-0026', ldpId: 5,    name: 'Ưu đãi Sinh viên 2026',        tplId: 'thulead',  tplLabel: 'LDP Thu Lead',         lv1: 'uu-dai-sinh-vien', l2: 'dang-ky-2026',  goal: 'Lead Gen',     channel: 'FPT Telecom', sections: 9,  submittedBy: 'Hà Linh',    submittedAt: '02/09/26 09:12', attempt: 1, status: 'pending', history: [] },
@@ -5276,7 +5300,7 @@ class Component extends DCLogic {
     const MAXROW = 5;
     this.openModal({
       title: 'Tắt URL đang có Landing Page chạy?',
-      description: 'Bạn sắp tắt ' + (branch ? 'URL cấp 1' : 'URL') + ' "fpt.vn/' + this.urlFull(n) + '".',
+      description: 'Bạn sắp tắt ' + (branch ? 'Slug cấp 1' : 'URL') + ' "fpt.vn/' + this.urlFull(n) + '".',
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
         h(DS.Alert, { theme: 'danger', title: 'Người truy cập sẽ gặp lỗi 404', style: { borderRadius: 10 } },
           (branch ? 'Các Landing Page bên dưới đang chạy trong nhánh này. ' : 'Landing Page bên dưới đang chạy trên URL này. ')
@@ -5306,12 +5330,11 @@ class Component extends DCLogic {
     const full = this.urlFull(n);
     this.openModal({
       title: 'URL đang có nội dung chạy',
-      description: 'Bạn sắp chỉnh sửa ' + (branch ? 'URL cấp 1' : 'URL') + ' "fpt.vn/' + full + '".',
+      description: 'Bạn sắp chỉnh sửa ' + (branch ? 'Slug cấp 1' : 'URL') + ' "fpt.vn/' + full + '".',
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
         h(DS.Alert, { theme: 'warning', title: 'Thay đổi sẽ ảnh hưởng nội dung đang chạy', style: { borderRadius: 10 } },
-          (branch ? 'Các nội dung bên dưới đang chạy trong nhánh URL này (gồm cả URL cấp 2). ' : 'Nội dung bên dưới đang chạy trên URL này. ')
-          + 'Nếu đổi slug, đường dẫn của chúng sẽ đổi theo và được hệ thống tự đồng bộ — người truy cập đường dẫn cũ sẽ gặp lỗi 404 (không tìm thấy trang), các liên kết đã chia sẻ hoặc đang chạy quảng cáo tới đường dẫn cũ sẽ không còn dùng được. '
-          + 'Đổi loại URL không tự chuyển các nội dung này sang loại mới.'),
+          (branch ? 'Các nội dung bên dưới đang chạy trong nhánh URL này (gồm cả Slug cấp 2). ' : 'Nội dung bên dưới đang chạy trên URL này. ')
+          + 'Nếu đổi slug, đường dẫn của chúng sẽ đổi theo và được hệ thống tự đồng bộ — người truy cập đường dẫn cũ sẽ gặp lỗi 404 (không tìm thấy trang), các liên kết đã chia sẻ hoặc đang chạy quảng cáo tới đường dẫn cũ sẽ không còn dùng được.'),
         h('div', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Đang chạy trên URL này (' + live.length + ')'),
         h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
           live.slice(0, MAXROW).map((u, i, arr) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: (i < arr.length - 1 || live.length > MAXROW) ? '1px solid var(--color-border-pale)' : 'none', fontSize: 13 } },
@@ -5376,8 +5399,8 @@ class Component extends DCLogic {
     const res = this.urlCommit(all, next, { urlEditor: undefined, urlDraft: undefined, urlTried: false, urlLiveOk: false });
     const synced = [res.pages ? res.pages + ' trang' : '', res.ldps ? res.ldps + ' Landing Page' : ''].filter(Boolean).join(' và ');
     if (r) this.toast('success', 'Đã cập nhật', 'URL "' + this.urlFull(saved, next) + '" đã được cập nhật.' + (synced ? ' Đã đồng bộ ' + synced + ' đang dùng URL này.' : ''));
-    else this.toast('success', 'Đã tạo', 'URL cấp ' + saved.level + ' "' + this.urlFull(saved, next) + '" đã được tạo.'
-      + (saved.level === 1 ? ' URL này đã có trong danh sách chọn "URL cấp 1" của chế độ "Có sẵn".' : ''));
+    else this.toast('success', 'Đã tạo', 'Slug cấp ' + saved.level + ' "' + this.urlFull(saved, next) + '" đã được tạo.'
+      + (saved.level === 1 ? ' URL này đã có trong danh sách chọn "Slug cấp 1" của chế độ "Có sẵn".' : ''));
   }
 
   renderUrls() {
@@ -5491,10 +5514,10 @@ class Component extends DCLogic {
     // cấp vẫn thấy ở phụ đề drawer và 2 dòng URL cấp 1 / URL cấp 2 — đều là trường của editor, CLAUDE.md §16).
     const rows = [];
     if (r.level === 1) {
-      rows.push(this.detailRow('URL cấp 1', mono(r.slug)));
+      rows.push(this.detailRow('Slug cấp 1', mono(r.slug)));
     } else {
-      rows.push(this.detailRow('URL cấp 1', mono(parent ? parent.slug : '—')));
-      rows.push(this.detailRow('URL cấp 2', mono(r.slug)));
+      rows.push(this.detailRow('Slug cấp 1', mono(parent ? parent.slug : '—')));
+      rows.push(this.detailRow('Slug cấp 2', mono(r.slug)));
     }
     rows.push(this.detailRow('Đường dẫn', mono('fpt.vn/' + full, 'var(--color-accent-text)')));
     rows.push(this.detailRow('Thuộc loại', this.urlTypeBadge(this.urlTypeOf(r, all))));
@@ -5503,7 +5526,7 @@ class Component extends DCLogic {
       ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, usage.map((u, i) => h('div', { key: i }, this.urlUsageLabel(u))))
       : h('span', { style: { color: 'var(--color-text-subtle)' } }, '—')));
     rows.push(...this.auditRows(r));
-    this.openDrawer({ title: full, subtitle: 'Chi tiết URL cấp ' + r.level, width: 480,
+    this.openDrawer({ title: full, subtitle: 'Chi tiết Slug cấp ' + r.level, width: 480,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } }, rows),
       footer: () => h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-end' } },
         locked ? h('span', { style: { flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-subtle)' } },
@@ -5576,16 +5599,16 @@ class Component extends DCLogic {
     // ── Kiểm tra (tính lại mỗi lần render → lỗi tự biến mất khi người dùng sửa xong, CLAUDE.md §14). Báo lỗi MỌI trường cùng lúc khi bấm Lưu. ──
     const SLUG_FMT_MSG = 'Slug chỉ gồm chữ thường không dấu, số và dấu gạch ngang (VD: truyen-hinh-fpt-play).';
     const errs = {};
-    if (!lv1AsInput && !d.pid) errs.pid = 'Trường bắt buộc — vui lòng chọn URL cấp 1.';
+    if (!lv1AsInput && !d.pid) errs.pid = 'Trường bắt buộc — vui lòng chọn Slug cấp 1.';
     if (lv1AsInput) {
       if (!s1) errs.slug1 = FPT_REQ_MSG;
       else if (!this.URL_SLUG_RE().test(s1)) errs.slug1 = SLUG_FMT_MSG;
-      else if (all.some(n => n.level === 1 && (!r || n.id !== r.id) && n.slug === s1)) errs.slug1 = 'URL cấp 1 "' + s1 + '" đã tồn tại.' + (isNew ? ' Chọn "Có sẵn" để thêm URL cấp 2 vào nhánh này, hoặc nhập slug khác.' : ' Vui lòng nhập slug khác.');
+      else if (all.some(n => n.level === 1 && (!r || n.id !== r.id) && n.slug === s1)) errs.slug1 = 'Slug cấp 1 "' + s1 + '" đã tồn tại.' + (isNew ? ' Chọn "Có sẵn" để thêm Slug cấp 2 vào nhánh này, hoặc nhập slug khác.' : ' Vui lòng nhập slug khác.');
     }
     if (hasLv2Field) {
       if (!s2) { if (!lv2Waiting) errs.slug2 = FPT_REQ_MSG; }
       else if (!this.URL_SLUG_RE().test(s2)) errs.slug2 = SLUG_FMT_MSG;
-      else if (!lv1AsInput && d.pid && all.some(n => n.level === 2 && n.pid === d.pid && (!r || n.id !== r.id) && n.slug === s2)) errs.slug2 = 'URL cấp 2 "' + s2 + '" đã tồn tại trong nhánh "' + (parent ? parent.slug : '') + '". Vui lòng nhập slug khác.';
+      else if (!lv1AsInput && d.pid && all.some(n => n.level === 2 && n.pid === d.pid && (!r || n.id !== r.id) && n.slug === s2)) errs.slug2 = 'Slug cấp 2 "' + s2 + '" đã tồn tại trong nhánh "' + (parent ? parent.slug : '') + '". Vui lòng nhập slug khác.';
     }
     // Lỗi định dạng / trùng hiện ngay khi gõ; lỗi "bắt buộc" + ô chọn chỉ hiện sau khi bấm Lưu.
     const showErr = k => !!errs[k] && (tried || ((k === 'slug1' || k === 'slug2') && errs[k] !== FPT_REQ_MSG));
@@ -5619,14 +5642,14 @@ class Component extends DCLogic {
     const slugField = lv1AsInput
       // Chỉ 1 ô nhập URL cấp 1 (Tạo mới / sửa URL cấp 1) — nửa hàng như ô đơn khác trong app.
       ? h('div', { key: 'slug', style: { width: 'calc(50% - 8px)', minWidth: 300 } },
-          this.field(req('URL cấp 1'), h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
+          this.field(req('Slug cấp 1'), h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
             prefixBox('fpt.vn/'),
             h('div', { key: 'lv1', ...errAttr('slug1'), style: { flex: 1, minWidth: 0 } }, slugCtl(k1, 'slug1', 'VD: truyen-hinh-fpt-play')))))
       : h('div', { key: 'slug' }, this.field(req('URL Slug'),
           h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' } },
             prefixBox('fpt.vn/'),
             slugCell('lv1', 'pid', guard('pid', h(DS.Select, {
-              options: parentOpts, value: d.pid || '', placeholder: 'Chọn Slug cấp 1', searchable: true, searchPlaceholder: 'Tìm URL cấp 1…',
+              options: parentOpts, value: d.pid || '', placeholder: 'Chọn Slug cấp 1', searchable: true, searchPlaceholder: 'Tìm Slug cấp 1…',
               disabled: viewOnly,
               error: showErr('pid') ? errs.pid : undefined,
               onChange: v => setD({ pid: v }),
@@ -5651,7 +5674,7 @@ class Component extends DCLogic {
     // URL đã là Landing Page thì ô chỉ còn đúng 1 lựa chọn (chính nó) → không đổi được gì, không cần modal xác nhận. Chưa phân loại → Landing Page là thay đổi thật nên vẫn hỏi nếu URL đang có nội dung chạy.
     const typeSelect = h('div', { style: { width: 'calc(50% - 8px)', minWidth: 260 } },
       guard('type', h(DS.Select, { options: typeOpts,
-        value: effTypeVal, disabled: !typeEditable && (!isNew || followsParent), placeholder: followsParent ? 'Theo URL cấp 1 đã chọn' : 'Chọn loại',
+        value: effTypeVal, disabled: !typeEditable && (!isNew || followsParent), placeholder: followsParent ? 'Theo Slug cấp 1 đã chọn' : 'Chọn loại',
         onChange: v => { if (typeEditable) setD({ type: v }); } }), typeEditable && origType === 'ldp'));
     // Ghi chú khi sửa: Trang thường → vì sao chỉ xem; URL cấp 1 đang đổi loại (Chưa phân loại → Landing Page) → áp dụng cho các URL cấp 2 chưa đặt loại riêng.
     const typeNotes = [];
@@ -5659,7 +5682,7 @@ class Component extends DCLogic {
     if (typeEditable && r.level === 1 && (d.type || '') !== origType) {
       // URL cấp 2 đã đặt loại riêng (n.type) thì giữ nguyên khi cấp 1 đổi loại.
       const followers = children.filter(c => c.type === undefined || c.type === null).length;
-      if (followers) typeNotes.push('Loại này áp dụng cho ' + followers + ' URL cấp 2 bên dưới chưa đặt loại riêng.');
+      if (followers) typeNotes.push('Loại này áp dụng cho ' + followers + ' Slug cấp 2 bên dưới chưa đặt loại riêng.');
     }
     const typeField = h('div', { key: 'type' }, this.field('Thuộc loại',
       h('div', null,
@@ -5713,7 +5736,7 @@ class Component extends DCLogic {
       this.saveUrl(r, d, s1, s2);
     };
     return this.editorShell(
-      isNew ? 'Tạo URL mới' : (viewOnly ? 'Xem URL cấp ' : 'Chỉnh sửa URL cấp ') + r.level + ': ' + this.urlFull(r, all),
+      isNew ? 'Tạo URL mới' : (viewOnly ? 'Xem Slug cấp ' : 'Chỉnh sửa Slug cấp ') + r.level + ': ' + this.urlFull(r, all),
       isNew ? 'Quản lý URL' : 'Cấu trúc đường dẫn',
       () => this.closeUrlEditor(),
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -9758,7 +9781,7 @@ class Component extends DCLogic {
         stat('Tổng yêu cầu', all.length, 'total')
       ),
       h('p', { style: { margin: 0, fontSize: 13, color: 'var(--color-text-subtle)' } },
-        'Super Admin duyệt các Landing Page tạo nhánh URL cấp 1 (Level 1) mới trên fpt.vn. Duyệt xong LDP tự xuất bản; từ chối cần ghi rõ lý do để người tạo chỉnh sửa và gửi lại.'
+        'Super Admin duyệt các Landing Page tạo nhánh Slug cấp 1 (Level 1) mới trên fpt.vn. Duyệt xong LDP tự xuất bản; từ chối cần ghi rõ lý do để người tạo chỉnh sửa và gửi lại.'
       ),
       h(DS.Tabs, { value: tab, onChange: v => this.setState({ ldpApprTab: v, ldpAppr_pg: 1 }), items: [
         { value: 'pending', label: 'Chờ duyệt (' + counts.pending + ')', icon: 'clock-line' },
@@ -9875,7 +9898,7 @@ class Component extends DCLogic {
             metaItem('Số sections', String(secCount)),
             metaItem('Người gửi', rec.submittedBy)
           )
-        ), showNewFlag && h(DS.Tag, { size: 'sm', color: 'var(--color-danger)' }, 'Nhánh URL cấp 1 MỚI')),
+        ), showNewFlag && h(DS.Tag, { size: 'sm', color: 'var(--color-danger)' }, 'Nhánh Slug cấp 1 MỚI')),
         card('Slug Level 1 cần duyệt', 'marker-pin-01-line',
           h('div', { style: { textAlign: 'center', fontFamily: 'var(--font-dev)', fontSize: 22, fontWeight: 700, color: slugColor, padding: '20px 16px', background: 'var(--color-surface-sunken)', borderRadius: 12, wordBreak: 'break-all' } }, rec.lv1)
         ),
@@ -10094,6 +10117,8 @@ class Component extends DCLogic {
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
             h(DS.Switch, { checked: isOn, size: 'sm', onChange: v => {
               if (v) {
+                // URL liên kết đang tắt (ở Quản lý URL) → không cho bật LDP; công tắc controlled nên tự về Tắt.
+                if (this.ldpUrlOff(r.lv1, r.l2)) { this.ldpUrlOffModal(); return; }
                 const clash = this.ldpLiveUrlClash(r);
                 if (clash) {
                   const path = this.ldpNormalizePath((r.lv1 || '') + (r.l2 ? '/' + r.l2 : ''));
@@ -10369,7 +10394,7 @@ class Component extends DCLogic {
               if (slugBlocked) { this.setState({ ldpStep: 2 }); this.toast('danger', 'URL chưa hợp lệ', slugCheck.msg || 'Vui lòng kiểm tra lại URL Slug ở bước Thông tin trang.'); return; }
               this.confirm(
                 isResubmit ? 'Gửi duyệt lại LDP?' : 'Gửi LDP đi duyệt?',
-                h('span', null, 'Nhánh URL cấp 1 mới "', h('strong', null, curLv1), '" cần Bộ phận kiểm duyệt. Vui lòng kiểm tra kỹ chính tả slug trước khi gửi. Sau khi gửi, LDP sẽ ở trạng thái "Chờ duyệt", không thể chỉnh sửa và tạm ẩn cho đến khi được duyệt.'),
+                h('span', null, 'Nhánh Slug cấp 1 mới "', h('strong', null, curLv1), '" cần Bộ phận kiểm duyệt. Vui lòng kiểm tra kỹ chính tả slug trước khi gửi. Sau khi gửi, LDP sẽ ở trạng thái "Chờ duyệt", không thể chỉnh sửa và tạm ẩn cho đến khi được duyệt.'),
                 () => this.submitLdpForApproval()
               );
             }
@@ -10377,6 +10402,9 @@ class Component extends DCLogic {
         : h(DS.Button, { level: 'primary', size: 'sm', leadingIcon: 'check-line', disabled: slugBlocked,
             onClick: () => {
               if (slugBlocked) { this.setState({ ldpStep: 2 }); this.toast('danger', 'URL chưa hợp lệ', slugCheck.msg || 'Vui lòng kiểm tra lại URL Slug ở bước Thông tin trang.'); return; }
+              // "Hoàn thành" = xuất bản LDP (Đang chạy) → cũng không cho khi URL đã chọn đang bị tắt ở Quản lý URL.
+              { const f2u = this.state.ldpForm2 || {}, eru = this.state.ldpEditRow || {};
+                if (this.ldpUrlOff(f2u.urlSlug1 !== undefined ? f2u.urlSlug1 : (eru.lv1 || ''), f2u.urlSlug2 !== undefined ? f2u.urlSlug2 : (eru.l2 || ''))) { this.ldpUrlOffModal(); return; } }
               if (slugCheck.warn) { this.confirm('Phát hành đè lên URL cũ?', slugCheck.msg, () => this.publishLdpDirect(), true); return; }
               this.publishLdpDirect();
             }
@@ -10671,7 +10699,7 @@ class Component extends DCLogic {
                   h('div', { style: { flex: '1 1 170px', minWidth: 150 } },
                     h(DS.Select, {
                       value: slug2, options: lv2Options, error: slug2Err, disabled: !slug1 || !lv2Options.length,
-                      placeholder: !slug1 ? 'Chọn nhánh Level 1 trước' : (lv2Options.length ? 'Chọn nhánh Level 2' : 'Chưa có URL cấp 2'),
+                      placeholder: !slug1 ? 'Chọn nhánh Level 1 trước' : (lv2Options.length ? 'Chọn nhánh Level 2' : 'Chưa có Slug cấp 2'),
                       searchable: true, searchPlaceholder: 'Tìm nhánh Level 2…',
                       onChange: v => set('urlSlug2', v),
                       containerStyle: { width: '100%' }
@@ -15279,8 +15307,10 @@ class Component extends DCLogic {
               value: titleVal, maxLength: TITLE_MAX, placeholder: 'Nhập tiêu đề tin tức…',
               onChange: e => {
                 const v = ((e && e.target ? e.target.value : e) || '').slice(0, TITLE_MAX);
+                if (slugInputRef.current && slugInputRef.current.value === slugify(titleVal)) {
+                  slugInputRef.current.value = slugify(v);
+                }
                 this.setState({ newsArtTitleVal: v });
-                if (slugInputRef.current) slugInputRef.current.value = slugify(v);
               }
             }), true),
             h('div', { style: { fontSize: 11.5, color: titleAtMax ? 'var(--color-danger-text)' : 'var(--color-text-muted)', marginTop: 4 } },
@@ -15288,9 +15318,9 @@ class Component extends DCLogic {
             )
           ),
           row2(
-            h('div', null, this.field('URL Slug', h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', overflow: 'hidden', background: 'var(--color-surface-alt)', height: 'var(--control-h-md)', boxSizing: 'border-box' } },
+            h('div', null, this.field('URL Slug', h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-base)', overflow: 'hidden', background: 'var(--color-surface)', height: 'var(--control-h-md)', boxSizing: 'border-box' } },
               h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 10px', fontSize: 13, color: 'var(--color-text-subtle)', borderRight: '1px solid var(--color-border)', background: 'var(--color-surface-alt)', whiteSpace: 'nowrap' } }, '/tin-tuc/'),
-              h('input', { ref: slugInputRef, defaultValue: r ? r.slug : '', placeholder: 'url-bai-viet', disabled: true, style: { flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text-subtle)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit', cursor: 'not-allowed' } })
+              h('input', { ref: slugInputRef, defaultValue: r ? r.slug : '', placeholder: 'url-bai-viet', style: { flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 13, padding: '0 12px', fontFamily: 'inherit', cursor: 'text' } })
             ))),
             this.field('Tags', this.tagPicker(tagOpts, tagsSel, v => this.setState({ newsArtTagsSel: v }), { placeholder: 'Chọn tag từ thư viện Quản lý Tags…', searchPlaceholder: 'Tìm tag…' }))
           ),
@@ -15337,8 +15367,8 @@ class Component extends DCLogic {
             this.field('URL ảnh', h(DS.Input, { defaultValue: r ? (r.img || '') : '', placeholder: 'https://… hoặc dán link' }))
           ),
           row2(
-            this.field('Alt text', h(DS.Input, { placeholder: 'Mô tả ảnh…' }), true),
-            this.field('Caption', h(DS.Input, { placeholder: 'Chú thích…' }))
+            this.field('Alt text (SEO)', h(DS.Input, { placeholder: 'Mô tả ảnh…' }), true),
+            this.field('Ghi chú hình đại diện', h(DS.Input, { placeholder: 'Chú thích…' }))
           ),
           typeSel === 'video' && this.field('Media URL (video/embed)', h(DS.Input, { placeholder: 'URL YouTube hoặc iframe…' }))
         ),
@@ -15862,7 +15892,7 @@ class Component extends DCLogic {
             this.uploadBox('Logo', 'JPG, PNG, WEBP, SVG · ≤200KB'),
             this.uploadBox('Hình đại diện', 'JPG, PNG, WEBP, SVG · ≤200KB')
           ),
-          this.field('Alt text', h(DS.Input, { placeholder: 'Mô tả ảnh (alt)' }))
+          this.field('Alt text (SEO)', h(DS.Input, { placeholder: 'Mô tả ảnh (alt)' }))
         ),
         // 4. Cấu hình hiển thị — vị trí xuất hiện & màu nhận diện
         section(4, 'settings-01-line', 'Cấu hình hiển thị',
