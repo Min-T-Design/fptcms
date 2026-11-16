@@ -5209,6 +5209,14 @@ class Component extends DCLogic {
           msg: 'URL này từng được dùng cho chiến dịch cũ "' + clash.name + '" (đã ' + (st === 'deleted' ? 'xoá' : 'hết hạn') + '). Bạn có chắc chắn muốn phát hành đè lên URL này không?' };
       }
     }
+    // Nhánh/slug hợp lệ về mặt định dạng nhưng URL (Quản lý URL) đang trỏ tới đã bị TẮT (thường do URL tự tắt
+    // theo khi LDP bị tắt, hoặc bị tắt tay sau khi LDP đã gán) → cảnh báo vàng ngay ở bước 2, không đợi tới lúc
+    // bấm "Hoàn thành" mới biết (đã có ldpUrlOffModal() chặn ở đó — xem renderLdpStep2/ldpToggleStatus). Không
+    // chặn "Tiếp theo" (kind !== block) vì đây chỉ là báo sớm, chặn thật vẫn nằm ở modal lúc xuất bản/kích hoạt.
+    if (this.ldpUrlOff(slug1, slug2)) {
+      return { ok: true, warn: true, kind: 'urlOff',
+        msg: 'URL liên kết đang bị tắt. Vui lòng kích hoạt lại URL tại Quản lý URL hoặc đổi sang URL khác đang hoạt động.' };
+    }
     return { ok: true };
   }
   // Tìm LDP khác đang "Đang chạy" (publish) trùng URL đầy đủ với bản ghi r — dùng khi bật lại
@@ -12403,13 +12411,25 @@ class Component extends DCLogic {
         const tabMissCount = (t, badges) => (fptHasTxt(t.name) ? 0 : 1) + t.pkgs.reduce((n, p) => n + pkgMissing(p, badges).length, 0);
         // Card_3 (CFG.richFeatures): "Nội dung gói bán" là block text editor gọn (đậm/nghiêng/gạch chân/danh sách/liên kết), lưu HTML vào featuresHtml khi rời ô soạn thảo.
         class PkgRichText extends React.Component {
-          constructor(p) { super(p); this.ref = React.createRef(); this.init = p.html || ''; }
+          constructor(p) { super(p); this.ref = React.createRef(); this.init = p.html || ''; this.state = { color: '#111827' }; }
           exec(cmd, val) { if (this.ref.current) this.ref.current.focus(); document.execCommand(cmd, false, val); }
           render() {
             const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
             const tb = (content, tip, fn) => h('button', { key: tip, type: 'button', title: tip, className: 'fpt-icon-btn-anim', onMouseDown: e => e.preventDefault(), onClick: fn,
               style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 28, height: 28, border: 'none', borderRadius: 6, background: 'transparent', cursor: 'pointer', color: 'var(--color-text)', fontSize: 13, fontWeight: 700, padding: '0 5px' } }, content);
             const dv = k => h('div', { key: k, style: { width: 1, alignSelf: 'stretch', background: 'var(--color-border)', margin: '0 4px' } });
+            // Màu chữ: nút "A" + vạch màu dưới chân, giống kiểu Google Docs — input type="color" ẩn phủ kín nút để mở bảng chọn màu
+            // gốc của hệ điều hành/trình duyệt (không có DS.ColorPicker nên tái dùng đúng kỹ thuật ô "Màu nền toàn trang" ở Bước 2 LDP).
+            // onMouseDown preventDefault giữ focus/selection trong vùng soạn thảo (như các nút khác) nhưng KHÔNG chặn việc click vẫn
+            // chuyển tiếp tới input ẩn (label→input là ở sự kiện click, không phải mousedown) nên bảng chọn màu vẫn mở bình thường.
+            const colorBtn = h('label', { key: 'tc', title: 'Màu chữ', className: 'fpt-icon-btn-anim', onMouseDown: e => e.preventDefault(),
+              style: { position: 'relative', display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: 28, height: 28, borderRadius: 6, cursor: 'pointer', padding: '3px 5px 4px' } },
+              h('span', { style: { fontWeight: 800, fontSize: 12.5, lineHeight: 1, color: 'var(--color-text)' } }, 'A'),
+              h('span', { style: { display: 'block', width: 14, height: 3, borderRadius: 2, marginTop: 2, background: this.state.color, flexShrink: 0 } }),
+              h('input', { type: 'color', value: this.state.color,
+                style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 },
+                onChange: e => { const v = e.target.value; this.setState({ color: v }); this.exec('foreColor', v); } })
+            );
             return h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden', background: 'var(--color-surface)' } },
               h('div', { style: { display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', padding: '6px 8px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-alt)' } },
                 tb(h('span', { style: { fontWeight: 800 } }, 'B'), 'In đậm (Ctrl+B)', () => this.exec('bold')),
@@ -12419,7 +12439,7 @@ class Component extends DCLogic {
                 tb(h(DS.Icon, { name: 'menu-01-line', size: 15 }), 'Danh sách chấm đầu dòng', () => this.exec('insertUnorderedList')),
                 tb(h(DS.Icon, { name: 'filter-lines-line', size: 15 }), 'Danh sách đánh số', () => this.exec('insertOrderedList')),
                 dv('d2'),
-                tb(h(DS.Icon, { name: 'paperclip-line', size: 15 }), 'Chèn liên kết', () => { const url = window.prompt('Nhập URL liên kết:'); if (url) this.exec('createLink', url); }),
+                colorBtn,
                 tb(h(DS.Icon, { name: 'x-circle-line', size: 15 }), 'Xóa định dạng', () => this.exec('removeFormat'))
               ),
               h('div', { ref: this.ref, contentEditable: true, suppressContentEditableWarning: true, className: 'fpt-richtext-canvas fpt-scroll', 'data-placeholder': 'Nhập nội dung gói bán...',
@@ -12621,10 +12641,18 @@ class Component extends DCLogic {
                         if (CFG.tagText) {
                           // Danh sách nội dung tag mặc định (≥5 mục → searchable, §11). Giá trị cũ không nằm trong danh sách (dữ liệu nhập tay trước đây) vẫn được giữ và hiện ở đầu danh sách.
                           const TAG_DEFAULT_PRESETS = ['Ưu đãi HOT','Giá tốt','Bán chạy','Mới','Đề xuất','Tiết kiệm','Quà tặng'];
+                          // Tag có màu ngay cả ở loại Mặc định (đồng bộ cách hiển thị với loại Nổi bật/Badge/Tag) — mỗi nội dung có sẵn
+                          // gắn 1 màu cố định từ token màu của Design System (--*-9, không bịa màu mới); nội dung tự nhập cũ không nằm
+                          // trong danh sách dùng màu trung tính (gray-9).
+                          const TAG_DEFAULT_PRESET_COLORS = {
+                            'Ưu đãi HOT': 'var(--red-9)', 'Giá tốt': 'var(--yellow-9)', 'Bán chạy': 'var(--orange-9)',
+                            'Mới': 'var(--green-9)', 'Đề xuất': 'var(--blue-9)', 'Tiết kiệm': 'var(--gray-9)', 'Quà tặng': 'var(--fpt-9)'
+                          };
                           const kind = sel.tagKind === 'featured' ? 'featured' : 'default';
                           const tagTxt = sel.tagText || '';
                           const setP = patch => this.updPkg(tab.id,selIdx,patch);
-                          const tagTxtOpts = (tagTxt && !TAG_DEFAULT_PRESETS.includes(tagTxt) ? [tagTxt, ...TAG_DEFAULT_PRESETS] : TAG_DEFAULT_PRESETS).map(t => ({ value:t, label:t }));
+                          const defTagChip = t => h('span',{style:{display:'inline-flex',alignItems:'center',padding:'3px 10px',borderRadius:5,fontWeight:700,fontSize:10.5,textTransform:'uppercase',letterSpacing:'.4px',background:TAG_DEFAULT_PRESET_COLORS[t]||'var(--gray-9)',color:'#ffffff'}},t);
+                          const tagTxtOpts = (tagTxt && !TAG_DEFAULT_PRESETS.includes(tagTxt) ? [tagTxt, ...TAG_DEFAULT_PRESETS] : TAG_DEFAULT_PRESETS).map(t => ({ value:t, searchText:t, label:defTagChip(t) }));
                           const noteSt = {fontSize:11.5,color:'var(--color-text-subtle)',marginTop:4};
                           const badgeOpts2 = badges.map(b => ({ value:b.id, searchText:b.name, label:h('span',{style:{display:'inline-flex',alignItems:'center',padding:'3px 10px',borderRadius:5,fontWeight:700,fontSize:10.5,textTransform:'uppercase',letterSpacing:'.4px',background:b.bgColor,color:b.textColor}},b.name) }));
                           return h('div',{style:{border:'1px solid var(--color-border)',borderRadius:10,padding:14}},
