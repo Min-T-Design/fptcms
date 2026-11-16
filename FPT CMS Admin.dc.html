@@ -413,24 +413,33 @@ function FptCategoryTreePicker({ cats, selected, onChange, placeholder, searchPl
     return top;
   }, [cats]);
 
+  // `prefix`/`isLast` dựng đường nối cây (xem khối render bên dưới): prefix[j] = nhánh tổ tiên ở cột j còn
+  // node em kế tiếp hay không (vẽ tiếp đường dọc), isLast = chính node này có phải con cuối của cha không
+  // (quyết định có vẽ đường dọc nối xuống dưới chỗ gấp khúc hay dừng lại). Gốc (depth 0) không có prefix.
   const flatAllDepth = React.useMemo(() => {
     const out = [];
-    const walk = (nodes, depth) => nodes.forEach(n => { out.push({ name: n.name, depth, hasChildren: n.children.length > 0 }); walk(n.children, depth + 1); });
-    walk(roots, 0);
+    const walk = (nodes, depth, prefix) => nodes.forEach((n, i) => {
+      const isLast = i === nodes.length - 1;
+      out.push({ name: n.name, depth, hasChildren: n.children.length > 0, prefix, isLast });
+      walk(n.children, depth + 1, depth === 0 ? [] : [...prefix, !isLast]);
+    });
+    walk(roots, 0, []);
     return out;
   }, [roots]);
 
   const flatVisible = React.useMemo(() => {
     const out = [];
-    const walk = (nodes, depth) => nodes.forEach(n => {
-      out.push({ name: n.name, depth, hasChildren: n.children.length > 0 });
-      if (n.children.length && !collapsed[n.name]) walk(n.children, depth + 1);
+    const walk = (nodes, depth, prefix) => nodes.forEach((n, i) => {
+      const isLast = i === nodes.length - 1;
+      out.push({ name: n.name, depth, hasChildren: n.children.length > 0, prefix, isLast });
+      if (n.children.length && !collapsed[n.name]) walk(n.children, depth + 1, depth === 0 ? [] : [...prefix, !isLast]);
     });
-    walk(roots, 0);
+    walk(roots, 0, []);
     return out;
   }, [roots, collapsed]);
 
-  const allNames = React.useMemo(() => flatAllDepth.map(n => n.name), [flatAllDepth]);
+  // Chỉ danh mục con (lá) mới chọn được — danh mục cha chỉ dùng để nhóm/thu-mở, không tự chọn cả nhánh.
+  const allNames = React.useMemo(() => flatAllDepth.filter(n => !n.hasChildren).map(n => n.name), [flatAllDepth]);
   const toggle = o => onChange(selected.includes(o) ? selected.filter(x => x !== o) : [...selected, o]);
   const toggleCollapse = (name, e) => { e.stopPropagation(); setCollapsed(c => ({ ...c, [name]: !c[name] })); };
 
@@ -466,18 +475,44 @@ function FptCategoryTreePicker({ cats, selected, onChange, placeholder, searchPl
           ? h('div', { style: { padding: '14px 4px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy kết quả')
           : visible.map(n => {
               const isSel = selected.includes(n.name);
+              // Khi đang tìm kiếm, danh sách phẳng theo kết quả khớp nên không vẽ đường nối cây (tổ tiên có
+              // thể bị lọc mất, đường nối sẽ "lơ lửng") — chỉ thụt lề theo cấp như bản cũ.
+              const showLines = !query;
+              const cols = [];
+              if (showLines && n.depth > 0) {
+                for (let j = 0; j < n.depth - 1; j++) {
+                  cols.push(h('div', { key: 'c' + j, style: { width: 20, flexShrink: 0, position: 'relative' } },
+                    n.prefix[j] && h('div', { style: { position: 'absolute', left: 9, top: 0, bottom: 0, width: 1, background: 'var(--color-border)' } })
+                  ));
+                }
+                cols.push(h('div', { key: 'elbow', style: { width: 20, flexShrink: 0, position: 'relative' } },
+                  h('div', { style: { position: 'absolute', left: 9, top: 0, height: '50%', width: 1, background: 'var(--color-border)' } }),
+                  !n.isLast && h('div', { style: { position: 'absolute', left: 9, top: '50%', bottom: 0, width: 1, background: 'var(--color-border)' } }),
+                  // Kéo dài hết phần còn lại của cột (left:9 → sát mép phải) để nhánh ngang gần tới checkbox hơn, thay vì dừng lưng chừng.
+                  h('div', { style: { position: 'absolute', left: 9, right: 0, top: 'calc(50% - 0.5px)', height: 1, background: 'var(--color-border)' } })
+                ));
+              }
+              // Hàng lá có đường nối không cần giữ chỗ 18px cho chevron nữa (không có cột nào khác ở cùng cấp
+              // cần canh theo) — bỏ để checkbox nằm sát nhánh ngang hơn, thay vì bỏ trống phía trước nó.
+              const skipLeafSpacer = !n.hasChildren && showLines && n.depth > 0;
+              const contentPadLeft = showLines ? 4 : 8 + n.depth * 20;
               return h('div', {
-                key: n.name, onClick: () => toggle(n.name),
-                style: { display: 'flex', alignItems: 'center', gap: 6, padding: '8px 8px', paddingLeft: 8 + n.depth * 20, borderRadius: 8, cursor: 'pointer', background: isSel ? 'var(--color-accent-bg)' : 'transparent' }
+                key: n.name,
+                onClick: n.hasChildren ? (e => toggleCollapse(n.name, e)) : (() => toggle(n.name)),
+                style: { display: 'flex', alignItems: 'stretch', borderRadius: 8, cursor: 'pointer', background: isSel ? 'var(--color-accent-bg)' : 'transparent' }
               },
-                n.hasChildren
-                  ? h('button', {
-                      type: 'button', onClick: e => toggleCollapse(n.name, e),
-                      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, flexShrink: 0, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }
-                    }, h(DS.Icon, { name: collapsed[n.name] ? 'chevron-right-01-line' : 'chevron-down-line', size: 14, color: 'var(--color-text-subtle)' }))
-                  : h('span', { style: { width: 18, flexShrink: 0 } }),
-                h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggle(n.name) })),
-                h('span', { style: { fontSize: 13.5, fontWeight: n.depth === 0 ? 700 : 500 } }, n.name)
+                ...cols,
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, padding: '8px 8px 8px ' + contentPadLeft + 'px', flex: 1, minWidth: 0 } },
+                  n.hasChildren
+                    ? h('button', {
+                        type: 'button', onClick: e => toggleCollapse(n.name, e),
+                        style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, flexShrink: 0, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }
+                      }, h(DS.Icon, { name: collapsed[n.name] ? 'chevron-right-01-line' : 'chevron-down-line', size: 14, color: 'var(--color-text-subtle)' }))
+                    : (!skipLeafSpacer && h('span', { style: { width: 18, flexShrink: 0 } })),
+                  // Danh mục cha (có con) chỉ nhóm/thu-mở — không có checkbox, không tự chọn được cả nhánh.
+                  !n.hasChildren && h('div', { onClick: e => e.stopPropagation() }, h(DS.Checkbox, { checked: isSel, onChange: () => toggle(n.name) })),
+                  h('span', { style: { fontSize: 13.5, fontWeight: n.depth === 0 ? 700 : 500 } }, n.name)
+                )
               );
             })
       ),
@@ -15392,7 +15427,6 @@ class Component extends DCLogic {
     this.setState(s => ({
       newsArticleEdit: r || {},
       newsArtCatsSel: r ? [...(r.cats || [])] : [],
-      newsArtCatPrimary: r ? (r.catPrimary || '') : '',
       newsArtCatErr: false,
       newsArtTagsSel: r ? [...(r.tags || [])] : [],
       newsArtTitleVal: r ? (r.title || '') : '',
@@ -15411,7 +15445,7 @@ class Component extends DCLogic {
   }
   closeArticleEditor() {
     this.setState({
-      newsArticleEdit: null, newsArtCatsSel: undefined, newsArtCatPrimary: undefined, newsArtCatErr: false,
+      newsArticleEdit: null, newsArtCatsSel: undefined, newsArtCatErr: false,
       newsArtTagsSel: undefined, newsArtTitleVal: undefined, newsArtSapoVal: undefined, newsArtTypeSel: undefined,
       newsArtSeoTitleVal: undefined, newsArtSeoDescVal: undefined,
       newsArtChatEnabled: undefined, newsArtLeadsEnabled: undefined, newsArtShowHome: undefined, newsArtShowInCat: undefined,
@@ -15454,7 +15488,6 @@ class Component extends DCLogic {
     const priorityCat = this.state.newsArtPriorityCat != null ? this.state.newsArtPriorityCat : '0';
     const typeSel = this.state.newsArtTypeSel != null ? this.state.newsArtTypeSel : (r ? (r.type || '') : '');
     const catsSel = this.state.newsArtCatsSel || [];
-    const catPrimary = this.state.newsArtCatPrimary || '';
     const catErr = !!this.state.newsArtCatErr;
     const tagOpts = this.NEWS_TAGS().map(t => t.name);
     const tagsSel = this.state.newsArtTagsSel || [];
@@ -15513,18 +15546,12 @@ class Component extends DCLogic {
             this.field('Danh mục', this.catTreePicker(this.NEWS_CATS(), catsSel, v => {
               this.setState({
                 newsArtCatsSel: v,
-                newsArtCatErr: v.length ? false : catErr,
-                newsArtCatPrimary: v.includes(catPrimary) ? catPrimary : (v[0] || '')
+                newsArtCatErr: v.length ? false : catErr
               });
             }, { placeholder: 'Chọn một hoặc nhiều danh mục…', searchPlaceholder: 'Tìm danh mục…' }), true),
             catErr && h('div', { className: 'fpt-req-err-msg' }, 'Chọn ít nhất 1 danh mục.')
           ),
-          row2(
-            this.field('Danh mục chính', h(DS.Select, {
-              options: catsSel.length ? catsSel.map(c => ({ value: c, label: c })) : [{ value: '', label: '— Chọn danh mục ở trên trước —' }],
-              value: catPrimary, disabled: !catsSel.length, searchable: catsSel.length >= 5, searchPlaceholder: 'Tìm danh mục…',
-              onChange: v => this.setState({ newsArtCatPrimary: v })
-            }), true),
+          h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } },
             this.field('Ngày giờ đăng bài', h('button', { type: 'button', onClick: () => openDateField(new Date().getHours()),
                 style: Object.assign({}, scheduleBtnStyle, { color: (this.state.form || {}).newsDate ? 'var(--color-text)' : 'var(--color-text-muted)' }) },
                 h(DS.Icon, { name: 'calendar-line', size: 15, color: 'var(--color-accent)' }),
@@ -15579,7 +15606,7 @@ class Component extends DCLogic {
               )
             )
           ),
-          // 5. Tiện ích & chuyển đổi — kế thừa Popup/Chat mặc định từ Danh mục chính, bài viết chỉ bật/tắt
+          // 5. Tiện ích & chuyển đổi — bài viết chỉ bật/tắt Chat/Popup, không còn chọn "Danh mục chính" riêng
           section(5, 'message-chat-circle-line', 'Tiện ích & chuyển đổi',
             h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
               h('div', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Bóng Chat tư vấn'),
