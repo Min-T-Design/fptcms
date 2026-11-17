@@ -4897,7 +4897,7 @@ class Component extends DCLogic {
             h('div', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 } }, u.name))),
           live.length > MAXROW ? h('div', { style: { padding: '8px 12px', fontSize: 12, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, '+ ' + (live.length - MAXROW) + ' Landing Page khác') : null),
         h('div', { style: { display: 'flex', justifyContent: 'flex-end', marginTop: 4 } },
-          h(DS.Button, { level: 'primary', onClick: () => this.closeModal() }, 'Đã hiểu')))
+          h(DS.Button, { level: 'primary', onClick: () => this.closeModal() }, 'Đóng')))
     });
   }
   LDP_TPL_DATA() {
@@ -9235,14 +9235,14 @@ class Component extends DCLogic {
   }
   openOmisellEditor(r) {
     this.setState({
-      omisellEditor: r, omisellNameErr: '', omisellCreatedId: null, omisellResultLoading: false,
+      omisellEditor: r, omisellNameErr: '',
       omisellDraft: r
         ? { name: r.name, campaignSource: r.campaignSource || '', utmSource: r.utmSource || '', utmMedium: r.utmMedium || '', utmCampaign: r.utmCampaign || '', utmTerm: r.utmTerm || '', utmContent: r.utmContent || '', code: r.code }
         : { name: '', campaignSource: '', utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '', code: this.genOmisellCode() }
     });
   }
   closeOmisellEditor() {
-    this.setState({ omisellEditor: undefined, omisellDraft: null, omisellNameErr: '', omisellCreatedId: null, omisellResultLoading: false });
+    this.setState({ omisellEditor: undefined, omisellDraft: null, omisellNameErr: '' });
   }
   openOmisellDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -9296,11 +9296,9 @@ class Component extends DCLogic {
     const columns = [
       { key: 'stt', header: '#', width: 44, align: 'center',
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (pg - 1) * sz + sliced.indexOf(r) + 1) },
-      { key: 'name', header: 'campaign_name', width: 280, render: (_, r) => h('div', null,
-          h('div', { style: { fontWeight: 700, fontSize: 13.5 } }, r.name),
-          h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 2 } }, r.code)
-        ) },
+      { key: 'name', header: 'campaign_name', width: 280, render: (_, r) => h('div', { style: { fontWeight: 700, fontSize: 13.5 } }, r.name) },
       { key: 'usage', header: 'Được dùng bởi', width: 220, render: (_, r) => usageCell(r) },
+      { key: 'campaignSource', header: 'campaign_source', width: 160, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5 } }, r.campaignSource || '—') },
       { key: 'utmSource', header: 'utm_source', width: 140, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5 } }, r.utmSource || '—') },
       { key: 'utmMedium', header: 'utm_medium', width: 140, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5 } }, r.utmMedium || '—') },
       { key: 'utmCampaign', header: 'utm_campaign', width: 140, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5 } }, r.utmCampaign || '—') },
@@ -9354,18 +9352,14 @@ class Component extends DCLogic {
       const dup = this.getOmisellCampaignList().find(c => c.name.trim().toLowerCase() === name.toLowerCase() && (!r || c.id !== r.id));
       this.setState({ omisellNameErr: dup ? 'Tên "' + name + '" đã tồn tại. Vui lòng đổi tên khác.' : '' });
     };
-    const justCreated = isNew && this.state.omisellCreatedId != null;
-    const showOutput = !isNew || justCreated;
     const NAME_MAX = 255;
-    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num, id: num === 3 ? 'omisell-result-card' : undefined },
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
         h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
       ),
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
     );
-    const outputLabel = lbl => h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, lbl);
-    const resultLoading = !!this.state.omisellResultLoading;
     return this.editorShell(
       isNew ? 'Tạo chiến dịch' : 'Chỉnh sửa chiến dịch: ' + r.name, 'Chiến dịch marketing gắn UTM theo dõi hiệu quả', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -9389,15 +9383,11 @@ class Component extends DCLogic {
             this.field('utm_term', h(DS.Input, { value: d.utmTerm, placeholder: 'Nhập utm_term…', onChange: e => setD({ utmTerm: this.omisellUtmSanitize(e && e.target ? e.target.value : e) }), onBlur: () => setD({ utmTerm: this.omisellUtmTrimEdge(d.utmTerm) }) })),
             this.field('utm_content', h(DS.Input, { value: d.utmContent, placeholder: 'Nhập utm_content…', onChange: e => setD({ utmContent: this.omisellUtmSanitize(e && e.target ? e.target.value : e) }), onBlur: () => setD({ utmContent: this.omisellUtmTrimEdge(d.utmContent) }) }))
           )
-        ),
-        showOutput && section(3, 'lock-01-line', 'Kết quả',
-          h('div', null, outputLabel('Mã chiến dịch'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: 220, height: 40, radius: 8 }) : this.omisellCopyValue(d.code, 'Sao chép mã chiến dịch')),
-          h('div', null, outputLabel('Nội dung'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: '100%', height: 40, radius: 8 }) : this.omisellCopyValue(this.omisellTrackingLink(d), 'Sao chép link tracking')),
-          h('div', null, outputLabel('Trạng thái'), resultLoading ? h(DS.Skeleton, { shape: 'rect', width: 90, height: 24, radius: 999 }) : this.omisellStatusBadge(this.omisellEffStatus(d)))
         )
+        // Tạm ẩn block "3. Kết quả" (mã chiến dịch/link/trạng thái) — mã chiến dịch đã hiển thị
+        // dưới campaign_name ngay trong bảng danh sách (renderOmisellList, cột 'name').
       ),
       () => {
-        if (justCreated) { back(); return; }
         const name = (d.name || '').trim();
         const dup = this.getOmisellCampaignList().find(c => c.name.trim().toLowerCase() === name.toLowerCase() && (!r || c.id !== r.id));
         if (dup) {
@@ -9417,16 +9407,9 @@ class Component extends DCLogic {
             this.toast('success', 'Đã lưu', 'Chiến dịch đã được cập nhật.');
           } else {
             const newId = Math.max(0, ...list.map(x => x.id)) + 1;
-            this.setState({
-              omisellCampaignListData: list.concat([Object.assign({ id: newId, active: true, createdAt: this.nowStr(), createdBy: 'Admin User' }, rec)]),
-              omisellCreatedId: newId,
-              omisellResultLoading: true
-            }, () => {
-              const el = document.getElementById('omisell-result-card');
-              if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              setTimeout(() => this.setState({ omisellResultLoading: false }), 700);
-            });
-            this.toast('success', 'Đã tạo', 'Chiến dịch mới đã được tạo. Xem kết quả bên dưới.');
+            this.setState({ omisellCampaignListData: list.concat([Object.assign({ id: newId, active: true, createdAt: this.nowStr(), createdBy: 'Admin User' }, rec)]) });
+            back();
+            this.toast('success', 'Đã tạo', 'Chiến dịch mới đã được tạo.');
           }
         };
         // Chiến dịch đang có Landing Page "Đang chạy" tham chiếu → cảnh báo đồng bộ trước khi lưu thật (giống urlConfirmEdit).
@@ -9436,7 +9419,7 @@ class Component extends DCLogic {
         }
         doSave();
       },
-      isNew ? (justCreated ? 'Quay lại danh sách' : 'Tạo chiến dịch') : 'Cập nhật'
+      isNew ? 'Tạo chiến dịch' : 'Cập nhật'
     );
   }
 
@@ -11307,7 +11290,10 @@ class Component extends DCLogic {
       s.tplLabel = SRC_LABEL[s.source] || 'Dùng chung';
     });
     const collator = new Intl.Collator('vi');
-    return secs.sort((a, b) => collator.compare(a.libLabel, b.libLabel));
+    // Sắp A→Z theo chữ thật của tên (bỏ dấu "[" "]" khi so sánh) để các section có tiền tố "[Card_n]" nằm đúng vị trí chữ cái
+    // của chúng (vd. "Card..." nằm cạnh "Câu...", "Chi..." — không bị dồn hết lên đầu danh sách chỉ vì có dấu ngoặc vuông).
+    const sortKey = s => (s.libLabel || s.name).replace(/[[\]]/g, '');
+    return secs.sort((a, b) => collator.compare(sortKey(a), sortKey(b)));
   }
   // Panel "Thư viện Sections" (tìm kiếm + danh sách kéo/nhấn + để thêm). canvasSecs = các section đang có trên trang (để hiện badge xN); onAdd(sec) = thêm 1 section vào cuối trang.
   // opts (chỉ bước "Nội dung sections" của template): { tplLabel, tplSecs = section gốc của template, onRestore(sec) } → gom section gốc đã bị xóa khỏi trang
