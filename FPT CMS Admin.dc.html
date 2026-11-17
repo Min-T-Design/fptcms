@@ -15227,11 +15227,6 @@ class Component extends DCLogic {
     { id: 6, title: 'Hướng dẫn cài đặt FPT Camera IQ3 tại nhà chỉ trong 5 phút', slug: 'huong-dan-cai-dat-camera-iq3', cats: ['Tin tổng hợp'], catPrimary: 'Tin tổng hợp', tags: ['camera'], type: 'guide', author: 'Phương Nam', channel: 'fpt-camera', lang: 'vi', status: 'hidden', featured: false, showHome: false, showInCat: true, priorityHome: 0, priorityCat: 0, chatEnabled: true, leadsPopupEnabled: true, views: 198, date: '01/05/2026', img: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=260&fit=crop', sapo: 'Video hướng dẫn đơn giản giúp bạn tự lắp đặt FPT Camera IQ3 tại nhà mà không cần kỹ thuật viên.' },
     { id: 7, title: 'Ưu đãi lắp đặt Internet LUX dịp cuối năm 2026', slug: 'uu-dai-lap-dat-internet-lux-cuoi-nam-2026', cats: ['Khuyến mại'], catPrimary: 'Khuyến mại', tags: ['khuyen-mai', 'internet'], type: 'promotion', author: 'Admin', channel: 'fpt-telecom', lang: 'vi', status: 'scheduled', featured: false, showHome: true, showInCat: true, priorityHome: 1, priorityCat: 1, chatEnabled: true, leadsPopupEnabled: true, views: 0, date: '', scheduledAt: '20/12/2026 08:00', img: '', sapo: 'Ưu đãi lắp đặt Internet LUX tốc độ cao dành riêng cho khách hàng đăng ký mới dịp cuối năm, sẽ công bố chính thức vào ngày khởi chạy.' },
   ]; }
-  CHAT_CHANNELS() { return [
-    { value: 'zalo-telecom', label: 'Zalo Official Account (FPT Telecom)' },
-    { value: 'livechat-fptvn', label: 'Livechat trực tuyến trên fpt.vn' },
-    { value: 'hotline-float', label: 'Nút Gọi Hotline Nổi (1900 6600)' },
-  ]; }
   // Mẫu popup mặc định cho Danh mục (Hành vi & Gói dịch vụ) — danh sách riêng, không dùng chung this.POPUPS()
   // vì đây là các mẫu hành vi kích hoạt popup (Flash Sale/Exit-Intent/Scroll/Minigame), không phải popup cụ thể.
   NEWS_CAT_DEFAULT_POPUPS() { return [
@@ -15239,12 +15234,6 @@ class Component extends DCLogic {
     { value: 'exit-intent', label: '[Exit-Intent] Giữ Chân Khách Hàng Khi Rời Trang' },
     { value: 'scroll-50', label: '[Scroll 50%] Mời Tư Vấn Gói Cước Tiết Kiệm' },
     { value: 'minigame', label: '[Minigame] Vòng Quay May Mắn Trúng Thưởng' },
-  ]; }
-  // Tần suất hiển thị popup mặc định cho Danh mục — riêng với POPUP_FREQUENCIES() (dùng cho module Popup gốc).
-  NEWS_CAT_POPUP_FREQUENCIES() { return [
-    { value: 'session-cap', label: '1 lần / phiên duyệt (Session cap)' },
-    { value: 'every-24h', label: 'Mỗi 24 giờ một lần' },
-    { value: 'always-test', label: 'Luôn kích hoạt (Dành cho kiểm thử)' },
   ]; }
   NEWS_CONTENT_TYPES() { return [
     { value: 'article', label: 'Tin bài / Bài viết' },
@@ -15257,27 +15246,27 @@ class Component extends DCLogic {
   // cố ý khác tên "Game" (con của Tin tức) dù wireframe ghi trùng — toàn hệ thống (tagPicker, catPrimary,
   // bộ lọc) nhận diện danh mục qua `name` nên 2 node trùng tên sẽ dính chọn chung, phải tách tên.
   NEWS_CATS() { return [
-    { id: 901, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', count: 123456, status: 'active', parent: 'Tin tức', layout: 'grid', lang: 'vi', order: 15, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 1, name: 'Tin tức', slug: 'tin-tuc', count: 68, status: 'active', parent: '', layout: 'grid', lang: 'vi', order: 1, defaultPopupId: 'flash-sale', defaultPopupFreq: 'session-cap', defaultChatChannel: 'zalo-telecom' },
-    { id: 2, name: 'Blog', slug: 'blog', count: 14, status: 'active', parent: '', layout: 'list', lang: 'vi', order: 2, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 3, name: 'Tin nổi bật', slug: 'tin-noi-bat', count: 9, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 1, defaultPopupId: 'exit-intent', defaultPopupFreq: 'always-test', defaultChatChannel: 'livechat-fptvn' },
-    { id: 4, name: 'Sản phẩm hot', slug: 'san-pham-hot', count: 7, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 2, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 5, name: 'Khuyến mại', slug: 'khuyen-mai', count: 8, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 3, defaultPopupId: 'scroll-50', defaultPopupFreq: 'session-cap', defaultChatChannel: 'zalo-telecom' },
-    { id: 6, name: 'Tin báo chí', slug: 'tin-bao-chi', count: 4, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 4, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 7, name: 'Tin tổng hợp', slug: 'tin-tong-hop', count: 6, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 5, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 8, name: 'Khách hàng nói về chúng tôi', slug: 'khach-hang-noi-ve-chung-toi', count: 3, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 6, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 9, name: 'Viễn thông công nghệ', slug: 'vien-thong-cong-nghe', count: 5, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 7, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 10, name: 'Giải trí', slug: 'giai-tri', count: 4, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 8, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 11, name: 'Camera', slug: 'camera', count: 2, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 9, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 12, name: 'Thể thao', slug: 'the-thao', count: 3, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 10, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 13, name: 'Game', slug: 'game', count: 2, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 11, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 14, name: 'Đời sống', slug: 'doi-song', count: 3, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 12, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 15, name: 'Tin FPT', slug: 'tin-fpt', count: 6, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 13, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: 'hotline-float' },
-    { id: 16, name: 'Khách hàng thân thiết', slug: 'khach-hang-than-thiet', count: 4, status: 'active', parent: 'Tin tức', layout: 'default', lang: 'vi', order: 14, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 17, name: 'Viễn thông', slug: 'vien-thong', count: 3, status: 'active', parent: 'Blog', layout: 'default', lang: 'vi', order: 1, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 18, name: 'Truyền hình', slug: 'truyen-hinh', count: 2, status: 'active', parent: 'Blog', layout: 'default', lang: 'vi', order: 2, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 19, name: 'Trò chơi', slug: 'tro-choi', count: 2, status: 'active', parent: 'Blog', layout: 'default', lang: 'vi', order: 3, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
-    { id: 20, name: 'Công nghệ', slug: 'cong-nghe', count: 0, status: 'inactive', parent: 'Blog', layout: 'default', lang: 'vi', order: 4, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 901, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', count: 123456, status: 'active', parent: 'Tin tức', layout: 'Khuyến mại tổng hợp', lang: 'vi', order: 15, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 1, name: 'Tin tức', slug: 'tin-tuc', count: 68, status: 'active', parent: '', layout: 'Tin tức', lang: 'vi', order: 1, defaultPopupId: 'flash-sale', defaultPopupFreq: 'session-cap', defaultChatChannel: 'zalo-telecom' },
+    { id: 2, name: 'Blog', slug: 'blog', count: 14, status: 'active', parent: '', layout: 'Tin E-Magazine', lang: 'vi', order: 2, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 3, name: 'Tin nổi bật', slug: 'tin-noi-bat', count: 9, status: 'active', parent: 'Tin tức', layout: 'Tin tức', lang: 'vi', order: 1, defaultPopupId: 'exit-intent', defaultPopupFreq: 'always-test', defaultChatChannel: 'livechat-fptvn' },
+    { id: 4, name: 'Sản phẩm hot', slug: 'san-pham-hot', count: 7, status: 'active', parent: 'Tin tức', layout: 'Sản phẩm/Dịch vụ', lang: 'vi', order: 2, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 5, name: 'Khuyến mại', slug: 'khuyen-mai', count: 8, status: 'active', parent: 'Tin tức', layout: 'Khuyến mại', lang: 'vi', order: 3, defaultPopupId: 'scroll-50', defaultPopupFreq: 'session-cap', defaultChatChannel: 'zalo-telecom' },
+    { id: 6, name: 'Tin báo chí', slug: 'tin-bao-chi', count: 4, status: 'active', parent: 'Tin tức', layout: 'Tin tức', lang: 'vi', order: 4, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 7, name: 'Tin tổng hợp', slug: 'tin-tong-hop', count: 6, status: 'active', parent: 'Tin tức', layout: 'Tin tức', lang: 'vi', order: 5, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 8, name: 'Khách hàng nói về chúng tôi', slug: 'khach-hang-noi-ve-chung-toi', count: 3, status: 'active', parent: 'Tin tức', layout: 'Khách hàng - Đối tác', lang: 'vi', order: 6, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 9, name: 'Viễn thông công nghệ', slug: 'vien-thong-cong-nghe', count: 5, status: 'active', parent: 'Tin tức', layout: 'Tin tức', lang: 'vi', order: 7, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 10, name: 'Giải trí', slug: 'giai-tri', count: 4, status: 'active', parent: 'Tin tức', layout: 'Tin tức', lang: 'vi', order: 8, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 11, name: 'Camera', slug: 'camera', count: 2, status: 'active', parent: 'Tin tức', layout: 'Sản phẩm/Dịch vụ', lang: 'vi', order: 9, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 12, name: 'Thể thao', slug: 'the-thao', count: 3, status: 'active', parent: 'Tin tức', layout: 'Tin tức', lang: 'vi', order: 10, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 13, name: 'Game', slug: 'game', count: 2, status: 'active', parent: 'Tin tức', layout: 'Tin tức', lang: 'vi', order: 11, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 14, name: 'Đời sống', slug: 'doi-song', count: 3, status: 'active', parent: 'Tin tức', layout: 'Tin tức', lang: 'vi', order: 12, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 15, name: 'Tin FPT', slug: 'tin-fpt', count: 6, status: 'active', parent: 'Tin tức', layout: 'Tin tức', lang: 'vi', order: 13, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: 'hotline-float' },
+    { id: 16, name: 'Khách hàng thân thiết', slug: 'khach-hang-than-thiet', count: 4, status: 'active', parent: 'Tin tức', layout: 'Khách hàng - Đối tác', lang: 'vi', order: 14, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 17, name: 'Viễn thông', slug: 'vien-thong', count: 3, status: 'active', parent: 'Blog', layout: 'Tin E-Magazine', lang: 'vi', order: 1, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 18, name: 'Truyền hình', slug: 'truyen-hinh', count: 2, status: 'active', parent: 'Blog', layout: 'Tin E-Magazine', lang: 'vi', order: 2, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 19, name: 'Trò chơi', slug: 'tro-choi', count: 2, status: 'active', parent: 'Blog', layout: 'Tin E-Magazine', lang: 'vi', order: 3, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
+    { id: 20, name: 'Công nghệ', slug: 'cong-nghe', count: 0, status: 'inactive', parent: 'Blog', layout: 'Tin E-Magazine', lang: 'vi', order: 4, defaultPopupId: null, defaultPopupFreq: '', defaultChatChannel: '' },
   ]; }
   NEWS_TAGS() { return [
     { id: 901, name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026-dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', count: 123456, status: 'active' },
@@ -15312,7 +15301,7 @@ class Component extends DCLogic {
         { value: 'articles', label: 'Danh sách Bài viết', icon: 'file-doc-line' },
         { value: 'cats', label: 'Danh mục', icon: 'folder-line' },
         { value: 'tags', label: 'Quản lý Tags', icon: 'star-01-line' },
-        { value: 'mapping', label: 'Cấu hình Thông tin hay', icon: 'stars-01-line' },
+        // { value: 'mapping', label: 'Cấu hình Thông tin hay', icon: 'stars-01-line' }, // tạm ẩn — chưa làm ở phase này
       ] }),
       body
     );
@@ -15469,6 +15458,7 @@ class Component extends DCLogic {
       newsArtSeoDescVal: r ? (r.metaDesc || '') : '',
       newsArtChatEnabled: r ? r.chatEnabled !== false : true,
       newsArtLeadsEnabled: r ? r.leadsPopupEnabled !== false : true,
+      newsArtApplyPkg: r ? r.applyPkg !== false : true,
       newsArtShowHome: r ? r.showHome !== false : true,
       newsArtShowInCat: r ? r.showInCat !== false : true,
       newsArtPriorityHome: r ? String(r.priorityHome != null ? r.priorityHome : (r.priority || 0)) : '0',
@@ -15481,7 +15471,7 @@ class Component extends DCLogic {
       newsArticleEdit: null, newsArtCatsSel: undefined, newsArtCatErr: false,
       newsArtTagsSel: undefined, newsArtTitleVal: undefined, newsArtSapoVal: undefined, newsArtTypeSel: undefined,
       newsArtSeoTitleVal: undefined, newsArtSeoDescVal: undefined,
-      newsArtChatEnabled: undefined, newsArtLeadsEnabled: undefined, newsArtShowHome: undefined, newsArtShowInCat: undefined,
+      newsArtChatEnabled: undefined, newsArtLeadsEnabled: undefined, newsArtApplyPkg: undefined, newsArtShowHome: undefined, newsArtShowInCat: undefined,
       newsArtPriorityHome: undefined, newsArtPriorityCat: undefined,
     });
   }
@@ -15648,6 +15638,13 @@ class Component extends DCLogic {
             h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
               h('div', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Popup thu Leads'),
               h(DS.Switch, { checked: this.state.newsArtLeadsEnabled !== false, onChange: v => this.setState({ newsArtLeadsEnabled: v }) })
+            ),
+            h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+              h('div', { style: { display: 'flex', alignItems: 'baseline', gap: 8 } },
+                h('div', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Gói bán áp dụng'),
+                h('span', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Kế thừa từ Chuyên mục')
+              ),
+              h(DS.Switch, { checked: this.state.newsArtApplyPkg !== false, onChange: v => this.setState({ newsArtApplyPkg: v }) })
             )
           )
         ),
@@ -15966,7 +15963,6 @@ class Component extends DCLogic {
   openNewsCatDetail(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const popupName = r.defaultPopupId ? (this.NEWS_CAT_DEFAULT_POPUPS().find(p => p.value === r.defaultPopupId) || {}).label : null;
-    const chatLabel = r.defaultChatChannel ? (this.CHAT_CHANNELS().find(c => c.value === r.defaultChatChannel) || {}).label : null;
     this.openDrawer({ title: r.name, subtitle: 'Danh mục bài viết', width: 460,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
         this.detailRow('Tên danh mục', r.name), this.detailRow('Slug', r.slug),
@@ -15974,7 +15970,6 @@ class Component extends DCLogic {
         this.detailRow('Thứ tự', String(r.order || 0)),
         this.detailRow('Số bài viết', String(r.count)), this.detailRow('Tình trạng', this.statusBadge(r.status)),
         this.detailRow('Popup thu Leads mặc định', popupName || '—'),
-        this.detailRow('Kênh Chat tư vấn mặc định', chatLabel || '—'),
         ...this.auditRows(r)
       ),
       footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
@@ -16009,23 +16004,20 @@ class Component extends DCLogic {
       if (search && !pkgLbl.match(s, search)) return false;
       return true;
     });
+    const MAX_SKU = 4;
+    const limitReached = selected.length >= MAX_SKU;
     const toggleSku = code => {
       const set = new Set(selected);
-      set.has(code) ? set.delete(code) : set.add(code);
-      this.setState({ newsCatSkus: Array.from(set) });
-    };
-    // "Chọn tất cả" áp dụng cho danh sách đang lọc (tab nguồn + danh mục + ô tìm kiếm); gói đã chọn ở danh mục khác được giữ nguyên.
-    const allChk = filteredSkus.length > 0 && filteredSkus.every(x => selected.includes(x.code));
-    const toggleAll = v => {
-      const set = new Set(selected);
-      filteredSkus.forEach(x => v ? set.add(x.code) : set.delete(x.code));
+      if (set.has(code)) { set.delete(code); }
+      else { if (set.size >= MAX_SKU) { this.toast('warning', 'Đã đạt giới hạn', 'Chỉ được chọn tối đa ' + MAX_SKU + ' gói dịch vụ.'); return; } set.add(code); }
       this.setState({ newsCatSkus: Array.from(set) });
     };
     const renderSkuItem = (sku) => {
       const isSel = selected.includes(sku.code);
-      return h('div', { key: sku.code, onClick: () => toggleSku(sku.code), style: { display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2, background: isSel ? 'var(--color-accent-bg)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent' } },
+      const isLocked = !isSel && limitReached;
+      return h('div', { key: sku.code, onClick: () => !isLocked && toggleSku(sku.code), style: { display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderRadius: 8, cursor: isLocked ? 'not-allowed' : 'pointer', marginBottom: 2, opacity: isLocked ? 0.5 : 1, background: isSel ? 'var(--color-accent-bg)' : 'transparent', border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent' } },
         h('div', { style: { paddingTop: 2 }, onClick: e => e.stopPropagation() },
-          h(DS.Checkbox, { checked: isSel, onChange: () => toggleSku(sku.code) })
+          h(DS.Checkbox, { checked: isSel, disabled: isLocked, onChange: () => toggleSku(sku.code) })
         ),
         h('div', { style: { flex: 1, minWidth: 0 } },
           h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 1 } },
@@ -16059,11 +16051,8 @@ class Component extends DCLogic {
           }, t.label);
         })
       ),
-      filteredSkus.length > 0 && h('div', { style: { padding: '0 10px', marginBottom: 8 } },
-        h(DS.Checkbox, { label: 'Chọn tất cả', checked: allChk, onChange: toggleAll })
-      ),
       h('div', { style: { marginBottom: 8 } },
-        h(DS.Input, { placeholder: 'Lọc tên hiển thị/route name...', leadingIcon: 'search-medium-line', value: this.state.newsCatSkuSearch || '', onChange: e => this.setState({ newsCatSkuSearch: e.target ? e.target.value : e }) })
+        h(DS.Input, { placeholder: 'Tìm theo tên hiển thị/route name', leadingIcon: 'search-medium-line', value: this.state.newsCatSkuSearch || '', onChange: e => this.setState({ newsCatSkuSearch: e.target ? e.target.value : e }) })
       ),
       h('div', { style: { fontSize: 9.5, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 } }, 'Danh mục'),
       h('div', { style: { display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' } },
@@ -16072,7 +16061,7 @@ class Component extends DCLogic {
       h('div', { className: 'fpt-scroll', style: { display: 'flex', flexDirection: 'column', maxHeight: 380, overflowY: 'auto', overflowX: 'hidden' } },
         filteredSkus.length ? filteredSkus.map(sku => renderSkuItem(sku)) : h('div', { style: { padding: '16px 6px', textAlign: 'center', fontSize: 12.5, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy SKU phù hợp.')
       ),
-      selected.length > 0 && h('div', { style: { marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border)', fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Đã chọn ' + selected.length + ' gói.')
+      h('div', { style: { marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--color-border)', fontSize: 12, fontWeight: limitReached ? 700 : 400, color: limitReached ? 'var(--color-danger-text)' : 'var(--color-text-subtle)' } }, 'Đã chọn ' + selected.length + '/' + MAX_SKU + ' gói.' + (limitReached ? ' Đã đạt giới hạn.' : ''))
     );
   }
   renderNewsCatEditor(r) {
@@ -16095,6 +16084,7 @@ class Component extends DCLogic {
     );
     const catColor = this.state.newsCatColor !== undefined ? this.state.newsCatColor : (r ? (r.color || '') : '');
     const popupOpts = [{ value: '', label: '— Không cấu hình —' }, ...this.NEWS_CAT_DEFAULT_POPUPS()];
+    const layoutOpts = ['Tin F-Safe', 'Tin tức', 'Địa điểm giao dịch', 'Danh sách báo cáo', 'Danh sách câu hỏi thường gặp', 'Danh sách loại báo cáo', 'Danh sách tài liệu', 'Danh sách video', 'Dịch vụ tổng hợp', 'Hướng dẫn', 'Hướng dẫn cài đặt', 'Hướng dẫn thủ tục', 'Hỗ trợ', 'Khuyến mại', 'Khuyến mại tổng hợp', 'Khách hàng - Đối tác', 'Khách hàng cá nhân', 'Khách hàng doanh nghiệp', 'Nhóm câu hỏi thường gặp', 'Sản phẩm/Dịch vụ', 'Thông tin thanh toán', 'Tin E-Magazine'].map(v => ({ value: v, label: v }));
     return this.editorShell(
       isNew ? 'Thêm Danh Mục mới' : 'Chỉnh sửa: ' + r.name, '', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -16113,7 +16103,7 @@ class Component extends DCLogic {
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 } },
             this.field('Danh mục cha', h(DS.Select, { options: parentOpts, defaultValue: r ? (r.parent || '') : '', placeholder: '— Danh mục cha —', searchable: true, searchPlaceholder: 'Tìm danh mục cha…' })),
-            this.field('Kiểu giao diện', h(DS.Select, { options: [{ value: 'default', label: 'Mặc định' }, { value: 'grid', label: 'Grid 3 cột' }, { value: 'list', label: 'Danh sách' }], defaultValue: r ? (r.layout || '') : '', placeholder: 'Chọn kiểu giao diện…' }))
+            this.field('Kiểu giao diện', h(DS.Select, { options: layoutOpts, defaultValue: r ? (r.layout || '') : '', placeholder: 'Chọn kiểu giao diện…', searchable: true, searchPlaceholder: 'Tìm kiểu giao diện…' }))
           ),
           h('div', { style: { display: 'grid', gridTemplateColumns: '160px 100px', gap: 14 } },
             this.field('Ngôn ngữ', h(DS.Select, { options: [{ value: 'vi', label: 'Tiếng Việt' }, { value: 'en', label: 'Tiếng Anh' }], defaultValue: r ? (r.lang || '') : '', placeholder: 'Chọn ngôn ngữ…' })),
@@ -16161,23 +16151,20 @@ class Component extends DCLogic {
             this.field('Từ khoá', h(DS.Input, { placeholder: 'Từ khoá liên quan, phân cách bằng dấu phẩy' }))
           )
         }] }),
-        // 5. Hành vi & Gói dịch vụ — gộp 1 block; Gói dịch vụ bên trái rộng cố định vừa đủ cho picker SKU
-        // (cùng tỉ lệ minmax(360,420) 1fr đang dùng ở PTTT — renderPayEditor), Hành vi chuyển đổi mặc định bên phải giãn hết phần còn lại
+        // 5. Hành vi & Gói dịch vụ — gộp 1 block, bố cục 50/50; Hành vi chuyển đổi mặc định bên trái, Gói dịch vụ áp dụng bên phải
         section(5, 'message-chat-circle-line', 'Hành vi & Gói dịch vụ',
-          h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(360px, 420px) 1fr', gap: 20 } },
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr minmax(360px, 420px)', gap: 20 } },
             h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14, paddingRight: 20, borderRight: '1px solid var(--color-border)' } },
+              h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Hành vi chuyển đổi mặc định'),
+              h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Bài viết con thuộc danh mục này khi bật "Popup thu Leads" sẽ tự động kế thừa cấu hình dưới đây.'),
+              this.field('Popup thu Leads mặc định', h(DS.Select, { options: popupOpts, defaultValue: r && r.defaultPopupId ? String(r.defaultPopupId) : '', placeholder: '— Không cấu hình —', searchable: true, searchPlaceholder: 'Tìm popup…' }))
+            ),
+            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
               h('div', null,
                 h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Gói dịch vụ áp dụng'),
                 h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 } }, 'Chọn phạm vi gói dịch vụ được liên kết với danh mục này.')
               ),
               this.renderNewsCatSkuPicker()
-            ),
-            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-              h('div', { style: { fontSize: 13, fontWeight: 600 } }, 'Hành vi chuyển đổi mặc định'),
-              h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)' } }, 'Bài viết con thuộc danh mục này khi bật "Bóng Chat tư vấn" / "Popup thu Leads" sẽ tự động kế thừa cấu hình dưới đây.'),
-              this.field('Popup thu Leads mặc định', h(DS.Select, { options: popupOpts, defaultValue: r && r.defaultPopupId ? String(r.defaultPopupId) : '', placeholder: '— Không cấu hình —', searchable: true, searchPlaceholder: 'Tìm popup…' })),
-              this.field('Tần suất hiển thị', h(DS.Select, { options: this.NEWS_CAT_POPUP_FREQUENCIES(), defaultValue: r ? (r.defaultPopupFreq || '') : '', placeholder: 'Chọn tần suất…' })),
-              this.field('Kênh Chat tư vấn mặc định', h(DS.Select, { options: this.CHAT_CHANNELS(), defaultValue: r ? (r.defaultChatChannel || '') : '', placeholder: 'Chọn kênh chat…' }))
             )
           )
         )
