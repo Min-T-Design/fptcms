@@ -726,10 +726,10 @@ function FptUploadSlot({ label, hint, required, ratio, maxKB, accept, value, onC
     busy && h('div', { style: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: 'var(--color-border)' } },
       h('div', { style: { width: Math.round(value.progress || 0) + '%', height: '100%', background: 'var(--color-accent)', transition: 'width .13s linear' } }))
   );
-  // Luôn chiếm sẵn chỗ rộng `height` dù chưa có ảnh (chỉ ẩn bằng visibility) — nếu không, ô thả ảnh
-  // (flex:1) đổi bề rộng ngay khi thumbnail xuất hiện, làm icon/chữ bên trong "nhảy" sang trái.
-  const thumb = h('div', { key: 'thumb', style: { position: 'relative', flex: 'none', width: height, height, visibility: value ? 'visible' : 'hidden' } },
-    value && h('div', {
+  // Chỉ chiếm chỗ rộng `height` khi đã có ảnh — ô trống để vùng thả ảnh (flex:1) chiếm full bề rộng,
+  // tránh để lại khung rỗng vô nghĩa cạnh vùng thả ảnh.
+  const thumb = value && h('div', { key: 'thumb', style: { position: 'relative', flex: 'none', width: height, height } },
+    h('div', {
       title: 'Xem ảnh gốc' + (value.w && value.h ? ' · ' + value.w + '×' + value.h + 'px' : ''), onClick: () => { if (value.src) setLightboxOpen(true); },
       style: {
         position: 'absolute', inset: 0, borderRadius: 8, overflow: 'hidden', border: '1px solid ' + (failed ? 'var(--color-danger)' : 'var(--color-border)'), cursor: 'zoom-in', boxSizing: 'border-box',
@@ -739,7 +739,7 @@ function FptUploadSlot({ label, hint, required, ratio, maxKB, accept, value, onC
       h('img', { src: value.src, alt: value.name, draggable: false, style: { width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: busy || failed ? 0.45 : 1, transition: 'opacity .2s' } }),
       failed && h('div', { style: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(DS.Icon, { name: 'alert-circle-line', size: 22, color: 'var(--color-danger)' }))
     ),
-    value && h('button', { type: 'button', className: 'fpt-upslot-mini fpt-upslot-del', title: busy ? 'Hủy tải lên' : 'Xóa ảnh', 'aria-label': busy ? 'Hủy tải lên' : 'Xóa ảnh', onClick: stop(remove),
+    h('button', { type: 'button', className: 'fpt-upslot-mini fpt-upslot-del', title: busy ? 'Hủy tải lên' : 'Xóa ảnh', 'aria-label': busy ? 'Hủy tải lên' : 'Xóa ảnh', onClick: stop(remove),
       style: { position: 'absolute', top: -7, right: -7, width: 22, height: 22, background: 'var(--color-surface)', border: '1px solid var(--color-border)' } },
       h(DS.Icon, { name: busy ? 'x-circle-line' : 'trash-line', size: 13, color: 'currentColor' }))
   );
@@ -4805,6 +4805,101 @@ class Component extends DCLogic {
   ]; }
   getOmisellCampaignList() { return this.state.omisellCampaignListData || this.OMISELL_CAMPAIGNS(); }
   omisellCampaignById(id) { return id ? this.getOmisellCampaignList().find(c => c.id === id) || null : null; }
+  // Bản ghi đang dùng chiến dịch này: LDP chọn chiến dịch này ở bước 2 (campaignId) — giống urlUsage() của Quản lý URL.
+  omisellUsage(c) {
+    const stOf = r => (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
+    return this.LDP_LIST().filter(r => r.campaignId === c.id).map(r => ({ kind: 'ldp', id: r.id, name: r.name, status: stOf(r) }));
+  }
+  omisellUsageLabel(u) { return 'LDP · ' + u.name; }
+  // Landing Page "Đang chạy" (publish) đang dùng chiến dịch này — dùng để cảnh báo trước khi tắt, giống urlLiveOnDeactivate() của Quản lý URL.
+  omisellLiveOnDeactivate(c) { return this.omisellUsage(c).filter(u => u.status === 'publish'); }
+  // Bật/tắt công tắc "Hoạt động" của chiến dịch: nếu đang có Landing Page chạy dùng chiến dịch này thì hỏi xác nhận trước (giống urlSetActive()).
+  omisellSetActive(id, v, confirmed) {
+    const c = this.omisellCampaignById(id);
+    if (!c) return;
+    const live = v ? [] : this.omisellLiveOnDeactivate(c);
+    if (!v && !confirmed && live.length) { this.omisellConfirmDeactivate(c, live); return; }
+    this.setState({ omisellCampaignListData: this.getOmisellCampaignList().map(x => x.id === id ? Object.assign({}, x, { active: v }) : x) });
+    const shortName = c.name.length > 60 ? c.name.slice(0, 60) + '…' : c.name;
+    this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Chiến dịch "' + shortName + '".');
+  }
+  // Modal cảnh báo khi tắt chiến dịch đang có Landing Page "Đang chạy" tham chiếu — cùng khuôn với urlConfirmDeactivate() (CLAUDE.md §17: nút chính đứng trước, "Hủy" sau).
+  omisellConfirmDeactivate(c, live, onYes) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const MAXROW = 5;
+    const shortName = c.name.length > 60 ? c.name.slice(0, 60) + '…' : c.name;
+    this.openModal({
+      title: 'Tắt chiến dịch đang được Landing Page dùng?',
+      description: 'Bạn sắp tắt chiến dịch "' + shortName + '".',
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+        h(DS.Alert, { theme: 'warning', title: 'Landing Page vẫn đang tham chiếu chiến dịch này', style: { borderRadius: 10 } },
+          live.length + ' Landing Page đang chạy bên dưới đang dùng chiến dịch này để gắn UTM theo dõi hiệu quả. '
+          + 'Tắt chiến dịch không làm gián đoạn các Landing Page này, nhưng chiến dịch sẽ chuyển sang Tạm ẩn và không còn hiện trong danh sách chọn chiến dịch cho Landing Page mới.'),
+        h('div', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Landing Page đang chạy (' + live.length + ')'),
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+          live.slice(0, MAXROW).map((u, i, arr) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: (i < arr.length - 1 || live.length > MAXROW) ? '1px solid var(--color-border-pale)' : 'none', fontSize: 13 } },
+            h(DS.Badge, { theme: 'neutral', style: { flexShrink: 0 } }, 'LDP'),
+            h('div', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 } }, u.name))),
+          live.length > MAXROW ? h('div', { style: { padding: '8px 12px', fontSize: 12, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, '+ ' + (live.length - MAXROW) + ' Landing Page khác') : null),
+        h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 } },
+          h(DS.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { this.closeModal(); if (onYes) onYes(); else this.omisellSetActive(c.id, false, true); } }, 'Vẫn tạm ẩn'),
+          h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy')))
+    });
+  }
+  // Modal cảnh báo khi LƯU chỉnh sửa chiến dịch đang có Landing Page "Đang chạy" tham chiếu — giống urlConfirmEdit(): sửa vẫn được phép, chỉ cảnh báo đồng bộ trước khi lưu thật.
+  omisellConfirmEdit(c, live, onYes) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const MAXROW = 5;
+    const shortName = c.name.length > 60 ? c.name.slice(0, 60) + '…' : c.name;
+    this.openModal({
+      title: 'Chiến dịch đang được Landing Page dùng',
+      description: 'Bạn sắp lưu thay đổi cho chiến dịch "' + shortName + '".',
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+        h(DS.Alert, { theme: 'warning', title: 'Thay đổi sẽ đồng bộ ngay sang Landing Page đang chạy', style: { borderRadius: 10 } },
+          live.length + ' Landing Page đang chạy bên dưới đang dùng chiến dịch này. Vì Landing Page luôn lấy dữ liệu trực tiếp từ chiến dịch nên mọi thay đổi (tên, utm_source/medium/campaign/term/content) sẽ áp dụng ngay cho các Landing Page này sau khi lưu.'),
+        h('div', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Landing Page đang chạy (' + live.length + ')'),
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+          live.slice(0, MAXROW).map((u, i, arr) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: (i < arr.length - 1 || live.length > MAXROW) ? '1px solid var(--color-border-pale)' : 'none', fontSize: 13 } },
+            h(DS.Badge, { theme: 'neutral', style: { flexShrink: 0 } }, 'LDP'),
+            h('div', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 } }, u.name))),
+          live.length > MAXROW ? h('div', { style: { padding: '8px 12px', fontSize: 12, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, '+ ' + (live.length - MAXROW) + ' Landing Page khác') : null),
+        h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 } },
+          h(DS.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { this.closeModal(); if (onYes) onYes(); } }, 'Xác nhận tiếp tục'),
+          h(DS.Button, { level: 'tertiary', onClick: () => this.closeModal() }, 'Hủy')))
+    });
+  }
+  // Xóa chiến dịch: chặn hẳn nếu đang có Landing Page "Đang chạy" tham chiếu (phải đổi/gỡ chiến dịch trên các LDP đó trước); không thì xóa qua modal xác nhận bình thường.
+  omisellDeleteCampaign(r) {
+    const live = this.omisellLiveOnDeactivate(r);
+    const shortName = r.name.length > 60 ? r.name.slice(0, 60) + '…' : r.name;
+    if (live.length) { this.omisellBlockDelete(r, live); return; }
+    this.confirm('Xóa chiến dịch?', 'Chiến dịch "' + shortName + '" sẽ bị xóa khỏi hệ thống.', () => {
+      this.setState({ omisellCampaignListData: this.getOmisellCampaignList().filter(x => x.id !== r.id) });
+      this.closeModal();
+      this.toast('success', 'Đã xóa', 'Đã xóa chiến dịch "' + shortName + '".');
+    }, true);
+  }
+  // Modal chặn xóa (không có lựa chọn "vẫn xóa") — chỉ 1 nút "Đã hiểu" để đóng.
+  omisellBlockDelete(c, live) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const MAXROW = 5;
+    const shortName = c.name.length > 60 ? c.name.slice(0, 60) + '…' : c.name;
+    this.openModal({
+      title: 'Không thể xóa chiến dịch đang được dùng',
+      description: 'Chiến dịch "' + shortName + '" đang được Landing Page "Đang chạy" sử dụng nên không thể xóa.',
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+        h(DS.Alert, { theme: 'danger', title: 'Cần gỡ chiến dịch khỏi các Landing Page này trước', style: { borderRadius: 10 } },
+          'Vào từng Landing Page bên dưới, đổi sang chiến dịch khác (hoặc bỏ chọn) rồi quay lại đây mới xóa được.'),
+        h('div', { style: { fontSize: 12.5, fontWeight: 600, color: 'var(--color-text-muted)' } }, 'Landing Page đang chạy (' + live.length + ')'),
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
+          live.slice(0, MAXROW).map((u, i, arr) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: (i < arr.length - 1 || live.length > MAXROW) ? '1px solid var(--color-border-pale)' : 'none', fontSize: 13 } },
+            h(DS.Badge, { theme: 'neutral', style: { flexShrink: 0 } }, 'LDP'),
+            h('div', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 } }, u.name))),
+          live.length > MAXROW ? h('div', { style: { padding: '8px 12px', fontSize: 12, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, '+ ' + (live.length - MAXROW) + ' Landing Page khác') : null),
+        h('div', { style: { display: 'flex', justifyContent: 'flex-end', marginTop: 4 } },
+          h(DS.Button, { level: 'primary', onClick: () => this.closeModal() }, 'Đã hiểu')))
+    });
+  }
   LDP_TPL_DATA() {
     return [
       { id: 'camera',     label: 'LDP Camera AI',         image: 'assets/ldp-tpl-camera.png',   icon: 'image-line',     hdrBg: '#fff4ed', hdrColor: '#c2410c', sections: 8,   desc: 'Giới thiệu & Bán FPT Camera AI + gói Cloud',        tags: ['product'] },
@@ -9162,6 +9257,9 @@ class Component extends DCLogic {
         this.detailRow('utm_term', r.utmTerm || '—'),
         this.detailRow('utm_content', r.utmContent || '—'),
         this.detailRow('Trạng thái', this.omisellStatusBadge(this.omisellEffStatus(r))),
+        this.detailRow('Được dùng bởi', (() => { const u = this.omisellUsage(r); return u.length
+          ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, u.map((x, i) => h('div', { key: i }, this.omisellUsageLabel(x))))
+          : h('span', { style: { color: 'var(--color-text-subtle)' } }, '—'); })()),
         this.detailRow('Mã chiến dịch', this.omisellCopyValue(r.code, 'Sao chép mã chiến dịch')),
         this.detailRow('Nội dung', this.omisellCopyValue(this.omisellTrackingLink(r), 'Sao chép link tracking')),
         ...this.auditRows(r)
@@ -9189,6 +9287,12 @@ class Component extends DCLogic {
     const sliced = this.sliceData(data, 'omisell');
     const pg = this.state.omisell_pg || 1;
     const sz = this.state.omisell_sz || 10;
+    const muted = { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' };
+    const usageCell = r => {
+      const u = this.omisellUsage(r);
+      if (!u.length) return h('span', { style: muted }, '—');
+      return h(FptChipList, { theme: 'neutral', max: 2, list: u.map(x => this.omisellUsageLabel(x)) });
+    };
     const columns = [
       { key: 'stt', header: '#', width: 44, align: 'center',
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (pg - 1) * sz + sliced.indexOf(r) + 1) },
@@ -9196,6 +9300,7 @@ class Component extends DCLogic {
           h('div', { style: { fontWeight: 700, fontSize: 13.5 } }, r.name),
           h('div', { style: { fontFamily: 'var(--font-dev)', fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 2 } }, r.code)
         ) },
+      { key: 'usage', header: 'Được dùng bởi', width: 220, render: (_, r) => usageCell(r) },
       { key: 'utmSource', header: 'utm_source', width: 140, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5 } }, r.utmSource || '—') },
       { key: 'utmMedium', header: 'utm_medium', width: 140, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5 } }, r.utmMedium || '—') },
       { key: 'utmCampaign', header: 'utm_campaign', width: 140, render: (_, r) => h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 11.5 } }, r.utmCampaign || '—') },
@@ -9206,19 +9311,13 @@ class Component extends DCLogic {
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = this.omisellEffStatus(r) !== 'hidden';
           return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
-            h(DS.Switch, { key: 'sw-omisell-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', title: 'Bật/Tắt chiến dịch', onChange: v => {
-              this.setState({ omisellCampaignListData: this.getOmisellCampaignList().map(x => x.id === r.id ? Object.assign({}, x, { active: v }) : x) });
-              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Chiến dịch "' + (r.name.length > 60 ? r.name.slice(0, 60) + '…' : r.name) + '".');
-            } })
+            // Controlled (checked) thay vì defaultChecked: khi người dùng Hủy ở modal cảnh báo tắt chiến dịch, công tắc tự bật lại đúng trạng thái thật.
+            h(DS.Switch, { key: 'sw-omisell-act-' + r.id, checked: isOn, size: 'sm', title: 'Bật/Tắt chiến dịch', onChange: v => this.omisellSetActive(r.id, v) })
           );
         } },
       { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
         { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openOmisellEditor(r) },
-        { icon: 'trash-line', label: 'Xóa', onClick: () => this.confirm('Xóa chiến dịch?', 'Chiến dịch "' + (r.name.length > 60 ? r.name.slice(0, 60) + '…' : r.name) + '" sẽ bị xóa khỏi hệ thống.', () => {
-          this.setState({ omisellCampaignListData: this.getOmisellCampaignList().filter(x => x.id !== r.id) });
-          this.closeModal();
-          this.toast('success', 'Đã xóa', 'Đã xóa chiến dịch "' + (r.name.length > 60 ? r.name.slice(0, 60) + '…' : r.name) + '".');
-        }, true) },
+        { icon: 'trash-line', label: 'Xóa', onClick: () => this.omisellDeleteCampaign(r) },
       ]) },
     ];
     return this.listCard(
@@ -9279,7 +9378,7 @@ class Component extends DCLogic {
             this.field('campaign_source', h(DS.Input, {
               value: d.campaignSource, placeholder: 'Nhập campaign_source…',
               onChange: e => setD({ campaignSource: e && e.target ? e.target.value : e })
-            }))
+            }), true)
           )
         ),
         section(2, 'link-01-line', 'Thông số UTM',
@@ -9306,28 +9405,36 @@ class Component extends DCLogic {
           this.toast('danger', 'Trùng tên', 'campaign_name đã tồn tại. Vui lòng đổi tên khác.');
           return;
         }
-        const list = this.getOmisellCampaignList();
-        const rec = {
-          name: d.name, campaignSource: d.campaignSource, utmSource: d.utmSource, utmMedium: d.utmMedium, utmCampaign: d.utmCampaign, utmTerm: d.utmTerm, utmContent: d.utmContent, code: d.code,
-          updatedAt: this.nowStr(), updatedBy: 'Admin User'
+        const doSave = () => {
+          const list = this.getOmisellCampaignList();
+          const rec = {
+            name: d.name, campaignSource: d.campaignSource, utmSource: d.utmSource, utmMedium: d.utmMedium, utmCampaign: d.utmCampaign, utmTerm: d.utmTerm, utmContent: d.utmContent, code: d.code,
+            updatedAt: this.nowStr(), updatedBy: 'Admin User'
+          };
+          if (r) {
+            this.setState({ omisellCampaignListData: list.map(x => x.id === r.id ? Object.assign({}, x, rec) : x) });
+            back();
+            this.toast('success', 'Đã lưu', 'Chiến dịch đã được cập nhật.');
+          } else {
+            const newId = Math.max(0, ...list.map(x => x.id)) + 1;
+            this.setState({
+              omisellCampaignListData: list.concat([Object.assign({ id: newId, active: true, createdAt: this.nowStr(), createdBy: 'Admin User' }, rec)]),
+              omisellCreatedId: newId,
+              omisellResultLoading: true
+            }, () => {
+              const el = document.getElementById('omisell-result-card');
+              if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              setTimeout(() => this.setState({ omisellResultLoading: false }), 700);
+            });
+            this.toast('success', 'Đã tạo', 'Chiến dịch mới đã được tạo. Xem kết quả bên dưới.');
+          }
         };
+        // Chiến dịch đang có Landing Page "Đang chạy" tham chiếu → cảnh báo đồng bộ trước khi lưu thật (giống urlConfirmEdit).
         if (r) {
-          this.setState({ omisellCampaignListData: list.map(x => x.id === r.id ? Object.assign({}, x, rec) : x) });
-          back();
-          this.toast('success', 'Đã lưu', 'Chiến dịch đã được cập nhật.');
-        } else {
-          const newId = Math.max(0, ...list.map(x => x.id)) + 1;
-          this.setState({
-            omisellCampaignListData: list.concat([Object.assign({ id: newId, active: true, createdAt: this.nowStr(), createdBy: 'Admin User' }, rec)]),
-            omisellCreatedId: newId,
-            omisellResultLoading: true
-          }, () => {
-            const el = document.getElementById('omisell-result-card');
-            if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            setTimeout(() => this.setState({ omisellResultLoading: false }), 700);
-          });
-          this.toast('success', 'Đã tạo', 'Chiến dịch mới đã được tạo. Xem kết quả bên dưới.');
+          const live = this.omisellLiveOnDeactivate(r);
+          if (live.length) { this.omisellConfirmEdit(r, live, doSave); return; }
         }
+        doSave();
       },
       isNew ? (justCreated ? 'Quay lại danh sách' : 'Tạo chiến dịch') : 'Cập nhật'
     );
@@ -11168,7 +11275,9 @@ class Component extends DCLogic {
   // nguồn (LDP_SECTION_DATA) cho rõ nghĩa, đừng chỉ trông chờ cơ chế hậu tố tự động ở trên.
   ldpLibraryPool() {
     const allSecData = this.LDP_SECTION_DATA();
-    const SRC_LABEL = { internet: 'Internet', sa: 'SA', camera: 'Camera AI', campaign: 'Wi-Fi 7', thulead: 'Thu Lead' };
+    const SRC_LABEL = { internet: 'Internet', sa: 'SA', camera: 'Camera AI', campaign: 'Wi-Fi 7', thulead: 'Thu Lead', common: 'Dùng chung' };
+    // Mã T hiện trong Thư viện Sections = template nguồn của section (không phải loại Card_n) — áp dụng cho MỌI section, cố định theo nguồn để không đổi giữa các lần render.
+    const TPL_CODE = { internet: 1, sa: 2, camera: 3, campaign: 4, thulead: 5, common: 6 };
     const allSecs = [];
     ['internet', 'sa', 'camera', 'campaign', 'thulead'].forEach(k => {
       (allSecData[k] || []).forEach(s => allSecs.push(Object.assign({}, s, { source: s.id === 'sa-products' ? 'sa' : k })));
@@ -11194,6 +11303,8 @@ class Component extends DCLogic {
       const group = byName[s.name];
       const descCollides = group.length > 1 && new Set(group.map(x => x.desc)).size < group.length;
       s.libLabel = descCollides && SRC_LABEL[s.source] ? s.name + ' (' + SRC_LABEL[s.source] + ')' : s.name;
+      s.tplCode = TPL_CODE[s.source] || 0;
+      s.tplLabel = SRC_LABEL[s.source] || 'Dùng chung';
     });
     const collator = new Intl.Collator('vi');
     return secs.sort((a, b) => collator.compare(a.libLabel, b.libLabel));
@@ -11228,8 +11339,9 @@ class Component extends DCLogic {
         style: { padding: '9px 10px', border: '1px solid ' + (addedCount > 0 ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 8, background: addedCount > 0 ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', cursor: 'grab', transition: 'all .12s' } },
         h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 6 } },
           h('div', { style: { flex: 1, minWidth: 0 } },
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' } },
               h('div', { style: { fontWeight: 600, fontSize: 12, lineHeight: '16px', color: 'var(--color-text)', minWidth: 0, wordBreak: 'break-word' } }, s.libLabel || s.name),
+              s.tplCode > 0 && h('span', { title: 'Thuộc template ' + s.tplLabel, style: { fontSize: 10, fontWeight: 700, background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '0px 6px', flexShrink: 0 } }, 'T' + s.tplCode),
               addedCount > 0 && h('span', { style: { fontSize: 10, fontWeight: 700, background: 'var(--color-accent)', color: '#fff', borderRadius: 10, padding: '1px 6px', flexShrink: 0 } }, 'x' + addedCount)
             ),
             h('div', { style: { fontSize: 10.5, color: 'var(--color-text-subtle)', marginTop: 2 } }, s.desc),
@@ -16084,7 +16196,7 @@ class Component extends DCLogic {
     );
     const catColor = this.state.newsCatColor !== undefined ? this.state.newsCatColor : (r ? (r.color || '') : '');
     const popupOpts = [{ value: '', label: '— Không cấu hình —' }, ...this.NEWS_CAT_DEFAULT_POPUPS()];
-    const layoutOpts = ['Tin F-Safe', 'Tin tức', 'Địa điểm giao dịch', 'Danh sách báo cáo', 'Danh sách câu hỏi thường gặp', 'Danh sách loại báo cáo', 'Danh sách tài liệu', 'Danh sách video', 'Dịch vụ tổng hợp', 'Hướng dẫn', 'Hướng dẫn cài đặt', 'Hướng dẫn thủ tục', 'Hỗ trợ', 'Khuyến mại', 'Khuyến mại tổng hợp', 'Khách hàng - Đối tác', 'Khách hàng cá nhân', 'Khách hàng doanh nghiệp', 'Nhóm câu hỏi thường gặp', 'Sản phẩm/Dịch vụ', 'Thông tin thanh toán', 'Tin E-Magazine'].map(v => ({ value: v, label: v }));
+    const layoutOpts = ['Tin F-Safe', 'Tin tức', 'Địa điểm giao dịch', 'Danh sách báo cáo', 'Danh sách câu hỏi thường gặp', 'Danh sách loại báo cáo', 'Danh sách tài liệu', 'Danh sách video', 'Dịch vụ tổng hợp', 'Hướng dẫn', 'Hướng dẫn cài đặt', 'Hướng dẫn thủ tục', 'Hỗ trợ', 'Khuyến mại', 'Khuyến mại tổng hợp', 'Khách hàng - Đối tác', 'Khách hàng cá nhân', 'Khách hàng doanh nghiệp', 'Nhóm câu hỏi thường gặp', 'Sản phẩm/Dịch vụ', 'Thông tin thanh toán', 'Tin E-Magazine'].sort((a, b) => a.localeCompare(b, 'vi')).map(v => ({ value: v, label: v }));
     return this.editorShell(
       isNew ? 'Thêm Danh Mục mới' : 'Chỉnh sửa: ' + r.name, '', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
