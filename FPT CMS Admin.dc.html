@@ -11049,7 +11049,7 @@ class Component extends DCLogic {
       this.setState({ [secKey]: [...getCurSecs(), { ...sec, uid: sec.id + '_' + Date.now() + '_' + Math.random().toString(36).slice(2) }] });
       this.toast('success', 'Đã thêm section', '"' + sec.name + '" đã được thêm vào cuối trang.');
     };
-    // Xóa mọi section của template (cả section có sẵn lẫn section thêm từ Thư viện): xóa theo vị trí dòng vì section có sẵn không có uid. Xóa tức thì (không hỏi xác nhận, theo yêu cầu) — chỉ hiện snackbar; section gốc có thể khôi phục từ Thư viện.
+    // Xóa mọi section của template (cả section có sẵn lẫn section thêm từ Thư viện): xóa theo vị trí dòng vì section có sẵn không có uid. Phải xác nhận trước khi xóa (modal — xem onClick icon Xóa bên dưới) vì xóa sẽ mất toàn bộ nội dung đã cấu hình của section (uid) đó; chỉ hiện snackbar sau khi xác nhận — section gốc (không uid) có thể khôi phục lại từ Thư viện.
     // Section gốc của template (không có uid) — dùng để Thư viện gom nhóm "Đã xóa khỏi template" và khôi phục lại đúng vị trí sau khi lỡ xóa.
     const tplDefaults = this.LDP_SECTION_DATA()[tplId] || [];
     const removeSec = (i) => {
@@ -11127,7 +11127,7 @@ class Component extends DCLogic {
                     h(DS.Switch, { size: 'sm', checked: this.state['ldpSecVis_' + (s.uid || s.id)] !== false, onChange: v => this.setState({ ['ldpSecVis_' + (s.uid || s.id)]: v }) }),
                     h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' } }, 'Hiển thị'),
                     h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: () => this.openLdpSectionDrawer(s, tpl) }),
-                    h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => removeSec(i) })
+                    h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => this.confirm('Xóa section khỏi trang?', 'Bạn có chắc chắn muốn xóa section này khỏi trang? Thao tác này sẽ xóa toàn bộ nội dung đã cấu hình của khối.', () => { this.closeModal(); removeSec(i); }, true) })
                   )
                 )
               )
@@ -11279,6 +11279,8 @@ class Component extends DCLogic {
     const srcColor = { internet: '#ff8c42', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981' };
     const self = this;
     const addSec = (sec) => { const cur = self.state.ldpCustomSecs || []; self.setState({ ldpCustomSecs: [...cur, { ...sec, uid: sec.id + '_' + Date.now() + '_' + Math.random().toString(36).slice(2) }] }); };
+    // Xóa luôn hỏi xác nhận (xem onClick icon Xóa bên dưới) — ở Trang tùy chỉnh mọi section đều có uid (không có bản gốc
+    // template để khôi phục như renderLdpStep3), nên xóa nhầm sẽ mất hẳn nội dung đã cấu hình.
     const removeSec = (uid) => { self.setState({ ldpCustomSecs: (self.state.ldpCustomSecs || []).filter(s => s.uid !== uid) }); };
     const dropCanvas = (e) => { e.preventDefault(); const libId = self.state.ldpLibDragId; if (libId) { const sec = allSecs.find(s => s.id === libId); if (sec) addSec(sec); } self.setState({ ldpLibDragId: null, ldpSecDragOverCanvas: false, ldpLibDragId: null }); };
     const mkDrag = (i) => ({
@@ -11330,7 +11332,7 @@ class Component extends DCLogic {
 
                     h(DS.Switch, { size: 'sm', checked: this.state['ldpSecVis_' + (s.uid || s.id)] !== false, onChange: v => this.setState({ ['ldpSecVis_' + (s.uid || s.id)]: v }) }),
                     h(DS.IconButton, { icon: 'edit-01-line', label: 'Sửa', level: 'tertiary', size: 'sm', onClick: () => this.openLdpSectionDrawer(s, { id: 'custom', label: 'Custom LDP' }) }),
-                    h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => removeSec(s.uid || s.id) })
+                    h(DS.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => this.confirm('Xóa section khỏi trang?', 'Bạn có chắc chắn muốn xóa section này khỏi trang? Thao tác này sẽ xóa toàn bộ nội dung đã cấu hình của khối.', () => { this.closeModal(); removeSec(s.uid || s.id); }, true) })
                   )
                 ),
                 h('div', {
@@ -15714,7 +15716,7 @@ class Component extends DCLogic {
       return true;
     });
     const parentOpts = [{ value: 'all', label: 'Tất cả danh mục cha' }, ...all.map(c => ({ value: c.name, label: c.name }))];
-    const levelOpts = [{ value: 'all', label: 'Tất cả cấp' }, { value: '1', label: 'Cấp 1' }, { value: '2', label: 'Cấp 2' }, { value: '3', label: 'Cấp 3' }];
+    const levelOpts = [{ value: 'all', label: 'Tất cả cấp' }, { value: '1', label: 'Cấp 1' }, { value: '2', label: 'Cấp 2' }];
     const statusOpts = [{ value: 'all', label: 'Tất cả tình trạng' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }];
     const columns = [
       { key: 'idx', header: '#', width: 44, render: (_, r, i) => h('span', { style: { color: 'var(--color-text-subtle)' } }, i + 1) },
@@ -16073,7 +16075,8 @@ class Component extends DCLogic {
   renderNewsCatEditor(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.setState({ newsCatEditor: undefined });
-    const parentOpts = this.NEWS_CATS().filter(c => !r || c.id !== r.id).map(c => ({ value: c.name, label: c.name }));
+    // Chỉ cho chọn danh mục cấp 1 (parent rỗng) làm danh mục cha — cây danh mục tin tức cố định tối đa 2 cấp.
+    const parentOpts = this.NEWS_CATS().filter(c => !c.parent && (!r || c.id !== r.id)).map(c => ({ value: c.name, label: c.name }));
     const slugInputRef = React.createRef();
     const slugify = s => (s || '').toLowerCase()
       .normalize('NFD').replace(/[̀-ͯ]/g, '')
