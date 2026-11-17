@@ -5656,6 +5656,8 @@ class Component extends DCLogic {
       { key: 'type', header: 'Loại', width: 130, render: (_, r) => this.urlTypeBadge(this.urlTypeOf(r, all)) },
       { key: 'usage', header: 'Đang dùng bởi', width: 250, render: (_, r) => usageCell(r) },
       ...this.auditCols(),
+      // Cột Trạng thái (theo yêu cầu: đứng sau bộ 4 cột kiểm toán, ngay trước Thao tác). Cùng nguồn urlIsActive với Switch nên luôn khớp nhau.
+      { key: 'status', header: 'Trạng thái', width: 150, render: (_, r) => this.statusBadge(this.urlIsActive(r) ? 'active' : 'inactive') },
       { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
           const isOn = this.urlIsActive(r);
           const locked = this.urlIsLocked(r, all);
@@ -5675,13 +5677,13 @@ class Component extends DCLogic {
           return this.rowActions([{ icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openUrlEditor(r) }]);
         } },
     ];
-    const typeLabel = { page: 'Trang thường', ldp: 'Landing Page', none: 'Chưa phân loại' };
+    const typeLabel = { page: 'Trang thường', ldp: 'Landing Page' };
     return this.listCard(
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: '1 1 auto', alignItems: 'center', flexWrap: 'wrap' } },
           h('div', { style: { flex: '1 1 260px', maxWidth: 320 } }, h(DS.Input, { placeholder: 'Tìm theo đường dẫn…', leadingIcon: 'search-medium-line', value: this.state.urlSearch || '', onChange: e => this.setState({ urlSearch: e && e.target ? e.target.value : e, urls_pg: 1 }) })),
           h('div', { style: { width: 176, flexShrink: 0 } }, h(DS.Select, {
-            options: [{ value: 'all', label: 'Tất cả loại' }, ...this.URL_TYPES(), { value: 'none', label: 'Chưa phân loại' }],
+            options: [{ value: 'all', label: 'Tất cả loại' }, ...this.URL_TYPES()],
             value: typeF,
             onChange: v => this.setState({ urlTypeFilter: v, urls_pg: 1 })
           })),
@@ -12884,7 +12886,8 @@ class Component extends DCLogic {
                     )
                   ),
                   expanded && h('div',{style:{padding:14}},
-                    fld('Tên '+tabWord, h(DS.Input,{key:'tabname'+tab.id,defaultValue:tab.name,placeholder:'Nhập tên '+tabWord+'...',onChange:e=>this.updTab(tab.id,{name:e.target.value})}), showErr && !fptHasTxt(tab.name)),
+                    // Không tab: chỉ còn đúng 1 section cố định (giữ tên tab mặc định cũ, không hiện ra) nên bỏ hẳn ô nhập — không có khái niệm đặt/đổi tên khi không có tab để phân biệt.
+                    !single && fld('Tên '+tabWord, h(DS.Input,{key:'tabname'+tab.id,defaultValue:tab.name,placeholder:'Nhập tên '+tabWord+'...',onChange:e=>this.updTab(tab.id,{name:e.target.value})}), showErr && !fptHasTxt(tab.name)),
                     h('div',{style:{display:'flex',gap:0,border:'1px solid var(--color-border)',borderRadius:10,padding:12,background:'var(--color-surface)',minHeight:280}},
                       leftPanel,
                       rightPanel
@@ -17687,17 +17690,63 @@ class Component extends DCLogic {
   }
 
   // ===== Profile =====
+  // Danh sách mạng xã hội cố định (tối đa 5 liên kết — mỗi mạng 1 ô) · Switch của từng dòng vừa là "thêm liên kết" vừa là bật/tắt hiển thị icon.
+  SOCIAL_PLATFORMS() { return [
+    { key: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/ten-cua-ban' },
+    { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/ten-cua-ban' },
+    { key: 'tiktok', label: 'TikTok', placeholder: 'https://tiktok.com/@ten-cua-ban' },
+    { key: 'youtube', label: 'YouTube', placeholder: 'https://youtube.com/@ten-cua-ban' },
+    { key: 'tumblr', label: 'Tumblr', placeholder: 'https://ten-cua-ban.tumblr.com' },
+  ]; }
   renderProfile() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const tab = this.state.profileTab || 'info';
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'profsec' + num },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+        h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
+      ),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
+    );
+    const bio = this.state.profileBio != null ? this.state.profileBio : 'Quản trị viên hệ thống FPT CMS.';
+    const social = this.state.profileSocial || {};
+    const triedSocial = !!this.state.profileSocialTried;
+    const setSocial = (key, patch) => this.setState({ profileSocial: { ...social, [key]: { ...(social[key] || {}), ...patch } } });
     return h('div', { style: { maxWidth: 720, display: 'flex', flexDirection: 'column', gap: 16 } },
       h(DS.Tabs, { value: tab, onChange: v => this.setState({ profileTab: v }), items: [{ value: 'info', label: 'Thông tin tài khoản', icon: 'user-circle-line' }, { value: 'pwd', label: 'Đổi mật khẩu', icon: 'lock-01-line' }] }),
       tab === 'info'
-        ? h(DS.Card, { style: { padding: 24, display: 'flex', flexDirection: 'column', gap: 16 } },
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 18 } }, h(DS.Avatar, { name: 'Admin User', size: 'lg' }), h('div', { style: { flex: 1 } }, this.field('Ảnh đại diện (URL / Upload)', h('div', { style: { display: 'flex', gap: 8 } }, h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'https://…' })), h(DS.Button, { level: 'secondary', leadingIcon: 'upload-01-line' }, 'Tải ảnh'))))),
-          h('div', { style: { display: 'flex', gap: 12 } }, h('div', { style: { flex: 1 } }, this.field('Họ và tên', h(DS.Input, { defaultValue: 'Admin User' }), true)), h('div', { style: { flex: 1 } }, this.field('Email', h(DS.Input, { defaultValue: 'admin@fpt.vn' }), true))),
-          h('div', { style: { display: 'flex', gap: 12 } }, h('div', { style: { flex: 1 } }, this.field('Kênh vận hành', h('div', { style: { padding: '9px 12px', background: 'var(--color-surface-alt)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6 } }, h(DS.Icon, { name: 'lock-01-line', size: 14, color: 'var(--color-text-subtle)' }), 'FPT Telecom'))), h('div', { style: { flex: 1 } }, this.field('Vai trò', h('div', { style: { padding: '9px 12px', background: 'var(--color-surface-alt)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6 } }, h(DS.Icon, { name: 'lock-01-line', size: 14, color: 'var(--color-text-subtle)' }), 'Super Admin')))),
-          h('div', { style: { display: 'flex', justifyContent: 'flex-end' } }, h(DS.Button, { level: 'primary', leadingIcon: 'check-line', onClick: () => this.toast('success', 'Đã lưu', 'Thông tin cá nhân đã được cập nhật.') }, 'Lưu thay đổi'))
+        ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+          section(1, 'user-circle-line', 'Thông tin cơ bản',
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 18 } }, h(DS.Avatar, { name: 'Admin User', size: 'lg' }), h('div', { style: { flex: 1 } }, this.field('Ảnh đại diện', h('div', { style: { display: 'flex', gap: 8 } }, h('div', { style: { flex: 1 } }, h(DS.Input, { placeholder: 'https://…' })), h(DS.Button, { level: 'secondary', leadingIcon: 'upload-01-line' }, 'Tải ảnh'))))),
+            h('div', { style: { display: 'flex', gap: 12 } }, h('div', { style: { flex: 1 } }, this.field('Họ và tên', h(DS.Input, { defaultValue: 'Admin User' }), true)), h('div', { style: { flex: 1 } }, this.field('Email', h(DS.Input, { defaultValue: 'admin@fpt.vn' }), true))),
+            h('div', { style: { display: 'flex', gap: 12 } }, h('div', { style: { flex: 1 } }, this.field('Kênh vận hành', h('div', { style: { padding: '9px 12px', background: 'var(--color-surface-alt)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6 } }, h(DS.Icon, { name: 'lock-01-line', size: 14, color: 'var(--color-text-subtle)' }), 'FPT Telecom'))), h('div', { style: { flex: 1 } }, this.field('Vai trò', h('div', { style: { padding: '9px 12px', background: 'var(--color-surface-alt)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6 } }, h(DS.Icon, { name: 'lock-01-line', size: 14, color: 'var(--color-text-subtle)' }), 'Super Admin')))),
+          ),
+          section(2, 'file-doc-line', 'Giới thiệu',
+            this.field('Giới thiệu bản thân', h(DS.Textarea, { value: bio, rows: 4, placeholder: 'Giới thiệu ngắn gọn về bạn…', onChange: e => this.setState({ profileBio: e.target.value }) }))
+          ),
+          section(3, 'share-01-line', 'Liên kết mạng xã hội',
+            h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: -6 } }, 'Bật mạng xã hội muốn hiển thị và nhập đường dẫn trang cá nhân tương ứng — tối đa 5 liên kết.'),
+            ...this.SOCIAL_PLATFORMS().map(p => {
+              const s = social[p.key] || {};
+              const on = !!s.enabled;
+              return h('div', { key: p.key, style: { display: 'flex', alignItems: 'center', gap: 10 } },
+                h(DS.Switch, { checked: on, onChange: v => { setSocial(p.key, { enabled: v }); this.toast(v ? 'success' : 'neutral', v ? 'Đã bật hiển thị' : 'Đã ẩn', 'Liên kết ' + p.label + (v ? ' sẽ hiển thị trên trang cá nhân.' : ' đã được ẩn khỏi trang cá nhân.')); } }),
+                h('span', { style: { width: 76, flexShrink: 0, fontSize: 13, fontWeight: 600, color: on ? 'var(--color-text)' : 'var(--color-text-subtle)' } }, p.label),
+                h('div', { style: { flex: 1 } }, h(FptUrlInput, {
+                  value: s.url || '', disabled: !on, placeholder: p.placeholder,
+                  forceValidate: on && triedSocial, onChange: e => setSocial(p.key, { url: e.target.value })
+                }))
+              );
+            })
+          ),
+          h('div', { style: { display: 'flex', justifyContent: 'flex-end' } }, h(DS.Button, {
+            level: 'primary', leadingIcon: 'check-line',
+            onClick: () => {
+              const bad = this.SOCIAL_PLATFORMS().some(p => { const s = social[p.key]; return s && s.enabled && !fptIsValidTargetUrl(s.url || ''); });
+              if (bad) { this.setState({ profileSocialTried: true }); this.toast('danger', 'URL không hợp lệ', FPT_URL_ERROR); return; }
+              this.toast('success', 'Đã lưu', 'Thông tin cá nhân đã được cập nhật.');
+            }
+          }, 'Lưu thay đổi'))
         )
         : h(DS.Card, { style: { padding: 24, display: 'flex', flexDirection: 'column', gap: 16 } },
           this.field('Mật khẩu hiện tại', h(DS.Input, { type: 'password', placeholder: '••••••' }), true),
