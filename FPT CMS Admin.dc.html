@@ -8423,6 +8423,12 @@ class Component extends DCLogic {
       ),
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
     );
+    // Tiêu đề "Nút N" của mỗi khối CTA phải nổi rõ hơn hẳn nhãn trường ("Nội dung"/"Link điều hướng") bên dưới —
+    // dùng kiểu "eyebrow" (chữ hoa, thưa, màu nhạt) + đường kẻ phân tách khi khối đang mở, thay vì chữ đậm cùng cỡ dễ lẫn với field label.
+    const ctaHead = (label, extra, withRule) => h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: withRule ? 10 : 0, marginBottom: withRule ? 2 : 0, borderBottom: withRule ? '1px solid var(--color-border)' : 'none' } },
+      h('span', { style: { fontWeight: 700, fontSize: 11.5, letterSpacing: 0.4, textTransform: 'uppercase', color: 'var(--color-text-subtle)' } }, label),
+      extra
+    );
     return this.editorShell(
       isNew ? 'Tạo Popup mới' : 'Chỉnh sửa Popup: ' + r.name, 'Popup hiển thị đa thiết bị', back,
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
@@ -8520,7 +8526,7 @@ class Component extends DCLogic {
           isCta && h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
             // Nút 1: bắt buộc, luôn hiện, không có cách xóa.
             h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
-              h('span', { style: { fontWeight: 700, fontSize: 12.5 } }, 'Nút 1'),
+              ctaHead('Nút 1', null, true),
               h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(160px, 220px) minmax(0, 1fr)', gap: 12 } },
                 this.field('Nội dung', h(DS.Input, { value: ctaButtons[0] ? ctaButtons[0].label : '', placeholder: 'VD: Mua ngay', onChange: e => updateCta(0, 'label', e && e.target ? e.target.value : e) })),
                 this.field('Link điều hướng', h(FptUrlInput, { value: ctaButtons[0] ? ctaButtons[0].url : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(0, 'url', e && e.target ? e.target.value : e) }))
@@ -8528,10 +8534,7 @@ class Component extends DCLogic {
             ),
             // Nút 2: tùy chọn — Switch ngay trên header tự mở rộng/thu gọn khối nhập liệu, thay cho nút thêm/xóa riêng.
             h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: ctaBtn2On ? 10 : 0 } },
-              h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-                h('span', { style: { fontWeight: 700, fontSize: 12.5 } }, 'Nút 2'),
-                h(DS.Switch, { checked: ctaBtn2On, onChange: v => this.setState({ popupEditorCtaBtn2On: v }) })
-              ),
+              ctaHead('Nút 2', h(DS.Switch, { checked: ctaBtn2On, onChange: v => this.setState({ popupEditorCtaBtn2On: v }) }), ctaBtn2On),
               ctaBtn2On && h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(160px, 220px) minmax(0, 1fr)', gap: 12 } },
                 this.field('Nội dung', h(DS.Input, { value: ctaButtons[1] ? ctaButtons[1].label : '', placeholder: 'VD: Mua ngay', onChange: e => updateCta(1, 'label', e && e.target ? e.target.value : e) })),
                 this.field('Link điều hướng', h(FptUrlInput, { value: ctaButtons[1] ? ctaButtons[1].url : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(1, 'url', e && e.target ? e.target.value : e) }))
