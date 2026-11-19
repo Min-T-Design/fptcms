@@ -8424,8 +8424,9 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
     );
     // Tiêu đề "Nút N" của mỗi khối CTA phải nổi rõ hơn hẳn nhãn trường ("Nội dung"/"Link điều hướng") bên dưới —
-    // dùng kiểu "eyebrow" (chữ hoa, thưa, màu nhạt) + đường kẻ phân tách khi khối đang mở, thay vì chữ đậm cùng cỡ dễ lẫn với field label.
-    const ctaHead = (label, extra, withRule) => h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: withRule ? 10 : 0, marginBottom: withRule ? 2 : 0, borderBottom: withRule ? '1px solid var(--color-border)' : 'none' } },
+    // dải nền xám nhạt bo góc trên (giống header accordion Thông tin checkout), vuông góc dưới khi có nội dung
+    // theo sau (expanded=true) để nối liền với phần thân, bo tròn cả 4 góc khi là toàn bộ khối (thu gọn).
+    const ctaHead = (label, extra, expanded) => h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--color-surface-alt)', borderRadius: expanded ? '10px 10px 0 0' : 10 } },
       h('span', { style: { fontWeight: 700, fontSize: 11.5, letterSpacing: 0.4, textTransform: 'uppercase', color: 'var(--color-text-subtle)' } }, label),
       extra
     );
@@ -8525,17 +8526,17 @@ class Component extends DCLogic {
           ),
           isCta && h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
             // Nút 1: bắt buộc, luôn hiện, không có cách xóa.
-            h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
+            h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
               ctaHead('Nút 1', null, true),
-              h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(160px, 220px) minmax(0, 1fr)', gap: 12 } },
+              h('div', { style: { padding: 14, borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: 'minmax(160px, 220px) minmax(0, 1fr)', gap: 12 } },
                 this.field('Nội dung', h(DS.Input, { value: ctaButtons[0] ? ctaButtons[0].label : '', placeholder: 'VD: Mua ngay', onChange: e => updateCta(0, 'label', e && e.target ? e.target.value : e) })),
                 this.field('Link điều hướng', h(FptUrlInput, { value: ctaButtons[0] ? ctaButtons[0].url : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(0, 'url', e && e.target ? e.target.value : e) }))
               )
             ),
             // Nút 2: tùy chọn — Switch ngay trên header tự mở rộng/thu gọn khối nhập liệu, thay cho nút thêm/xóa riêng.
-            h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: ctaBtn2On ? 10 : 0 } },
+            h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
               ctaHead('Nút 2', h(DS.Switch, { checked: ctaBtn2On, onChange: v => this.setState({ popupEditorCtaBtn2On: v }) }), ctaBtn2On),
-              ctaBtn2On && h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(160px, 220px) minmax(0, 1fr)', gap: 12 } },
+              ctaBtn2On && h('div', { style: { padding: 14, borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: 'minmax(160px, 220px) minmax(0, 1fr)', gap: 12 } },
                 this.field('Nội dung', h(DS.Input, { value: ctaButtons[1] ? ctaButtons[1].label : '', placeholder: 'VD: Mua ngay', onChange: e => updateCta(1, 'label', e && e.target ? e.target.value : e) })),
                 this.field('Link điều hướng', h(FptUrlInput, { value: ctaButtons[1] ? ctaButtons[1].url : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(1, 'url', e && e.target ? e.target.value : e) }))
               )
