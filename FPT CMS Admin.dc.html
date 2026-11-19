@@ -10719,7 +10719,6 @@ class Component extends DCLogic {
             goal: !sv.goal,
             effRange: !(effR.start && effR.end),
             bcLv2: !(sv.bcLv2 || '').trim(),
-            h1: !sv.h1,
           };
           const errCount = Object.values(errs).filter(Boolean).length;
           if (errCount) {
@@ -11146,11 +11145,11 @@ class Component extends DCLogic {
       bcPreview),
       section(4, 'search-medium-line', 'SEO',
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 } },
-        h('div', { style: { gridColumn: '1 / -1' } },
-          h('label', { style: lbSt }, 'Tiêu đề (H1)', req),
-          h(DS.Input, { value: sv.h1, onChange: e => set('h1', e.target.value), placeholder: 'Nhập tiêu đề chính hiển thị trên trang', error: (step2Err.h1 && !sv.h1) ? 'Vui lòng nhập Tiêu đề (H1).' : undefined })
+        h('div', null,
+          h('label', { style: lbSt }, 'Tiêu đề (H1)'),
+          h(DS.Input, { value: sv.h1, onChange: e => set('h1', e.target.value), placeholder: 'Nhập tiêu đề chính hiển thị trên trang' })
         ),
-        h('div', { style: { gridColumn: '1 / -1' } },
+        h('div', null,
           h('label', { style: lbSt }, 'Meta Title'),
           h(DS.Input, { value: sv.metaTitle, maxLength: 60, onChange: e => set('metaTitle', e.target.value), placeholder: 'Tiêu đề hiển thị trên Google (60 ký tự)' })
         ),
@@ -13022,8 +13021,8 @@ class Component extends DCLogic {
                   onDragOver:e=>{e.preventDefault();if(tabDragFrom!==ti)this.setState({tabDragOver:ti});},
                   onDrop:e=>{e.preventDefault();if(tabDragFrom<0||tabDragFrom===ti)return;const nt=[...tabs];const[mv]=nt.splice(tabDragFrom,1);nt.splice(ti,0,mv);this.setState({tabs:nt,tabDragFrom:-1,tabDragOver:-1});},
                   onDragEnd:()=>this.setState({tabDragFrom:-1,tabDragOver:-1}),
-                  // Không tab: khung ngoài này không còn viền riêng — viền duy nhất nằm ở khung nhập bên trong (tránh 2 viền lồng sát nhau).
-                  style:{border:single?'none':showErr?'1.5px solid var(--color-danger)':isDragOver?'2px dashed var(--color-accent)':expanded?'1.5px solid var(--color-accent)':'1px solid var(--color-border)',borderRadius:12,marginBottom:12,overflow:'hidden',transition:'border-color .15s',opacity:tabDragFrom===ti?0.45:1}},
+                  // Không tab: viền duy nhất nằm ở khung ngoài này (thẳng hàng với "Kiểu hiển thị" phía trên) — khung nhập bên trong bỏ viền riêng để tránh 2 viền lồng sát nhau và tránh bị lệch vô trong.
+                  style:{border:single?(showErr?'1.5px solid var(--color-danger)':'1px solid var(--color-border)'):showErr?'1.5px solid var(--color-danger)':isDragOver?'2px dashed var(--color-accent)':expanded?'1.5px solid var(--color-accent)':'1px solid var(--color-border)',borderRadius:12,marginBottom:12,overflow:'hidden',transition:'border-color .15s',opacity:tabDragFrom===ti?0.45:1}},
                   // Không tab: bỏ hẳn thanh tiêu đề đóng/mở "Section: ..." — chỉ có đúng 1 section nên không cần gấp/mở hay đặt tên để phân biệt, chỉ còn khung nhập bên dưới.
                   !single && h('div',{
                     onClick:()=>this.updTab(tab.id,{expanded:!expanded}),
@@ -13046,7 +13045,7 @@ class Component extends DCLogic {
                   (single || expanded) && h('div',{style:{padding:14}},
                     // Không tab: chỉ còn đúng 1 section cố định (giữ tên tab mặc định cũ, không hiện ra) nên bỏ hẳn ô nhập — không có khái niệm đặt/đổi tên khi không có tab để phân biệt.
                     !single && fld('Tên '+tabWord, h(DS.Input,{key:'tabname'+tab.id,defaultValue:tab.name,placeholder:'Nhập tên '+tabWord+'...',onChange:e=>this.updTab(tab.id,{name:e.target.value})}), showErr && !fptHasTxt(tab.name)),
-                    h('div',{style:{display:'flex',gap:0,border:(single&&showErr)?'1.5px solid var(--color-danger)':'1px solid var(--color-border)',borderRadius:10,padding:12,background:'var(--color-surface)',minHeight:280}},
+                    h('div',{style:{display:'flex',gap:0,border:single?'none':'1px solid var(--color-border)',borderRadius:single?0:10,padding:single?0:12,background:'var(--color-surface)',minHeight:280}},
                       leftPanel,
                       rightPanel
                     )
