@@ -8401,6 +8401,22 @@ class Component extends DCLogic {
     const autoCloseErr = autoClose !== '' && !/^\d+$/.test(autoClose) ? 'Chỉ nhập số nguyên từ 0 trở lên.' : undefined;
     const showPages = type !== 'checkout' && type !== 'pkg-detail';
     const showLink = type !== 'checkout' && type !== 'pkg-detail';
+    // "Trang thường" được chọn thêm kiểu hiển thị cho mục 2: Hình ảnh (mặc định, như cũ) hoặc CTA button
+    // (1-2 nút, mỗi nút nhập Nội dung + Link điều hướng riêng) — chỉ áp dụng cho loại này theo yêu cầu.
+    const showCtaChoice = type === 'menu-page';
+    const imgMode = this.state.popupEditorImgMode !== undefined ? this.state.popupEditorImgMode : ((r && r.imgMode) || 'image');
+    const isCta = showCtaChoice && imgMode === 'cta';
+    const ctaButtons = this.state.popupEditorCta || (r && r.ctaButtons) || [{ id: 1, label: '', url: '' }];
+    const updateCta = (i, key, val) => this.setState(sv => ({ popupEditorCta: (sv.popupEditorCta || ctaButtons).map((b, j) => j === i ? { ...b, [key]: val } : b) }));
+    const addCtaBtn = () => {
+      const cur = this.state.popupEditorCta || ctaButtons;
+      if (cur.length >= 2) return;
+      this.setState({ popupEditorCta: [...cur, { id: Date.now(), label: '', url: '' }] });
+    };
+    const removeCtaBtn = i => {
+      const cur = this.state.popupEditorCta || ctaButtons;
+      this.setState({ popupEditorCta: cur.filter((_, j) => j !== i) });
+    };
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -8490,11 +8506,31 @@ class Component extends DCLogic {
           )
         ),
         section(showPkgBlock ? 3 : 2, 'image-line', showLink ? 'Hình ảnh & liên kết' : 'Hình ảnh',
-          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
-            this.uploadBox('Popup Desktop', 'JPG, PNG, WEBP · ≤200KB'),
-            this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · ≤200KB')
-          ),
-          showLink && this.field('Link điều hướng', h(FptUrlInput, { defaultValue: r ? (r.url || '') : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai' }))
+          showCtaChoice && h(DS.Segmented, {
+            size: 'sm',
+            items: [{ value: 'image', label: 'Hình ảnh' }, { value: 'cta', label: 'CTA button' }],
+            value: imgMode,
+            onChange: v => this.setState({ popupEditorImgMode: v })
+          }),
+          isCta
+            ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+                ctaButtons.map((b, i) => h('div', { key: b.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
+                  h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                    h('span', { style: { fontWeight: 700, fontSize: 12.5 } }, 'Nút ' + (i + 1)),
+                    ctaButtons.length > 1 && h(DS.IconButton, { icon: 'trash-line', label: 'Xóa nút', level: 'tertiary', size: 'sm', onClick: () => removeCtaBtn(i) })
+                  ),
+                  h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(160px, 220px) minmax(0, 1fr)', gap: 12 } },
+                    this.field('Nội dung', h(DS.Input, { value: b.label, placeholder: 'VD: Mua ngay', onChange: e => updateCta(i, 'label', e && e.target ? e.target.value : e) })),
+                    this.field('Link điều hướng', h(FptUrlInput, { value: b.url, placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(i, 'url', e && e.target ? e.target.value : e) }))
+                  )
+                )),
+                ctaButtons.length < 2 && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed' }, onClick: addCtaBtn }, '+ Thêm nút CTA')
+              )
+            : h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
+                this.uploadBox('Popup Desktop', 'JPG, PNG, WEBP · ≤200KB'),
+                this.uploadBox('Popup Mobile', 'JPG, PNG, WEBP · ≤200KB')
+              ),
+          showLink && !isCta && this.field('Link điều hướng', h(FptUrlInput, { defaultValue: r ? (r.url || '') : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai' }))
         ),
         type !== 'checkout' && section(showPkgBlock ? 4 : 3, 'zap-line', 'Hành vi hiển thị',
           h('div', { style: { display: 'flex', gap: 12 } },
