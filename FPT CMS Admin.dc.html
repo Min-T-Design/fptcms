@@ -8407,16 +8407,15 @@ class Component extends DCLogic {
     const imgMode = this.state.popupEditorImgMode !== undefined ? this.state.popupEditorImgMode : ((r && r.imgMode) || 'image');
     const isCta = showCtaChoice && imgMode === 'cta';
     const ctaButtons = this.state.popupEditorCta || (r && r.ctaButtons) || [{ id: 1, label: '', url: '' }];
-    const updateCta = (i, key, val) => this.setState(sv => ({ popupEditorCta: (sv.popupEditorCta || ctaButtons).map((b, j) => j === i ? { ...b, [key]: val } : b) }));
-    const addCtaBtn = () => {
-      const cur = this.state.popupEditorCta || ctaButtons;
-      if (cur.length >= 2) return;
-      this.setState({ popupEditorCta: [...cur, { id: Date.now(), label: '', url: '' }] });
-    };
-    const removeCtaBtn = i => {
-      const cur = this.state.popupEditorCta || ctaButtons;
-      this.setState({ popupEditorCta: cur.filter((_, j) => j !== i) });
-    };
+    // Nút 1 luôn hiện (bắt buộc, không xóa được). Nút 2 là tùy chọn — bật/tắt bằng Switch ở header của chính nó
+    // (bật = mở rộng ô nhập, tắt = thu gọn) thay vì nút "+ Thêm/Xóa" riêng.
+    const ctaBtn2On = this.state.popupEditorCtaBtn2On !== undefined ? this.state.popupEditorCtaBtn2On : ctaButtons.length > 1;
+    const updateCta = (i, key, val) => this.setState(sv => {
+      const cur = (sv.popupEditorCta || ctaButtons).slice();
+      while (cur.length <= i) cur.push({ id: Date.now() + cur.length, label: '', url: '' });
+      cur[i] = { ...cur[i], [key]: val };
+      return { popupEditorCta: cur };
+    });
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -8506,25 +8505,33 @@ class Component extends DCLogic {
           )
         ),
         section(showPkgBlock ? 3 : 2, 'image-line', showLink ? 'Hình ảnh & liên kết' : 'Hình ảnh',
-          showCtaChoice && h(DS.Segmented, {
+          showCtaChoice && h('div', { style: { alignSelf: 'flex-start' } }, h(DS.Segmented, {
             size: 'sm',
             items: [{ value: 'image', label: 'Hình ảnh' }, { value: 'cta', label: 'CTA button' }],
             value: imgMode,
             onChange: v => this.setState({ popupEditorImgMode: v })
-          }),
+          })),
           isCta
             ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
-                ctaButtons.map((b, i) => h('div', { key: b.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
-                  h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-                    h('span', { style: { fontWeight: 700, fontSize: 12.5 } }, 'Nút ' + (i + 1)),
-                    ctaButtons.length > 1 && h(DS.IconButton, { icon: 'trash-line', label: 'Xóa nút', level: 'tertiary', size: 'sm', onClick: () => removeCtaBtn(i) })
-                  ),
+                // Nút 1: bắt buộc, luôn hiện, không có cách xóa.
+                h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
+                  h('span', { style: { fontWeight: 700, fontSize: 12.5 } }, 'Nút 1'),
                   h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(160px, 220px) minmax(0, 1fr)', gap: 12 } },
-                    this.field('Nội dung', h(DS.Input, { value: b.label, placeholder: 'VD: Mua ngay', onChange: e => updateCta(i, 'label', e && e.target ? e.target.value : e) })),
-                    this.field('Link điều hướng', h(FptUrlInput, { value: b.url, placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(i, 'url', e && e.target ? e.target.value : e) }))
+                    this.field('Nội dung', h(DS.Input, { value: ctaButtons[0] ? ctaButtons[0].label : '', placeholder: 'VD: Mua ngay', onChange: e => updateCta(0, 'label', e && e.target ? e.target.value : e) })),
+                    this.field('Link điều hướng', h(FptUrlInput, { value: ctaButtons[0] ? ctaButtons[0].url : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(0, 'url', e && e.target ? e.target.value : e) }))
                   )
-                )),
-                ctaButtons.length < 2 && h(DS.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed' }, onClick: addCtaBtn }, '+ Thêm nút CTA')
+                ),
+                // Nút 2: tùy chọn — Switch ngay trên header tự mở rộng/thu gọn khối nhập liệu, thay cho nút thêm/xóa riêng.
+                h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: ctaBtn2On ? 10 : 0 } },
+                  h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+                    h('span', { style: { fontWeight: 700, fontSize: 12.5 } }, 'Nút 2'),
+                    h(DS.Switch, { checked: ctaBtn2On, onChange: v => this.setState({ popupEditorCtaBtn2On: v }) })
+                  ),
+                  ctaBtn2On && h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(160px, 220px) minmax(0, 1fr)', gap: 12 } },
+                    this.field('Nội dung', h(DS.Input, { value: ctaButtons[1] ? ctaButtons[1].label : '', placeholder: 'VD: Mua ngay', onChange: e => updateCta(1, 'label', e && e.target ? e.target.value : e) })),
+                    this.field('Link điều hướng', h(FptUrlInput, { value: ctaButtons[1] ? ctaButtons[1].url : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(1, 'url', e && e.target ? e.target.value : e) }))
+                  )
+                )
               )
             : h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 } },
                 this.uploadBox('Popup Desktop', 'JPG, PNG, WEBP · ≤200KB'),
