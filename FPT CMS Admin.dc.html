@@ -5189,6 +5189,8 @@ class Component extends DCLogic {
       campaignId: pick('campaignId', (r && r.campaignId) || ''),
       goal: pick('goal', r ? (r.goal || '') : ''),
       effRange: pick('effRange', r ? this.ldpEffRangeOf(r) : null) || {},
+      // Tiêu đề (H1): giống Quản lý Trang — tiêu đề chính hiển thị trên trang, bắt buộc, đặt trong khối SEO (renderLdpStep2).
+      h1: pick('h1', r ? (r.h1 || '') : ''),
       metaTitle: pick('metaTitle', r ? (r.metaTitle || demo.metaTitle || ((r.name || '') + ' - FPT Telecom')) : ''),
       metaDesc: pick('metaDesc', r ? (r.metaDesc || demo.metaDesc || '') : ''),
     };
@@ -10717,6 +10719,7 @@ class Component extends DCLogic {
             goal: !sv.goal,
             effRange: !(effR.start && effR.end),
             bcLv2: !(sv.bcLv2 || '').trim(),
+            h1: !sv.h1,
           };
           const errCount = Object.values(errs).filter(Boolean).length;
           if (errCount) {
@@ -11143,7 +11146,11 @@ class Component extends DCLogic {
       bcPreview),
       section(4, 'search-medium-line', 'SEO',
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 } },
-        h('div', null,
+        h('div', { style: { gridColumn: '1 / -1' } },
+          h('label', { style: lbSt }, 'Tiêu đề (H1)', req),
+          h(DS.Input, { value: sv.h1, onChange: e => set('h1', e.target.value), placeholder: 'Nhập tiêu đề chính hiển thị trên trang', error: (step2Err.h1 && !sv.h1) ? 'Vui lòng nhập Tiêu đề (H1).' : undefined })
+        ),
+        h('div', { style: { gridColumn: '1 / -1' } },
           h('label', { style: lbSt }, 'Meta Title'),
           h(DS.Input, { value: sv.metaTitle, maxLength: 60, onChange: e => set('metaTitle', e.target.value), placeholder: 'Tiêu đề hiển thị trên Google (60 ký tự)' })
         ),
@@ -13015,26 +13022,31 @@ class Component extends DCLogic {
                   onDragOver:e=>{e.preventDefault();if(tabDragFrom!==ti)this.setState({tabDragOver:ti});},
                   onDrop:e=>{e.preventDefault();if(tabDragFrom<0||tabDragFrom===ti)return;const nt=[...tabs];const[mv]=nt.splice(tabDragFrom,1);nt.splice(ti,0,mv);this.setState({tabs:nt,tabDragFrom:-1,tabDragOver:-1});},
                   onDragEnd:()=>this.setState({tabDragFrom:-1,tabDragOver:-1}),
-                  style:{border:showErr?'1.5px solid var(--color-danger)':isDragOver?'2px dashed var(--color-accent)':expanded?'1.5px solid var(--color-accent)':'1px solid var(--color-border)',borderRadius:12,marginBottom:12,overflow:'hidden',transition:'border-color .15s',opacity:tabDragFrom===ti?0.45:1}},
-                  h('div',{
+                  // Không tab: khung ngoài này không còn viền riêng — viền duy nhất nằm ở khung nhập bên trong (tránh 2 viền lồng sát nhau).
+                  style:{border:single?'none':showErr?'1.5px solid var(--color-danger)':isDragOver?'2px dashed var(--color-accent)':expanded?'1.5px solid var(--color-accent)':'1px solid var(--color-border)',borderRadius:12,marginBottom:12,overflow:'hidden',transition:'border-color .15s',opacity:tabDragFrom===ti?0.45:1}},
+                  // Không tab: bỏ hẳn thanh tiêu đề đóng/mở "Section: ..." — chỉ có đúng 1 section nên không cần gấp/mở hay đặt tên để phân biệt, chỉ còn khung nhập bên dưới.
+                  !single && h('div',{
                     onClick:()=>this.updTab(tab.id,{expanded:!expanded}),
                     style:{background:expanded?'var(--color-accent-bg)':'var(--color-surface-alt)',padding:'10px 14px',display:'flex',alignItems:'center',gap:8,cursor:'pointer',transition:'background .15s',userSelect:'none'}
                   },
-                    !single && h(DS.Icon,{name:'dots-grid-line',size:16,color:'var(--color-text-subtle)',style:{cursor:'grab',flexShrink:0,lineHeight:1}}),
+                    h(DS.Icon,{name:'dots-grid-line',size:16,color:'var(--color-text-subtle)',style:{cursor:'grab',flexShrink:0,lineHeight:1}}),
                     h(DS.Icon,{name:expanded?'chevron-down-line':'chevron-right-line',size:16,color:expanded?'var(--color-accent)':'var(--color-text-subtle)'}),
                     h('span',{style:{fontWeight:700,fontSize:13,color:expanded?'var(--color-accent)':'var(--color-text)',flex:1}},TabWord+': '+(tab.name||'Chưa đặt tên')),
                     showErr && h('span',{style:{fontSize:11,fontWeight:700,color:'var(--color-danger-text)',whiteSpace:'nowrap',flexShrink:0}},nMiss+' trường chưa điền'),
-                    !single && h('div',{style:{display:'flex',gap:8,alignItems:'center',marginLeft:'auto',flexShrink:0},onClick:e=>e.stopPropagation()},
+                    h('div',{style:{display:'flex',gap:8,alignItems:'center',marginLeft:'auto',flexShrink:0},onClick:e=>e.stopPropagation()},
                       h(DS.Switch,{size:'sm',label:'Mặc định',checked:defaultTab===tab.id,onChange:v=>{if(v)this.setState({defaultTab:tab.id});}}),
                       tabs.length>1 && h(DS.Button,{level:'tertiary',size:'sm',leadingIcon:'trash-line',style:{color:'var(--color-danger-text)',fontSize:11},
                         onClick:e=>{e.stopPropagation();this.setState(s=>({tabs:s.tabs.filter(t=>t.id!==tab.id)}));}
                       },'Xóa tab')
                     )
                   ),
-                  expanded && h('div',{style:{padding:14}},
+                  single && showErr && h('div',{style:{padding:'8px 14px',background:'var(--color-danger-bg)',display:'flex',alignItems:'center'}},
+                    h('span',{style:{fontSize:11,fontWeight:700,color:'var(--color-danger-text)'}},nMiss+' trường chưa điền')
+                  ),
+                  (single || expanded) && h('div',{style:{padding:14}},
                     // Không tab: chỉ còn đúng 1 section cố định (giữ tên tab mặc định cũ, không hiện ra) nên bỏ hẳn ô nhập — không có khái niệm đặt/đổi tên khi không có tab để phân biệt.
                     !single && fld('Tên '+tabWord, h(DS.Input,{key:'tabname'+tab.id,defaultValue:tab.name,placeholder:'Nhập tên '+tabWord+'...',onChange:e=>this.updTab(tab.id,{name:e.target.value})}), showErr && !fptHasTxt(tab.name)),
-                    h('div',{style:{display:'flex',gap:0,border:'1px solid var(--color-border)',borderRadius:10,padding:12,background:'var(--color-surface)',minHeight:280}},
+                    h('div',{style:{display:'flex',gap:0,border:(single&&showErr)?'1.5px solid var(--color-danger)':'1px solid var(--color-border)',borderRadius:10,padding:12,background:'var(--color-surface)',minHeight:280}},
                       leftPanel,
                       rightPanel
                     )
@@ -13216,7 +13228,6 @@ class Component extends DCLogic {
             if (!c7Has(it.desc)) m.push('desc');
             criteria.forEach(c => { if (c.type === 'text' && !c7Has((it.criteriaValues || {})[c.id])) m.push('cv' + c.id); });
             if (!c7Has(it.ctaText)) m.push('ctaText');
-            if (!c7Has(it.ctaUrl) || !fptIsValidTargetUrl(it.ctaUrl)) m.push('ctaUrl');
             return m;
           };
           const fromPkg = code => { const p = C7_PKGS.find(x => x.code === code); return p ? { code:p.code, name:p.name, price:p.price } : { code:'', name:'', price:'' }; };
@@ -13306,6 +13317,15 @@ class Component extends DCLogic {
                 h('div', { style: { marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid var(--color-border)' } },
                   h('span', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'var(--color-text-subtle)' } }, title)),
                 ...content);
+              // Giống khung CTA của Card_1 (mkCard1Class) — Card_7 chỉ có đúng 1 CTA (không có CTA phụ/CTA chi tiết) nên chỉ cần 1 ctaBox.
+              // Công tắc luôn ở trạng thái Bật và bị khoá (disabled) — mỗi gói trong bảng giá Card_7 bắt buộc phải có nút CTA để đăng ký, không cho tắt.
+              const ctaBox = (title, enabled, onChange, content, disabled) => h('div', { style: { padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface-alt)' } },
+                h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: enabled ? 10 : 0 } },
+                  h('div', { style: { fontSize: 12.5, fontWeight: 700, color: 'var(--color-text)' } }, title),
+                  h(DS.Switch, { size: 'sm', label: enabled ? 'Bật' : 'Tắt', checked: enabled, onChange, disabled })
+                ),
+                enabled ? content : null
+              );
               const upd = (id, patch) => store.set({ items: store.items.map(x => x.id === id ? { ...x, ...patch } : x) });
               // Công tắc kèm chữ: chữ bên TRÁI trong khung rộng cố định (căn phải), công tắc bên PHẢI — đổi Bật/Tắt không làm công tắc hay các nút bên cạnh xê dịch.
               const swText = (text, checked, onChange, w, strong) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
@@ -13398,9 +13418,9 @@ class Component extends DCLogic {
                             )
                       ),
                       grp('Nút kêu gọi hành động (CTA)',
-                        g2(
-                          fptReqFld('Nút CTA — Text', h(DS.Input, { key: 'ct' + it.id, defaultValue: it.ctaText || '', placeholder: 'Đăng ký ngay', onChange: e => upd(it.id, { ctaText: e.target.value }) }), E('ctaText')),
-                          fptReqFld('Nút CTA — URL', h(FptUrlInput, { key: 'cu' + it.id, defaultValue: it.ctaUrl || '', placeholder: '/dang-ky-internet?goi=...', onChange: e => upd(it.id, { ctaUrl: e.target.value }) }), E('ctaUrl') && (c7Has(it.ctaUrl) ? FPT_URL_ERROR : FPT_REQ_MSG))
+                        ctaBox('CTA luồng toàn trình', true, undefined,
+                          fptReqFld('CTA luồng toàn trình — Text', h(DS.Input, { key: 'ct' + it.id, defaultValue: it.ctaText || '', placeholder: 'Đăng ký ngay', onChange: e => upd(it.id, { ctaText: e.target.value }) }), E('ctaText')),
+                          true
                         )
                       )
                     )
