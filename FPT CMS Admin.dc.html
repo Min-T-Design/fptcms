@@ -4535,16 +4535,16 @@ class Component extends DCLogic {
   // Danh sách trang: state.pagesData (sau khi lưu ở Quản lý Trang hoặc khi đổi slug ở Quản lý URL) hoặc dữ liệu mẫu PAGES_SEED.
   PAGES() { return this.state.pagesData || this.PAGES_SEED(); }
   PAGES_SEED() { return [
-    { name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', bcLv1: 'Trang chủ', bcLv2: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026/dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', h1: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
-    { name: 'FPT Play detail', bcLv1: 'Trang chủ', bcLv2: 'Truyền hình FPT Play', slug: 'truyen-hinh-fpt-play/detail', h1: 'FPT Play detail', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
-    { name: 'SA detail', bcLv1: 'Trang chủ', bcLv2: 'Dịch vụ số', slug: 'dich-vu-so/detail', h1: 'SA detail', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
-    { name: 'Internet detail sections2', bcLv1: 'Trang chủ', bcLv2: 'Chi tiết Internet', slug: 'internet-detail/sections2', h1: 'Internet detail sections2', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
-    { name: 'Internet - Wifi 2', bcLv1: 'Trang chủ', bcLv2: 'Lắp mạng internet', slug: 'internet/detail2', h1: 'Internet - Wifi', status: 'active', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:25', updatedAt: '26/03/2026 08:26' },
-    { name: 'Dịch vụ F-Safe', bcLv1: 'Dịch vụ số', bcLv2: 'Dịch vụ F-Safe', slug: 'dich-vu-f-safe', h1: 'F-Safe FPT bảo mật Internet toàn diện cho cả gia đình', status: 'active', newsTag: 'internet', metaTitle: 'F-Safe FPT - Bảo mật Internet', metaKeywords: 'f-safe, bảo mật internet, fpt', metaDesc: 'F-Safe FPT bảo mật Internet toàn diện cho cả gia đình.', faqCat: 'Dịch vụ GTGT', createdBy: 'Phạm Thu Hà', createdAt: '03/02/2026 16:40', updatedAt: '18/03/2026 17:54' },
-    { name: 'Camera An Ninh FPT', bcLv1: 'Trang chủ', bcLv2: 'Camera an ninh', slug: 'camera-an-ninh', h1: 'Camera An Ninh FPT – Giám sát mọi lúc mọi nơi', status: 'hidden', newsTag: 'camera', metaTitle: 'Camera An Ninh FPT – Giám sát mọi lúc mọi nơi', metaKeywords: 'camera an ninh, fpt camera, giám sát', metaDesc: 'Camera An Ninh FPT – Giải pháp giám sát thông minh cho gia đình và doanh nghiệp.', faqCat: '', createdBy: 'Phạm Thu Hà', createdAt: '03/02/2026 16:33', updatedAt: '10/05/2026 09:00' },
-    { name: 'Trang chủ', bcLv1: '', bcLv2: 'Trang chủ', slug: 'home', h1: 'FPT Telecom — Nhà cung cấp Internet & Truyền hình', status: 'active', newsTag: '', metaTitle: 'FPT Telecom - Internet, Truyền hình, Camera', metaKeywords: 'fpt, internet, truyền hình, camera', metaDesc: 'Nhà cung cấp dịch vụ Internet, Truyền hình và Camera hàng đầu Việt Nam.', faqCat: 'Thanh toán cước', createdBy: 'Admin User', createdAt: '01/01/2026 08:00', updatedAt: '20/06/2026 10:00' },
-    { name: 'Tin tức', bcLv1: 'Trang chủ', bcLv2: 'Tin tức', slug: 'tin-tuc', h1: 'Tin tức & Sự kiện FPT', status: 'active', newsTag: 'khuyen-mai', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: '', createdBy: 'Admin User', createdAt: '01/01/2026 08:00', updatedAt: '10/06/2026 08:00' },
-    { name: 'Liên hệ', bcLv1: 'Trang chủ', bcLv2: 'Liên hệ', slug: 'lien-he', h1: 'Liên hệ FPT Telecom', status: 'hidden', newsTag: '', metaTitle: '', metaKeywords: '', metaDesc: '', faqCat: 'Chính sách & Thủ tục', createdBy: 'Trần Thị Bích', createdAt: '01/01/2026 08:00', updatedAt: '05/06/2026 14:30' },
+    { name: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm Wi-Fi 6', bcLv1: 'Trang chủ', bcLv2: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết', slug: 'chuong-trinh-uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026/dang-ky-moi-goi-internet-toc-do-cao-kem-thiet-bi-wi-fi-6-va-camera-an-ninh-thong-minh', h1: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc', status: 'active', newsTag: '', metaTitle: '', metaDesc: '', faqCat: '', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', createdAt: '27/10/2026 09:15', updatedAt: '27/10/2026 09:15' },
+    { name: 'FPT Play detail', bcLv1: 'Trang chủ', bcLv2: 'Truyền hình FPT Play', slug: 'truyen-hinh-fpt-play/detail', h1: 'FPT Play detail', status: 'active', newsTag: '', metaTitle: '', metaDesc: '', faqCat: '', createdBy: 'Nguyễn Văn An', createdAt: '05/04/2026 23:19', updatedAt: '05/04/2026 23:19' },
+    { name: 'SA detail', bcLv1: 'Trang chủ', bcLv2: 'Dịch vụ số', slug: 'dich-vu-so/detail', h1: 'SA detail', status: 'active', newsTag: '', metaTitle: '', metaDesc: '', faqCat: '', createdBy: 'Trần Thị Bích', createdAt: '27/03/2026 10:13', updatedAt: '27/03/2026 10:13' },
+    { name: 'Internet detail sections2', bcLv1: 'Trang chủ', bcLv2: 'Chi tiết Internet', slug: 'internet-detail/sections2', h1: 'Internet detail sections2', status: 'active', newsTag: '', metaTitle: '', metaDesc: '', faqCat: '', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:26', updatedAt: '26/03/2026 08:26' },
+    { name: 'Internet - Wifi 2', bcLv1: 'Trang chủ', bcLv2: 'Lắp mạng internet', slug: 'internet/detail2', h1: 'Internet - Wifi', status: 'active', newsTag: '', metaTitle: '', metaDesc: '', faqCat: '', createdBy: 'Lê Minh Hoàng', createdAt: '26/03/2026 08:25', updatedAt: '26/03/2026 08:26' },
+    { name: 'Dịch vụ F-Safe', bcLv1: 'Dịch vụ số', bcLv2: 'Dịch vụ F-Safe', slug: 'dich-vu-f-safe', h1: 'F-Safe FPT bảo mật Internet toàn diện cho cả gia đình', status: 'active', newsTag: 'internet', metaTitle: 'F-Safe FPT - Bảo mật Internet', metaDesc: 'F-Safe FPT bảo mật Internet toàn diện cho cả gia đình.', faqCat: 'Dịch vụ GTGT', createdBy: 'Phạm Thu Hà', createdAt: '03/02/2026 16:40', updatedAt: '18/03/2026 17:54' },
+    { name: 'Camera An Ninh FPT', bcLv1: 'Trang chủ', bcLv2: 'Camera an ninh', slug: 'camera-an-ninh', h1: 'Camera An Ninh FPT – Giám sát mọi lúc mọi nơi', status: 'hidden', newsTag: 'camera', metaTitle: 'Camera An Ninh FPT – Giám sát mọi lúc mọi nơi', metaDesc: 'Camera An Ninh FPT – Giải pháp giám sát thông minh cho gia đình và doanh nghiệp.', faqCat: '', createdBy: 'Phạm Thu Hà', createdAt: '03/02/2026 16:33', updatedAt: '10/05/2026 09:00' },
+    { name: 'Trang chủ', bcLv1: '', bcLv2: 'Trang chủ', slug: 'home', h1: 'FPT Telecom — Nhà cung cấp Internet & Truyền hình', status: 'active', newsTag: '', metaTitle: 'FPT Telecom - Internet, Truyền hình, Camera', metaDesc: 'Nhà cung cấp dịch vụ Internet, Truyền hình và Camera hàng đầu Việt Nam.', faqCat: 'Thanh toán cước', createdBy: 'Admin User', createdAt: '01/01/2026 08:00', updatedAt: '20/06/2026 10:00' },
+    { name: 'Tin tức', bcLv1: 'Trang chủ', bcLv2: 'Tin tức', slug: 'tin-tuc', h1: 'Tin tức & Sự kiện FPT', status: 'active', newsTag: 'khuyen-mai', metaTitle: '', metaDesc: '', faqCat: '', createdBy: 'Admin User', createdAt: '01/01/2026 08:00', updatedAt: '10/06/2026 08:00' },
+    { name: 'Liên hệ', bcLv1: 'Trang chủ', bcLv2: 'Liên hệ', slug: 'lien-he', h1: 'Liên hệ FPT Telecom', status: 'hidden', newsTag: '', metaTitle: '', metaDesc: '', faqCat: 'Chính sách & Thủ tục', createdBy: 'Trần Thị Bích', createdAt: '01/01/2026 08:00', updatedAt: '05/06/2026 14:30' },
   ]; }
   // Section gắn với trang theo TÊN trang (pages[]). Khi đổi tên trang ở Quản lý Trang, state.pageRenames { tênGốc: tênMới } giúp
   // các Section vẫn bám đúng trang đó (không bị mất liên kết chỉ vì sửa tên).
@@ -6168,7 +6168,7 @@ class Component extends DCLogic {
         },
         onDragEnd: () => this.setState({ pageSecDragIdx: null, pageSecDragOverIdx: null }),
       });
-      pageSectionsCard = section(5, 'apps-2-line', 'Danh sách Section của trang',
+      pageSectionsCard = section(4, 'apps-2-line', 'Danh sách Section của trang',
         h('div', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)', marginTop: -6, marginBottom: 2 } },
           orderedSections.length ? 'Kéo thả để thay đổi thứ tự hiển thị section trên trang.' : null
         ),
@@ -6208,7 +6208,8 @@ class Component extends DCLogic {
       newsTag: dv('newsTag', r ? (r.newsTag || '') : ''),
       bcShow: dv('bcShow', r ? r.bcShow !== false : true),
       bcLv1: dv('bcLv1', r ? (r.bcLv1 || '') : ''), bcLv2: dv('bcLv2', r ? (r.bcLv2 || '') : ''),
-      metaTitle: dv('metaTitle', r ? (r.metaTitle || '') : ''), metaKeywords: dv('metaKeywords', r ? (r.metaKeywords || '') : ''), metaDesc: dv('metaDesc', r ? (r.metaDesc || '') : ''),
+      metaTitle: dv('metaTitle', r ? (r.metaTitle || '') : ''), metaDesc: dv('metaDesc', r ? (r.metaDesc || '') : ''),
+      thumbnail: dv('thumbnail', r ? (r.thumbnail || '') : ''),
       active: dv('active', r ? (actMap[r.slug] !== undefined ? !!actMap[r.slug] : r.status !== 'hidden') : true),
     };
     // Breadcrumb: "trang trước" chọn từ breadcrumb (trang hiện tại) của các trang khác — đây cũng là nguồn sau này cho ô Breadcrumb trang trước của LDP
@@ -6232,7 +6233,7 @@ class Component extends DCLogic {
       const chk = this.urlCheckPageSlug(val.slug, r ? r.slug : null);
       if (!chk.ok) { this.toast('danger', 'Mã code (Slug) chưa hợp lệ', chk.msg || 'Vui lòng nhập Mã code (Slug) theo định dạng lv1/lv2.'); return; }
       const now = this.nowStr();
-      const rec = { name: val.name.trim(), slug: chk.path, h1: val.h1, status: val.active ? 'active' : 'hidden', newsTag: val.newsTag, bcLv1: val.bcLv1, bcLv2: val.bcLv2.trim(), bcShow: val.bcShow, metaTitle: val.metaTitle, metaKeywords: val.metaKeywords, metaDesc: val.metaDesc, updatedAt: now, updatedBy: 'Admin User' };
+      const rec = { name: val.name.trim(), slug: chk.path, h1: val.h1, status: val.active ? 'active' : 'hidden', newsTag: val.newsTag, bcLv1: val.bcLv1, bcLv2: val.bcLv2.trim(), bcShow: val.bcShow, metaTitle: val.metaTitle, metaDesc: val.metaDesc, thumbnail: val.thumbnail, updatedAt: now, updatedBy: 'Admin User' };
       const list = this.PAGES();
       const nextPages = r ? list.map(p => p.slug === r.slug ? { ...p, ...rec } : p) : [{ ...rec, faqCat: '', createdBy: 'Admin User', createdAt: now }, ...list];
       const prevUrls = this.URLS();
@@ -6294,15 +6295,27 @@ class Component extends DCLogic {
           ),
           this.field('Xem trước', this.breadcrumbPreview(val.bcLv1, val.bcLv2))
         ),
-        section(3, 'search-medium-line', 'Cấu hình SEO',
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-            h('div', null, this.field('Meta tiêu đề', h(DS.Input, { value: val.metaTitle, onChange: e => setDv('metaTitle', evVal(e)), placeholder: 'Tiêu đề hiển thị trên Google' }), true)),
-            h('div', null, this.field('Meta từ khóa', h(DS.Input, { value: val.metaKeywords, onChange: e => setDv('metaKeywords', evVal(e)), placeholder: 'internet fpt, wifi 6, …' }), true))
-          ),
-          this.field('Meta mô tả', h(DS.Textarea, { value: val.metaDesc, onChange: e => setDv('metaDesc', evVal(e)), maxLength: 160, placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 }), true)
-        ),
-        section(4, 'image-line', 'Hình ảnh',
-          h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } }, this.uploadBox('Ảnh đại diện trang', 'PNG / JPG / WebP · ≤200KB', true))
+        section(3, 'search-medium-line', 'SEO',
+          this.field('Meta Title', h(DS.Input, { value: val.metaTitle, onChange: e => setDv('metaTitle', evVal(e)), placeholder: 'Tiêu đề hiển thị trên Google' })),
+          this.field('Thumbnail', h('div', { style: { display: 'flex', gap: 8 } },
+            h(DS.Input, { value: val.thumbnail, onChange: e => setDv('thumbnail', evVal(e)), placeholder: 'URL ảnh', style: { flex: 1 } }),
+            h(DS.Button, { level: 'secondary', size: 'sm' }, 'Upload')
+          )),
+          this.field('Meta Description', h(DS.Textarea, { value: val.metaDesc, onChange: e => setDv('metaDesc', evVal(e)), maxLength: 160, placeholder: 'Mô tả SEO ngắn (150–160 ký tự)…', rows: 3 })),
+          h('div', null,
+            h('div', { style: { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 8 } }, 'XEM TRƯỚC HIỂN THỊ TÌM KIẾM GOOGLE (SEO SNIPPET MOCKUP)'),
+            h('div', { style: { background: 'var(--color-surface-sunken)', border: '1px solid var(--color-border)', borderRadius: 10, padding: 16, maxWidth: 600, fontFamily: 'Arial, sans-serif' } },
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 } },
+                h('div', { style: { background: 'var(--color-surface-alt)', width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#f36523', flexShrink: 0 } }, 'F'),
+                h('div', { style: { minWidth: 0 } },
+                  h('span', { style: { display: 'block', fontSize: 12, color: 'var(--color-text)' } }, 'FPT Telecom'),
+                  h('span', { style: { display: 'block', fontSize: 11, color: 'var(--color-text-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, 'https://fpt.vn/' + val.slug)
+                )
+              ),
+              h('div', { style: { color: '#4c8fda', fontSize: 18, lineHeight: '26px', marginBottom: 4, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' } }, val.metaTitle || 'Tiêu đề trang'),
+              h('div', { style: { color: 'var(--color-text-muted)', fontSize: 13, lineHeight: '20px' } }, val.metaDesc || 'Mô tả meta hiển thị tại đây...')
+            )
+          )
         ),
         pageSectionsCard
       ),
