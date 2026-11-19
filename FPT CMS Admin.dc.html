@@ -8529,16 +8529,16 @@ class Component extends DCLogic {
             h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
               ctaHead('Nút 1', null, true),
               h('div', { style: { padding: 14, borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: 'minmax(160px, 220px) minmax(0, 1fr)', gap: 12 } },
-                this.field('Nội dung', h(DS.Input, { value: ctaButtons[0] ? ctaButtons[0].label : '', placeholder: 'VD: Mua ngay', onChange: e => updateCta(0, 'label', e && e.target ? e.target.value : e) })),
-                this.field('Link điều hướng', h(FptUrlInput, { value: ctaButtons[0] ? ctaButtons[0].url : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(0, 'url', e && e.target ? e.target.value : e) }))
+                this.field('Nội dung', h(DS.Input, { value: ctaButtons[0] ? ctaButtons[0].label : '', placeholder: 'VD: Mua ngay', onChange: e => updateCta(0, 'label', e && e.target ? e.target.value : e) }), true),
+                this.field('Link điều hướng', h(FptUrlInput, { value: ctaButtons[0] ? ctaButtons[0].url : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(0, 'url', e && e.target ? e.target.value : e) }), true)
               )
             ),
             // Nút 2: tùy chọn — Switch ngay trên header tự mở rộng/thu gọn khối nhập liệu, thay cho nút thêm/xóa riêng.
             h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' } },
               ctaHead('Nút 2', h(DS.Switch, { checked: ctaBtn2On, onChange: v => this.setState({ popupEditorCtaBtn2On: v }) }), ctaBtn2On),
               ctaBtn2On && h('div', { style: { padding: 14, borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: 'minmax(160px, 220px) minmax(0, 1fr)', gap: 12 } },
-                this.field('Nội dung', h(DS.Input, { value: ctaButtons[1] ? ctaButtons[1].label : '', placeholder: 'VD: Mua ngay', onChange: e => updateCta(1, 'label', e && e.target ? e.target.value : e) })),
-                this.field('Link điều hướng', h(FptUrlInput, { value: ctaButtons[1] ? ctaButtons[1].url : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(1, 'url', e && e.target ? e.target.value : e) }))
+                this.field('Nội dung', h(DS.Input, { value: ctaButtons[1] ? ctaButtons[1].label : '', placeholder: 'VD: Mua ngay', onChange: e => updateCta(1, 'label', e && e.target ? e.target.value : e) }), true),
+                this.field('Link điều hướng', h(FptUrlInput, { value: ctaButtons[1] ? ctaButtons[1].url : '', placeholder: 'VD: /khuyen-mai hoặc https://fpt.vn/khuyen-mai', onChange: e => updateCta(1, 'url', e && e.target ? e.target.value : e) }), true)
               )
             )
           ),
