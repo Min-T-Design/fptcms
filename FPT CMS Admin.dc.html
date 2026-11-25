@@ -9758,7 +9758,7 @@ class Component extends DCLogic {
       return true;
     });
     const columns = [
-      { key: 'q', header: 'Câu hỏi', width: 340, render: (_, r) => h('div', null,
+      { key: 'q', header: 'Câu hỏi & trả lời', width: 340, render: (_, r) => h('div', null,
         h('div', { style: { fontWeight: 600, fontSize: 13.5 } }, r.q),
         r.a ? h('div', { style: { fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }, dangerouslySetInnerHTML: { __html: r.a } }) : null
       )},
@@ -9938,7 +9938,7 @@ class Component extends DCLogic {
         else { const newId = Math.max(0, ...base.map(f => f.id)) + 1; this.setState({ faqItems: base.concat([{ id: newId, cat: d.cat, lang: d.lang, q: d.q, a: answerHtml, answer: answerHtml, order: Number(d.order) || 1, status: d.active ? 'active' : 'inactive', createdAt: today, createdBy: 'Admin User', updatedAt: today, updatedBy: 'Admin User' }]) }); }
         back(); this.toast('success', 'Đã lưu', 'Câu hỏi đã được lưu.');
       },
-      isNew ? 'Thêm câu hỏi' : 'Lưu câu hỏi'
+      'Lưu câu hỏi'
     );
   }
   openFaqCatDetail(r) {
@@ -10052,7 +10052,7 @@ class Component extends DCLogic {
         else { const newId = Math.max(0, ...base.map(c => c.id)) + 1; this.setState({ faqCatsData: base.concat([{ id: newId, name, lang, order: base.length + 1, count: 0, status: 'active', createdAt: today, createdBy: 'Admin User', updatedAt: today, updatedBy: 'Admin User' }]) }); }
         back(); this.toast('success', 'Đã lưu', 'Danh mục đã được lưu.');
       },
-      isNew ? 'Thêm danh mục' : 'Lưu danh mục'
+      'Lưu danh mục'
     );
   }
 
