@@ -758,6 +758,31 @@ function FptUploadSlot({ label, hint, required, ratio, maxKB, accept, value, onC
   );
 }
 
+// Bộ chọn đánh giá sao dùng cho tab Cài đặt ứng dụng — 5 sao, mốc chọn nhỏ nhất 0,5 (bấm nửa trái ngôi sao = x,5 | nửa phải = x,0).
+function FptStarRating({ value, onChange, size = 26 }) {
+  const h = React.createElement;
+  const DS = window.ZENKaizenDesignSystem_4069b4;
+  const [hover, setHover] = React.useState(null);
+  const v = hover != null ? hover : (value || 0);
+  const stars = [1, 2, 3, 4, 5].map(n => {
+    const fillPct = v >= n ? 100 : v >= n - 0.5 ? 50 : 0;
+    const pick = half => { onChange(half); setHover(null); };
+    return h('div', { key: 'star' + n, style: { position: 'relative', width: size, height: size, flexShrink: 0 } },
+      h(DS.Icon, { name: 'star-01-line', size, color: 'var(--color-border-strong)', style: { position: 'absolute', top: 0, left: 0, pointerEvents: 'none' } }),
+      fillPct > 0 && h('div', { key: 'fill', style: { position: 'absolute', top: 0, left: 0, width: fillPct + '%', height: size, overflow: 'hidden', pointerEvents: 'none' } },
+        h(DS.Icon, { name: 'star-01-solid', size, color: 'var(--color-warning)' })
+      ),
+      h('div', { key: 'half-l', onMouseEnter: () => setHover(n - 0.5), onMouseLeave: () => setHover(null), onClick: () => pick(n - 0.5), title: (n - 0.5) + ' sao', style: { position: 'absolute', top: 0, left: 0, width: '50%', height: '100%', cursor: 'pointer' } }),
+      h('div', { key: 'half-r', onMouseEnter: () => setHover(n), onMouseLeave: () => setHover(null), onClick: () => pick(n), title: n + ' sao', style: { position: 'absolute', top: 0, right: 0, width: '50%', height: '100%', cursor: 'pointer' } })
+    );
+  });
+  return h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+    h('div', { style: { display: 'flex', gap: 4 } }, ...stars),
+    h('span', { style: { fontSize: 13.5, fontWeight: 700, color: 'var(--color-text)', minWidth: 30 } }, value ? value.toFixed(1) : '—'),
+    h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '/ 5')
+  );
+}
+
 // Vùng bảng dữ liệu có thể "Thu phóng" (phóng to/thu nhỏ như Excel) qua toolbar hoặc Ctrl + cuộn chuột.
 // Dùng CSS `zoom` (không phải transform:scale) vì zoom co giãn luôn kích thước layout của khối, nên
 // khung cuộn ngang bao ngoài (overflow:auto, không nằm trong khối zoom) tự nhận đúng kích thước đã
@@ -4734,6 +4759,12 @@ class Component extends DCLogic {
       content: 'Ưu đãi Black Friday — Giảm 50% cước Internet 6 tháng đầu cho khách hàng đăng ký mới.',
       url: 'https://fpt.vn/shop/internet/black-friday', target: '_blank', order: 2, status: 'active', startAt: '20/11/2026 00:00', endAt: '30/11/2026 23:59', createdAt: '25/09/2026 10:20', createdBy: 'Admin User', updatedAt: '28/09/2026 16:45', updatedBy: 'Admin User' },
   ]; }
+  // Cài đặt ứng dụng — banner gợi ý cài/mở ứng dụng (kiểu "Hi FPT") hiển thị dạng thẻ: Logo, Tiêu đề, đánh giá sao, Mô tả ngắn, nút CTA, Hành vi hiển thị.
+  APP_BANNERS() { return [
+    { id: 901, title: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới Internet tốc độ cao kèm Wi-Fi 6 và Camera an ninh toàn quốc', logoImg: '', logoImgLink: '', rating: 2.5, shortDesc: 'Combo Internet tốc độ cao kèm Camera AI, Wi-Fi 6 và nhiều ưu đãi hấp dẫn khác dành riêng cho bạn', ctaText: 'Mở ứng dụng ngay để nhận ưu đãi hôm nay', ctaUrl: 'https://fpt.vn/shop/internet/uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026', autoCloseSec: 0, frequency: 'always', status: 'active', createdAt: '27/10/2026 09:15', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedAt: '27/10/2026 09:15', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
+    { id: 1, title: 'Hi FPT', logoImg: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7aedea66620_1786441194.png', logoImgLink: '', rating: 4.5, shortDesc: 'FPT Telecom · Miễn phí trên App Store & CH Play', ctaText: 'Mở App ngay', ctaUrl: 'https://fpt.vn/app/hi-fpt', autoCloseSec: 10, frequency: 'every-session', status: 'active', createdAt: '11/08/2026 09:15', createdBy: 'Admin User', updatedAt: '25/08/2026 14:30', updatedBy: 'Nguyễn Thị Thùy' },
+    { id: 2, title: 'FPT Play', logoImg: '', logoImgLink: '', rating: 4, shortDesc: 'Xem trọn Ngoại Hạng Anh & kho phim bản quyền', ctaText: 'Cài đặt ngay', ctaUrl: 'https://fpt.vn/app/fpt-play', autoCloseSec: 0, frequency: 'every-session', status: 'inactive', createdAt: '02/07/2026 10:20', createdBy: 'Trần Minh Khoa', updatedAt: '02/07/2026 10:20', updatedBy: 'Trần Minh Khoa' },
+  ]; }
   FAQS() { return [
     { id: 901, cat: 'Thanh toán cước', q: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc?', a: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc. Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc. Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc.', lang: 'Tiếng Việt', order: 9, status: 'active', createdAt: '27/10/2026', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedAt: '27/10/2026', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
     { id: 1, cat: 'Thanh toán cước', q: 'Làm thế nào để thanh toán cước trực tuyến?', a: 'FPT Telecom hỗ trợ đa dạng hình thức thanh toán: ứng dụng Hi FPT, ví điện tử MoMo, VNPay, ZaloPay, chuyển khoản ngân hàng hoặc tại quầy giao dịch FPT.', lang: 'Tiếng Việt', order: 1, status: 'active', createdAt: '14/01/2026', createdBy: 'Nguyễn Văn An', updatedAt: '20/03/2026', updatedBy: 'Trần Thị Bích' },
@@ -8633,6 +8664,7 @@ class Component extends DCLogic {
   // ===== Quảng cáo (Ads) =====
   getAdsList() { return this.state.adsListData || this.ADS(); }
   getAdCatsList() { return this.state.adCatsListData || this.AD_CATEGORIES(); }
+  getAppBannersList() { return this.state.appBannersListData || this.APP_BANNERS(); }
   adCatLabel(code) {
     const c = this.getAdCatsList().find(c => c.code === code);
     return c ? c.name : '—';
@@ -8680,6 +8712,14 @@ class Component extends DCLogic {
     if (c && c.bgImg) return 'center / cover no-repeat url("' + c.bgImg + '")';
     return (c && c.bgColor) || 'var(--color-surface-alt)';
   }
+  appBannerRatingBadge(v) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    if (!v) return h('span', { style: { color: 'var(--color-text-subtle)', fontSize: 12.5 } }, '—');
+    return h('div', { style: { display: 'flex', alignItems: 'center', gap: 4 } },
+      h(DS.Icon, { name: 'star-01-solid', size: 14, color: 'var(--color-warning)' }),
+      h('span', { style: { fontSize: 12.5, fontWeight: 700 } }, Number(v).toFixed(1))
+    );
+  }
   openAdEditor(r) {
     this.setState({
       adEditor: r, adCatErr: false, adTitleErr: false,
@@ -8694,14 +8734,16 @@ class Component extends DCLogic {
   renderAds() {
     if (this.state.adEditor !== undefined) return this.renderAdEditor(this.state.adEditor);
     if (this.state.adCatEditor !== undefined) return this.renderAdCatEditor(this.state.adCatEditor);
+    if (this.state.appBannerEditor !== undefined) return this.renderAppBannerEditor(this.state.appBannerEditor);
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const tab = this.state.adsTab || 'list';
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       h(DS.Tabs, { value: tab, onChange: v => this.setState({ adsTab: v }), items: [
         { value: 'list', label: 'Danh sách quảng cáo', icon: 'bell-01-line' },
         { value: 'cats', label: 'Khung quảng cáo', icon: 'folder-line' },
+        { value: 'appbanner', label: 'Cài đặt ứng dụng', icon: 'download-01-line' },
       ] }),
-      tab === 'list' ? this.renderAdsList() : this.renderAdCats()
+      tab === 'list' ? this.renderAdsList() : tab === 'cats' ? this.renderAdCats() : this.renderAppBanners()
     );
   }
   renderAdsList() {
@@ -9239,6 +9281,236 @@ class Component extends DCLogic {
         this.toast('success', 'Đã lưu', 'Khung quảng cáo đã được lưu.');
       },
       isNew ? 'Thêm khung quảng cáo' : 'Lưu khung quảng cáo'
+    );
+  }
+
+  // ===== Cài đặt ứng dụng (banner gợi ý cài/mở ứng dụng, kiểu "Hi FPT") =====
+  openAppBannerEditor(r) {
+    this.setState({
+      appBannerEditor: r, appBannerRatingErr: false, appBannerLogoErr: false, appBannerFreqErr: false,
+      appBannerDraft: Object.assign(r
+        ? { title: r.title, rating: r.rating || 0, shortDesc: r.shortDesc || '', ctaText: r.ctaText || '', ctaUrl: r.ctaUrl || '', autoClose: r.autoCloseSec ? String(r.autoCloseSec) : '', frequency: r.frequency || '', active: r.status !== 'inactive' }
+        : { title: '', rating: 0, shortDesc: '', ctaText: '', ctaUrl: '', autoClose: '', frequency: '', active: true })
+    });
+  }
+  closeAppBannerEditor() {
+    this.setState({ appBannerEditor: undefined, appBannerDraft: null, appBannerRatingErr: false, appBannerLogoErr: false, appBannerFreqErr: false });
+  }
+  renderAppBanners() {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const q = (this.state.appBannerSearch || '').toLowerCase();
+    const statusF = this.state.appBannerStatusFilter || 'all';
+    const data = this.getAppBannersList().filter(a => {
+      if (q && !(a.title + ' ' + (a.shortDesc || '') + ' ' + (a.ctaText || '')).toLowerCase().includes(q)) return false;
+      if (statusF !== 'all' && a.status !== statusF) return false;
+      return true;
+    });
+    const sliced = this.sliceData(data, 'appBanner');
+    const pg = this.state.appBanner_pg || 1;
+    const sz = this.state.appBanner_sz || 10;
+    const columns = [
+      { key: 'stt', header: '#', width: 44, align: 'center',
+        render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (pg - 1) * sz + sliced.indexOf(r) + 1) },
+      { key: 'app', header: 'Tiêu đề', width: 300, render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+          r.logoImg
+            ? h('img', { src: r.logoImg, style: { width: 40, height: 40, borderRadius: 10, objectFit: 'contain', background: 'var(--color-surface-alt)', flexShrink: 0 } })
+            : h('div', { style: { width: 40, height: 40, borderRadius: 10, background: 'var(--color-surface-alt)', flexShrink: 0 } }),
+          h('span', { style: { fontWeight: 600, fontSize: 13, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } }, r.title)
+        ) },
+      { key: 'rating', header: 'Đánh giá', width: 110, align: 'center', render: (_, r) => h('div', { style: { display: 'flex', justifyContent: 'center' } }, this.appBannerRatingBadge(r.rating)) },
+      { key: 'cta', header: 'Nút CTA', width: 180, render: (_, r) => r.ctaText ? h('span', { style: { fontSize: 12.5, fontWeight: 600 } }, r.ctaText) : '—' },
+      { key: 'status', header: 'Trạng thái', width: 130, render: (_, r) => this.statusBadge(r.status) },
+      ...this.auditCols(),
+      { key: 'active', header: 'Hoạt động', width: 64, align: 'center', render: (_, r) => {
+          const isOn = r.status !== 'inactive';
+          return h('div', { onClick: e => e.stopPropagation(), style: { display: 'flex', justifyContent: 'center' } },
+            h(DS.Switch, { key: 'sw-appbanner-act-' + r.id + '-' + (isOn ? 1 : 0), defaultChecked: isOn, size: 'sm', title: 'Bật/Tắt Cài đặt ứng dụng', onChange: v => {
+              this.setState({ appBannersListData: this.getAppBannersList().map(x => x.id === r.id ? Object.assign({}, x, { status: v ? 'active' : 'inactive' }) : x) });
+              this.toast(v ? 'success' : 'neutral', v ? 'Đã bật' : 'Đã tắt', 'Cài đặt ứng dụng "' + r.title.slice(0, 60) + '".');
+            } })
+          );
+        } },
+      { key: 'act', header: 'Thao tác', width: 50, align: 'right', render: (_, r) => this.rowActions([
+        { icon: 'edit-01-line', label: 'Sửa', onClick: () => this.openAppBannerEditor(r) },
+      ]) },
+    ];
+    return this.listCard(
+      this.toolbar(
+        h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
+          h('div', { style: { width: 360, flexShrink: 0 } }, h(DS.Input, { value: this.state.appBannerSearch || '', onChange: e => this.setState({ appBannerSearch: e && e.target ? e.target.value : e, appBanner_pg: 1 }), placeholder: 'Tìm tiêu đề, mô tả, CTA...', leadingIcon: 'search-medium-line' })),
+          h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, {
+            value: statusF, options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }],
+            onChange: v => this.setState({ appBannerStatusFilter: v, appBanner_pg: 1 })
+          }))
+        ),
+        h(DS.Button, { level: 'primary', leadingIcon: 'plus-line', onClick: () => this.openAppBannerEditor(null), style: { flexShrink: 0 } }, 'Thêm Cài đặt ứng dụng'),
+        true
+      ),
+      this.filterChipsBar([
+        this.state.appBannerSearch && this.filterChip('Tìm: ' + this.state.appBannerSearch, 'neutral', () => this.setState({ appBannerSearch: '', appBanner_pg: 1 })),
+        statusF !== 'all' && this.filterChip('Trạng thái: ' + (statusF === 'active' ? 'Hoạt động' : 'Ngừng hoạt động'), statusF === 'active' ? 'success' : 'neutral', () => this.setState({ appBannerStatusFilter: 'all', appBanner_pg: 1 })),
+      ]),
+      data.length ? this.tbl(columns, sliced, 'id', r => this.openAppBannerDetail(r)) : this.empty('Chưa có Cài đặt ứng dụng nào.'),
+      data.length ? this.renderPagBar(data.length, 'appBanner', 'cấu hình ứng dụng') : null
+    );
+  }
+  openAppBannerDetail(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const freqLabel = Object.fromEntries(this.POPUP_FREQUENCIES().map(t => [t.value, t.label]));
+    this.openDrawer({ title: r.title.length > 60 ? r.title.slice(0, 60) + '…' : r.title, subtitle: 'Chi tiết Cài đặt ứng dụng', width: 440,
+      render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
+        this.detailRow('Tiêu đề', r.title),
+        this.detailRow('Logo App', r.logoImg ? h('img', { src: r.logoImg, style: { width: 64, height: 64, borderRadius: 12, objectFit: 'contain', background: 'var(--color-surface-alt)' } }) : '—'),
+        this.detailRow('Đánh giá', this.appBannerRatingBadge(r.rating)),
+        this.detailRow('Mô tả ngắn', r.shortDesc || '—'),
+        this.detailRow('Nút CTA', (r.ctaText || r.ctaUrl) ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } },
+            h('span', { style: { fontWeight: 600 } }, r.ctaText || '—'),
+            r.ctaUrl && h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, color: 'var(--color-text-subtle)', wordBreak: 'break-all' } }, r.ctaUrl)
+          ) : '—'),
+        this.detailRow('Thời gian tự đóng', r.autoCloseSec ? r.autoCloseSec + ' giây' : 'Không tự đóng'),
+        this.detailRow('Tần suất hiển thị', freqLabel[r.frequency] || '—'),
+        this.detailRow('Trạng thái', this.statusBadge(r.status)),
+        ...this.auditRows(r)
+      ),
+      footer: () => h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+        h(DS.Button, { level: 'tertiary', onClick: () => this.closeDrawer() }, 'Đóng'),
+        h(DS.Button, { level: 'primary', leadingIcon: 'edit-01-line', onClick: () => { this.closeDrawer(); this.openAppBannerEditor(r); } }, 'Chỉnh sửa')
+      )
+    });
+  }
+  renderAppBannerEditor(r) {
+    const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
+    const isNew = !r; const back = () => this.closeAppBannerEditor();
+    const setD = patch => this.setState(s => ({ appBannerDraft: Object.assign({}, s.appBannerDraft, patch) }));
+    const d = this.state.appBannerDraft || { title: '', rating: 0, shortDesc: '', ctaText: '', ctaUrl: '', autoClose: '', frequency: '', active: true };
+    const ratingErr = !!this.state.appBannerRatingErr;
+    const logoErr = !!this.state.appBannerLogoErr;
+    const freqErr = !!this.state.appBannerFreqErr;
+    const autoCloseErr = d.autoClose !== '' && !/^\d+$/.test(d.autoClose) ? 'Chỉ nhập số nguyên từ 0 trở lên.' : undefined;
+    const TITLE_MAX = 150, SHORTDESC_MAX = 100, CTA_TEXT_MAX = 50;
+    const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
+        h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
+        h('span', { style: { fontWeight: 700, fontSize: 14.5, color: 'var(--color-accent-text)' } }, num + '. ' + title)
+      ),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
+    );
+    // Controlled text field: hard maxLength + live "at limit" counter (CLAUDE.md §13), re-declared locally per editor.
+    // `suggest` (tham số thứ 6, tuỳ chọn) là ghi chú đề xuất độ dài vừa 1 dòng trên banner app thật — khác với giới hạn cứng `max`.
+    const limField = (label, key, max, required, placeholder, suggest) => {
+      const val = d[key] || '';
+      const atMax = val.length >= max;
+      return this.field(label, h('div', null,
+        h(DS.Input, {
+          value: val, maxLength: max, placeholder,
+          onChange: e => setD({ [key]: ((e && e.target ? e.target.value : e) || '').slice(0, max) })
+        }),
+        h('div', { style: { fontSize: 11.5, color: atMax ? 'var(--color-danger-text)' : 'var(--color-text-subtle)', marginTop: 4 } },
+          'Tối đa ' + max + ' ký tự (' + val.length + '/' + max + ')' + (atMax ? ' — đã đạt giới hạn' : '')),
+        suggest && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2, fontStyle: 'italic' } }, suggest)
+      ), required);
+    };
+    const limTextField = (label, key, max, required, placeholder, suggest) => {
+      const val = d[key] || '';
+      const atMax = val.length >= max;
+      return this.field(label, h('div', null,
+        h(DS.Textarea, {
+          value: val, maxLength: max, rows: 2, placeholder,
+          onChange: e => setD({ [key]: ((e && e.target ? e.target.value : e) || '').slice(0, max) })
+        }),
+        h('div', { style: { fontSize: 11.5, color: atMax ? 'var(--color-danger-text)' : 'var(--color-text-subtle)', marginTop: 4 } },
+          'Tối đa ' + max + ' ký tự (' + val.length + '/' + max + ')' + (atMax ? ' — đã đạt giới hạn' : '')),
+        suggest && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2, fontStyle: 'italic' } }, suggest)
+      ), required);
+    };
+    // Logo App dùng ô tải ảnh chung (FptUploadSlot); giá trị nằm trong appBannerDraft.logoImgDraft (null = đã xóa).
+    const seedImg = (src, link) => src ? { id: 'seed:' + src, name: String(src).split('/').pop(), sizeKB: null, src, status: 'done', progress: 100, url: link || src } : null;
+    const iconVal = d.logoImgDraft !== undefined ? d.logoImgDraft : seedImg(r && r.logoImg, r && r.logoImgLink);
+    const imgPatchBox = (field, seed) => v => this.setState(s => {
+      const dd = s.appBannerDraft || {};
+      const prev = dd[field] !== undefined ? dd[field] : seed;
+      const next = typeof v === 'function' ? v(prev) : v;
+      const patch = { appBannerDraft: Object.assign({}, dd, { [field]: next }) };
+      if (next && next.status === 'done' && s.appBannerLogoErr) patch.appBannerLogoErr = false;
+      return patch;
+    });
+    return this.editorShell(
+      isNew ? 'Thêm Cài đặt ứng dụng' : 'Chỉnh sửa Cài đặt ứng dụng', '', back,
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--color-surface-alt)', borderRadius: 10 } },
+          h('span', { style: { fontWeight: 600, fontSize: 13.5 } }, 'Trạng thái hoạt động'),
+          h(DS.Switch, { checked: d.active, onChange: v => setD({ active: !!v }) })
+        ),
+        section(1, 'file-doc-line', 'Thông tin cơ bản',
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12, alignItems: 'start' } },
+            limField('Tiêu đề', 'title', TITLE_MAX, true, 'VD: Hi FPT', 'Gợi ý: nên đặt tối đa khoảng 20 ký tự để hiển thị vừa 1 dòng trên banner ứng dụng (VD: "Hi FPT").'),
+            h('div', null,
+              h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Đánh giá', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+              h('div', { className: ratingErr ? 'fpt-req-box-err' : undefined, style: { padding: ratingErr ? 8 : '6px 0', borderRadius: 8 } },
+                h(FptStarRating, { value: d.rating, onChange: v => { setD({ rating: v }); if (this.state.appBannerRatingErr) this.setState({ appBannerRatingErr: false }); } })
+              ),
+              ratingErr && h('div', { className: 'fpt-req-err-msg' }, 'Vui lòng chọn mức đánh giá (nhỏ nhất 0,5 sao).')
+            )
+          ),
+          limTextField('Mô tả ngắn', 'shortDesc', SHORTDESC_MAX, true, 'VD: Quản lý tiện ích qua ứng dụng', 'Gợi ý: nên đặt tối đa khoảng 40 ký tự để hiển thị vừa 1 dòng trên banner ứng dụng (VD: "Quản lý tiện ích qua ứng dụng").')
+        ),
+        section(2, 'share-01-line', 'Nút CTA',
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 } },
+            limField('Tiêu đề nút', 'ctaText', CTA_TEXT_MAX, true, 'VD: Mở App ngay'),
+            this.field('Link điều hướng', h(FptUrlInput, {
+              value: d.ctaUrl, placeholder: 'https://... hoặc /duong-dan',
+              onChange: e => setD({ ctaUrl: e && e.target ? e.target.value : e }),
+              hint: 'Liên kết mở khi bấm nút CTA.'
+            }), true)
+          )
+        ),
+        section(3, 'image-line', 'Hình ảnh & tài nguyên',
+          h('div', { style: { width: 'calc(50% - 6px)', minWidth: 260 } },
+            h('div', { className: logoErr ? 'fpt-req-box-err' : undefined },
+              this.uploadBox('Logo App', 'JPG, PNG, WEBP · ≤200KB', true, null, { key: 'appBannerLogo', maxKB: 200, value: iconVal, onChange: imgPatchBox('logoImgDraft', seedImg(r && r.logoImg, r && r.logoImgLink)) })
+            ),
+            logoErr && h('div', { className: 'fpt-req-err-msg' }, 'Vui lòng tải Logo App.')
+          )
+        ),
+        section(4, 'zap-line', 'Hành vi hiển thị',
+          h('div', { style: { display: 'flex', gap: 12 } },
+            h('div', { style: { width: 200 } }, this.field('Thời gian tự đóng (giây)',
+              h(DS.Input, { type: 'number', min: 0, step: 1, value: d.autoClose, placeholder: 'Không tự đóng', error: autoCloseErr,
+                onChange: e => setD({ autoClose: String(e && e.target ? e.target.value : e) }) }))),
+            h('div', { style: { flex: 1 } }, this.field('Tần suất hiển thị', h(DS.Select, {
+              options: this.POPUP_FREQUENCIES(), value: d.frequency, placeholder: 'Chọn tần suất hiển thị…',
+              error: freqErr ? 'Trường bắt buộc — vui lòng chọn.' : undefined,
+              onChange: v => { setD({ frequency: v }); if (v && this.state.appBannerFreqErr) this.setState({ appBannerFreqErr: false }); }
+            }), true))
+          )
+        )
+      ),
+      () => {
+        const ratingMissing = !(d.rating > 0);
+        const logoMissing = !(iconVal && iconVal.status === 'done');
+        const freqMissing = !d.frequency;
+        if (ratingMissing || logoMissing || freqMissing) {
+          this.setState({ appBannerRatingErr: ratingMissing, appBannerLogoErr: logoMissing, appBannerFreqErr: freqMissing });
+          const missing = [ratingMissing && 'mức đánh giá', logoMissing && 'Logo App', freqMissing && 'tần suất hiển thị'].filter(Boolean);
+          this.toast('danger', 'Thiếu thông tin', 'Vui lòng chọn/tải ' + missing.join(', ') + '.');
+          return;
+        }
+        if (autoCloseErr) { this.toast('danger', 'Thời gian tự đóng không hợp lệ', autoCloseErr); return; }
+        if (iconVal && iconVal.status === 'uploading') { this.toast('warning', 'Ảnh đang tải lên', 'Vui lòng đợi ảnh tải xong rồi lưu.'); return; }
+        if (this.state.appBannerRatingErr || this.state.appBannerLogoErr || this.state.appBannerFreqErr) this.setState({ appBannerRatingErr: false, appBannerLogoErr: false, appBannerFreqErr: false });
+        const list = this.getAppBannersList();
+        const rec = {
+          title: d.title, logoImg: iconVal && iconVal.status === 'done' ? iconVal.src : '', logoImgLink: iconVal && iconVal.status === 'done' ? iconVal.url : '',
+          rating: d.rating, shortDesc: d.shortDesc, ctaText: d.ctaText, ctaUrl: d.ctaUrl,
+          autoCloseSec: d.autoClose ? +d.autoClose : 0, frequency: d.frequency,
+          status: d.active ? 'active' : 'inactive', updatedAt: this.nowStr(), updatedBy: 'Admin User'
+        };
+        if (r) this.setState({ appBannersListData: list.map(a => a.id === r.id ? Object.assign({}, a, rec) : a) });
+        else { const newId = Math.max(0, ...list.map(a => a.id)) + 1; this.setState({ appBannersListData: list.concat([Object.assign({ id: newId, createdAt: this.nowStr(), createdBy: 'Admin User' }, rec)]) }); }
+        back();
+        this.toast('success', 'Đã lưu', isNew ? 'Cài đặt ứng dụng mới đã được tạo.' : 'Cài đặt ứng dụng đã được cập nhật.');
+      },
+      isNew ? 'Tạo Cài đặt ứng dụng' : 'Cập nhật'
     );
   }
 
