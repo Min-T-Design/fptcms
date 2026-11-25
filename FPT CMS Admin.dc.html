@@ -9311,7 +9311,7 @@ class Component extends DCLogic {
     const columns = [
       { key: 'stt', header: '#', width: 44, align: 'center',
         render: (_, r) => h('span', { style: { fontSize: 12.5, color: 'var(--color-text-subtle)' } }, (pg - 1) * sz + sliced.indexOf(r) + 1) },
-      { key: 'app', header: 'Tiêu đề', width: 300, render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+      { key: 'app', header: 'Tên ứng dụng', width: 300, render: (_, r) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
           r.logoImg
             ? h('img', { src: r.logoImg, style: { width: 40, height: 40, borderRadius: 10, objectFit: 'contain', background: 'var(--color-surface-alt)', flexShrink: 0 } })
             : h('div', { style: { width: 40, height: 40, borderRadius: 10, background: 'var(--color-surface-alt)', flexShrink: 0 } }),
@@ -9337,7 +9337,7 @@ class Component extends DCLogic {
     return this.listCard(
       this.toolbar(
         h('div', { style: { display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
-          h('div', { style: { width: 360, flexShrink: 0 } }, h(DS.Input, { value: this.state.appBannerSearch || '', onChange: e => this.setState({ appBannerSearch: e && e.target ? e.target.value : e, appBanner_pg: 1 }), placeholder: 'Tìm tiêu đề, mô tả, CTA...', leadingIcon: 'search-medium-line' })),
+          h('div', { style: { width: 360, flexShrink: 0 } }, h(DS.Input, { value: this.state.appBannerSearch || '', onChange: e => this.setState({ appBannerSearch: e && e.target ? e.target.value : e, appBanner_pg: 1 }), placeholder: 'Tìm tên ứng dụng, mô tả, CTA...', leadingIcon: 'search-medium-line' })),
           h('div', { style: { width: 200, flexShrink: 0 } }, h(DS.Select, {
             value: statusF, options: [{ value: 'all', label: 'Tất cả trạng thái' }, { value: 'active', label: 'Hoạt động' }, { value: 'inactive', label: 'Ngừng hoạt động' }],
             onChange: v => this.setState({ appBannerStatusFilter: v, appBanner_pg: 1 })
@@ -9359,7 +9359,7 @@ class Component extends DCLogic {
     const freqLabel = Object.fromEntries(this.POPUP_FREQUENCIES().map(t => [t.value, t.label]));
     this.openDrawer({ title: r.title.length > 60 ? r.title.slice(0, 60) + '…' : r.title, subtitle: 'Chi tiết Cài đặt ứng dụng', width: 440,
       render: () => h('div', { style: { display: 'flex', flexDirection: 'column' } },
-        this.detailRow('Tiêu đề', r.title),
+        this.detailRow('Tên ứng dụng', r.title),
         this.detailRow('Logo App', r.logoImg ? h('img', { src: r.logoImg, style: { width: 64, height: 64, borderRadius: 12, objectFit: 'contain', background: 'var(--color-surface-alt)' } }) : '—'),
         this.detailRow('Đánh giá', this.appBannerRatingBadge(r.rating)),
         this.detailRow('Mô tả ngắn', r.shortDesc || '—'),
@@ -9387,7 +9387,7 @@ class Component extends DCLogic {
     const logoErr = !!this.state.appBannerLogoErr;
     const freqErr = !!this.state.appBannerFreqErr;
     const autoCloseErr = d.autoClose !== '' && !/^\d+$/.test(d.autoClose) ? 'Chỉ nhập số nguyên từ 0 trở lên.' : undefined;
-    const TITLE_MAX = 150, SHORTDESC_MAX = 100, CTA_TEXT_MAX = 50;
+    const TITLE_MAX = 35, SHORTDESC_MAX = 35, CTA_TEXT_MAX = 35;
     const section = (num, icon, title, ...content) => h(DS.Card, { key: 'sec' + num },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 } },
         h(DS.Icon, { name: icon, size: 18, color: 'var(--color-accent)' }),
@@ -9396,8 +9396,7 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } }, ...content)
     );
     // Controlled text field: hard maxLength + live "at limit" counter (CLAUDE.md §13), re-declared locally per editor.
-    // `suggest` (tham số thứ 6, tuỳ chọn) là ghi chú đề xuất độ dài vừa 1 dòng trên banner app thật — khác với giới hạn cứng `max`.
-    const limField = (label, key, max, required, placeholder, suggest) => {
+    const limField = (label, key, max, required, placeholder) => {
       const val = d[key] || '';
       const atMax = val.length >= max;
       return this.field(label, h('div', null,
@@ -9406,21 +9405,7 @@ class Component extends DCLogic {
           onChange: e => setD({ [key]: ((e && e.target ? e.target.value : e) || '').slice(0, max) })
         }),
         h('div', { style: { fontSize: 11.5, color: atMax ? 'var(--color-danger-text)' : 'var(--color-text-subtle)', marginTop: 4 } },
-          'Tối đa ' + max + ' ký tự (' + val.length + '/' + max + ')' + (atMax ? ' — đã đạt giới hạn' : '')),
-        suggest && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2, fontStyle: 'italic' } }, suggest)
-      ), required);
-    };
-    const limTextField = (label, key, max, required, placeholder, suggest) => {
-      const val = d[key] || '';
-      const atMax = val.length >= max;
-      return this.field(label, h('div', null,
-        h(DS.Textarea, {
-          value: val, maxLength: max, rows: 2, placeholder,
-          onChange: e => setD({ [key]: ((e && e.target ? e.target.value : e) || '').slice(0, max) })
-        }),
-        h('div', { style: { fontSize: 11.5, color: atMax ? 'var(--color-danger-text)' : 'var(--color-text-subtle)', marginTop: 4 } },
-          'Tối đa ' + max + ' ký tự (' + val.length + '/' + max + ')' + (atMax ? ' — đã đạt giới hạn' : '')),
-        suggest && h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)', marginTop: 2, fontStyle: 'italic' } }, suggest)
+          'Tối đa ' + max + ' ký tự (' + val.length + '/' + max + ')' + (atMax ? ' — đã đạt giới hạn' : ''))
       ), required);
     };
     // Logo App dùng ô tải ảnh chung (FptUploadSlot); giá trị nằm trong appBannerDraft.logoImgDraft (null = đã xóa).
@@ -9443,24 +9428,23 @@ class Component extends DCLogic {
         ),
         section(1, 'file-doc-line', 'Thông tin cơ bản',
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12, alignItems: 'start' } },
-            limField('Tiêu đề', 'title', TITLE_MAX, true, 'VD: Hi FPT', 'Gợi ý: nên đặt tối đa khoảng 20 ký tự để hiển thị vừa 1 dòng trên banner ứng dụng (VD: "Hi FPT").'),
-            h('div', null,
-              h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Đánh giá', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
-              h('div', { className: ratingErr ? 'fpt-req-box-err' : undefined, style: { padding: ratingErr ? 8 : '6px 0', borderRadius: 8 } },
-                h(FptStarRating, { value: d.rating, onChange: v => { setD({ rating: v }); if (this.state.appBannerRatingErr) this.setState({ appBannerRatingErr: false }); } })
-              ),
-              ratingErr && h('div', { className: 'fpt-req-err-msg' }, 'Vui lòng chọn mức đánh giá (nhỏ nhất 0,5 sao).')
-            )
+            limField('Tên ứng dụng', 'title', TITLE_MAX, true, 'VD: Hi FPT'),
+            limField('Mô tả ngắn', 'shortDesc', SHORTDESC_MAX, true, 'VD: Quản lý tiện ích qua ứng dụng')
           ),
-          limTextField('Mô tả ngắn', 'shortDesc', SHORTDESC_MAX, true, 'VD: Quản lý tiện ích qua ứng dụng', 'Gợi ý: nên đặt tối đa khoảng 40 ký tự để hiển thị vừa 1 dòng trên banner ứng dụng (VD: "Quản lý tiện ích qua ứng dụng").')
+          h('div', null,
+            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Đánh giá', h('span', { style: { color: 'var(--color-danger)' } }, ' *')),
+            h('div', { className: ratingErr ? 'fpt-req-box-err' : undefined, style: { padding: ratingErr ? 8 : '6px 0', borderRadius: 8 } },
+              h(FptStarRating, { value: d.rating, onChange: v => { setD({ rating: v }); if (this.state.appBannerRatingErr) this.setState({ appBannerRatingErr: false }); } })
+            ),
+            ratingErr && h('div', { className: 'fpt-req-err-msg' }, 'Vui lòng chọn mức đánh giá (nhỏ nhất 0,5 sao).')
+          )
         ),
         section(2, 'share-01-line', 'Nút CTA',
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 } },
             limField('Tiêu đề nút', 'ctaText', CTA_TEXT_MAX, true, 'VD: Mở App ngay'),
             this.field('Link điều hướng', h(FptUrlInput, {
               value: d.ctaUrl, placeholder: 'https://... hoặc /duong-dan',
-              onChange: e => setD({ ctaUrl: e && e.target ? e.target.value : e }),
-              hint: 'Liên kết mở khi bấm nút CTA.'
+              onChange: e => setD({ ctaUrl: e && e.target ? e.target.value : e })
             }), true)
           )
         ),
@@ -9473,15 +9457,15 @@ class Component extends DCLogic {
           )
         ),
         section(4, 'zap-line', 'Hành vi hiển thị',
-          h('div', { style: { display: 'flex', gap: 12 } },
-            h('div', { style: { width: 200 } }, this.field('Thời gian tự đóng (giây)',
-              h(DS.Input, { type: 'number', min: 0, step: 1, value: d.autoClose, placeholder: 'Không tự đóng', error: autoCloseErr,
-                onChange: e => setD({ autoClose: String(e && e.target ? e.target.value : e) }) }))),
-            h('div', { style: { flex: 1 } }, this.field('Tần suất hiển thị', h(DS.Select, {
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 } },
+            this.field('Tần suất hiển thị', h(DS.Select, {
               options: this.POPUP_FREQUENCIES(), value: d.frequency, placeholder: 'Chọn tần suất hiển thị…',
               error: freqErr ? 'Trường bắt buộc — vui lòng chọn.' : undefined,
               onChange: v => { setD({ frequency: v }); if (v && this.state.appBannerFreqErr) this.setState({ appBannerFreqErr: false }); }
-            }), true))
+            }), true),
+            this.field('Thời gian tự đóng (giây)',
+              h(DS.Input, { type: 'number', min: 0, step: 1, value: d.autoClose, placeholder: 'Không tự đóng', error: autoCloseErr,
+                onChange: e => setD({ autoClose: String(e && e.target ? e.target.value : e) }) }))
           )
         )
       ),
