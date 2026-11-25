@@ -4938,6 +4938,7 @@ class Component extends DCLogic {
       { id: 'internet',   label: 'LDP Internet',          image: 'assets/ldp-tpl-internet.png', icon: 'globe-01-line',  hdrBg: '#fff7ed', hdrColor: '#ea580c', sections: 12,  desc: 'Cáp quang cá nhân / gia đình, thu lead',              tags: ['internet'] },
       { id: 'sa',         label: 'LDP SA (FPT Play)',     image: 'assets/ldp-tpl-sa.png',       icon: 'star-01-line',   hdrBg: '#f5f3ff', hdrColor: '#6d28d9', sections: 10,  desc: 'Dịch vụ giải trí FPT Play / SA',                      tags: ['entertainment'] },
       { id: 'thulead',    label: 'LDP Thu Lead',          image: 'assets/ldp-tpl-thulead.png',  icon: 'file-check-line',hdrBg: '#ecfdf5', hdrColor: '#065f46', sections: 10,   desc: 'Tối ưu chuyển đổi thu thập lead',                     tags: ['lead'] },
+      { id: 'charmcam',   label: 'LDP Charm Camera',      image: 'assets/ldp-tpl-charmcam.png', icon: 'stars-01-line',  hdrBg: '#fdf2f8', hdrColor: '#be185d', sections: 11,  desc: 'Camera thông minh có thể tuỳ biến charm trang trí',   tags: ['product'] },
     ];
   }
   LDP_SECTION_DATA() {
@@ -5002,6 +5003,19 @@ class Component extends DCLogic {
         { id: 'lead-faq',       name: 'FAQ Accordion',                         desc: 'Câu hỏi về điều kiện khuyến mãi, cam kết',          type: 'FAQ',       emoji: '❓',  ec: 'rgba(139,92,246,0.15)',  tc: '#a78bfa' },
         { id: 'lead-sticky',    name: 'Sticky Bottom Bar',                     desc: 'Thanh khuyến mãi kèm nút đăng ký nhanh',                type: 'Sticky',    emoji: '📌',  ec: 'rgba(239,68,68,0.15)',   tc: '#ef4444' },
       ],
+      charmcam: [
+        { id: 'cc-hero',       name: 'Banner Hero - Slider Banner',                desc: 'Slider ảnh nền toàn trang, thêm/xoá/sắp xếp slide', type: 'HeroSlider',  emoji: '🖼',  ec: 'rgba(219,39,119,0.15)',  tc: '#db2777' },
+        { id: 'cc-combo',      name: 'Combo - Nhập hội Cam-era nhận ngay deal khủng', desc: 'Card deal/combo: chọn sản phẩm, giá, ảnh, nút mua', type: 'ComboDeal',   emoji: '🎉',  ec: 'rgba(249,115,22,0.15)',  tc: 'var(--color-accent)' },
+        { id: 'cc-offers',     name: 'Ưu đãi - Bộ thẻ ưu đãi độc quyền',             desc: 'Thẻ ưu đãi xếp xoè + CTA chung bên dưới',          type: 'OfferCards',  emoji: '🎴',  ec: 'rgba(168,85,247,0.15)',  tc: '#a855f7' },
+        { id: 'cc-features',   name: 'Feature Tabs - Trải nghiệm siêu tính năng',    desc: 'Tab pill tính năng kèm ảnh, Có tab / Không tab',   type: 'FeatureTabs', emoji: '✨',  ec: 'rgba(14,165,233,0.15)',  tc: '#0284c7' },
+        { id: 'cc-detail',     name: 'Detail - Camera chất riêng',                   desc: 'Card sản phẩm: dropdown chọn SP, badge, mô tả',    type: 'ProductCards',emoji: '📷',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
+        { id: 'cc-customizer', name: 'Customizer - 3 màu áo & 9 chiếc charm',        desc: 'Tab bộ sưu tập (màu áo/charm), mỗi tab 1 danh sách', type: 'Customizer', emoji: '🎨',  ec: 'rgba(236,72,153,0.15)',  tc: '#ec4899' },
+        { id: 'cc-packages',   name: 'Packages - Trải nghiệm siêu tính năng',        desc: 'Card gói dịch vụ: chọn gói, giá, ảnh, 2 CTA',       type: 'PkgCards',    emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
+        { id: 'cc-guide',      name: 'Guide - Hướng dẫn Lắp đặt & Kích hoạt',        desc: 'Tab hướng dẫn, mỗi tab 1 danh sách bước (Steps)',  type: 'GuideTabs',   emoji: '📋',  ec: 'rgba(20,184,166,0.15)',  tc: '#2dd4bf' },
+        { id: 'cc-gallery',    name: 'Gallery - Đặt đâu cũng hợp',                   desc: 'Slider ảnh không gian thực tế đặt Camera',          type: 'GallerySlider', emoji: '🖼', ec: 'rgba(99,102,241,0.15)',  tc: '#818cf8' },
+        { id: 'cc-faq',        name: 'FAQ - Accordion Câu hỏi thường gặp',           desc: 'Câu hỏi đồng bộ từ kho FAQ chung',                 type: 'FAQ',         emoji: '❓',  ec: 'rgba(139,92,246,0.15)',  tc: '#a78bfa' },
+        { id: 'cc-marquee',    name: 'Marquee / Ticker - Dải chữ chạy ngang độc lập', desc: 'Dải chữ chạy ngang, icon phân cách, tốc độ/hướng', type: 'Marquee',    emoji: '📢',  ec: 'rgba(59,130,246,0.15)',  tc: '#3b82f6' },
+      ],
       customhtml: [
         { id: 'customhtml-code', name: 'Mã HTML tùy chỉnh', desc: 'Dán mã HTML, CSS, JS tùy chỉnh', type: 'Code', emoji: '💻', ec: 'rgba(245,158,11,0.15)', tc: '#fbbf24' },
       ],
@@ -5021,6 +5035,7 @@ class Component extends DCLogic {
       { id: 2, name: 'Sự kiện FPT Play 2026',       tplId: 'sa',       tplLabel: 'LDP SA',               goal: 'Sự kiện / Branding', lv1: 'su-kien',               l2: 'fpt-play-2026',    url: '/su-kien/fpt-play-2026',                  startDate: '01/01/26', endDate: '31/01/26', createdBy: 'Minh Tú', createdAt: '18/12/25', lastEdit: '28/01/26', lastEditBy: 'Minh Tú', status: 'expired', bcLv1: 'Sự kiện', bcLv2: 'FPT Play 2026' },
       { id: 3, name: 'Camera AI Tháng 6',           tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-thang-6', url: '/thiet-bi-thong-minh/camera-ai-thang-6', startDate: '01/06/26', endDate: '30/06/26', createdBy: 'Admin User', createdAt: '19/05/26', lastEdit: '02/06/26', lastEditBy: 'Admin',   status: 'publish', bcLv1: 'Camera an ninh', bcLv2: 'Camera AI' },
       { id: 4, name: 'Wi-Fi 7 Launch',              tplId: 'campaign', tplLabel: 'LDP Campaign Wi-Fi 7', goal: 'Lead Gen',           lv1: 'khuyen-mai',            l2: 'wifi-7-launch',    url: '/khuyen-mai/wifi-7-launch',               startDate: '15/06/26', endDate: '15/07/26', createdBy: 'Minh Tú', createdAt: '30/05/26', lastEdit: '14/06/26', lastEditBy: 'Minh Tú', status: 'draft', bcLv1: 'Lắp mạng internet', bcLv2: 'Wi-Fi 7', campaignId: 4 },
+      { id: 9, name: 'Charm Camera Play 4 - Ra mắt phiên bản mới', tplId: 'charmcam', tplLabel: 'LDP Charm Camera', goal: 'Bán gói cước', lv1: 'thiet-bi-thong-minh', l2: 'charm-camera-play-4', url: '/thiet-bi-thong-minh/charm-camera-play-4', startDate: '01/12/26', endDate: '31/12/26', createdBy: 'Minh Tú', createdAt: '20/11/26', lastEdit: '24/11/26', lastEditBy: 'Minh Tú', status: 'publish', bcLv1: 'Camera an ninh', bcLv2: 'Charm Camera Play 4' },
       // LDP Khu vực (ldpType: 'region'): chỉ áp dụng cho khách hàng thuộc Tỉnh/Thành phố + Phường/Xã đã chọn. Bản ghi không có ldpType = LDP thường.
       { id: 5, name: 'Ưu đãi Internet Phường Bến Thành', tplId: 'internet', tplLabel: 'LDP Internet',     goal: 'Lead Gen',           lv1: 'khuyen-mai',            l2: 'internet-ben-thanh', url: '/khuyen-mai/internet-ben-thanh',        startDate: '01/10/26', endDate: '31/10/26', createdBy: 'Hà Linh', createdAt: '28/09/26', lastEdit: '15/10/26', lastEditBy: 'Hà Linh', status: 'publish', ldpType: 'region', province: 'TP. Hồ Chí Minh', ward: 'Phường Bến Thành' },
       { id: 6, name: 'Camera AI Phường Hoàn Kiếm',  tplId: 'camera',   tplLabel: 'LDP Camera AI',        goal: 'Bán gói cước',       lv1: 'thiet-bi-thong-minh',   l2: 'camera-ai-hoan-kiem', url: '/thiet-bi-thong-minh/camera-ai-hoan-kiem', startDate: '15/11/26', endDate: '15/12/26', createdBy: 'Minh Tú', createdAt: '12/10/26', lastEdit: '16/10/26', lastEditBy: 'Minh Tú', status: 'draft', ldpType: 'region', province: 'Hà Nội', ward: 'Phường Hoàn Kiếm' },
@@ -5037,6 +5052,7 @@ class Component extends DCLogic {
       5: { metaTitle: 'Internet FPT tại Phường Bến Thành - Ưu đãi tháng 10', metaDesc: 'Khách hàng khu vực Phường Bến Thành, TP. Hồ Chí Minh: lắp Internet FPT tháng 10 nhận ưu đãi cước và lắp đặt trong 24 giờ.' },
       6: { metaTitle: 'Camera AI tại Phường Hoàn Kiếm - FPT Camera', metaDesc: 'Lắp Camera AI FPT tại Phường Hoàn Kiếm, Hà Nội: giám sát 24/7, cảnh báo thông minh, kỹ thuật viên đến tận nơi.' },
       7: { metaTitle: 'Wi-Fi 7 tại Phường Hải Châu - FPT Telecom', metaDesc: 'Wi-Fi 7 đã có tại Phường Hải Châu, TP. Đà Nẵng. Đăng ký ngay để nhận ưu đãi dành riêng cho khách hàng khu vực.' },
+      9: { metaTitle: 'Charm Camera Play 4 - FPT Camera', metaDesc: 'FPT Camera Play 4 phiên bản Charm: tuỳ biến 3 màu áo & 9 chiếc charm trang trí, ưu đãi ra mắt giảm đến 20%, miễn phí lắp đặt toàn quốc.' },
     };
   }
   // Danh mục demo Tỉnh/Thành phố → Phường/Xã cho "LDP Khu vực" (34 đơn vị cấp tỉnh). Đây là dữ liệu minh hoạ cho prototype, không phải danh mục hành chính chính thức.
@@ -10686,8 +10702,8 @@ class Component extends DCLogic {
     const statF = this.state.ldpListStatus || 'all';
     const goalF = this.state.ldpListGoal || 'all';
     const campF = this.state.ldpListCampaign || 'all';
-    const tplColors = { internet: '#ff8c42', sa: '#a78bfa', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981', customhtml: '#f59e0b' };
-    const tplBg    = { internet: 'rgba(255,140,66,0.15)', sa: 'rgba(109,40,217,0.15)', camera: 'rgba(255,107,0,0.15)', campaign: 'rgba(59,130,246,0.15)', thulead: 'rgba(16,185,129,0.15)', customhtml: 'rgba(245,158,11,0.15)' };
+    const tplColors = { internet: '#ff8c42', sa: '#a78bfa', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981', charmcam: '#be185d', customhtml: '#f59e0b' };
+    const tplBg    = { internet: 'rgba(255,140,66,0.15)', sa: 'rgba(109,40,217,0.15)', camera: 'rgba(255,107,0,0.15)', campaign: 'rgba(59,130,246,0.15)', thulead: 'rgba(16,185,129,0.15)', charmcam: 'rgba(219,39,119,0.15)', customhtml: 'rgba(245,158,11,0.15)' };
     const data = this.LDP_LIST().filter(r => {
       const q = search.toLowerCase();
       if (q && !r.name.toLowerCase().includes(q) && !r.url.toLowerCase().includes(q)) return false;
@@ -10821,8 +10837,8 @@ class Component extends DCLogic {
   }
   openLdpDetailDrawer(r) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    const tplColors = { internet: '#ff8c42', sa: '#a78bfa', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981', customhtml: '#f59e0b' };
-    const tplBg    = { internet: 'rgba(255,140,66,0.15)', sa: 'rgba(109,40,217,0.15)', camera: 'rgba(255,107,0,0.15)', campaign: 'rgba(59,130,246,0.15)', thulead: 'rgba(16,185,129,0.15)', customhtml: 'rgba(245,158,11,0.15)' };
+    const tplColors = { internet: '#ff8c42', sa: '#a78bfa', camera: '#ff6b00', campaign: '#3b82f6', thulead: '#10b981', charmcam: '#be185d', customhtml: '#f59e0b' };
+    const tplBg    = { internet: 'rgba(255,140,66,0.15)', sa: 'rgba(109,40,217,0.15)', camera: 'rgba(255,107,0,0.15)', campaign: 'rgba(59,130,246,0.15)', thulead: 'rgba(16,185,129,0.15)', charmcam: 'rgba(219,39,119,0.15)', customhtml: 'rgba(245,158,11,0.15)' };
     const stBadge = s => { const map = { publish: ['Đang chạy','success'], expired: ['Hết hạn','danger'], draft: ['Nháp','neutral'], hidden: ['Tạm ẩn','warning'], pending: ['Chờ duyệt','info'], rejected: ['Từ chối','danger'] }; const [lbl,theme] = map[s]||['—','neutral']; return h(DS.Badge, { theme, dot: true }, lbl); };
     const effStatus = (this.state.ldpStatuses && this.state.ldpStatuses[r.id] !== undefined) ? this.state.ldpStatuses[r.id] : r.status;
     this.openDrawer({
@@ -11581,11 +11597,11 @@ class Component extends DCLogic {
   // nguồn (LDP_SECTION_DATA) cho rõ nghĩa, đừng chỉ trông chờ cơ chế hậu tố tự động ở trên.
   ldpLibraryPool() {
     const allSecData = this.LDP_SECTION_DATA();
-    const SRC_LABEL = { internet: 'Internet', sa: 'SA', camera: 'Camera AI', campaign: 'Wi-Fi 7', thulead: 'Thu Lead', common: 'Dùng chung' };
+    const SRC_LABEL = { internet: 'Internet', sa: 'SA', camera: 'Camera AI', campaign: 'Wi-Fi 7', thulead: 'Thu Lead', common: 'Dùng chung', charmcam: 'Charm Camera' };
     // Mã T hiện trong Thư viện Sections = template nguồn của section (không phải loại Card_n) — áp dụng cho MỌI section, cố định theo nguồn để không đổi giữa các lần render.
-    const TPL_CODE = { internet: 1, sa: 2, camera: 3, campaign: 4, thulead: 5, common: 6 };
+    const TPL_CODE = { internet: 1, sa: 2, camera: 3, campaign: 4, thulead: 5, common: 6, charmcam: 7 };
     const allSecs = [];
-    ['internet', 'sa', 'camera', 'campaign', 'thulead'].forEach(k => {
+    ['internet', 'sa', 'camera', 'campaign', 'thulead', 'charmcam'].forEach(k => {
       (allSecData[k] || []).forEach(s => allSecs.push(Object.assign({}, s, { source: s.id === 'sa-products' ? 'sa' : k })));
     });
     // [Card_2..7]: các section card gói chỉ có trong Thư viện (không nằm trong bộ section mặc định của template nào).
@@ -12305,7 +12321,7 @@ class Component extends DCLogic {
       }
     }
     // ── Section background panel (Camera sections 2,3,4,6) ─────────────────
-    const CAM_BG_IDS = ['lead-top-header','cam-usp','cam-detail','cam-select','cam-awards','camp-countdown','camp-usp','camp-highlights','camp-products','camp-compare','camp-targets','camp-videos','inet-countdown','inet-stats','inet-products','inet-card2','inet-card3','inet-card4','inet-card5','inet-card6','inet-card7','inet-playbox','inet-review','inet-steps','inet-promo','sa-countdown','sa-sports','sa-experience','sa-categories','sa-pricing','sa-commentators','lead-countdown','lead-proof','lead-pricing','lead-pkg-compare','lead-steps','lead-reviews','lead-feedback','lead-procedure','inet-faq','sa-faq-support','cam-faq','camp-faq','lead-faq','sa-products'];
+    const CAM_BG_IDS = ['lead-top-header','cam-usp','cam-detail','cam-select','cam-awards','camp-countdown','camp-usp','camp-highlights','camp-products','camp-compare','camp-targets','camp-videos','inet-countdown','inet-stats','inet-products','inet-card2','inet-card3','inet-card4','inet-card5','inet-card6','inet-card7','inet-playbox','inet-review','inet-steps','inet-promo','sa-countdown','sa-sports','sa-experience','sa-categories','sa-pricing','sa-commentators','lead-countdown','lead-proof','lead-pricing','lead-pkg-compare','lead-steps','lead-reviews','lead-feedback','lead-procedure','inet-faq','sa-faq-support','cam-faq','camp-faq','lead-faq','sa-products','cc-combo','cc-offers','cc-features','cc-detail','cc-packages','cc-guide','cc-gallery','cc-faq'];
     const CAM_BG_DEFAULTS = {
       'lead-top-header': { mode:'color', color:'#1e2a5c', image:'' },
       'cam-usp':        { mode:'color', color:'#ffffff', image:'' },
@@ -12352,6 +12368,14 @@ class Component extends DCLogic {
       'cam-faq':         { mode:'color', color:'#f8fafc', image:'' },
       'camp-faq':        { mode:'color', color:'#f8fafc', image:'' },
       'lead-faq':        { mode:'color', color:'#f8fafc', image:'' },
+      'cc-combo':        { mode:'color', color:'#fdf2f8', image:'' },
+      'cc-offers':       { mode:'color', color:'#faf5ff', image:'' },
+      'cc-features':     { mode:'color', color:'#f0f9ff', image:'' },
+      'cc-detail':       { mode:'color', color:'#f0fdf4', image:'' },
+      'cc-packages':     { mode:'color', color:'#fffbeb', image:'' },
+      'cc-guide':        { mode:'color', color:'#f0fdfa', image:'' },
+      'cc-gallery':      { mode:'color', color:'#eef2ff', image:'' },
+      'cc-faq':          { mode:'color', color:'#f8fafc', image:'' },
     };
     const BG_PRESETS = ['#ffffff','#f8fafc','#fff4ed','#f0fdf4','#eff6ff','#0f172a','#1e293b','#f36523'];
     const mainThisRef = this;
@@ -12428,6 +12452,41 @@ class Component extends DCLogic {
     }
     // Builder editor Card_1 (Danh sách gói) — dùng chung cho Products và camp-products (Wi-Fi 7), chỉ khác dữ liệu mẫu.
     let buildCard1Editor = null;
+    // ── CC_PKGS / ccFromPkg — catalog demo dùng chung cho Combo/Detail/Packages của template LDP Charm Camera ──
+    const CC_PKGS = [
+      { code: 'cc-play4',     name: 'FPT Camera Play 4',        price: '890.000đ' },
+      { code: 'cc-play4-pro', name: 'FPT Camera Play 4 Pro',     price: '1.290.000đ' },
+      { code: 'cc-combo2',    name: 'Combo 2 Camera Play 4',     price: '1.590.000đ' },
+      { code: 'cc-combo3',    name: 'Combo 3 Camera Play 4',     price: '2.190.000đ' },
+      { code: 'cc-cloud',     name: 'Gói Cloud lưu trữ 30 ngày', price: '39.000đ/tháng' },
+    ];
+    const ccFromPkg = code => { const p = CC_PKGS.find(x => x.code === code); return p ? { code: p.code, name: p.name, price: p.price } : { code: '', name: '', price: '' }; };
+    // ── ccColorField — ô chọn màu dùng chung (không có DS.ColorPicker, theo đúng kỹ thuật "Màu nền toàn trang" Bước 2) ──
+    const ccColorField = (color, onChange) => h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+      h('label', { style: { position: 'relative', width: 36, height: 36, borderRadius: 8, border: '1.5px solid var(--color-border)', overflow: 'hidden', cursor: 'pointer', flexShrink: 0, background: color || '#ffffff' } },
+        h('input', { type: 'color', value: /^#[0-9a-fA-F]{6}$/.test(color) ? color : '#ffffff', onChange: e => onChange(e.target.value), style: { position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 } })
+      ),
+      h(DS.Input, { value: color || '', onChange: e => onChange(e.target.value), placeholder: '#ffffff', style: { width: 120, flexShrink: 0, fontFamily: 'var(--font-dev)' } })
+    );
+    // ── CcCtaToggle — CTA đơn dùng chung cho cc-offers/cc-features: Switch Bật/Tắt, Text/URL chỉ bắt buộc khi bật ──
+    class CcCtaToggle extends React.Component {
+      constructor(p) { super(p); this.state = { on: p.defaultOn !== false }; }
+      render() {
+        const { on } = this.state; const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement;
+        const lb2 = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+        const fldT = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb2 }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+        return h2('div', { style: { padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 10, background: 'var(--color-surface-alt)' } },
+          h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: on ? 10 : 0 } },
+            h2('span', { style: { fontSize: 12.5, fontWeight: 700 } }, this.props.title || 'Nút CTA'),
+            h2(DS2.Switch, { size: 'sm', checked: on, onChange: v => this.setState({ on: v }), label: on ? 'Bật' : 'Tắt' })
+          ),
+          on && h2('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' } },
+            fldT('Text nút', h2(DS2.Input, { placeholder: this.props.textPh || 'VD: Xem chi tiết' }), true),
+            fldT('URL điều hướng', h2(FptUrlInput, { placeholder: this.props.urlPh || '/...' }), true)
+          )
+        );
+      }
+    }
     // ── per-type field sets ───────────────────────────────────────────────────
     const extraByType = {
       // ── TOP HEADER PROMO STRIP ──
@@ -14899,6 +14958,721 @@ class Component extends DCLogic {
           this._ldpSaProdsCls = SaProductsEd;
         }
         return [h(this._ldpSaProdsCls,{key:'sa-products-ed'})];
+      })(),
+      // ════════════════════════════════════════════════════════════════════
+      // Template LDP Charm Camera (charmcam) — 11 section cc-*
+      // ════════════════════════════════════════════════════════════════════
+      // ── CC-HERO (BANNER HERO - SLIDER BANNER) ──
+      'cc-hero': (() => {
+        class CcHeroSliderEd extends React.Component {
+          constructor(p) { super(p); this.state = { items: [
+            { id: 1, imgDesktop: '', imgMobile: '', url: '/thiet-bi-thong-minh/charm-camera-play-4' },
+            { id: 2, imgDesktop: '', imgMobile: '', url: '/khuyen-mai/charm-camera-ra-mat' },
+          ], nextId: 3, confirmIdx: null, dragFrom: -1, dragOver: -1 }; }
+          upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
+          render() {
+            const { items, confirmIdx, dragFrom, dragOver } = this.state;
+            const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
+            const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+            const fldH = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            const mFldH = (l, ph, cap) => fldH(l, h2('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } },
+              h2('div', { style: { display: 'flex', gap: 8 } },
+                h2(DS2.Input, { placeholder: ph || 'URL ảnh...' }),
+                h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
+              ),
+              h2('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)' } }, 'Dung lượng tối đa: ' + cap)
+            ), true);
+            return h2('div', null,
+              items.map((item, i) => {
+                const isOver = dragFrom >= 0 && dragFrom !== i && dragOver === i;
+                return h2('div', { key: item.id, draggable: true,
+                  onDragStart: () => self.setState({ dragFrom: i }),
+                  onDragOver: e => { e.preventDefault(); self.setState({ dragOver: i }); },
+                  onDrop: e => { e.preventDefault(); if (dragFrom < 0 || dragFrom === i) return; const nc = [...items]; const [mv] = nc.splice(dragFrom, 1); nc.splice(i, 0, mv); self.setState({ items: nc, dragFrom: -1, dragOver: -1 }); },
+                  onDragEnd: () => self.setState({ dragFrom: -1, dragOver: -1 }),
+                  style: { border: '1px solid ' + (isOver ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 8, padding: 12, background: isOver ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', marginBottom: 10, opacity: dragFrom === i ? 0.45 : 1, transition: 'all .12s' } },
+                  h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
+                    h2('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                      h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab' } }),
+                      h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Slide ' + (i + 1))
+                    ),
+                    items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
+                  ),
+                  mFldH('Ảnh nền Desktop', 'URL ảnh desktop...', '≤200KB'),
+                  mFldH('Ảnh nền Mobile', 'URL ảnh mobile...', '≤150KB'),
+                  fldH('URL điều hướng khi click banner', h2(FptUrlInput, { value: item.url || '', onChange: e => self.upd(item.id, { url: e.target.value }), placeholder: '/khuyen-mai/...' }), true)
+                );
+              }),
+              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, imgDesktop: '', imgMobile: '', url: '' }], nextId: s.nextId + 1 })) }, 'Thêm Slide Banner'),
+              confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa slide?', description: 'Slide banner này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
+                h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
+                  h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
+                )
+              )
+            );
+          }
+        }
+        return [
+          divr('DANH SÁCH SLIDE BANNER (THÊM/XÓA/KÉO-THẢ SẮP XẾP)'),
+          h(CcHeroSliderEd, { key: 'cc-hero-ed' })
+        ];
+      })(),
+      // ── CC-COMBO (COMBO - NHẬP HỘI CAM-ERA NHẬN NGAY DEAL KHỦNG) ──
+      'cc-combo': (() => {
+        class CcComboEd extends React.Component {
+          constructor(p) { super(p); this.state = { items: [
+            { id: 1, code: 'cc-play4', name: 'FPT Camera Play 4', price: '890.000đ', desc: 'Tặng kèm thẻ nhớ 32GB + 1 charm trang trí', img: '', color: '#fdf2f8', ctaText: 'Mua ngay', ctaUrl: '/checkout/cc-play4', visible: true },
+            { id: 2, code: 'cc-combo2', name: 'Combo 2 Camera Play 4', price: '1.590.000đ', desc: 'Mua 2 tặng 1 bộ charm trang trí giới hạn', img: '', color: '#eff6ff', ctaText: 'Mua ngay', ctaUrl: '/checkout/cc-combo2', visible: true },
+          ], nextId: 3, confirmIdx: null }; }
+          upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
+          render() {
+            const { items, confirmIdx } = this.state;
+            const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
+            const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+            const fldC = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            const g2C = (...it) => h2('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' } }, ...it);
+            const opts = CC_PKGS.map(p => ({ value: p.code, label: p.name }));
+            return h2('div', null,
+              items.map((it, i) => h2('div', { key: it.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 12, background: 'var(--color-surface-alt)', marginBottom: 10 } },
+                h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
+                  h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Card Deal/Combo ' + (i + 1)),
+                  h2('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+                    h2(DS2.Switch, { size: 'sm', checked: it.visible, onChange: v => self.upd(it.id, { visible: v }), label: it.visible ? 'Hiển thị' : 'Ẩn' }),
+                    items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
+                  )
+                ),
+                fldC('Chọn sản phẩm', h2(DS2.Select, { options: opts, value: it.code || '', placeholder: 'Chọn sản phẩm…', searchable: true, searchPlaceholder: 'Tìm sản phẩm…', onChange: v => self.upd(it.id, ccFromPkg(v)) }), true),
+                g2C(
+                  fldC('Giá bán', h2(DS2.Input, { value: it.price || '', disabled: true, placeholder: 'Tự động theo sản phẩm' })),
+                  fldC('Màu nền Card', ccColorField(it.color, v => self.upd(it.id, { color: v })))
+                ),
+                fldC('Mô tả ngắn', h2(DS2.Input, { value: it.desc || '', onChange: e => self.upd(it.id, { desc: e.target.value }), placeholder: 'VD: Tặng kèm thẻ nhớ 32GB' }), true),
+                fldC('Ảnh sản phẩm minh họa', h2('div', { style: { display: 'flex', gap: 8 } },
+                  h2(DS2.Input, { placeholder: 'URL ảnh...' }),
+                  h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
+                ), true),
+                g2C(
+                  fldC('Nút CTA — Text', h2(DS2.Input, { value: it.ctaText || '', onChange: e => self.upd(it.id, { ctaText: e.target.value }) }), true),
+                  fldC('Nút CTA — URL luồng checkout', h2(FptUrlInput, { value: it.ctaUrl || '', onChange: e => self.upd(it.id, { ctaUrl: e.target.value }), placeholder: '/checkout/...' }), true)
+                )
+              )),
+              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, code: '', name: '', price: '', desc: '', img: '', color: '#ffffff', ctaText: 'Mua ngay', ctaUrl: '', visible: true }], nextId: s.nextId + 1 })) }, 'Thêm Card Deal/Combo'),
+              confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa card?', description: 'Card deal/combo này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
+                h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
+                  h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
+                )
+              )
+            );
+          }
+        }
+        return [
+          fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Nhập hội Cam-era nhận ngay deal khủng' })),
+          divr('DANH SÁCH CARD DEAL / COMBO (TỐI ĐA 3 THẺ HIỂN THỊ, DƯ THÌ CÓ MŨI TÊN CHUYỂN)'),
+          h(CcComboEd, { key: 'cc-combo-ed' })
+        ];
+      })(),
+      // ── CC-OFFERS (ƯU ĐÃI - BỘ THẺ ƯU ĐÃI ĐỘC QUYỀN) ──
+      'cc-offers': (() => {
+        class CcOfferEd extends React.Component {
+          constructor(p) { super(p); this.state = { items: [
+            { id: 1, desc: 'Giảm 500K cho đơn đặt trước', color: '#faf5ff', img: '', url: '/uu-dai/dat-truoc' },
+            { id: 2, desc: 'Tặng charm giới hạn khi mua Combo 2', color: '#eff6ff', img: '', url: '' },
+            { id: 3, desc: 'Miễn phí lắp đặt toàn quốc', color: '#fff7ed', img: '', url: '' },
+          ], nextId: 4, confirmIdx: null }; }
+          upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
+          render() {
+            const { items, confirmIdx } = this.state;
+            const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
+            const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+            const fldO = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            return h2('div', null,
+              items.map((it, i) => h2('div', { key: it.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 12, background: 'var(--color-surface-alt)', marginBottom: 10 } },
+                h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
+                  h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Thẻ ưu đãi ' + (i + 1)),
+                  items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
+                ),
+                fldO('Màu nền thẻ', ccColorField(it.color, v => self.upd(it.id, { color: v })), true),
+                fldO('Ảnh nền thẻ', h2('div', { style: { display: 'flex', gap: 8 } },
+                  h2(DS2.Input, { placeholder: 'URL ảnh nền thẻ...' }),
+                  h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
+                ), true),
+                fldO('Mô tả ngắn ở chân thẻ', h2(DS2.Input, { value: it.desc || '', onChange: e => self.upd(it.id, { desc: e.target.value }), placeholder: 'VD: Giảm 500K cho đơn đầu tiên' }), true),
+                fldO('URL điều hướng khi click thẻ', h2(FptUrlInput, { value: it.url || '', onChange: e => self.upd(it.id, { url: e.target.value }), placeholder: '/uu-dai/... (tùy chọn)' }), false)
+              )),
+              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, desc: '', color: '#ffffff', img: '', url: '' }], nextId: s.nextId + 1 })) }, 'Thêm thẻ ưu đãi'),
+              confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa thẻ ưu đãi?', description: 'Thẻ ưu đãi này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
+                h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
+                  h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
+                )
+              )
+            );
+          }
+        }
+        return [
+          fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Bộ thẻ ưu đãi độc quyền' })),
+          fld('Mô tả phụ', h(DS.Input, { placeholder: 'Mô tả ngắn...' })),
+          divr('DANH SÁCH THẺ ƯU ĐÃI (XẾP XÒE)'),
+          h(CcOfferEd, { key: 'cc-offers-ed' }),
+          divr('NÚT CTA CHUNG BÊN DƯỚI'),
+          h(CcCtaToggle, { key: 'cc-offers-cta', title: 'Nút CTA chung bên dưới', defaultOn: false, textPh: 'VD: Xem chi tiết' })
+        ];
+      })(),
+      // ── CC-FEATURES (FEATURE TABS - TRẢI NGHIỆM SIÊU TÍNH NĂNG) ──
+      'cc-features': (() => {
+        class CcFeatureTabsEd extends React.Component {
+          constructor(p) { super(p); this.state = { tabMode: 'tabs', items: [
+            { id: 1, name: 'Nhận diện chuyển động AI', imgDesktop: '', imgMobile: '', url: '' },
+            { id: 2, name: 'Đàm thoại 2 chiều', imgDesktop: '', imgMobile: '', url: '' },
+          ], nextId: 3, confirmIdx: null, dragFrom: -1, dragOver: -1 }; }
+          upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
+          render() {
+            const { tabMode, items, confirmIdx, dragFrom, dragOver } = this.state;
+            const single = tabMode === 'single';
+            const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
+            const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+            const fldF = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            const mFldF = (l, ph, cap) => fldF(l, h2('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } },
+              h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { placeholder: ph }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')),
+              h2('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)' } }, 'Dung lượng tối đa: ' + cap)
+            ), true);
+            return h2('div', null,
+              h2('div', { key: 'tabmode', style: { marginBottom: 14 } },
+                h2('label', { style: lb }, 'Kiểu hiển thị'),
+                h2('div', { style: { display: 'flex', gap: 20 } },
+                  h2(DS2.Radio, { name: 'cc-features-tabmode', label: 'Có tab', checked: !single, onChange: () => self.setState({ tabMode: 'tabs' }) }),
+                  h2(DS2.Radio, { name: 'cc-features-tabmode', label: 'Không tab', checked: single, onChange: () => self.setState({ tabMode: 'single' }) })
+                )
+              ),
+              h2('div', { key: 'listhdr', style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'var(--color-text-subtle)', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid var(--color-border)' } }, 'DANH SÁCH TAB TÍNH NĂNG'),
+              items.map((it, i) => {
+                const isOver = dragFrom >= 0 && dragFrom !== i && dragOver === i;
+                return h2('div', { key: it.id, draggable: !single,
+                  onDragStart: () => { if (single) return; self.setState({ dragFrom: i }); },
+                  onDragOver: e => { if (single) return; e.preventDefault(); self.setState({ dragOver: i }); },
+                  onDrop: e => { if (single) return; e.preventDefault(); if (dragFrom < 0 || dragFrom === i) return; const nc = [...items]; const [mv] = nc.splice(dragFrom, 1); nc.splice(i, 0, mv); self.setState({ items: nc, dragFrom: -1, dragOver: -1 }); },
+                  onDragEnd: () => self.setState({ dragFrom: -1, dragOver: -1 }),
+                  style: { border: '1px solid ' + (isOver ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 8, padding: 12, background: isOver ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', marginBottom: 10, opacity: dragFrom === i ? 0.45 : 1 } },
+                  h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
+                    h2('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                      !single && h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab' } }),
+                      h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, (single ? 'Ảnh ' : 'Tab ') + (i + 1))
+                    ),
+                    items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
+                  ),
+                  !single && fldF('Tên tab (hiển thị trên thanh pill)', h2(DS2.Input, { value: it.name || '', onChange: e => self.upd(it.id, { name: e.target.value }) }), true),
+                  mFldF('Ảnh Desktop', 'URL ảnh desktop...', '≤200KB'),
+                  mFldF('Ảnh Mobile', 'URL ảnh mobile...', '≤150KB'),
+                  fldF('URL (tùy chọn)', h2(FptUrlInput, { value: it.url || '', onChange: e => self.upd(it.id, { url: e.target.value }) }), false)
+                );
+              }),
+              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, name: 'Tab ' + (s.items.length + 1), imgDesktop: '', imgMobile: '', url: '' }], nextId: s.nextId + 1 })) }, 'Thêm Tab tính năng'),
+              confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa mục này?', description: 'Mục này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
+                h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
+                  h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
+                )
+              )
+            );
+          }
+        }
+        return [
+          fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Trải nghiệm siêu tính năng' })),
+          divr('CẤU HÌNH TAB TÍNH NĂNG'),
+          h(CcFeatureTabsEd, { key: 'cc-features-ed' }),
+          divr('NÚT CTA BÊN DƯỚI KHUNG HIỂN THỊ'),
+          h(CcCtaToggle, { key: 'cc-features-cta', title: 'Nút CTA bên dưới khung hiển thị', defaultOn: false, textPh: 'VD: Khám phá' })
+        ];
+      })(),
+      // ── CC-DETAIL (DETAIL - CAMERA CHẤT RIÊNG) ──
+      'cc-detail': (() => {
+        class CcDetailEd extends React.Component {
+          constructor(p) { super(p); this.state = { items: [
+            { id: 1, code: 'cc-play4', name: 'FPT Camera Play 4', price: '890.000đ', badgeOn: true, badgeText: 'Bán chạy nhất', badgeColor: '#f36523', img: '', color: '#ffffff', desc: 'Camera AI xoay 360°, cảnh báo chuyển động thông minh, có thể tuỳ biến 3 màu áo & 9 chiếc charm trang trí theo phong cách riêng.', ctaText: 'Xem chi tiết', ctaUrl: '/thiet-bi-thong-minh/charm-camera-play-4' },
+            { id: 2, code: 'cc-play4-pro', name: 'FPT Camera Play 4 Pro', price: '1.290.000đ', badgeOn: true, badgeText: 'Mới', badgeColor: '#a855f7', img: '', color: '#ffffff', desc: 'Nâng cấp độ phân giải 2K, lưu trữ Cloud 30 ngày miễn phí tháng đầu, đàm thoại 2 chiều rõ nét.', ctaText: 'Xem chi tiết', ctaUrl: '/thiet-bi-thong-minh/charm-camera-play-4-pro' },
+          ], nextId: 3, confirmIdx: null }; }
+          upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
+          render() {
+            const { items, confirmIdx } = this.state;
+            const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
+            const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+            const fldD = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            const g2D = (...it) => h2('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' } }, ...it);
+            const opts = CC_PKGS.map(p => ({ value: p.code, label: p.name }));
+            return h2('div', null,
+              items.map((it, i) => h2('div', { key: it.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 12, background: 'var(--color-surface-alt)', marginBottom: 10 } },
+                h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
+                  h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Card sản phẩm ' + (i + 1)),
+                  items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
+                ),
+                fldD('Chọn sản phẩm', h2(DS2.Select, { options: opts, value: it.code || '', placeholder: 'Chọn sản phẩm…', searchable: true, searchPlaceholder: 'Tìm sản phẩm…', onChange: v => self.upd(it.id, ccFromPkg(v)) }), true),
+                g2D(
+                  fldD('Tên sản phẩm', h2(DS2.Input, { value: it.name || '', disabled: true, placeholder: 'Tự động theo sản phẩm' })),
+                  fldD('Giá bán', h2(DS2.Input, { value: it.price || '', disabled: true, placeholder: 'Tự động theo sản phẩm' }))
+                ),
+                h2('div', { style: { padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: 8, marginBottom: 10 } },
+                  h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: it.badgeOn ? 8 : 0 } },
+                    h2('span', { style: { fontSize: 12, fontWeight: 600 } }, 'Badge nhãn góc trên'),
+                    h2(DS2.Switch, { size: 'sm', checked: it.badgeOn, onChange: v => self.upd(it.id, { badgeOn: v }), label: it.badgeOn ? 'Bật' : 'Tắt' })
+                  ),
+                  it.badgeOn && g2D(
+                    fldD('Text badge', h2(DS2.Input, { value: it.badgeText || '', onChange: e => self.upd(it.id, { badgeText: e.target.value }), placeholder: 'VD: Mới' }), true),
+                    fldD('Màu badge', ccColorField(it.badgeColor, v => self.upd(it.id, { badgeColor: v })))
+                  )
+                ),
+                fldD('Ảnh sản phẩm', h2('div', { style: { display: 'flex', gap: 8 } },
+                  h2(DS2.Input, { placeholder: 'URL ảnh...' }),
+                  h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
+                ), true),
+                fldD('Màu nền Card', ccColorField(it.color, v => self.upd(it.id, { color: v })), true),
+                fldD('Mô tả', h2(DS2.Textarea, { rows: 3, value: it.desc || '', onChange: e => self.upd(it.id, { desc: e.target.value }), placeholder: 'Mô tả sản phẩm nhiều dòng...' }), true),
+                g2D(
+                  fldD('Nút CTA — Text', h2(DS2.Input, { value: it.ctaText || '', onChange: e => self.upd(it.id, { ctaText: e.target.value }) }), true),
+                  fldD('Nút CTA — URL', h2(FptUrlInput, { value: it.ctaUrl || '', onChange: e => self.upd(it.id, { ctaUrl: e.target.value }) }), true)
+                )
+              )),
+              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, code: '', name: '', price: '', badgeOn: false, badgeText: '', badgeColor: '#f36523', img: '', color: '#ffffff', desc: '', ctaText: 'Xem chi tiết', ctaUrl: '' }], nextId: s.nextId + 1 })) }, 'Thêm Card sản phẩm'),
+              confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa card sản phẩm?', description: 'Card sản phẩm này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
+                h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
+                  h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
+                )
+              )
+            );
+          }
+        }
+        return [
+          fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Camera chất riêng' })),
+          divr('DANH SÁCH CARD SẢN PHẨM'),
+          h(CcDetailEd, { key: 'cc-detail-ed' })
+        ];
+      })(),
+      // ── CC-CUSTOMIZER (CUSTOMIZER - 3 MÀU ÁO & 9 CHIẾC CHARM) ──
+      'cc-customizer': (() => {
+        class CcCustomizerEd extends React.Component {
+          constructor(p) { super(p); this.state = { tabMode: 'tabs', tabDragFrom: -1, tabDragOver: -1, tabs: [
+            { id: 't1', name: 'Màu áo', color: '#fdf2f8', expanded: true,  items: [
+              { id: 11, name: 'Hồng Pastel', desc: 'Màu hồng nhẹ nhàng, dịu mắt' },
+              { id: 12, name: 'Xanh Biển', desc: 'Màu xanh tươi mát, năng động' },
+              { id: 13, name: 'Trắng Ngọc Trai', desc: 'Màu trắng sang trọng, dễ phối' },
+            ] },
+            { id: 't2', name: 'Charm',  color: '#eff6ff', expanded: false, items: [
+              { id: 21, name: 'Charm Ngôi Sao', desc: 'Lấp lánh, nổi bật trên mọi màu áo' },
+              { id: 22, name: 'Charm Mặt Trăng', desc: 'Dịu dàng, tinh tế' },
+              { id: 23, name: 'Charm Trái Tim', desc: 'Ngọt ngào, dễ thương' },
+            ] },
+          ], nextTabId: 3, nextItemId: 100 }; }
+          updTab(tid, patch) { this.setState(s => ({ tabs: s.tabs.map(t => t.id === tid ? { ...t, ...patch } : t) })); }
+          updItem(tid, iid, patch) { this.setState(s => ({ tabs: s.tabs.map(t => t.id === tid ? { ...t, items: t.items.map(it => it.id === iid ? { ...it, ...patch } : it) } : t) })); }
+          render() {
+            const { tabMode, tabs, tabDragFrom, tabDragOver } = this.state;
+            const single = tabMode === 'single';
+            const self = this;
+            const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement;
+            const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+            const fldU = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            return h2('div', null,
+              h2('div', { key: 'tabmode', style: { marginBottom: 14 } },
+                h2('label', { style: lb }, 'Kiểu hiển thị'),
+                h2('div', { style: { display: 'flex', gap: 20 } },
+                  h2(DS2.Radio, { name: 'cc-customizer-tabmode', label: 'Có tab', checked: !single, onChange: () => self.setState({ tabMode: 'tabs' }) }),
+                  h2(DS2.Radio, { name: 'cc-customizer-tabmode', label: 'Không tab', checked: single, onChange: () => self.setState({ tabMode: 'single' }) })
+                )
+              ),
+              tabs.map((tab, ti) => {
+                const { expanded, items, color } = tab;
+                const isDragOver = !single && tabDragFrom >= 0 && tabDragFrom !== ti && tabDragOver === ti;
+                return h2('div', { key: tab.id, draggable: !single,
+                  onDragStart: () => { if (single) return; self.setState({ tabDragFrom: ti, tabDragOver: -1 }); },
+                  onDragOver: e => { if (single || tabDragFrom === ti) return; e.preventDefault(); self.setState({ tabDragOver: ti }); },
+                  onDrop: e => { if (single) return; e.preventDefault(); if (tabDragFrom < 0 || tabDragFrom === ti) return; const nt = [...tabs]; const [mv] = nt.splice(tabDragFrom, 1); nt.splice(ti, 0, mv); self.setState({ tabs: nt, tabDragFrom: -1, tabDragOver: -1 }); },
+                  onDragEnd: () => self.setState({ tabDragFrom: -1, tabDragOver: -1 }),
+                  style: { border: isDragOver ? '2px dashed var(--color-accent)' : expanded ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)', borderRadius: 12, marginBottom: 12, overflow: 'hidden', transition: 'border-color .15s', opacity: tabDragFrom === ti ? 0.45 : 1 } },
+                  h2('div', { onClick: () => self.updTab(tab.id, { expanded: !expanded }), style: { background: expanded ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' } },
+                    !single && h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
+                    h2(DS2.Icon, { name: expanded ? 'chevron-down-line' : 'chevron-right-01-line', size: 16, color: expanded ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
+                    h2('span', { style: { fontWeight: 700, fontSize: 13, color: expanded ? 'var(--color-accent)' : 'var(--color-text)', flex: 1 } }, 'Tab: ' + tab.name),
+                    h2('div', { style: { display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }, onClick: e => e.stopPropagation() },
+                      tabs.length > 1 && h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)', fontSize: 11 }, onClick: () => self.setState(s => ({ tabs: s.tabs.filter(t => t.id !== tab.id) })) }, 'Xóa tab')
+                    )
+                  ),
+                  expanded && h2('div', { style: { padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
+                    !single && fldU('Tên tab', h2(DS2.Input, { key: 'ccctabname' + tab.id, defaultValue: tab.name, placeholder: 'Nhập tên tab...', onBlur: e => { const v = e.target.value.trim(); if (v) self.updTab(tab.id, { name: v }); } }), true),
+                    fldU('Màu nền', ccColorField(color, v => self.updTab(tab.id, { color: v })), true),
+                    h2('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--color-text-subtle)' } }, 'NỘI DUNG CHARM'),
+                    items.map((item, ii) => h2('div', { key: item.id, style: { border: '1px solid var(--color-border-pale)', borderRadius: 8, padding: 10, background: 'var(--color-surface)' } },
+                      h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
+                        h2('span', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Charm ' + (ii + 1)),
+                        h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => self.updTab(tab.id, { items: items.filter(x => x.id !== item.id) }) }, 'Xóa')
+                      ),
+                      fldU('Thumbnail minh họa sản phẩm', h2('div', { style: { display: 'flex', gap: 8 } },
+                        h2(DS2.Input, { placeholder: 'URL ảnh...' }),
+                        h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
+                      ), true),
+                      fldU('Tên Charm', h2(DS2.Input, { value: item.name || '', onChange: e => self.updItem(tab.id, item.id, { name: e.target.value }) }), true),
+                      fldU('Mô tả ngắn', h2(DS2.Input, { value: item.desc || '', onChange: e => self.updItem(tab.id, item.id, { desc: e.target.value }) }), true)
+                    )),
+                    h2(DS2.Button, { level: 'secondary', size: 'sm', style: { width: '100%', borderStyle: 'dashed' }, onClick: () => self.setState(s => { const nid = s.nextItemId; return { tabs: s.tabs.map(t => t.id === tab.id ? { ...t, items: [...t.items, { id: nid, name: '', desc: '' }] } : t), nextItemId: nid + 1 }; }) }, '+ Thêm nội dung charm')
+                  )
+                );
+              }),
+              !single && h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ tabs: [...s.tabs, { id: 't' + s.nextTabId, name: 'Tab mới ' + (s.tabs.length + 1), color: '#ffffff', expanded: true, items: [] }], nextTabId: s.nextTabId + 1 })) }, '+ Thêm tab bộ sưu tập')
+            );
+          }
+        }
+        return [
+          fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: 3 màu áo & 9 chiếc charm' })),
+          divr('TAB BỘ SƯU TẬP'),
+          h(CcCustomizerEd, { key: 'cc-customizer-ed' })
+        ];
+      })(),
+      // ── CC-PACKAGES (PACKAGES - TRẢI NGHIỆM SIÊU TÍNH NĂNG) ──
+      'cc-packages': (() => {
+        class CcPackagesEd extends React.Component {
+          constructor(p) { super(p); this.state = { items: [
+            { id: 1, code: 'cc-play4', name: 'FPT Camera Play 4', price: '890.000đ', priceTip: 'Đã gồm VAT', tagOn: true, content: 'Camera AI xoay 360°\nTuỳ biến 3 màu áo & 9 charm\nCảnh báo chuyển động thông minh', ctaMainOn: true, ctaMainText: 'Mua ngay', ctaMainColor: '#f36523', ctaSubOn: true, ctaSubText: 'Xem chi tiết', ctaSubUrl: '/thiet-bi-thong-minh/charm-camera-play-4' },
+            { id: 2, code: 'cc-cloud', name: 'Gói Cloud lưu trữ 30 ngày', price: '39.000đ/tháng', priceTip: 'Miễn phí tháng đầu', tagOn: false, content: 'Lưu trữ video 30 ngày trên Cloud\nXem lại mọi lúc trên App\nTự động xoá dữ liệu cũ', ctaMainOn: true, ctaMainText: 'Đăng ký ngay', ctaMainColor: '#f36523', ctaSubOn: true, ctaSubText: 'Tìm hiểu thêm', ctaSubUrl: '/thiet-bi-thong-minh/goi-cloud' },
+          ], nextId: 3, confirmIdx: null }; }
+          upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
+          render() {
+            const { items, confirmIdx } = this.state;
+            const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
+            const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+            const fldK = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            const g2K = (...it) => h2('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' } }, ...it);
+            const opts = CC_PKGS.map(p => ({ value: p.code, label: p.name + ' · ' + p.price }));
+            return h2('div', null,
+              items.map((it, i) => h2('div', { key: it.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 12, background: 'var(--color-surface-alt)', marginBottom: 10 } },
+                h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
+                  h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Card gói ' + (i + 1)),
+                  h2('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+                    h2(DS2.Switch, { size: 'sm', checked: it.tagOn, onChange: v => self.upd(it.id, { tagOn: v }), label: 'Tag nổi bật' }),
+                    items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
+                  )
+                ),
+                fldK('Chọn gói', h2(DS2.Select, { options: opts, value: it.code || '', placeholder: 'Chọn gói…', searchable: true, searchPlaceholder: 'Tìm gói…', onChange: v => self.upd(it.id, ccFromPkg(v)) }), true),
+                g2K(
+                  fldK('Giá cước', h2(DS2.Input, { value: it.price || '', disabled: true, placeholder: 'Tự động theo gói' })),
+                  fldK('Tooltip ghi chú giá', h2(DS2.Input, { value: it.priceTip || '', onChange: e => self.upd(it.id, { priceTip: e.target.value }), placeholder: 'VD: Đã gồm VAT' }), false)
+                ),
+                g2K(
+                  fldK('Ảnh Card — Desktop', h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { placeholder: 'URL ảnh desktop...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')), true),
+                  fldK('Ảnh Card — Mobile', h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { placeholder: 'URL ảnh mobile...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')), true)
+                ),
+                fldK('Nội dung gói bán', h2(DS2.Textarea, { rows: 3, value: it.content || '', onChange: e => self.upd(it.id, { content: e.target.value }), placeholder: 'Mô tả nội dung gói, mỗi dòng 1 ý...' }), true),
+                h2('div', { style: { padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: 8, marginBottom: 10 } },
+                  h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: it.ctaMainOn ? 8 : 0 } },
+                    h2('span', { style: { fontSize: 12, fontWeight: 600 } }, 'CTA chính (luồng toàn trình)'),
+                    h2(DS2.Switch, { size: 'sm', checked: it.ctaMainOn, onChange: v => self.upd(it.id, { ctaMainOn: v }), label: it.ctaMainOn ? 'Bật' : 'Tắt' })
+                  ),
+                  it.ctaMainOn && g2K(
+                    fldK('Text', h2(DS2.Input, { value: it.ctaMainText || '', onChange: e => self.upd(it.id, { ctaMainText: e.target.value }) }), true),
+                    fldK('Màu nút khi hover', ccColorField(it.ctaMainColor, v => self.upd(it.id, { ctaMainColor: v })), true)
+                  )
+                ),
+                h2('div', { style: { padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: 8 } },
+                  h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: it.ctaSubOn ? 8 : 0 } },
+                    h2('span', { style: { fontSize: 12, fontWeight: 600 } }, 'CTA phụ'),
+                    h2(DS2.Switch, { size: 'sm', checked: it.ctaSubOn, onChange: v => self.upd(it.id, { ctaSubOn: v }), label: it.ctaSubOn ? 'Bật' : 'Tắt' })
+                  ),
+                  it.ctaSubOn && g2K(
+                    fldK('Text', h2(DS2.Input, { value: it.ctaSubText || '', onChange: e => self.upd(it.id, { ctaSubText: e.target.value }) }), true),
+                    fldK('URL', h2(FptUrlInput, { value: it.ctaSubUrl || '', onChange: e => self.upd(it.id, { ctaSubUrl: e.target.value }) }), true)
+                  )
+                )
+              )),
+              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, code: '', name: '', price: '', priceTip: '', tagOn: false, content: '', ctaMainOn: true, ctaMainText: 'Mua ngay', ctaMainColor: '#f36523', ctaSubOn: true, ctaSubText: 'Xem chi tiết', ctaSubUrl: '' }], nextId: s.nextId + 1 })) }, 'Thêm Card gói dịch vụ'),
+              confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa card gói?', description: 'Card gói dịch vụ này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
+                h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
+                  h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
+                )
+              )
+            );
+          }
+        }
+        return [
+          fld('Tiêu đề hiển thị trên trang', h(DS.Input, { placeholder: 'VD: Trải nghiệm siêu tính năng' })),
+          fld('Mô tả phụ / Tagline', h(DS.Input, { placeholder: 'Mô tả ngắn...' }), false),
+          divr('DANH SÁCH CARD GÓI DỊCH VỤ'),
+          h(CcPackagesEd, { key: 'cc-packages-ed' })
+        ];
+      })(),
+      // ── CC-GUIDE (GUIDE - HƯỚNG DẪN LẮP ĐẶT & KÍCH HOẠT) ──
+      'cc-guide': (() => {
+        class CcGuideTabsEd extends React.Component {
+          constructor(p) { super(p); this.state = { tabMode: 'tabs', tabDragFrom: -1, tabDragOver: -1, tabs: [
+            { id: 'g1', name: 'Lắp đặt', expanded: true, steps: [
+              { id: 1, title: 'Mở hộp & kiểm tra phụ kiện', desc: 'Kiểm tra Camera, charm trang trí, cáp nguồn và hướng dẫn sử dụng đi kèm.' },
+              { id: 2, title: 'Gắn charm trang trí yêu thích', desc: 'Chọn 1 trong 9 chiếc charm để gắn lên thân Camera theo phong cách riêng.' },
+              { id: 3, title: 'Kết nối nguồn điện', desc: 'Cắm cáp nguồn vào Camera và nguồn điện ổn định, đèn báo sáng là đã lên nguồn.' },
+              { id: 4, title: 'Đặt Camera đúng vị trí', desc: 'Đặt Camera ở vị trí có góc quan sát rộng, tránh ánh nắng chiếu trực tiếp.' },
+            ] },
+            { id: 'g2', name: 'Kích hoạt', expanded: false, steps: [
+              { id: 11, title: 'Tải ứng dụng FPT Camera', desc: 'Tải app FPT Camera trên App Store hoặc Google Play và đăng nhập tài khoản.' },
+              { id: 12, title: 'Quét mã QR trên thân máy', desc: 'Mở app, chọn Thêm thiết bị và quét mã QR được in trên thân Camera.' },
+              { id: 13, title: 'Kết nối Wi-Fi gia đình', desc: 'Nhập tên và mật khẩu Wi-Fi để Camera kết nối internet.' },
+              { id: 14, title: 'Hoàn tất & xem trực tiếp', desc: 'Kích hoạt thành công, xem hình ảnh trực tiếp ngay trên app.' },
+            ] },
+          ], nextTabId: 3, nextStepId: 100 }; }
+          updTab(tid, patch) { this.setState(s => ({ tabs: s.tabs.map(t => t.id === tid ? { ...t, ...patch } : t) })); }
+          updStep(tid, sid, patch) { this.setState(s => ({ tabs: s.tabs.map(t => t.id === tid ? { ...t, steps: t.steps.map(st => st.id === sid ? { ...st, ...patch } : st) } : t) })); }
+          render() {
+            const { tabMode, tabs, tabDragFrom, tabDragOver } = this.state;
+            const single = tabMode === 'single';
+            const self = this;
+            const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement;
+            const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+            const fldG = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            return h2('div', null,
+              h2('div', { key: 'tabmode', style: { marginBottom: 14 } },
+                h2('label', { style: lb }, 'Kiểu hiển thị'),
+                h2('div', { style: { display: 'flex', gap: 20 } },
+                  h2(DS2.Radio, { name: 'cc-guide-tabmode', label: 'Có tab', checked: !single, onChange: () => self.setState({ tabMode: 'tabs' }) }),
+                  h2(DS2.Radio, { name: 'cc-guide-tabmode', label: 'Không tab', checked: single, onChange: () => self.setState({ tabMode: 'single' }) })
+                )
+              ),
+              tabs.map((tab, ti) => {
+                const { expanded, steps } = tab;
+                const isDragOver = !single && tabDragFrom >= 0 && tabDragFrom !== ti && tabDragOver === ti;
+                return h2('div', { key: tab.id, draggable: !single,
+                  onDragStart: () => { if (single) return; self.setState({ tabDragFrom: ti, tabDragOver: -1 }); },
+                  onDragOver: e => { if (single || tabDragFrom === ti) return; e.preventDefault(); self.setState({ tabDragOver: ti }); },
+                  onDrop: e => { if (single) return; e.preventDefault(); if (tabDragFrom < 0 || tabDragFrom === ti) return; const nt = [...tabs]; const [mv] = nt.splice(tabDragFrom, 1); nt.splice(ti, 0, mv); self.setState({ tabs: nt, tabDragFrom: -1, tabDragOver: -1 }); },
+                  onDragEnd: () => self.setState({ tabDragFrom: -1, tabDragOver: -1 }),
+                  style: { border: isDragOver ? '2px dashed var(--color-accent)' : expanded ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)', borderRadius: 12, marginBottom: 12, overflow: 'hidden', transition: 'border-color .15s', opacity: tabDragFrom === ti ? 0.45 : 1 } },
+                  h2('div', { onClick: () => self.updTab(tab.id, { expanded: !expanded }), style: { background: expanded ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' } },
+                    !single && h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
+                    h2(DS2.Icon, { name: expanded ? 'chevron-down-line' : 'chevron-right-01-line', size: 16, color: expanded ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
+                    h2('span', { style: { fontWeight: 700, fontSize: 13, color: expanded ? 'var(--color-accent)' : 'var(--color-text)', flex: 1 } }, 'Tab: ' + tab.name),
+                    h2('div', { style: { display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }, onClick: e => e.stopPropagation() },
+                      tabs.length > 1 && h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)', fontSize: 11 }, onClick: () => self.setState(s => ({ tabs: s.tabs.filter(t => t.id !== tab.id) })) }, 'Xóa tab')
+                    )
+                  ),
+                  expanded && h2('div', { style: { padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
+                    !single && fldG('Tên tab', h2(DS2.Input, { key: 'ccgtabname' + tab.id, defaultValue: tab.name, placeholder: 'Nhập tên tab...', onBlur: e => { const v = e.target.value.trim(); if (v) self.updTab(tab.id, { name: v }); } }), true),
+                    h2('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--color-text-subtle)' } }, 'CÁC BƯỚC THỰC HIỆN'),
+                    steps.map((st, si) => stepBlk(si + 1,
+                      h2('div', { key: 'stephdr', style: { display: 'flex', justifyContent: 'flex-end', marginBottom: 6 } },
+                        steps.length > 1 && h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)' }, onClick: () => self.updTab(tab.id, { steps: steps.filter(x => x.id !== st.id) }) }, 'Xóa bước')
+                      ),
+                      fldG('Ảnh minh họa bước', h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { placeholder: 'URL ảnh...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')), true),
+                      fldG('Tiêu đề bước', h2(DS2.Input, { value: st.title || '', onChange: e => self.updStep(tab.id, st.id, { title: e.target.value }) }), true),
+                      fldG('Mô tả chi tiết', h2(DS2.Textarea, { rows: 2, value: st.desc || '', onChange: e => self.updStep(tab.id, st.id, { desc: e.target.value }) }), true)
+                    )),
+                    h2(DS2.Button, { level: 'secondary', size: 'sm', style: { width: '100%', borderStyle: 'dashed' }, onClick: () => self.setState(s => { const nid = s.nextStepId; return { tabs: s.tabs.map(t => t.id === tab.id ? { ...t, steps: [...t.steps, { id: nid, title: '', desc: '' }] } : t), nextStepId: nid + 1 }; }) }, '+ Thêm bước')
+                  )
+                );
+              }),
+              !single && h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ tabs: [...s.tabs, { id: 'g' + s.nextTabId, name: 'Tab mới ' + (s.tabs.length + 1), expanded: true, steps: [1,2,3,4].map(n => ({ id: s.nextStepId + n, title: '', desc: '' })) }], nextTabId: s.nextTabId + 1, nextStepId: s.nextStepId + 4 })) }, '+ Thêm tab hướng dẫn')
+            );
+          }
+        }
+        return [
+          fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Hướng dẫn Lắp đặt & Kích hoạt' })),
+          divr('CẤU HÌNH TAB HƯỚNG DẪN'),
+          h(CcGuideTabsEd, { key: 'cc-guide-ed' })
+        ];
+      })(),
+      // ── CC-GALLERY (GALLERY - ĐẶT ĐÂU CŨNG HỢP) ──
+      'cc-gallery': (() => {
+        class CcGalleryEd extends React.Component {
+          constructor(p) { super(p); this.state = { items: [{ id: 1, url: '' }, { id: 2, url: '' }, { id: 3, url: '' }], nextId: 4, confirmIdx: null }; }
+          upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
+          render() {
+            const { items, confirmIdx } = this.state;
+            const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
+            const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+            const fldG = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            return h2('div', null,
+              items.map((it, i) => h2('div', { key: it.id, style: { border: '1px solid var(--color-border)', borderRadius: 8, padding: 12, background: 'var(--color-surface-alt)', marginBottom: 10 } },
+                h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
+                  h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Slide ' + (i + 1)),
+                  items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
+                ),
+                fldG('Ảnh không gian đặt Camera', h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { placeholder: 'URL ảnh...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')), true),
+                fldG('URL điều hướng (tùy chọn)', h2(FptUrlInput, { value: it.url || '', onChange: e => self.upd(it.id, { url: e.target.value }) }), false)
+              )),
+              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, url: '' }], nextId: s.nextId + 1 })) }, 'Thêm slide'),
+              confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa slide?', description: 'Slide này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
+                h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
+                  h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
+                )
+              )
+            );
+          }
+        }
+        return [
+          fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Đặt đâu cũng hợp' })),
+          divr('DANH SÁCH SLIDE KHÔNG GIAN THỰC TẾ'),
+          h(CcGalleryEd, { key: 'cc-gallery-ed' })
+        ];
+      })(),
+      // ── CC-FAQ (FAQ - ACCORDION CÂU HỎI THƯỜNG GẶP) ──
+      'cc-faq': (() => {
+        const CC_FAQ_DB = [
+          { id:'faq-1', cat:'Lắp đặt',   q:'Lắp đặt Camera FPT Charm cần những thủ tục gì?' },
+          { id:'faq-2', cat:'Kỹ thuật',   q:'Làm thế nào để đổi Wi-Fi kết nối cho Camera?' },
+          { id:'faq-3', cat:'Thanh toán', q:'Các phương thức thanh toán khi mua Camera?' },
+          { id:'faq-4', cat:'Bảo hành',   q:'Chính sách bảo hành thiết bị FPT Camera Play 4?' },
+          { id:'faq-5', cat:'Lắp đặt',   q:'Thời gian giao hàng & lắp đặt là bao lâu?' },
+          { id:'faq-6', cat:'Kỹ thuật',   q:'Camera có xem được qua điện thoại không?' },
+          { id:'faq-7', cat:'Thanh toán', q:'Có thể trả góp khi mua Camera không?' },
+          { id:'faq-8', cat:'Bảo hành',   q:'Camera bị lỗi thì liên hệ ai để đổi trả?' },
+        ];
+        class CcFaqEd extends React.Component {
+          constructor(p) {
+            super(p);
+            this.state = {
+              items: [
+                { id:'faq-1', q:'Lắp đặt Camera FPT Charm cần những thủ tục gì?' },
+                { id:'faq-2', q:'Làm thế nào để đổi Wi-Fi kết nối cho Camera?' },
+              ],
+              openFirst: true,
+              confirmIdx: null, pickerOpen: false, pickerCat: 'Tất cả', pickerQ: '',
+              dragFrom: -1, dragOver: -1
+            };
+          }
+          render() {
+            const { items, openFirst, confirmIdx, pickerOpen, pickerCat, pickerQ, dragFrom, dragOver } = this.state;
+            const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
+            const alreadyIds = new Set(items.map(i => i.id));
+            const filtered = CC_FAQ_DB.filter(f =>
+              (pickerCat === 'Tất cả' || f.cat === pickerCat) &&
+              (!pickerQ || f.q.toLowerCase().includes(pickerQ.toLowerCase()))
+            );
+            return h2('div', null,
+              items.map((item, i) =>
+                h2('div', { key: item.id, draggable: true,
+                  onDragStart: () => self.setState({ dragFrom: i }),
+                  onDragOver: e => { e.preventDefault(); self.setState({ dragOver: i }); },
+                  onDrop: e => {
+                    e.preventDefault();
+                    if (dragFrom < 0 || dragFrom === i) return;
+                    const nc = [...items]; const [mv] = nc.splice(dragFrom, 1); nc.splice(i, 0, mv);
+                    self.setState({ items: nc, dragFrom: -1, dragOver: -1 });
+                  },
+                  onDragEnd: () => self.setState({ dragFrom: -1, dragOver: -1 }),
+                  style: { border: '1px solid ' + (dragOver === i ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 8, padding: '10px 12px', background: dragOver === i ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10, opacity: dragFrom === i ? 0.4 : 1, transition: 'all .12s' }
+                },
+                  h2(DS2.Icon, { name: 'dots-grid-line', size: 18, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
+                  h2('span', { style: { width: 22, height: 22, borderRadius: '50%', background: 'var(--color-accent)', color: '#fff', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } }, i + 1),
+                  h2('span', { style: { flex: 1, fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, item.q),
+                  h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)', flexShrink: 0 }, onClick: () => self.setState({ confirmIdx: i }) })
+                )
+              ),
+              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState({ pickerOpen: true }) }, 'Thêm câu hỏi'),
+              h2('div', { style: { marginTop: 12 } },
+                h2(DS2.Checkbox, { checked: openFirst, onChange: v => self.setState({ openFirst: v }), label: 'Mặc định mở câu hỏi đầu tiên' })
+              ),
+              confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa câu hỏi?', description: 'Câu hỏi này sẽ bị xóa khỏi danh sách section.' },
+                h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => {
+                    const idx = confirmIdx;
+                    self.setState(s => ({ items: s.items.filter((_, ii) => ii !== idx), confirmIdx: null }));
+                  }}, 'Xóa'),
+                  h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
+                )
+              ),
+              pickerOpen && h2(DS2.Modal, { open: true, onClose: () => self.setState({ pickerOpen: false }), title: 'Chọn câu hỏi từ kho FAQ', description: 'Chọn câu hỏi để thêm vào section này.' },
+                h2('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+                  h2(DS2.Input, { placeholder: 'Tìm câu hỏi...', leadingIcon: 'search-medium-line', value: pickerQ, onChange: e => self.setState({ pickerQ: e.target.value }) }),
+                  h2('div', { style: { maxHeight: 300, overflowY: 'auto', border: '1px solid var(--color-border)', borderRadius: 8 } },
+                    filtered.length === 0
+                      ? h2('div', { style: { padding: 20, textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13 } }, 'Không tìm thấy câu hỏi.')
+                      : filtered.map((f, fi) => {
+                          const added = alreadyIds.has(f.id);
+                          return h2('div', { key: f.id, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderBottom: fi < filtered.length - 1 ? '1px solid var(--color-border-pale)' : 'none', background: added ? 'var(--color-surface-alt)' : 'transparent' } },
+                            h2('div', { style: { flex: 1, minWidth: 0 } },
+                              h2('div', { style: { fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: added ? 'var(--color-text-subtle)' : 'var(--color-text)' } }, f.q),
+                              h2('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 2 } }, f.cat)
+                            ),
+                            added
+                              ? h2('span', { style: { fontSize: 11, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0 } }, 'Đã thêm')
+                              : h2(DS2.Button, { level: 'secondary', size: 'sm', onClick: () => self.setState(s => ({ items: [...s.items, { id: f.id, q: f.q }] })) }, 'Thêm')
+                          );
+                        })
+                  ),
+                  h2('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
+                    h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ pickerOpen: false }) }, 'Đóng')
+                  )
+                )
+              )
+            );
+          }
+        }
+        return [
+          fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Câu hỏi thường gặp' })),
+          divr('DANH SÁCH CÂU HỎI (ĐỒNG BỘ TỪ KHO FAQ CHUNG)'),
+          h(CcFaqEd, { key: 'cc-faq-ed' })
+        ];
+      })(),
+      // ── CC-MARQUEE (MARQUEE / TICKER - DẢI CHỮ CHẠY NGANG ĐỘC LẬP) ──
+      'cc-marquee': (() => {
+        class CcMarqueeEd extends React.Component {
+          constructor(p) { super(p); this.state = {
+            items: [{ id: 1, text: 'Mua Camera AI Play 4', url: '' }, { id: 2, text: 'Quà tặng đặc biệt từ FPT', url: '' }],
+            nextId: 3, confirmIdx: null, dragFrom: -1, dragOver: -1,
+            iconColor: '#f36523', bgColor: '#1d4ed8', textColor: '#ffffff', speed: 'medium', direction: 'ltr'
+          }; }
+          upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
+          render() {
+            const { items, confirmIdx, dragFrom, dragOver, iconColor, bgColor, textColor, speed, direction } = this.state;
+            const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
+            const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
+            const fldM = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            const g2M = (...it) => h2('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' } }, ...it);
+            return h2('div', null,
+              items.map((it, i) => {
+                const isOver = dragFrom >= 0 && dragFrom !== i && dragOver === i;
+                return h2('div', { key: it.id, draggable: true,
+                  onDragStart: () => self.setState({ dragFrom: i }),
+                  onDragOver: e => { e.preventDefault(); self.setState({ dragOver: i }); },
+                  onDrop: e => { e.preventDefault(); if (dragFrom < 0 || dragFrom === i) return; const nc = [...items]; const [mv] = nc.splice(dragFrom, 1); nc.splice(i, 0, mv); self.setState({ items: nc, dragFrom: -1, dragOver: -1 }); },
+                  onDragEnd: () => self.setState({ dragFrom: -1, dragOver: -1 }),
+                  style: { border: '1px solid ' + (isOver ? 'var(--color-accent)' : 'var(--color-border)'), borderRadius: 8, padding: 12, background: isOver ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', marginBottom: 10, opacity: dragFrom === i ? 0.45 : 1 } },
+                  h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
+                    h2('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                      h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab' } }),
+                      h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Cụm nội dung ' + (i + 1))
+                    ),
+                    items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
+                  ),
+                  fldM('Nội dung text', h2(DS2.Input, { value: it.text || '', onChange: e => self.upd(it.id, { text: e.target.value }), placeholder: 'VD: Mua Camera AI Play 4' }), true),
+                  fldM('URL điều hướng (tùy chọn)', h2(FptUrlInput, { value: it.url || '', onChange: e => self.upd(it.id, { url: e.target.value }) }), false)
+                );
+              }),
+              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, text: '', url: '' }], nextId: s.nextId + 1 })) }, 'Thêm cụm nội dung'),
+              h2('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'var(--color-text-subtle)', margin: '16px 0 10px', paddingTop: 10, borderTop: '1px dashed var(--color-border)' } }, 'ICON / KÝ TỰ PHÂN CÁCH'),
+              g2M(
+                fldM('Icon phân cách', h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { placeholder: 'URL icon...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')), true),
+                fldM('Màu icon', ccColorField(iconColor, v => self.setState({ iconColor: v })), true)
+              ),
+              h2('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'var(--color-text-subtle)', margin: '16px 0 10px', paddingTop: 10, borderTop: '1px dashed var(--color-border)' } }, 'MÀU SẮC & TỐC ĐỘ'),
+              g2M(
+                fldM('Màu nền dải', ccColorField(bgColor, v => self.setState({ bgColor: v })), true),
+                fldM('Màu chữ', ccColorField(textColor, v => self.setState({ textColor: v })), true)
+              ),
+              g2M(
+                fldM('Tốc độ chạy chữ', h2(DS2.Select, { options: [{ value: 'slow', label: 'Chậm' }, { value: 'medium', label: 'Trung bình' }, { value: 'fast', label: 'Nhanh' }], value: speed, onChange: v => self.setState({ speed: v }) }), true),
+                fldM('Hướng chạy', h2(DS2.Select, { options: [{ value: 'ltr', label: 'Trái → Phải' }, { value: 'rtl', label: 'Phải → Trái' }], value: direction, onChange: v => self.setState({ direction: v }) }), true)
+              ),
+              confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa cụm nội dung?', description: 'Cụm nội dung này sẽ bị xóa khỏi dải chạy chữ. Hành động này không thể hoàn tác.' },
+                h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
+                  h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
+                )
+              )
+            );
+          }
+        }
+        return [
+          divr('DANH SÁCH CỤM NỘI DUNG CHẠY NGANG (THÊM/XÓA/KÉO-THẢ SẮP XẾP)'),
+          h(CcMarqueeEd, { key: 'cc-marquee-ed' })
+        ];
       })(),
       // Nội dung văn bản: chỉ 1 vùng soạn thảo (nằm trong nhóm "Thông tin cơ bản" cùng Tên section). Bắt buộc có nội dung — kiểm tra ở validateLdpSecFields (đọc DOM vùng soạn thảo).
       TextEditor: section.type === 'TextEditor'
