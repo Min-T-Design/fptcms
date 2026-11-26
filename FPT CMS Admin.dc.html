@@ -1637,6 +1637,7 @@ class Component extends DCLogic {
         displayName: 'Internet Giga - Siêu tốc độ cho gia đình', slug: 'internet-giga',
         tags: ['bestseller', 'recommended'], tagText: 'HOT', tagColor: '#ef4444', tagTextColor: '#ffffff',
         priceTooltip: 'Mức giá bao gồm VAT và có thể được thay đổi theo khu vực và thời điểm. Giá chưa bao gồm phí thuê thiết bị đầu cuối, phí thu tiền tận nhà và các dịch vụ gia tăng khác.',
+        priceFromEnabled: true, priceFromPages: ['Trang chủ', 'Internet - Wifi'],
         bundledFee: 'Miễn phí lắp đặt · Phí duy trì dịch vụ thêm 20.000đ/tháng',
         attributes: [
           { icon: 'zap-line', name: 'Tốc độ tải xuống', value: '150 Mbps', featured: true },
@@ -1924,7 +1925,7 @@ class Component extends DCLogic {
     };
   }
   openSkuEditor(r) {
-    this.setState({ skuEditor: r, skuEditorTab: 'attrs', pkgForm: this.seedPkgForm(r), pkgTagEnabled: undefined, pkgTagBadgeId: undefined, pkgRouteErr: false, pkgDisplayErr: false, pkgRouteConfirmed: undefined, pkgRouteInput: this.PKG_ROUTE_OF(r) });
+    this.setState({ skuEditor: r, skuEditorTab: 'attrs', pkgForm: this.seedPkgForm(r), pkgTagEnabled: undefined, pkgTagBadgeId: undefined, pkgPriceFromEnabled: undefined, pkgPriceFromPages: undefined, pkgRouteErr: false, pkgDisplayErr: false, pkgRouteConfirmed: undefined, pkgRouteInput: this.PKG_ROUTE_OF(r) });
   }
 
   renderSku() {
@@ -2611,6 +2612,8 @@ class Component extends DCLogic {
     const goToBadgeModule = () => this.setState({ active: 'badge-tag', badgeTagEditor: null, badgeFormCategories: ['card'] });
     const channelNameVal = this.state.pkgForm.channelDisplayName || '';
     const channelNameMissing = !!this.state.pkgDisplayErr && !channelNameVal.trim();
+    const priceFromEnabled = this.state.pkgPriceFromEnabled !== undefined ? this.state.pkgPriceFromEnabled : !!(r && r.priceFromEnabled);
+    const priceFromPages = this.state.pkgPriceFromPages !== undefined ? this.state.pkgPriceFromPages : (r && r.priceFromPages ? r.priceFromPages : []);
     return this.collapsibleCard('pkgSecWebOpen', 'Cài đặt web', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
         this.field('Tên hiển thị trên kênh', h(DS.Input, {
           value: channelNameVal, placeholder: 'VD: Internet Giga - Siêu tốc độ cho gia đình',
@@ -2642,6 +2645,21 @@ class Component extends DCLogic {
                   )
                 ),
             h('div', { style: { fontSize: 11.5, color: 'var(--color-text-subtle)' } }, 'Tên hiển thị và màu sắc của Tag được quản lý tập trung tại module Quản lý Badge/Tag.')
+          )
+        ),
+        h('div', { style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14 } },
+          h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: priceFromEnabled ? 10 : 0, flexWrap: 'wrap', gap: 10 } },
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+              h(DS.Switch, { size: 'sm', checked: priceFromEnabled, onChange: () => this.setState({ pkgPriceFromEnabled: !priceFromEnabled }) }),
+              h('span', { style: { fontWeight: 700, fontSize: 13 } }, 'Hiển thị "Chỉ từ" ', h('span', { style: { fontWeight: 400, color: 'var(--color-text-muted)', fontSize: 11.5 } }, '(gắn trước giá bán trên Banner/Card sản phẩm)'))
+            )
+          ),
+          priceFromEnabled && h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+            h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+              h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Trang hiển thị'),
+              priceFromPages.length > 0 && h('span', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, '(Đã chọn: ' + priceFromPages.length + ' trang)')
+            ),
+            this.tagPicker(this.BANNER_PAGES(), priceFromPages, v => this.setState({ pkgPriceFromPages: v }), { placeholder: 'Chọn trang hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
           )
         ),
         this.field('Nội dung Tooltip ghi chú giá', h('div', null,
