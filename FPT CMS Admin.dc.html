@@ -2651,7 +2651,7 @@ class Component extends DCLogic {
           h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: priceFromEnabled ? 10 : 0, flexWrap: 'wrap', gap: 10 } },
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
               h(DS.Switch, { size: 'sm', checked: priceFromEnabled, onChange: () => this.setState({ pkgPriceFromEnabled: !priceFromEnabled }) }),
-              h('span', { style: { fontWeight: 700, fontSize: 13 } }, 'Hiển thị "Chỉ từ" ', h('span', { style: { fontWeight: 400, color: 'var(--color-text-muted)', fontSize: 11.5 } }, '(gắn trước giá bán trên Banner/Card sản phẩm)'))
+              h('span', { style: { fontWeight: 700, fontSize: 13 } }, 'Hiển thị "Chỉ từ" ', h('span', { style: { fontWeight: 400, color: 'var(--color-text-muted)', fontSize: 11.5 } }, '(gắn trước giá bán trên Card sản phẩm)'))
             )
           ),
           priceFromEnabled && h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
@@ -5115,12 +5115,12 @@ class Component extends DCLogic {
     };
   }
   LDP_PROVINCES() { return Object.keys(this.LDP_REGION_DATA()); }
-  // Tag phân loại nguồn của một mục trong dropdown: Trang thường (xanh dương) / LDP (cam). Dùng cho "Breadcrumb trang trước" (Quản lý Trang + LDP)
+  // Tag phân loại nguồn của một mục trong dropdown: Trang thường (xanh dương) / Landing Page (cam; trước đây ghi tắt "LDP", user đổi 2026-11-26). Dùng cho "Breadcrumb trang trước" (Quản lý Trang + LDP)
   // và ô chọn "URL cấp 1" có sẵn của Quản lý URL — cùng một kiểu tag để 2 nơi đọc giống nhau.
   breadcrumbKindTag(kind) {
     const h = React.createElement;
     const isLdp = kind === 'ldp';
-    return h('span', { key: kind, style: { flexShrink: 0, padding: '1px 8px', borderRadius: 99, fontSize: 10.5, fontWeight: 700, lineHeight: '16px', whiteSpace: 'nowrap', background: isLdp ? 'var(--color-accent-bg)' : 'var(--color-info-bg)', color: isLdp ? 'var(--color-accent-text)' : 'var(--color-info-text)' } }, isLdp ? 'LDP' : 'Trang thường');
+    return h('span', { key: kind, style: { flexShrink: 0, padding: '1px 8px', borderRadius: 99, fontSize: 10.5, fontWeight: 700, lineHeight: '16px', whiteSpace: 'nowrap', background: isLdp ? 'var(--color-accent-bg)' : 'var(--color-info-bg)', color: isLdp ? 'var(--color-accent-text)' : 'var(--color-info-text)' } }, isLdp ? 'Landing Page' : 'Trang thường');
   }
   // Danh sách "Breadcrumb trang trước" dùng chung (Quản lý Trang + LDP): gộp Breadcrumb trang hiện tại (bcLv2) của các trang và các LDP khác
   // (opts.pageSlug / opts.ldpId = bản ghi đang sửa, bỏ qua chính nó). Mỗi mục gắn tag Trang thường / LDP; trùng tên ở cả hai nguồn thì hiện cả hai tag.
@@ -5753,7 +5753,8 @@ class Component extends DCLogic {
         parent = next.find(n => n.id === d.pid);
       }
       if (s2) {
-        const kid = { id: nextId(), level: 2, slug: s2, pid: parent.id, active: d.active !== false, createdBy: by, createdAt: now, updatedBy: by, updatedAt: now };
+        // Ghi loại riêng 'ldp' (không để kế thừa loại URL cấp 1): chọn cấp 1 là Trang thường thì Slug cấp 2 mới vẫn là Landing Page, và không bị khoá chỉ-xem.
+        const kid = { id: nextId(), level: 2, slug: s2, pid: parent.id, type: 'ldp', active: d.active !== false, createdBy: by, createdAt: now, updatedBy: by, updatedAt: now };
         next.push(kid); created.push(kid);
         touch(parent.id);
       }
@@ -5962,7 +5963,6 @@ class Component extends DCLogic {
     const parent = lv1AsInput ? null : this.urlNode(d.pid, all);
     const s1 = lv1AsInput ? clean(d[k1]) : (parent ? parent.slug : '');
     const s2 = hasLv2Field ? clean(d[k2]) : '';
-    const parentType = parent ? this.urlTypeOf(parent, all) : '';
 
     // ── Kiểm tra (tính lại mỗi lần render → lỗi tự biến mất khi người dùng sửa xong, CLAUDE.md §14). Báo lỗi MỌI trường cùng lúc khi bấm Lưu. ──
     const SLUG_FMT_MSG = 'Slug chỉ gồm chữ thường không dấu, số và dấu gạch ngang (VD: truyen-hinh-fpt-play).';
@@ -6027,22 +6027,23 @@ class Component extends DCLogic {
             slugCell('lv2', 'slug2', slugCtl(k2, 'slug2', lv2Waiting ? 'Chọn Slug cấp 1 trước' : 'Nhập Slug cấp 2 (VD: detail)', lv2Waiting)))));
 
     // ── Thuộc loại: Trang thường / Landing Page.
-    //    • Tạo mới "Tạo mới" (URL cấp 1 mới): luôn Landing Page, "Trang thường" bị ẩn (URL Trang thường chỉ được đồng bộ từ Quản lý Trang).
-    //    • Tạo mới "Có sẵn": ô khoá, theo loại của URL cấp 1 đã chọn (chưa chọn → trống).
+    //    • Tạo mới (cả "Tạo mới" lẫn "Có sẵn"): mặc định Landing Page ngay từ lúc mở form, "Trang thường" bị ẩn (URL Trang thường chỉ được đồng bộ từ Quản lý Trang).
+    //      "Có sẵn" KHÔNG còn theo loại của Slug cấp 1 đã chọn — chọn cấp 1 là Trang thường thì Slug cấp 2 mới vẫn là Landing Page.
     //    • Sửa URL Landing Page (Chưa phân loại) CẢ cấp 1 lẫn cấp 2: ĐỔI ĐƯỢC (typeEditable); URL đang có nội dung chạy thì đổi loại xong bấm Lưu sẽ hiện modal xác nhận (urlConfirmEdit).
     //      URL cấp 2 đổi loại thì lưu loại riêng, không còn theo URL cấp 1 cha. Sửa URL Trang thường: chỉ xem (đồng bộ từ Quản lý Trang). ──
-    // Loại hiệu lực: tạo "Tạo mới" → Landing Page; tạo "Có sẵn" → loại URL cấp 1 đã chọn; sửa URL → loại trong bản nháp (bị khoá thì giữ loại hiện có).
+    // Loại hiệu lực: TẠO MỚI (cả "Có sẵn" lẫn "Tạo mới") → luôn mặc định Landing Page, không theo loại của Slug cấp 1 đã chọn
+    // (user chốt 2026-11-26: URL tạo ở module này là Landing Page, không phải Trang thường — saveUrl cũng ghi type 'ldp' cho Slug cấp 2 mới);
+    // sửa URL → loại trong bản nháp (bị khoá thì giữ loại hiện có).
     const typeEditable = !isNew && !slugLocked;
     const origType = !isNew ? this.urlTypeOf(r, all) : '';
-    const effTypeVal = isNew ? (mode === 'new' ? 'ldp' : parentType) : (typeEditable ? (d.type || '') : origType);
-    const followsParent = isNew && mode === 'existing';
+    const effTypeVal = isNew ? 'ldp' : (typeEditable ? (d.type || '') : origType);
     // Dropdown: "Trang thường" KHÔNG được chọn — URL Trang thường chỉ được đồng bộ từ Quản lý Trang (user chốt 2026-11-04). Nên ẩn khỏi mọi ô chọn được
     // (tạo URL cấp 1 mới + sửa URL); chỉ còn ở các ô khoá (URL Trang thường chỉ xem / "Có sẵn" theo URL cấp 1 là Trang thường) để hiển thị đúng nhãn giá trị.
-    const typeOpts = [{ value: 'page', label: 'Trang thường' }, { value: 'ldp', label: 'Landing Page' }].filter(o => !((isNew && mode === 'new') || typeEditable) || o.value !== 'page');
+    const typeOpts = [{ value: 'page', label: 'Trang thường' }, { value: 'ldp', label: 'Landing Page' }].filter(o => !(isNew || typeEditable) || o.value !== 'page');
     // URL đã là Landing Page thì ô chỉ còn đúng 1 lựa chọn (chính nó) → không đổi được gì nên Lưu không hỏi. Chưa phân loại → Landing Page là thay đổi thật nên Lưu vẫn hỏi nếu URL đang có nội dung chạy.
     const typeSelect = h('div', { style: { width: 'calc(50% - 8px)', minWidth: 260 } },
       fillW('type', h(DS.Select, { options: typeOpts,
-        value: effTypeVal, disabled: !typeEditable && (!isNew || followsParent), placeholder: followsParent ? 'Theo Slug cấp 1 đã chọn' : 'Chọn loại',
+        value: effTypeVal, disabled: !typeEditable && !isNew, placeholder: 'Chọn loại',
         onChange: v => { if (typeEditable) setD({ type: v }); } })));
     // Ghi chú khi sửa: Trang thường → vì sao chỉ xem; URL cấp 1 đang đổi loại (Chưa phân loại → Landing Page) → áp dụng cho các URL cấp 2 chưa đặt loại riêng.
     const typeNotes = [];
@@ -11277,25 +11278,30 @@ class Component extends DCLogic {
     // thêm Level 2) tuy đánh dấu đỏ ở ô Level 2 (bad2) nhưng câu chữ dài (chứa slug Cấp 1) nên cũng giới hạn cùng
     // chiều rộng này, tránh tràn xuống ngay dưới ô Level 2 nhìn như đang che lấp nó.
     const scopeL1Only = !!(slugCheck.block && (slugCheck.kind === 'needL2Page' || (slugCheck.bad1 && !slugCheck.bad2)));
-    // Nhánh Level 1 / Level 2 lấy từ module Quản lý URL: Level 1 = URL cấp 1 loại "Landing Page" HOẶC "Trang thường"
-    // (chọn nhánh Trang thường thì Slug Cấp 2 bắt buộc — xem isPageBranch trong ldpSlugValidate); Level 2 = các URL cấp 2
-    // đã tạo dưới nhánh Level 1 đang chọn. Cả hai chọn bằng DS.Select (searchable). Nhãn dùng đúng định dạng URL slug để
-    // người dùng thấy đúng segment sẽ dùng. Bản ghi cũ trỏ tới slug không còn trong danh mục vẫn giữ lại 1 lựa chọn tương ứng để ô không bị trống.
+    // URL lấy từ module Quản lý URL, gộp Level 1 + Level 2 thành 1 ô chọn duy nhất (yêu cầu người dùng 2026-11-26 —
+    // trước đó là 2 ô Level 1/Level 2 cascading riêng): mỗi lựa chọn là 1 URL hoàn chỉnh (cấp 1 độc lập, hoặc
+    // cấp 1/cấp 2), value là path đầy đủ ("level-1" hoặc "level-1/level-2"); onChange tách path ra urlSlug1/urlSlug2,
+    // cơ chế ldpSlugValidate/slugCheck bên dưới giữ nguyên không đổi vì vẫn đọc 2 giá trị này. URL ngừng hoạt động
+    // (cờ active ở Quản lý URL) không đưa vào danh sách; riêng path đang chọn của bản ghi vẫn được giữ lại dù không
+    // còn active/tồn tại, để ô không bị trống.
     const urlAll = this.URLS();
-    // URL ngừng hoạt động (cờ active ở Quản lý URL) không được đưa vào danh sách chọn; riêng giá trị đang chọn của bản ghi vẫn được giữ.
     const lv1Nodes = urlAll.filter(n => n.level === 1 && (n.type === 'ldp' || n.type === 'page'))
       .sort((a, b) => ((a.type === 'ldp' ? 0 : 1) - (b.type === 'ldp' ? 0 : 1)) || a.slug.localeCompare(b.slug));
-    // Mỗi nhánh gắn badge LDP (cam) / Trang thường (xanh) — cùng kiểu tag với dropdown "Breadcrumb trang trước" / "Có sẵn"
-    // của Quản lý URL (breadcrumbKindTag) để nhất quán cách đọc; nhánh Landing Page xếp trước, Trang thường xếp sau.
-    const lv1Options = lv1Nodes.filter(n => this.urlIsActive(n) || n.slug === slug1).map(n => ({ value: n.slug, searchText: n.slug,
-      label: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 } },
-        h('span', { style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, n.slug),
-        this.breadcrumbKindTag(n.type)) }));
-    if (slug1 && !lv1Options.some(o => o.value === slug1)) lv1Options.push({ value: slug1, label: slug1 });
-    const lv1Node = lv1Nodes.find(n => n.slug === slug1);
-    const lv2Nodes = lv1Node ? urlAll.filter(n => n.level === 2 && n.pid === lv1Node.id) : [];
-    const lv2Options = lv2Nodes.filter(n => this.urlIsActive(n) || n.slug === slug2).map(n => ({ value: n.slug, label: n.slug }));
-    if (slug2 && !lv2Options.some(o => o.value === slug2)) lv2Options.push({ value: slug2, label: slug2 });
+    // Mỗi lựa chọn gắn badge LDP (cam) / Trang thường (xanh) — cùng kiểu tag với dropdown "Breadcrumb trang trước"
+    // của Quản lý URL (breadcrumbKindTag) để phân biệt nhánh ngay trong danh sách đã gộp.
+    const urlOptLabel = (full, type) => h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 } },
+      h('span', { style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, full),
+      this.breadcrumbKindTag(type));
+    const urlFlatOptions = [];
+    lv1Nodes.forEach(n1 => {
+      if (this.urlIsActive(n1) || (n1.slug === slug1 && !slug2)) urlFlatOptions.push({ value: n1.slug, searchText: n1.slug, label: urlOptLabel(n1.slug, n1.type) });
+      urlAll.filter(n => n.level === 2 && n.pid === n1.id).sort((a, b) => a.slug.localeCompare(b.slug)).forEach(n2 => {
+        const full = n1.slug + '/' + n2.slug;
+        if (this.urlIsActive(n2) || (n1.slug === slug1 && n2.slug === slug2)) urlFlatOptions.push({ value: full, searchText: full, label: urlOptLabel(full, this.urlTypeOf(n2, urlAll)) });
+      });
+    });
+    const slugFull = [slug1, slug2].filter(Boolean).join('/');
+    if (slugFull && !urlFlatOptions.some(o => o.value === slugFull)) urlFlatOptions.push({ value: slugFull, label: slugFull });
     // Bỏ chọn Level 2 dùng nút × gốc của DS.Select (giống Level 1) — không tự chèn thêm lựa chọn "Bỏ chọn" vào
     // menu nữa, vì value '' trong options khiến DS.Select coi đây là select kiểu "Tất cả" và tự ẩn nút × (§11).
     const slug  = [slug1, slug2].filter(s => s).join('/') || 'khuyen-mai/km-t5';
@@ -11304,7 +11310,7 @@ class Component extends DCLogic {
     const bgColor = get('bgColor', defaultBgColor);
     // Chiến dịch marketing liên kết (bắt buộc) — nguồn là module Quản lý chiến dịch (getOmisellCampaignList);
     // ≥5 bản ghi và danh mục này chỉ tăng dần nên luôn searchable (§11). Bản ghi cũ trỏ tới chiến dịch đã bị xóa vẫn
-    // giữ lại 1 lựa chọn tương ứng để ô không bị trống, giống cách xử lý lv1Options/bcLv1Options ở trên.
+    // giữ lại 1 lựa chọn tương ứng để ô không bị trống, giống cách xử lý urlFlatOptions/bcLv1Options ở trên.
     const campaignId = sv.campaignId;
     const campaignOptions = this.getOmisellCampaignList().map(c => ({ value: c.id, label: c.name }));
     if (campaignId && !campaignOptions.some(o => o.value === campaignId)) campaignOptions.push({ value: campaignId, label: 'Chiến dịch #' + campaignId });
@@ -11352,27 +11358,17 @@ class Component extends DCLogic {
                 h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } }, 'Slug đã được duyệt — không thể chỉnh sửa. Cập nhật nội dung trang không cần gửi duyệt lại.')
               )
             : h('div', null,
-                h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' } },
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
                   h('span', { style: { display: 'flex', alignItems: 'center', padding: '0 12px', height: 48, background: 'var(--color-surface-sunken)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-base)', fontSize: 13, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap', flexShrink: 0 } }, 'fpt.vn/'),
-                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } },
+                  h('div', { style: { flex: '1 1 260px', minWidth: 200 } },
                     h(DS.Select, {
-                      value: slug1,
-                      options: lv1Options,
-                      placeholder: 'Chọn nhánh Level 1',
+                      value: slugFull,
+                      options: urlFlatOptions,
+                      placeholder: 'Chọn URL có sẵn (Quản lý URL)',
                       searchable: true,
-                      searchPlaceholder: 'Tìm nhánh Level 1…',
-                      onChange: v => { set('urlSlug1', v); if (v !== slug1) set('urlSlug2', ''); },
-                      error: slug1Err,
-                      containerStyle: { width: '100%' }
-                    })
-                  ),
-                  h('span', { style: { display: 'flex', alignItems: 'center', height: 48, color: 'var(--color-text-subtle)', fontSize: 16, flexShrink: 0 } }, '/'),
-                  h('div', { style: { flex: '1 1 170px', minWidth: 150 } },
-                    h(DS.Select, {
-                      value: slug2, options: lv2Options, error: slug2Err, disabled: !slug1 || !lv2Options.length,
-                      placeholder: !slug1 ? 'Chọn nhánh Level 1 trước' : (lv2Options.length ? 'Chọn nhánh Level 2' : 'Chưa có Slug cấp 2'),
-                      searchable: true, searchPlaceholder: 'Tìm nhánh Level 2…',
-                      onChange: v => set('urlSlug2', v),
+                      searchPlaceholder: 'Tìm URL…',
+                      onChange: v => { const segs = String(v || '').split('/'); set('urlSlug1', segs[0] || ''); set('urlSlug2', segs[1] || ''); },
+                      error: slug1Err || slug2Err,
                       containerStyle: { width: '100%' }
                     })
                   )
@@ -11381,15 +11377,15 @@ class Component extends DCLogic {
                   const tone = slugCheck.block ? 'var(--color-danger-text)' : slugCheck.warn ? 'var(--color-warning-text)' : (!slug1 ? 'var(--color-text-subtle)' : 'var(--color-success-text)');
                   return h('div', { style: { marginTop: 8, fontSize: 11.5, display: 'flex', alignItems: 'flex-start', gap: 5, color: tone, fontWeight: (slugCheck.block || slugCheck.warn) ? 600 : 400, maxWidth: scopeL1Only ? '50%' : undefined } },
                     !slug1
-                      ? h('span', null, 'Chọn một nhánh Level 1 có sẵn.')
+                      ? h('span', null, 'Chọn một URL có sẵn trong Quản lý URL.')
                       : slugCheck.block
                         ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'x-circle-line', size: 14 }), h('span', null, slugCheck.msg))
                         : slugCheck.warn
                           ? h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'alert-triangle-line', size: 14 }), h('span', null, slugCheck.msg))
                           : h('span', { style: { display: 'inline-flex', alignItems: 'flex-start', gap: 5 } }, h(DS.Icon, { name: 'check-circle-line', size: 14 }), h('span', null,
                               slug2
-                                ? h('span', null, 'Nhánh "', h('strong', null, slug1), '" hợp lệ — URL cấu trúc 2 cấp: fpt.vn/', h('strong', null, slug1 + '/' + slug2), ' đã sẵn sàng để tiếp tục.')
-                                : h('span', null, 'Nhánh fpt.vn/', h('strong', null, slug1), ' hợp lệ URL cấu trúc 1 cấp — Đã sẵn sàng để tiếp tục.')
+                                ? h('span', null, 'URL "', h('strong', null, slug1 + '/' + slug2), '" hợp lệ — đã sẵn sàng để tiếp tục.')
+                                : h('span', null, 'URL fpt.vn/', h('strong', null, slug1), ' hợp lệ — đã sẵn sàng để tiếp tục.')
                             ))
                   );
                 })(),
