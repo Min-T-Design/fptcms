@@ -5115,12 +5115,12 @@ class Component extends DCLogic {
     };
   }
   LDP_PROVINCES() { return Object.keys(this.LDP_REGION_DATA()); }
-  // Tag phân loại nguồn của một mục trong dropdown: Trang thường (xanh dương) / Landing Page (cam; trước đây ghi tắt "LDP", user đổi 2026-11-26). Dùng cho "Breadcrumb trang trước" (Quản lý Trang + LDP)
+  // Tag phân loại nguồn của một mục trong dropdown: Trang thường (xanh dương) / LDP (cam; user chốt 2026-11-26: badge ghi tắt "LDP", không viết "Landing Page"). Dùng cho "Breadcrumb trang trước" (Quản lý Trang + LDP)
   // và ô chọn "URL cấp 1" có sẵn của Quản lý URL — cùng một kiểu tag để 2 nơi đọc giống nhau.
   breadcrumbKindTag(kind) {
     const h = React.createElement;
     const isLdp = kind === 'ldp';
-    return h('span', { key: kind, style: { flexShrink: 0, padding: '1px 8px', borderRadius: 99, fontSize: 10.5, fontWeight: 700, lineHeight: '16px', whiteSpace: 'nowrap', background: isLdp ? 'var(--color-accent-bg)' : 'var(--color-info-bg)', color: isLdp ? 'var(--color-accent-text)' : 'var(--color-info-text)' } }, isLdp ? 'Landing Page' : 'Trang thường');
+    return h('span', { key: kind, style: { flexShrink: 0, padding: '1px 8px', borderRadius: 99, fontSize: 10.5, fontWeight: 700, lineHeight: '16px', whiteSpace: 'nowrap', background: isLdp ? 'var(--color-accent-bg)' : 'var(--color-info-bg)', color: isLdp ? 'var(--color-accent-text)' : 'var(--color-info-text)' } }, isLdp ? 'LDP' : 'Trang thường');
   }
   // Danh sách "Breadcrumb trang trước" dùng chung (Quản lý Trang + LDP): gộp Breadcrumb trang hiện tại (bcLv2) của các trang và các LDP khác
   // (opts.pageSlug / opts.ldpId = bản ghi đang sửa, bỏ qua chính nó). Mỗi mục gắn tag Trang thường / LDP; trùng tên ở cả hai nguồn thì hiện cả hai tag.
@@ -5488,7 +5488,8 @@ class Component extends DCLogic {
   urlTypeLabel(t) { return (this.URL_TYPES().find(x => x.value === t) || {}).label || 'Chưa phân loại'; }
   urlTypeBadge(t) {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
-    return h(DS.Badge, { theme: t === 'ldp' ? 'brand' : t === 'page' ? 'info' : 'neutral' }, this.urlTypeLabel(t));
+    // Badge ghi tắt "LDP" (user chốt 2026-11-26, khớp badge trong dropdown); nhãn đầy đủ "Landing Page" vẫn dùng cho bộ lọc / ô chọn Thuộc loại qua urlTypeLabel.
+    return h(DS.Badge, { theme: t === 'ldp' ? 'brand' : t === 'page' ? 'info' : 'neutral' }, t === 'ldp' ? 'LDP' : this.urlTypeLabel(t));
   }
   // Bản nháp mặc định của form "Tạo URL": mode 'existing' = chọn URL cấp 1 có sẵn (pid) + nhập URL cấp 2 (slug2, bắt buộc);
   // mode 'new' = chỉ nhập URL cấp 1 mới (slug1) — lưu xong nó thành một URL độc lập và nằm trong kho dropdown "URL cấp 1" của chế độ "Có sẵn".
