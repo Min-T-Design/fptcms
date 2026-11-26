@@ -11355,8 +11355,7 @@ class Component extends DCLogic {
                   h('span', null, 'fpt.vn/'),
                   h('strong', { style: { color: 'var(--color-text)' } }, slug1 || '—'),
                   slug2 ? h('span', null, '/', h('strong', { style: { color: 'var(--color-text)' } }, slug2)) : null
-                ),
-                h('div', { style: { marginTop: 5, fontSize: 11, color: 'var(--color-text-subtle)' } }, 'Slug đã được duyệt — không thể chỉnh sửa. Cập nhật nội dung trang không cần gửi duyệt lại.')
+                )
               )
             : h('div', null,
                 h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
