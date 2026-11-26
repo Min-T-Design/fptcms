@@ -1178,6 +1178,7 @@ class Component extends DCLogic {
         { id: 'banner', label: 'Quản lý Banner' },
         { id: 'cms-popup', label: 'Quản lý Popup' },
         { id: 'ads', label: 'Quản lý Quảng cáo' },
+        { id: 'app-banner', label: 'Cài đặt ứng dụng' },
       ]},
       { type: 'group', id: 'g-content', label: 'Bài viết & Nội dung', icon: 'edit-01-line', children: [
         { id: 'news', label: 'Quản lý Tin tức' },
@@ -1199,7 +1200,7 @@ class Component extends DCLogic {
       'cms-payment': 'Phương thức Thanh toán', 'urls': 'Quản lý URL', 'pages': 'Quản lý Trang (Pages)', 'sections': 'Quản lý Sections',
       'blocks': 'Quản lý Blocks', 'landing': 'Landing Page (LDP)', 'ldp-approval': 'Duyệt LDP', 'cms-menu': 'Quản lý Menu',
       'omisell-campaign': 'Quản lý chiến dịch',
-      'banner': 'Quản lý Banner', 'cms-popup': 'Quản lý Popup', 'ads': 'Quản lý Quảng cáo', 'news': 'Quản lý Tin tức', 'faq': 'Quản lý FAQ',
+      'banner': 'Quản lý Banner', 'cms-popup': 'Quản lý Popup', 'ads': 'Quản lý Quảng cáo', 'app-banner': 'Cài đặt ứng dụng', 'news': 'Quản lý Tin tức', 'faq': 'Quản lý FAQ',
       'sys-roles': 'Quản lý Vai trò', 'sys-users': 'Quản lý Người dùng', 'sys-permissions': 'Phân quyền tính năng',
       'sales-report': 'Báo cáo bán hàng', 'sales-report-online': 'Báo cáo đăng ký Online',
       'profile': 'Thông tin tài khoản',
@@ -1477,6 +1478,7 @@ class Component extends DCLogic {
       case 'banner': return this.renderBanner();
       case 'cms-popup': return this.renderPopup();
       case 'ads': return this.renderAds();
+      case 'app-banner': return this.renderAppBannerModule();
       case 'news': return this.renderNews();
       case 'faq': return this.renderFaq();
       case 'sys-roles': return this.renderRoles();
@@ -4761,9 +4763,9 @@ class Component extends DCLogic {
   ]; }
   // Cài đặt ứng dụng — banner gợi ý cài/mở ứng dụng (kiểu "Hi FPT") hiển thị dạng thẻ: Logo, Tiêu đề, đánh giá sao, Mô tả ngắn, nút CTA, Hành vi hiển thị.
   APP_BANNERS() { return [
-    { id: 901, title: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới Internet tốc độ cao kèm Wi-Fi 6 và Camera an ninh toàn quốc', logoImg: '', logoImgLink: '', rating: 2.5, shortDesc: 'Combo Internet tốc độ cao kèm Camera AI, Wi-Fi 6 và nhiều ưu đãi hấp dẫn khác dành riêng cho bạn', ctaText: 'Mở ứng dụng ngay để nhận ưu đãi hôm nay', ctaUrl: 'https://fpt.vn/shop/internet/uu-dai-dac-biet-danh-cho-khach-hang-than-thiet-2026', autoCloseSec: 0, frequency: 'always', status: 'active', createdAt: '27/10/2026 09:15', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedAt: '27/10/2026 09:15', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
-    { id: 1, title: 'Hi FPT', logoImg: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7aedea66620_1786441194.png', logoImgLink: '', rating: 4.5, shortDesc: 'FPT Telecom · Miễn phí trên App Store & CH Play', ctaText: 'Mở App ngay', ctaUrl: 'https://fpt.vn/app/hi-fpt', autoCloseSec: 10, frequency: 'every-session', status: 'active', createdAt: '11/08/2026 09:15', createdBy: 'Admin User', updatedAt: '25/08/2026 14:30', updatedBy: 'Nguyễn Thị Thùy' },
-    { id: 2, title: 'FPT Play', logoImg: '', logoImgLink: '', rating: 4, shortDesc: 'Xem trọn Ngoại Hạng Anh & kho phim bản quyền', ctaText: 'Cài đặt ngay', ctaUrl: 'https://fpt.vn/app/fpt-play', autoCloseSec: 0, frequency: 'every-session', status: 'inactive', createdAt: '02/07/2026 10:20', createdBy: 'Trần Minh Khoa', updatedAt: '02/07/2026 10:20', updatedBy: 'Trần Minh Khoa' },
+    { id: 901, title: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới Internet tốc độ cao kèm Wi-Fi 6 và Camera an ninh toàn quốc', logoImg: '', logoImgLink: '', rating: 2.5, shortDesc: 'Combo Internet tốc độ cao kèm Camera AI, Wi-Fi 6 và nhiều ưu đãi hấp dẫn khác dành riêng cho bạn', ctaText: 'Mở ứng dụng ngay để nhận ưu đãi hôm nay', ctaUrlAppStore: 'https://apps.apple.com/vn/app/uu-dai-dac-biet-khach-hang-than-thiet-2026/id9876543210', ctaUrlGooglePlay: 'https://play.google.com/store/apps/details?id=vn.fpt.uudaidacbietkhachhangthanthiet2026', pages: ['Trang chủ'], autoCloseSec: 0, frequency: 'always', status: 'active', createdAt: '27/10/2026 09:15', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedAt: '27/10/2026 09:15', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
+    { id: 1, title: 'Hi FPT', logoImg: 'https://hi-static.fpt.vn/sys/shop/stag/2026-08-11/6a7aedea66620_1786441194.png', logoImgLink: '', rating: 4.5, shortDesc: 'FPT Telecom · Miễn phí trên App Store & CH Play', ctaText: 'Mở App ngay', ctaUrlAppStore: 'https://apps.apple.com/vn/app/hi-fpt/id1234567890', ctaUrlGooglePlay: 'https://play.google.com/store/apps/details?id=vn.fpt.hifpt', pages: [], autoCloseSec: 10, frequency: 'every-session', status: 'active', createdAt: '11/08/2026 09:15', createdBy: 'Admin User', updatedAt: '25/08/2026 14:30', updatedBy: 'Nguyễn Thị Thùy' },
+    { id: 2, title: 'FPT Play', logoImg: '', logoImgLink: '', rating: 4, shortDesc: 'Xem trọn Ngoại Hạng Anh & kho phim bản quyền', ctaText: 'Cài đặt ngay', ctaUrlAppStore: 'https://apps.apple.com/vn/app/fpt-play/id2345678901', ctaUrlGooglePlay: 'https://play.google.com/store/apps/details?id=vn.fpt.fptplay', pages: [], autoCloseSec: 0, frequency: 'every-session', status: 'inactive', createdAt: '02/07/2026 10:20', createdBy: 'Trần Minh Khoa', updatedAt: '02/07/2026 10:20', updatedBy: 'Trần Minh Khoa' },
   ]; }
   FAQS() { return [
     { id: 901, cat: 'Thanh toán cước', q: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc?', a: 'Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc. Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc. Chương trình ưu đãi đặc biệt dành cho khách hàng thân thiết đăng ký mới gói Internet tốc độ cao kèm thiết bị Wi-Fi 6 và camera an ninh thông minh áp dụng toàn quốc.', lang: 'Tiếng Việt', order: 9, status: 'active', createdAt: '27/10/2026', createdBy: 'Nguyễn Thị Thùy Linh Phương Anh', updatedAt: '27/10/2026', updatedBy: 'Nguyễn Thị Thùy Linh Phương Anh' },
@@ -5010,7 +5012,7 @@ class Component extends DCLogic {
         { id: 'cc-features',   name: 'Feature Tabs - Trải nghiệm siêu tính năng',    desc: 'Tab pill tính năng kèm ảnh, Có tab / Không tab',   type: 'FeatureTabs', emoji: '✨',  ec: 'rgba(14,165,233,0.15)',  tc: '#0284c7' },
         { id: 'cc-detail',     name: 'Detail - Camera chất riêng',                   desc: 'Card sản phẩm: dropdown chọn SP, badge, mô tả',    type: 'ProductCards',emoji: '📷',  ec: 'rgba(16,185,129,0.15)',  tc: '#10b981' },
         { id: 'cc-customizer', name: 'Customizer - 3 màu áo & 9 chiếc charm',        desc: 'Tab bộ sưu tập (màu áo/charm), mỗi tab 1 danh sách', type: 'Customizer', emoji: '🎨',  ec: 'rgba(236,72,153,0.15)',  tc: '#ec4899' },
-        { id: 'cc-packages',   name: 'Packages - Trải nghiệm siêu tính năng',        desc: 'Card gói dịch vụ: chọn gói, giá, ảnh, 2 CTA',       type: 'PkgCards',    emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
+        { id: 'cc-packages',   name: 'Packages - Combo siêu ưu đãi',        desc: 'Card gói dịch vụ: chọn gói, giá, ảnh, 2 CTA',       type: 'PkgCards',    emoji: '📦',  ec: 'rgba(245,158,11,0.15)',  tc: '#d97706' },
         { id: 'cc-guide',      name: 'Guide - Hướng dẫn Lắp đặt & Kích hoạt',        desc: 'Tab hướng dẫn, mỗi tab 1 danh sách bước (Steps)',  type: 'GuideTabs',   emoji: '📋',  ec: 'rgba(20,184,166,0.15)',  tc: '#2dd4bf' },
         { id: 'cc-gallery',    name: 'Gallery - Đặt đâu cũng hợp',                   desc: 'Slider ảnh không gian thực tế đặt Camera',          type: 'GallerySlider', emoji: '🖼', ec: 'rgba(99,102,241,0.15)',  tc: '#818cf8' },
         { id: 'cc-faq',        name: 'FAQ - Accordion Câu hỏi thường gặp',           desc: 'Câu hỏi đồng bộ từ kho FAQ chung',                 type: 'FAQ',         emoji: '❓',  ec: 'rgba(139,92,246,0.15)',  tc: '#a78bfa' },
@@ -8750,17 +8752,20 @@ class Component extends DCLogic {
   renderAds() {
     if (this.state.adEditor !== undefined) return this.renderAdEditor(this.state.adEditor);
     if (this.state.adCatEditor !== undefined) return this.renderAdCatEditor(this.state.adCatEditor);
-    if (this.state.appBannerEditor !== undefined) return this.renderAppBannerEditor(this.state.appBannerEditor);
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const tab = this.state.adsTab || 'list';
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       h(DS.Tabs, { value: tab, onChange: v => this.setState({ adsTab: v }), items: [
         { value: 'list', label: 'Danh sách quảng cáo', icon: 'bell-01-line' },
         { value: 'cats', label: 'Khung quảng cáo', icon: 'folder-line' },
-        { value: 'appbanner', label: 'Cài đặt ứng dụng', icon: 'download-01-line' },
       ] }),
-      tab === 'list' ? this.renderAdsList() : tab === 'cats' ? this.renderAdCats() : this.renderAppBanners()
+      tab === 'list' ? this.renderAdsList() : this.renderAdCats()
     );
+  }
+  // Module riêng "Cài đặt ứng dụng" (đặt dưới Quản lý Quảng cáo trong nav) — trước đây là 1 tab của renderAds().
+  renderAppBannerModule() {
+    if (this.state.appBannerEditor !== undefined) return this.renderAppBannerEditor(this.state.appBannerEditor);
+    return this.renderAppBanners();
   }
   renderAdsList() {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
@@ -9305,8 +9310,8 @@ class Component extends DCLogic {
     this.setState({
       appBannerEditor: r, appBannerRatingErr: false, appBannerLogoErr: false, appBannerFreqErr: false,
       appBannerDraft: Object.assign(r
-        ? { title: r.title, rating: r.rating || 0, shortDesc: r.shortDesc || '', ctaText: r.ctaText || '', ctaUrl: r.ctaUrl || '', autoClose: r.autoCloseSec ? String(r.autoCloseSec) : '', frequency: r.frequency || '', active: r.status !== 'inactive' }
-        : { title: '', rating: 0, shortDesc: '', ctaText: '', ctaUrl: '', autoClose: '', frequency: '', active: true })
+        ? { title: r.title, rating: r.rating || 0, shortDesc: r.shortDesc || '', ctaText: r.ctaText || '', ctaUrlAppStore: r.ctaUrlAppStore || '', ctaUrlGooglePlay: r.ctaUrlGooglePlay || '', pages: r.pages || [], autoClose: r.autoCloseSec ? String(r.autoCloseSec) : '', frequency: r.frequency || '', active: r.status !== 'inactive' }
+        : { title: '', rating: 0, shortDesc: '', ctaText: '', ctaUrlAppStore: '', ctaUrlGooglePlay: '', pages: [], autoClose: '', frequency: '', active: true })
     });
   }
   closeAppBannerEditor() {
@@ -9379,9 +9384,10 @@ class Component extends DCLogic {
         this.detailRow('Logo App', r.logoImg ? h('img', { src: r.logoImg, style: { width: 64, height: 64, borderRadius: 12, objectFit: 'contain', background: 'var(--color-surface-alt)' } }) : '—'),
         this.detailRow('Đánh giá', this.appBannerRatingBadge(r.rating)),
         this.detailRow('Mô tả ngắn', r.shortDesc || '—'),
-        this.detailRow('Nút CTA', (r.ctaText || r.ctaUrl) ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } },
+        this.detailRow('Nút CTA', (r.ctaText || r.ctaUrlAppStore || r.ctaUrlGooglePlay) ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } },
             h('span', { style: { fontWeight: 600 } }, r.ctaText || '—'),
-            r.ctaUrl && h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, color: 'var(--color-text-subtle)', wordBreak: 'break-all' } }, r.ctaUrl)
+            r.ctaUrlAppStore && h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, color: 'var(--color-text-subtle)', wordBreak: 'break-all' } }, 'App Store: ' + r.ctaUrlAppStore),
+            r.ctaUrlGooglePlay && h('span', { style: { fontFamily: 'var(--font-dev)', fontSize: 12, color: 'var(--color-text-subtle)', wordBreak: 'break-all' } }, 'Google Play: ' + r.ctaUrlGooglePlay)
           ) : '—'),
         this.detailRow('Thời gian tự đóng', r.autoCloseSec ? r.autoCloseSec + ' giây' : 'Không tự đóng'),
         this.detailRow('Tần suất hiển thị', freqLabel[r.frequency] || '—'),
@@ -9398,7 +9404,8 @@ class Component extends DCLogic {
     const DS = window.ZENKaizenDesignSystem_4069b4; const h = React.createElement;
     const isNew = !r; const back = () => this.closeAppBannerEditor();
     const setD = patch => this.setState(s => ({ appBannerDraft: Object.assign({}, s.appBannerDraft, patch) }));
-    const d = this.state.appBannerDraft || { title: '', rating: 0, shortDesc: '', ctaText: '', ctaUrl: '', autoClose: '', frequency: '', active: true };
+    const d = this.state.appBannerDraft || { title: '', rating: 0, shortDesc: '', ctaText: '', ctaUrlAppStore: '', ctaUrlGooglePlay: '', pages: [], autoClose: '', frequency: '', active: true };
+    const selectedPages = d.pages || [];
     const ratingErr = !!this.state.appBannerRatingErr;
     const logoErr = !!this.state.appBannerLogoErr;
     const freqErr = !!this.state.appBannerFreqErr;
@@ -9456,11 +9463,15 @@ class Component extends DCLogic {
           )
         ),
         section(2, 'share-01-line', 'Nút CTA',
+          limField('Tiêu đề nút', 'ctaText', CTA_TEXT_MAX, true, 'VD: Mở App ngay'),
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 } },
-            limField('Tiêu đề nút', 'ctaText', CTA_TEXT_MAX, true, 'VD: Mở App ngay'),
-            this.field('Link điều hướng', h(FptUrlInput, {
-              value: d.ctaUrl, placeholder: 'https://... hoặc /duong-dan',
-              onChange: e => setD({ ctaUrl: e && e.target ? e.target.value : e })
+            this.field('Link App Store', h(FptUrlInput, {
+              value: d.ctaUrlAppStore, placeholder: 'https://apps.apple.com/...',
+              onChange: e => setD({ ctaUrlAppStore: e && e.target ? e.target.value : e })
+            }), true),
+            this.field('Link Google Play', h(FptUrlInput, {
+              value: d.ctaUrlGooglePlay, placeholder: 'https://play.google.com/...',
+              onChange: e => setD({ ctaUrlGooglePlay: e && e.target ? e.target.value : e })
             }), true)
           )
         ),
@@ -9472,7 +9483,15 @@ class Component extends DCLogic {
             logoErr && h('div', { className: 'fpt-req-err-msg' }, 'Vui lòng tải Logo App.')
           )
         ),
-        section(4, 'zap-line', 'Hành vi hiển thị',
+        section(4, 'marker-pin-01-line', 'Cấu hình trang hiển thị áp dụng',
+          h('div', { style: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: -8 } }, 'Chọn các trang trên website FPT sẽ hiển thị Cài đặt ứng dụng này. Không chọn trang nào = áp dụng cho tất cả trang.'),
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+            h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Trang áp dụng'),
+            h(DS.Badge, { theme: selectedPages.length ? 'info' : 'success' }, selectedPages.length ? selectedPages.length + ' trang' : 'Tất cả trang')
+          ),
+          this.tagPicker(this.BANNER_PAGES(), selectedPages, v => setD({ pages: v }), { placeholder: 'Chọn trang áp dụng hiển thị...', searchPlaceholder: 'Tìm kiếm trang...' })
+        ),
+        section(5, 'zap-line', 'Hành vi hiển thị',
           h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 } },
             this.field('Tần suất hiển thị', h(DS.Select, {
               options: this.POPUP_FREQUENCIES(), value: d.frequency, placeholder: 'Chọn tần suất hiển thị…',
@@ -9501,7 +9520,7 @@ class Component extends DCLogic {
         const list = this.getAppBannersList();
         const rec = {
           title: d.title, logoImg: iconVal && iconVal.status === 'done' ? iconVal.src : '', logoImgLink: iconVal && iconVal.status === 'done' ? iconVal.url : '',
-          rating: d.rating, shortDesc: d.shortDesc, ctaText: d.ctaText, ctaUrl: d.ctaUrl,
+          rating: d.rating, shortDesc: d.shortDesc, ctaText: d.ctaText, ctaUrlAppStore: d.ctaUrlAppStore, ctaUrlGooglePlay: d.ctaUrlGooglePlay, pages: d.pages || [],
           autoCloseSec: d.autoClose ? +d.autoClose : 0, frequency: d.frequency,
           status: d.active ? 'active' : 'inactive', updatedAt: this.nowStr(), updatedBy: 'Admin User'
         };
@@ -14994,7 +15013,7 @@ class Component extends DCLogic {
                   h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
                     h2('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
                       h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab' } }),
-                      h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Slide ' + (i + 1))
+                      h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Banner ' + (i + 1))
                     ),
                     items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
                   ),
@@ -15014,53 +15033,143 @@ class Component extends DCLogic {
           }
         }
         return [
-          divr('DANH SÁCH SLIDE BANNER (THÊM/XÓA/KÉO-THẢ SẮP XẾP)'),
+          divr('DANH SÁCH HERO BANNER'),
           h(CcHeroSliderEd, { key: 'cc-hero-ed' })
         ];
       })(),
       // ── CC-COMBO (COMBO - NHẬP HỘI CAM-ERA NHẬN NGAY DEAL KHỦNG) ──
       'cc-combo': (() => {
+        const G_COLOR_COMBO = '#f36523';
         class CcComboEd extends React.Component {
           constructor(p) { super(p); this.state = { items: [
-            { id: 1, code: 'cc-play4', name: 'FPT Camera Play 4', price: '890.000đ', desc: 'Tặng kèm thẻ nhớ 32GB + 1 charm trang trí', img: '', color: '#fdf2f8', ctaText: 'Mua ngay', ctaUrl: '/checkout/cc-play4', visible: true },
-            { id: 2, code: 'cc-combo2', name: 'Combo 2 Camera Play 4', price: '1.590.000đ', desc: 'Mua 2 tặng 1 bộ charm trang trí giới hạn', img: '', color: '#eff6ff', ctaText: 'Mua ngay', ctaUrl: '/checkout/cc-combo2', visible: true },
-          ], nextId: 3, confirmIdx: null }; }
+            { id: 1, code: 'cc-play4', name: 'FPT Camera Play 4', price: '890.000đ', desc: 'Tặng kèm thẻ nhớ 32GB + 1 charm trang trí', img: '', color: '#fdf2f8', ctaText: 'Mua ngay', visible: true },
+            { id: 2, code: 'cc-combo2', name: 'Combo 2 Camera Play 4', price: '1.590.000đ', desc: 'Mua 2 tặng 1 bộ charm trang trí giới hạn', img: '', color: '#eff6ff', ctaText: 'Mua ngay', visible: true },
+          ], nextId: 3, selIdx: 0, q: '', addOpen: false, addQ: '', addSel: new Set(), dragFrom: -1, dragOver: -1, confirmIdx: null }; }
           upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
           render() {
-            const { items, confirmIdx } = this.state;
+            const { items, selIdx, q, addOpen, addQ, addSel, dragFrom, dragOver, confirmIdx } = this.state;
             const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
             const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
             const fldC = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
             const g2C = (...it) => h2('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' } }, ...it);
-            const opts = CC_PKGS.map(p => ({ value: p.code, label: p.name }));
-            return h2('div', null,
-              items.map((it, i) => h2('div', { key: it.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 12, background: 'var(--color-surface-alt)', marginBottom: 10 } },
-                h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
-                  h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Card Deal/Combo ' + (i + 1)),
-                  h2('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
-                    h2(DS2.Switch, { size: 'sm', checked: it.visible, onChange: v => self.upd(it.id, { visible: v }), label: it.visible ? 'Hiển thị' : 'Ẩn' }),
-                    items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
-                  )
+            const grpHdr = title => h2('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--color-text-subtle)', marginBottom: 10, marginTop: 4, paddingBottom: 6, borderBottom: '1px solid var(--color-border)' } }, title);
+            const existingCodes = new Set(items.map(p => p.code));
+            const filtered = q ? items.filter(p => (p.name || '').toLowerCase().includes(q.toLowerCase()) || (p.code || '').toLowerCase().includes(q.toLowerCase())) : items;
+            const sel = selIdx >= 0 && selIdx < items.length ? items[selIdx] : null;
+            const filtModal = CC_PKGS.filter(p => !addQ || p.code.toLowerCase().includes(addQ.toLowerCase()) || p.name.toLowerCase().includes(addQ.toLowerCase()));
+
+            const leftPanel = h2('div', { style: { width: 220, flexShrink: 0, borderRight: '1px solid var(--color-border)', paddingRight: 14, display: 'flex', flexDirection: 'column', gap: 8 } },
+              h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 } },
+                h2('div', { style: { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'var(--color-text-subtle)' } }, 'Card hiển thị'),
+                h2(DS2.Button, { level: 'primary', size: 'sm', leadingIcon: 'plus-line', onClick: () => self.setState({ addOpen: true, addQ: '', addSel: new Set(items.map(p => p.code)) }) }, 'Thêm')
+              ),
+              h2(DS2.Input, { placeholder: 'Lọc gói...', value: q, onChange: e => self.setState({ q: e.target.value }), leadingIcon: 'search-medium-line', size: 'sm' }),
+              h2('div', { style: { flex: 1, overflowY: 'auto', maxHeight: 320 } },
+                filtered.length === 0
+                  ? h2('div', { style: { padding: '20px 0', textAlign: 'center', fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Chưa có card nào · bấm Thêm')
+                  : filtered.map(it => {
+                      const ri = items.indexOf(it);
+                      const isSel = ri === selIdx;
+                      const isDO = dragFrom >= 0 && dragFrom !== ri && dragOver === ri;
+                      return h2('div', { key: it.id, draggable: true,
+                        onDragStart: () => self.setState({ dragFrom: ri }),
+                        onDragOver: e => { e.preventDefault(); self.setState({ dragOver: ri }); },
+                        onDrop: e => { e.preventDefault(); if (dragFrom < 0 || dragFrom === ri) return; const np = [...items]; const [mv] = np.splice(dragFrom, 1); np.splice(ri, 0, mv); let ns = selIdx; if (selIdx === dragFrom) ns = ri; else if (selIdx > dragFrom && selIdx <= ri) ns = selIdx - 1; else if (selIdx < dragFrom && selIdx >= ri) ns = selIdx + 1; self.setState({ items: np, selIdx: ns, dragFrom: -1, dragOver: -1 }); },
+                        onDragEnd: () => self.setState({ dragFrom: -1, dragOver: -1 }),
+                        onClick: () => self.setState({ selIdx: ri }),
+                        style: { display: 'flex', alignItems: 'center', gap: 6, padding: '7px 8px', borderRadius: 8, cursor: 'pointer', marginBottom: 3,
+                          background: isSel ? 'var(--color-accent-bg)' : isDO ? 'var(--color-surface-alt)' : 'transparent',
+                          border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent',
+                          borderTop: isDO ? '2px solid var(--color-accent)' : undefined,
+                          opacity: dragFrom === ri ? 0.4 : (it.visible === false ? 0.5 : 1), transition: 'all .12s' }
+                      },
+                        h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
+                        h2('span', { style: { background: G_COLOR_COMBO, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 5, flexShrink: 0, whiteSpace: 'nowrap' } }, 'C' + (ri + 1)),
+                        h2('div', { style: { flex: 1, minWidth: 0 } },
+                          h2('div', { style: { fontSize: 12, fontWeight: isSel ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, it.name || 'Chưa đặt tên'),
+                          h2('div', { style: { fontSize: 10, color: 'var(--color-text-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, it.code || '—')
+                        )
+                      );
+                    })
+              ),
+              h2('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, items.length + ' card · Kéo để sắp xếp')
+            );
+
+            const rightPanel = h2('div', { style: { flex: 1, paddingLeft: 14, minWidth: 0 } },
+              sel ? h2('div', { key: sel.id },
+                h2('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid var(--color-border)' } },
+                  h2('div', { style: { flex: 1, minWidth: 0 } },
+                    h2('div', { style: { fontWeight: 700, fontSize: 14 } }, sel.name || 'Chưa đặt tên'),
+                    h2('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, sel.code || '—')
+                  ),
+                  h2(DS2.Switch, { size: 'sm', checked: sel.visible, onChange: v => self.upd(sel.id, { visible: v }), label: sel.visible ? 'Hiển thị' : 'Ẩn' }),
+                  items.length > 1 && h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: selIdx }) }, 'Xóa')
                 ),
-                fldC('Chọn sản phẩm', h2(DS2.Select, { options: opts, value: it.code || '', placeholder: 'Chọn sản phẩm…', searchable: true, searchPlaceholder: 'Tìm sản phẩm…', onChange: v => self.upd(it.id, ccFromPkg(v)) }), true),
+                grpHdr('Thông tin hiển thị trên card'),
                 g2C(
-                  fldC('Giá bán', h2(DS2.Input, { value: it.price || '', disabled: true, placeholder: 'Tự động theo sản phẩm' })),
-                  fldC('Màu nền Card', ccColorField(it.color, v => self.upd(it.id, { color: v })))
+                  fldC('Giá bán', h2(DS2.Input, { value: sel.price || '', disabled: true, placeholder: 'Tự động theo sản phẩm' })),
+                  fldC('Màu nền Card', ccColorField(sel.color, v => self.upd(sel.id, { color: v })))
                 ),
-                fldC('Mô tả ngắn', h2(DS2.Input, { value: it.desc || '', onChange: e => self.upd(it.id, { desc: e.target.value }), placeholder: 'VD: Tặng kèm thẻ nhớ 32GB' }), true),
-                fldC('Ảnh sản phẩm minh họa', h2('div', { style: { display: 'flex', gap: 8 } },
-                  h2(DS2.Input, { placeholder: 'URL ảnh...' }),
+                fldC('Mô tả ngắn', h2(DS2.Input, { value: sel.desc || '', onChange: e => self.upd(sel.id, { desc: e.target.value }), placeholder: 'VD: Tặng kèm thẻ nhớ 32GB' }), true),
+                grpHdr('Hình ảnh card'),
+                fldC('Thumbnail', h2('div', { style: { display: 'flex', gap: 8 } },
+                  h2(DS2.Input, { value: sel.img || '', onChange: e => self.upd(sel.id, { img: e.target.value }), placeholder: 'URL ảnh...' }),
                   h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
                 ), true),
-                g2C(
-                  fldC('Nút CTA — Text', h2(DS2.Input, { value: it.ctaText || '', onChange: e => self.upd(it.id, { ctaText: e.target.value }) }), true),
-                  fldC('Nút CTA — URL luồng checkout', h2(FptUrlInput, { value: it.ctaUrl || '', onChange: e => self.upd(it.id, { ctaUrl: e.target.value }), placeholder: '/checkout/...' }), true)
+                fldC('Nút CTA — Text', h2(DS2.Input, { value: sel.ctaText || '', onChange: e => self.upd(sel.id, { ctaText: e.target.value }) }), true)
+              ) : h2('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 260, gap: 10, color: 'var(--color-text-subtle)' } },
+                  h2(DS2.Icon, { name: 'star-01-line', size: 32, color: 'var(--color-text-subtle)' }),
+                  h2('div', { style: { fontSize: 14, fontWeight: 600 } }, 'Chưa chọn card'),
+                  h2('div', { style: { fontSize: 12, textAlign: 'center', lineHeight: 1.6 } }, 'Bấm vào card bên trái để chỉnh sửa')
                 )
-              )),
-              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, code: '', name: '', price: '', desc: '', img: '', color: '#ffffff', ctaText: 'Mua ngay', ctaUrl: '', visible: true }], nextId: s.nextId + 1 })) }, 'Thêm Card Deal/Combo'),
+            );
+
+            const addModal = h2(DS2.Modal, { open: addOpen, onClose: () => self.setState({ addOpen: false }), title: 'Card hiển thị', description: 'Tích để thêm, bỏ tích để gỡ card khỏi danh sách' },
+              h2('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+                h2(DS2.Input, { placeholder: 'Tìm gói theo tên hoặc mã...', value: addQ, onChange: e => self.setState({ addQ: e.target.value }), leadingIcon: 'search-medium-line', size: 'sm' }),
+                (() => {
+                  const selectable = filtModal;
+                  const allSel = selectable.length > 0 && selectable.every(s => addSel.has(s.code));
+                  return h2('div', { style: { display: 'flex', alignItems: 'center', paddingLeft: 2 } },
+                    h2(DS2.Checkbox, { label: 'Chọn tất cả', checked: allSel, onChange: v => { const ns = new Set(addSel); selectable.forEach(s => v ? ns.add(s.code) : ns.delete(s.code)); self.setState({ addSel: ns }); } }));
+                })(),
+                h2('div', { style: { maxHeight: 300, overflowY: 'auto', borderRadius: 8, border: '1px solid var(--color-border)' } },
+                  filtModal.length === 0
+                    ? h2('div', { style: { padding: 24, textAlign: 'center', fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy gói phù hợp')
+                    : filtModal.map(pkg => {
+                        const chk = addSel.has(pkg.code), already = existingCodes.has(pkg.code);
+                        return h2('div', { key: pkg.code, onClick: () => { const ns = new Set(addSel); chk ? ns.delete(pkg.code) : ns.add(pkg.code); self.setState({ addSel: ns }); },
+                          style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderBottom: '1px solid var(--color-border-pale)', cursor: 'pointer', background: chk ? 'var(--color-accent-bg)' : already ? 'var(--color-surface-sunken)' : 'transparent', transition: 'background .1s' } },
+                          h2('div', { style: { width: 18, height: 18, borderRadius: 4, flexShrink: 0, border: '1.5px solid', borderColor: chk ? 'var(--color-accent)' : 'var(--color-border-strong)', background: chk ? 'var(--color-accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, chk && h2(DS2.Icon, { name: 'check-line', size: 11, color: '#fff' })),
+                          h2('div', { style: { flex: 1, minWidth: 0 } },
+                            h2('div', { style: { fontWeight: 700, fontSize: 13 } }, pkg.name),
+                            h2('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, pkg.code + ' · ' + pkg.price)
+                          )
+                        );
+                      })
+                ),
+                h2('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 } },
+                  h2('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, addSel.size + ' card được chọn'),
+                  h2('div', { style: { display: 'flex', gap: 8 } },
+                    h2(DS2.Button, { level: 'secondary', onClick: () => self.setState({ addOpen: false }) }, 'Hủy'),
+                    h2(DS2.Button, { level: 'primary', onClick: () => {
+                      const kept = items.filter(p => addSel.has(p.code));
+                      const toAdd = CC_PKGS.filter(p => addSel.has(p.code) && !existingCodes.has(p.code));
+                      const newItems = toAdd.map((p, i) => ({ id: self.state.nextId + i, code: p.code, name: p.name, price: p.price, desc: '', img: '', color: '#ffffff', ctaText: 'Mua ngay', visible: true }));
+                      const nc = [...kept, ...newItems];
+                      self.setState(s => ({ items: nc, nextId: s.nextId + newItems.length, selIdx: nc.length ? Math.min(selIdx < 0 ? 0 : selIdx, nc.length - 1) : -1, addOpen: false, addSel: new Set() }));
+                    } }, 'Lưu (' + addSel.size + ' card)')
+                  )
+                )
+              )
+            );
+
+            return h2('div', null,
+              h2('div', { style: { display: 'flex', gap: 0 } }, leftPanel, rightPanel),
+              addModal,
               confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa card?', description: 'Card deal/combo này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
                 h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
+                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => { const ni = s.items.filter((_, j) => j !== idx); return { items: ni, confirmIdx: null, selIdx: ni.length ? Math.min(idx, ni.length - 1) : -1 }; }); } }, 'Xóa'),
                   h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
                 )
               )
@@ -15069,7 +15178,7 @@ class Component extends DCLogic {
         }
         return [
           fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Nhập hội Cam-era nhận ngay deal khủng' })),
-          divr('DANH SÁCH CARD DEAL / COMBO (TỐI ĐA 3 THẺ HIỂN THỊ, DƯ THÌ CÓ MŨI TÊN CHUYỂN)'),
+          divr('DANH SÁCH CARD SẢN PHẨM'),
           h(CcComboEd, { key: 'cc-combo-ed' })
         ];
       })(),
@@ -15077,9 +15186,9 @@ class Component extends DCLogic {
       'cc-offers': (() => {
         class CcOfferEd extends React.Component {
           constructor(p) { super(p); this.state = { items: [
-            { id: 1, desc: 'Giảm 500K cho đơn đặt trước', color: '#faf5ff', img: '', url: '/uu-dai/dat-truoc' },
-            { id: 2, desc: 'Tặng charm giới hạn khi mua Combo 2', color: '#eff6ff', img: '', url: '' },
-            { id: 3, desc: 'Miễn phí lắp đặt toàn quốc', color: '#fff7ed', img: '', url: '' },
+            { id: 1, title: 'Ưu đãi đặt trước', desc: 'Giảm 500K cho đơn đặt trước', bgMode: 'color', color: '#faf5ff', img: '' },
+            { id: 2, title: 'Ưu đãi Combo 2', desc: 'Tặng charm giới hạn khi mua Combo 2', bgMode: 'color', color: '#eff6ff', img: '' },
+            { id: 3, title: 'Lắp đặt miễn phí', desc: 'Miễn phí lắp đặt toàn quốc', bgMode: 'color', color: '#fff7ed', img: '' },
           ], nextId: 4, confirmIdx: null }; }
           upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
           render() {
@@ -15087,22 +15196,37 @@ class Component extends DCLogic {
             const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
             const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
             const fldO = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            const bgTab = it => fldO('Nền card', h2('div', { style: { border: '1px solid var(--color-border)', borderRadius: 8, padding: 10 } },
+              h2('div', { style: { display: 'flex', gap: 6, marginBottom: 10 } },
+                ['color', 'image'].map(m => {
+                  const active = (it.bgMode || 'color') === m;
+                  return h2('button', { key: m, type: 'button', onClick: () => self.upd(it.id, { bgMode: m }), style: { padding: '5px 16px', borderRadius: 20, border: '1.5px solid ' + (active ? 'var(--color-accent)' : 'var(--color-border)'), background: active ? 'var(--color-accent-bg)' : 'var(--color-surface)', color: active ? 'var(--color-accent)' : 'var(--color-text)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' } }, m === 'color' ? 'Màu nền' : 'Ảnh nền');
+                })
+              ),
+              (it.bgMode || 'color') === 'color'
+                ? h2('div', null,
+                    h2('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 } },
+                      BG_PRESETS.map((c, ci) => { const isSel = it.color === c; return h2('div', { key: ci, onClick: () => self.upd(it.id, { color: c }), title: c, style: { width: 28, height: 28, borderRadius: 6, background: c, border: isSel ? '2.5px solid var(--color-accent)' : '1.5px solid var(--color-border)', cursor: 'pointer' } }); })
+                    ),
+                    ccColorField(it.color, v => self.upd(it.id, { color: v }))
+                  )
+                : h2('div', { style: { display: 'flex', gap: 8 } },
+                    h2(DS2.Input, { placeholder: 'URL ảnh nền card...', value: it.img || '', onChange: e => self.upd(it.id, { img: e.target ? e.target.value : e }) }),
+                    h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
+                  )
+            ), true);
             return h2('div', null,
               items.map((it, i) => h2('div', { key: it.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 12, background: 'var(--color-surface-alt)', marginBottom: 10 } },
                 h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
-                  h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Thẻ ưu đãi ' + (i + 1)),
+                  h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Card ưu đãi ' + (i + 1)),
                   items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
                 ),
-                fldO('Màu nền thẻ', ccColorField(it.color, v => self.upd(it.id, { color: v })), true),
-                fldO('Ảnh nền thẻ', h2('div', { style: { display: 'flex', gap: 8 } },
-                  h2(DS2.Input, { placeholder: 'URL ảnh nền thẻ...' }),
-                  h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
-                ), true),
-                fldO('Mô tả ngắn ở chân thẻ', h2(DS2.Input, { value: it.desc || '', onChange: e => self.upd(it.id, { desc: e.target.value }), placeholder: 'VD: Giảm 500K cho đơn đầu tiên' }), true),
-                fldO('URL điều hướng khi click thẻ', h2(FptUrlInput, { value: it.url || '', onChange: e => self.upd(it.id, { url: e.target.value }), placeholder: '/uu-dai/... (tùy chọn)' }), false)
+                fldO('Tiêu đề', h2(DS2.Input, { value: it.title || '', onChange: e => self.upd(it.id, { title: e.target.value }), placeholder: 'VD: Ưu đãi đặt trước' }), true),
+                bgTab(it),
+                fldO('Mô tả ngắn ở chân card', h2(DS2.Input, { value: it.desc || '', onChange: e => self.upd(it.id, { desc: e.target.value }), placeholder: 'VD: Giảm 500K cho đơn đầu tiên' }), true)
               )),
-              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, desc: '', color: '#ffffff', img: '', url: '' }], nextId: s.nextId + 1 })) }, 'Thêm thẻ ưu đãi'),
-              confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa thẻ ưu đãi?', description: 'Thẻ ưu đãi này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
+              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, title: '', desc: '', bgMode: 'color', color: '#ffffff', img: '' }], nextId: s.nextId + 1 })) }, 'Thêm card ưu đãi'),
+              confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa card ưu đãi?', description: 'Card ưu đãi này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
                 h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
                   h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
                   h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
@@ -15114,7 +15238,7 @@ class Component extends DCLogic {
         return [
           fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Bộ thẻ ưu đãi độc quyền' })),
           fld('Mô tả phụ', h(DS.Input, { placeholder: 'Mô tả ngắn...' })),
-          divr('DANH SÁCH THẺ ƯU ĐÃI (XẾP XÒE)'),
+          divr('DANH SÁCH CARD ƯU ĐÃI'),
           h(CcOfferEd, { key: 'cc-offers-ed' }),
           divr('NÚT CTA CHUNG BÊN DƯỚI'),
           h(CcCtaToggle, { key: 'cc-offers-cta', title: 'Nút CTA chung bên dưới', defaultOn: false, textPh: 'VD: Xem chi tiết' })
@@ -15162,10 +15286,10 @@ class Component extends DCLogic {
                     ),
                     items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
                   ),
-                  !single && fldF('Tên tab (hiển thị trên thanh pill)', h2(DS2.Input, { value: it.name || '', onChange: e => self.upd(it.id, { name: e.target.value }) }), true),
+                  !single && fldF('Tên tab', h2(DS2.Input, { value: it.name || '', onChange: e => self.upd(it.id, { name: e.target.value }) }), true),
                   mFldF('Ảnh Desktop', 'URL ảnh desktop...', '≤200KB'),
                   mFldF('Ảnh Mobile', 'URL ảnh mobile...', '≤150KB'),
-                  fldF('URL (tùy chọn)', h2(FptUrlInput, { value: it.url || '', onChange: e => self.upd(it.id, { url: e.target.value }) }), false)
+                  fldF('URL', h2(FptUrlInput, { value: it.url || '', onChange: e => self.upd(it.id, { url: e.target.value }), placeholder: '/tinh-nang/...' }), false)
                 );
               }),
               h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, name: 'Tab ' + (s.items.length + 1), imgDesktop: '', imgMobile: '', url: '' }], nextId: s.nextId + 1 })) }, 'Thêm Tab tính năng'),
@@ -15188,10 +15312,12 @@ class Component extends DCLogic {
       })(),
       // ── CC-DETAIL (DETAIL - CAMERA CHẤT RIÊNG) ──
       'cc-detail': (() => {
+        const mainThis = this;
+        const cardBadges = () => mainThis.getBadgeTagList().filter(b => b.status === 'active' && (b.categories || []).includes('card'));
         class CcDetailEd extends React.Component {
           constructor(p) { super(p); this.state = { items: [
-            { id: 1, code: 'cc-play4', name: 'FPT Camera Play 4', price: '890.000đ', badgeOn: true, badgeText: 'Bán chạy nhất', badgeColor: '#f36523', img: '', color: '#ffffff', desc: 'Camera AI xoay 360°, cảnh báo chuyển động thông minh, có thể tuỳ biến 3 màu áo & 9 chiếc charm trang trí theo phong cách riêng.', ctaText: 'Xem chi tiết', ctaUrl: '/thiet-bi-thong-minh/charm-camera-play-4' },
-            { id: 2, code: 'cc-play4-pro', name: 'FPT Camera Play 4 Pro', price: '1.290.000đ', badgeOn: true, badgeText: 'Mới', badgeColor: '#a855f7', img: '', color: '#ffffff', desc: 'Nâng cấp độ phân giải 2K, lưu trữ Cloud 30 ngày miễn phí tháng đầu, đàm thoại 2 chiều rõ nét.', ctaText: 'Xem chi tiết', ctaUrl: '/thiet-bi-thong-minh/charm-camera-play-4-pro' },
+            { id: 1, code: 'cc-play4', name: 'FPT Camera Play 4', price: '890.000đ', tagOn: true, tagBadgeId: 'bdg-hot', img: '', color: '#ffffff', desc: 'Camera AI xoay 360°, cảnh báo chuyển động thông minh, có thể tuỳ biến 3 màu áo & 9 chiếc charm trang trí theo phong cách riêng.', ctaText: 'Xem chi tiết' },
+            { id: 2, code: 'cc-play4-pro', name: 'FPT Camera Play 4 Pro', price: '1.290.000đ', tagOn: true, tagBadgeId: 'bdg-new', img: '', color: '#ffffff', desc: 'Nâng cấp độ phân giải 2K, lưu trữ Cloud 30 ngày miễn phí tháng đầu, đàm thoại 2 chiều rõ nét.', ctaText: 'Xem chi tiết' },
           ], nextId: 3, confirmIdx: null }; }
           upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
           render() {
@@ -15212,28 +15338,42 @@ class Component extends DCLogic {
                   fldD('Tên sản phẩm', h2(DS2.Input, { value: it.name || '', disabled: true, placeholder: 'Tự động theo sản phẩm' })),
                   fldD('Giá bán', h2(DS2.Input, { value: it.price || '', disabled: true, placeholder: 'Tự động theo sản phẩm' }))
                 ),
-                h2('div', { style: { padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: 8, marginBottom: 10 } },
-                  h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: it.badgeOn ? 8 : 0 } },
-                    h2('span', { style: { fontSize: 12, fontWeight: 600 } }, 'Badge nhãn góc trên'),
-                    h2(DS2.Switch, { size: 'sm', checked: it.badgeOn, onChange: v => self.upd(it.id, { badgeOn: v }), label: it.badgeOn ? 'Bật' : 'Tắt' })
-                  ),
-                  it.badgeOn && g2D(
-                    fldD('Text badge', h2(DS2.Input, { value: it.badgeText || '', onChange: e => self.upd(it.id, { badgeText: e.target.value }), placeholder: 'VD: Mới' }), true),
-                    fldD('Màu badge', ccColorField(it.badgeColor, v => self.upd(it.id, { badgeColor: v })))
-                  )
-                ),
+                (() => {
+                  const badges = cardBadges();
+                  const picked = badges.find(b => b.id === it.tagBadgeId);
+                  const badgeOpts = badges.map(b => ({ value: b.id, label: h2('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 5, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '.4px', background: b.bgColor, color: b.textColor } }, b.name) }));
+                  return h2('div', { style: { padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 8, marginBottom: 10 } },
+                    h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: it.tagOn ? 10 : 0 } },
+                      h2('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+                        h2(DS2.Switch, { size: 'sm', checked: it.tagOn, onChange: v => self.upd(it.id, { tagOn: v }) }),
+                        h2('span', { style: { fontSize: 12.5, fontWeight: 700 } }, 'Tag nổi bật ', h2('span', { style: { fontWeight: 400, color: 'var(--color-text-muted)', fontSize: 11 } }, '(gắn trên Banner/Card sản phẩm ngoài Web/App)'))
+                      ),
+                      it.tagOn && h2('div', { style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--color-text-muted)' } }, 'Xem trước:',
+                        picked
+                          ? h2('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '5px 14px', borderRadius: 6, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.5px', background: picked.bgColor, color: picked.textColor } }, picked.name)
+                          : h2('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '5px 14px', borderRadius: 6, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.5px', background: 'var(--color-surface-sunken)', color: 'var(--color-text-subtle)' } }, 'Chưa chọn Badge/Tag')
+                      )
+                    ),
+                    it.tagOn && h2('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+                      badges.length
+                        ? fldD('Badge/Tag', h2(DS2.Select, { options: badgeOpts, value: it.tagBadgeId || '', placeholder: 'Chọn Badge/Tag…', searchable: true, searchPlaceholder: 'Tìm Badge/Tag…', onChange: v => self.upd(it.id, { tagBadgeId: v }) }), true)
+                        : h2('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: 10, borderRadius: 8, background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', fontSize: 12.5 } },
+                            h2(DS2.Icon, { name: 'alert-triangle-line', size: 14, style: { flexShrink: 0 } }),
+                            'Chưa có Badge/Tag nào thuộc phân loại "Card gói" đang hoạt động. Hãy tạo tại module Quản lý Badge/Tag.'
+                          ),
+                      h2('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)' } }, 'Tên hiển thị và màu sắc của Tag được quản lý tập trung tại module Quản lý Badge/Tag.')
+                    )
+                  );
+                })(),
                 fldD('Ảnh sản phẩm', h2('div', { style: { display: 'flex', gap: 8 } },
                   h2(DS2.Input, { placeholder: 'URL ảnh...' }),
                   h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
                 ), true),
                 fldD('Màu nền Card', ccColorField(it.color, v => self.upd(it.id, { color: v })), true),
                 fldD('Mô tả', h2(DS2.Textarea, { rows: 3, value: it.desc || '', onChange: e => self.upd(it.id, { desc: e.target.value }), placeholder: 'Mô tả sản phẩm nhiều dòng...' }), true),
-                g2D(
-                  fldD('Nút CTA — Text', h2(DS2.Input, { value: it.ctaText || '', onChange: e => self.upd(it.id, { ctaText: e.target.value }) }), true),
-                  fldD('Nút CTA — URL', h2(FptUrlInput, { value: it.ctaUrl || '', onChange: e => self.upd(it.id, { ctaUrl: e.target.value }) }), true)
-                )
+                fldD('Nút CTA — Text', h2(DS2.Input, { value: it.ctaText || '', onChange: e => self.upd(it.id, { ctaText: e.target.value }) }), true)
               )),
-              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, code: '', name: '', price: '', badgeOn: false, badgeText: '', badgeColor: '#f36523', img: '', color: '#ffffff', desc: '', ctaText: 'Xem chi tiết', ctaUrl: '' }], nextId: s.nextId + 1 })) }, 'Thêm Card sản phẩm'),
+              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, code: '', name: '', price: '', tagOn: false, tagBadgeId: '', img: '', color: '#ffffff', desc: '', ctaText: 'Xem chi tiết' }], nextId: s.nextId + 1 })) }, 'Thêm Card sản phẩm'),
               confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa card sản phẩm?', description: 'Card sản phẩm này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
                 h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
                   h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
@@ -15281,44 +15421,66 @@ class Component extends DCLogic {
                   h2(DS2.Radio, { name: 'cc-customizer-tabmode', label: 'Không tab', checked: single, onChange: () => self.setState({ tabMode: 'single' }) })
                 )
               ),
-              tabs.map((tab, ti) => {
-                const { expanded, items, color } = tab;
-                const isDragOver = !single && tabDragFrom >= 0 && tabDragFrom !== ti && tabDragOver === ti;
-                return h2('div', { key: tab.id, draggable: !single,
-                  onDragStart: () => { if (single) return; self.setState({ tabDragFrom: ti, tabDragOver: -1 }); },
-                  onDragOver: e => { if (single || tabDragFrom === ti) return; e.preventDefault(); self.setState({ tabDragOver: ti }); },
-                  onDrop: e => { if (single) return; e.preventDefault(); if (tabDragFrom < 0 || tabDragFrom === ti) return; const nt = [...tabs]; const [mv] = nt.splice(tabDragFrom, 1); nt.splice(ti, 0, mv); self.setState({ tabs: nt, tabDragFrom: -1, tabDragOver: -1 }); },
-                  onDragEnd: () => self.setState({ tabDragFrom: -1, tabDragOver: -1 }),
-                  style: { border: isDragOver ? '2px dashed var(--color-accent)' : expanded ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)', borderRadius: 12, marginBottom: 12, overflow: 'hidden', transition: 'border-color .15s', opacity: tabDragFrom === ti ? 0.45 : 1 } },
-                  h2('div', { onClick: () => self.updTab(tab.id, { expanded: !expanded }), style: { background: expanded ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' } },
-                    !single && h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
-                    h2(DS2.Icon, { name: expanded ? 'chevron-down-line' : 'chevron-right-01-line', size: 16, color: expanded ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
-                    h2('span', { style: { fontWeight: 700, fontSize: 13, color: expanded ? 'var(--color-accent)' : 'var(--color-text)', flex: 1 } }, 'Tab: ' + tab.name),
-                    h2('div', { style: { display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }, onClick: e => e.stopPropagation() },
-                      tabs.length > 1 && h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)', fontSize: 11 }, onClick: () => self.setState(s => ({ tabs: s.tabs.filter(t => t.id !== tab.id) })) }, 'Xóa tab')
-                    )
-                  ),
-                  expanded && h2('div', { style: { padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
-                    !single && fldU('Tên tab', h2(DS2.Input, { key: 'ccctabname' + tab.id, defaultValue: tab.name, placeholder: 'Nhập tên tab...', onBlur: e => { const v = e.target.value.trim(); if (v) self.updTab(tab.id, { name: v }); } }), true),
-                    fldU('Màu nền', ccColorField(color, v => self.updTab(tab.id, { color: v })), true),
-                    h2('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--color-text-subtle)' } }, 'NỘI DUNG CHARM'),
-                    items.map((item, ii) => h2('div', { key: item.id, style: { border: '1px solid var(--color-border-pale)', borderRadius: 8, padding: 10, background: 'var(--color-surface)' } },
-                      h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
-                        h2('span', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Charm ' + (ii + 1)),
-                        h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => self.updTab(tab.id, { items: items.filter(x => x.id !== item.id) }) }, 'Xóa')
+              single
+                ? (() => {
+                    const tab = tabs[0];
+                    const { items, color } = tab;
+                    return h2('div', { key: tab.id, style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+                      fldU('Màu nền', ccColorField(color, v => self.updTab(tab.id, { color: v })), true),
+                      h2('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--color-text-subtle)' } }, 'NỘI DUNG CHARM'),
+                      items.map((item, ii) => h2('div', { key: item.id, style: { border: '1px solid var(--color-border-pale)', borderRadius: 8, padding: 10, background: 'var(--color-surface)' } },
+                        h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
+                          h2('span', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Card ' + (ii + 1)),
+                          h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => self.updTab(tab.id, { items: items.filter(x => x.id !== item.id) }) }, 'Xóa')
+                        ),
+                        fldU('Thumbnail', h2('div', { style: { display: 'flex', gap: 8 } },
+                          h2(DS2.Input, { placeholder: 'URL ảnh...' }),
+                          h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
+                        ), true),
+                        fldU('Tiêu đề', h2(DS2.Input, { value: item.name || '', onChange: e => self.updItem(tab.id, item.id, { name: e.target.value }) }), true),
+                        fldU('Mô tả ngắn', h2(DS2.Input, { value: item.desc || '', onChange: e => self.updItem(tab.id, item.id, { desc: e.target.value }) }), true)
+                      )),
+                      h2(DS2.Button, { level: 'secondary', size: 'sm', style: { width: '100%', borderStyle: 'dashed' }, onClick: () => self.setState(s => { const nid = s.nextItemId; return { tabs: s.tabs.map(t => t.id === tab.id ? { ...t, items: [...t.items, { id: nid, name: '', desc: '' }] } : t), nextItemId: nid + 1 }; }) }, '+ Thêm nội dung charm')
+                    );
+                  })()
+                : tabs.map((tab, ti) => {
+                    const { expanded, items, color } = tab;
+                    const isDragOver = tabDragFrom >= 0 && tabDragFrom !== ti && tabDragOver === ti;
+                    return h2('div', { key: tab.id, draggable: true,
+                      onDragStart: () => self.setState({ tabDragFrom: ti, tabDragOver: -1 }),
+                      onDragOver: e => { if (tabDragFrom === ti) return; e.preventDefault(); self.setState({ tabDragOver: ti }); },
+                      onDrop: e => { e.preventDefault(); if (tabDragFrom < 0 || tabDragFrom === ti) return; const nt = [...tabs]; const [mv] = nt.splice(tabDragFrom, 1); nt.splice(ti, 0, mv); self.setState({ tabs: nt, tabDragFrom: -1, tabDragOver: -1 }); },
+                      onDragEnd: () => self.setState({ tabDragFrom: -1, tabDragOver: -1 }),
+                      style: { border: isDragOver ? '2px dashed var(--color-accent)' : expanded ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)', borderRadius: 12, marginBottom: 12, overflow: 'hidden', transition: 'border-color .15s', opacity: tabDragFrom === ti ? 0.45 : 1 } },
+                      h2('div', { onClick: () => self.updTab(tab.id, { expanded: !expanded }), style: { background: expanded ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' } },
+                        h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
+                        h2(DS2.Icon, { name: expanded ? 'chevron-down-line' : 'chevron-right-01-line', size: 16, color: expanded ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
+                        h2('span', { style: { fontWeight: 700, fontSize: 13, color: expanded ? 'var(--color-accent)' : 'var(--color-text)', flex: 1 } }, 'Tab: ' + tab.name),
+                        h2('div', { style: { display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }, onClick: e => e.stopPropagation() },
+                          tabs.length > 1 && h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)', fontSize: 11 }, onClick: () => self.setState(s => ({ tabs: s.tabs.filter(t => t.id !== tab.id) })) }, 'Xóa tab')
+                        )
                       ),
-                      fldU('Thumbnail minh họa sản phẩm', h2('div', { style: { display: 'flex', gap: 8 } },
-                        h2(DS2.Input, { placeholder: 'URL ảnh...' }),
-                        h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
-                      ), true),
-                      fldU('Tên Charm', h2(DS2.Input, { value: item.name || '', onChange: e => self.updItem(tab.id, item.id, { name: e.target.value }) }), true),
-                      fldU('Mô tả ngắn', h2(DS2.Input, { value: item.desc || '', onChange: e => self.updItem(tab.id, item.id, { desc: e.target.value }) }), true)
-                    )),
-                    h2(DS2.Button, { level: 'secondary', size: 'sm', style: { width: '100%', borderStyle: 'dashed' }, onClick: () => self.setState(s => { const nid = s.nextItemId; return { tabs: s.tabs.map(t => t.id === tab.id ? { ...t, items: [...t.items, { id: nid, name: '', desc: '' }] } : t), nextItemId: nid + 1 }; }) }, '+ Thêm nội dung charm')
-                  )
-                );
-              }),
-              !single && h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ tabs: [...s.tabs, { id: 't' + s.nextTabId, name: 'Tab mới ' + (s.tabs.length + 1), color: '#ffffff', expanded: true, items: [] }], nextTabId: s.nextTabId + 1 })) }, '+ Thêm tab bộ sưu tập')
+                      expanded && h2('div', { style: { padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
+                        fldU('Tên tab', h2(DS2.Input, { key: 'ccctabname' + tab.id, defaultValue: tab.name, placeholder: 'Nhập tên tab...', onBlur: e => { const v = e.target.value.trim(); if (v) self.updTab(tab.id, { name: v }); } }), true),
+                        fldU('Màu nền', ccColorField(color, v => self.updTab(tab.id, { color: v })), true),
+                        h2('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--color-text-subtle)' } }, 'NỘI DUNG CHARM'),
+                        items.map((item, ii) => h2('div', { key: item.id, style: { border: '1px solid var(--color-border-pale)', borderRadius: 8, padding: 10, background: 'var(--color-surface)' } },
+                          h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } },
+                            h2('span', { style: { fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Card ' + (ii + 1)),
+                            h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', onClick: () => self.updTab(tab.id, { items: items.filter(x => x.id !== item.id) }) }, 'Xóa')
+                          ),
+                          fldU('Thumbnail', h2('div', { style: { display: 'flex', gap: 8 } },
+                            h2(DS2.Input, { placeholder: 'URL ảnh...' }),
+                            h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')
+                          ), true),
+                          fldU('Tiêu đề', h2(DS2.Input, { value: item.name || '', onChange: e => self.updItem(tab.id, item.id, { name: e.target.value }) }), true),
+                          fldU('Mô tả ngắn', h2(DS2.Input, { value: item.desc || '', onChange: e => self.updItem(tab.id, item.id, { desc: e.target.value }) }), true)
+                        )),
+                        h2(DS2.Button, { level: 'secondary', size: 'sm', style: { width: '100%', borderStyle: 'dashed' }, onClick: () => self.setState(s => { const nid = s.nextItemId; return { tabs: s.tabs.map(t => t.id === tab.id ? { ...t, items: [...t.items, { id: nid, name: '', desc: '' }] } : t), nextItemId: nid + 1 }; }) }, '+ Thêm nội dung charm')
+                      )
+                    );
+                  }),
+              !single && h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ tabs: [...s.tabs, { id: 't' + s.nextTabId, name: 'Tab mới ' + (s.tabs.length + 1), color: '#ffffff', expanded: true, items: [] }], nextTabId: s.nextTabId + 1 })) }, 'Thêm tab bộ sưu tập')
             );
           }
         }
@@ -15330,63 +15492,184 @@ class Component extends DCLogic {
       })(),
       // ── CC-PACKAGES (PACKAGES - TRẢI NGHIỆM SIÊU TÍNH NĂNG) ──
       'cc-packages': (() => {
+        const mainThis = this;
+        const cardBadges = () => mainThis.getBadgeTagList().filter(b => b.status === 'active' && (b.categories || []).includes('card'));
+        const G_COLOR = '#f36523';
         class CcPackagesEd extends React.Component {
           constructor(p) { super(p); this.state = { items: [
-            { id: 1, code: 'cc-play4', name: 'FPT Camera Play 4', price: '890.000đ', priceTip: 'Đã gồm VAT', tagOn: true, content: 'Camera AI xoay 360°\nTuỳ biến 3 màu áo & 9 charm\nCảnh báo chuyển động thông minh', ctaMainOn: true, ctaMainText: 'Mua ngay', ctaMainColor: '#f36523', ctaSubOn: true, ctaSubText: 'Xem chi tiết', ctaSubUrl: '/thiet-bi-thong-minh/charm-camera-play-4' },
-            { id: 2, code: 'cc-cloud', name: 'Gói Cloud lưu trữ 30 ngày', price: '39.000đ/tháng', priceTip: 'Miễn phí tháng đầu', tagOn: false, content: 'Lưu trữ video 30 ngày trên Cloud\nXem lại mọi lúc trên App\nTự động xoá dữ liệu cũ', ctaMainOn: true, ctaMainText: 'Đăng ký ngay', ctaMainColor: '#f36523', ctaSubOn: true, ctaSubText: 'Tìm hiểu thêm', ctaSubUrl: '/thiet-bi-thong-minh/goi-cloud' },
-          ], nextId: 3, confirmIdx: null }; }
+            { id: 1, code: 'cc-play4', name: 'FPT Camera Play 4', price: '890.000đ', priceTip: 'Đã gồm VAT', tagOn: true, tagBadgeId: 'bdg-hot', imgDesktop: '', imgMobile: '', content: 'Camera AI xoay 360°\nTuỳ biến 3 màu áo & 9 charm\nCảnh báo chuyển động thông minh', ctaMainOn: true, ctaMainText: 'Mua ngay', ctaMainColor: '#f36523', ctaSubOn: true, ctaSubText: 'Xem chi tiết', ctaSubUrl: '/thiet-bi-thong-minh/charm-camera-play-4' },
+            { id: 2, code: 'cc-cloud', name: 'Gói Cloud lưu trữ 30 ngày', price: '39.000đ/tháng', priceTip: 'Miễn phí tháng đầu', tagOn: false, tagBadgeId: '', imgDesktop: '', imgMobile: '', content: 'Lưu trữ video 30 ngày trên Cloud\nXem lại mọi lúc trên App\nTự động xoá dữ liệu cũ', ctaMainOn: true, ctaMainText: 'Đăng ký ngay', ctaMainColor: '#f36523', ctaSubOn: true, ctaSubText: 'Tìm hiểu thêm', ctaSubUrl: '/thiet-bi-thong-minh/goi-cloud' },
+          ], nextId: 3, selIdx: 0, q: '', addOpen: false, addQ: '', addSel: new Set(), dragFrom: -1, dragOver: -1, confirmIdx: null }; }
           upd(id, patch) { this.setState(s => ({ items: s.items.map(x => x.id === id ? { ...x, ...patch } : x) })); }
           render() {
-            const { items, confirmIdx } = this.state;
+            const { items, selIdx, q, addOpen, addQ, addSel, dragFrom, dragOver, confirmIdx } = this.state;
             const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement; const self = this;
             const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
             const fldK = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
             const g2K = (...it) => h2('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' } }, ...it);
-            const opts = CC_PKGS.map(p => ({ value: p.code, label: p.name + ' · ' + p.price }));
-            return h2('div', null,
-              items.map((it, i) => h2('div', { key: it.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 12, background: 'var(--color-surface-alt)', marginBottom: 10 } },
-                h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 } },
-                  h2('span', { style: { fontSize: 12, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '.05em' } }, 'Card gói ' + (i + 1)),
-                  h2('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
-                    h2(DS2.Switch, { size: 'sm', checked: it.tagOn, onChange: v => self.upd(it.id, { tagOn: v }), label: 'Tag nổi bật' }),
-                    items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
-                  )
-                ),
-                fldK('Chọn gói', h2(DS2.Select, { options: opts, value: it.code || '', placeholder: 'Chọn gói…', searchable: true, searchPlaceholder: 'Tìm gói…', onChange: v => self.upd(it.id, ccFromPkg(v)) }), true),
-                g2K(
-                  fldK('Giá cước', h2(DS2.Input, { value: it.price || '', disabled: true, placeholder: 'Tự động theo gói' })),
-                  fldK('Tooltip ghi chú giá', h2(DS2.Input, { value: it.priceTip || '', onChange: e => self.upd(it.id, { priceTip: e.target.value }), placeholder: 'VD: Đã gồm VAT' }), false)
-                ),
-                g2K(
-                  fldK('Ảnh Card — Desktop', h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { placeholder: 'URL ảnh desktop...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')), true),
-                  fldK('Ảnh Card — Mobile', h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { placeholder: 'URL ảnh mobile...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')), true)
-                ),
-                fldK('Nội dung gói bán', h2(DS2.Textarea, { rows: 3, value: it.content || '', onChange: e => self.upd(it.id, { content: e.target.value }), placeholder: 'Mô tả nội dung gói, mỗi dòng 1 ý...' }), true),
-                h2('div', { style: { padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: 8, marginBottom: 10 } },
-                  h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: it.ctaMainOn ? 8 : 0 } },
-                    h2('span', { style: { fontSize: 12, fontWeight: 600 } }, 'CTA chính (luồng toàn trình)'),
-                    h2(DS2.Switch, { size: 'sm', checked: it.ctaMainOn, onChange: v => self.upd(it.id, { ctaMainOn: v }), label: it.ctaMainOn ? 'Bật' : 'Tắt' })
+            const grpHdr = title => h2('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--color-text-subtle)', marginBottom: 10, marginTop: 4, paddingBottom: 6, borderBottom: '1px solid var(--color-border)' } }, title);
+            const existingCodes = new Set(items.map(p => p.code));
+            const filtered = q ? items.filter(p => (p.name || '').toLowerCase().includes(q.toLowerCase()) || (p.code || '').toLowerCase().includes(q.toLowerCase())) : items;
+            const sel = selIdx >= 0 && selIdx < items.length ? items[selIdx] : null;
+            const filtModal = CC_PKGS.filter(p => !addQ || p.code.toLowerCase().includes(addQ.toLowerCase()) || p.name.toLowerCase().includes(addQ.toLowerCase()));
+
+            const leftPanel = h2('div', { style: { width: 220, flexShrink: 0, borderRight: '1px solid var(--color-border)', paddingRight: 14, display: 'flex', flexDirection: 'column', gap: 8 } },
+              h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 } },
+                h2('div', { style: { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.7px', color: 'var(--color-text-subtle)' } }, 'Gói hiển thị'),
+                h2(DS2.Button, { level: 'primary', size: 'sm', leadingIcon: 'plus-line', onClick: () => self.setState({ addOpen: true, addQ: '', addSel: new Set(items.map(p => p.code)) }) }, 'Thêm')
+              ),
+              h2(DS2.Input, { placeholder: 'Lọc gói...', value: q, onChange: e => self.setState({ q: e.target.value }), leadingIcon: 'search-medium-line', size: 'sm' }),
+              h2('div', { style: { flex: 1, overflowY: 'auto', maxHeight: 320 } },
+                filtered.length === 0
+                  ? h2('div', { style: { padding: '20px 0', textAlign: 'center', fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Chưa có gói nào · bấm Thêm')
+                  : filtered.map(it => {
+                      const ri = items.indexOf(it);
+                      const isSel = ri === selIdx;
+                      const isDO = dragFrom >= 0 && dragFrom !== ri && dragOver === ri;
+                      return h2('div', { key: it.id, draggable: true,
+                        onDragStart: () => self.setState({ dragFrom: ri }),
+                        onDragOver: e => { e.preventDefault(); self.setState({ dragOver: ri }); },
+                        onDrop: e => { e.preventDefault(); if (dragFrom < 0 || dragFrom === ri) return; const np = [...items]; const [mv] = np.splice(dragFrom, 1); np.splice(ri, 0, mv); let ns = selIdx; if (selIdx === dragFrom) ns = ri; else if (selIdx > dragFrom && selIdx <= ri) ns = selIdx - 1; else if (selIdx < dragFrom && selIdx >= ri) ns = selIdx + 1; self.setState({ items: np, selIdx: ns, dragFrom: -1, dragOver: -1 }); },
+                        onDragEnd: () => self.setState({ dragFrom: -1, dragOver: -1 }),
+                        onClick: () => self.setState({ selIdx: ri }),
+                        style: { display: 'flex', alignItems: 'center', gap: 6, padding: '7px 8px', borderRadius: 8, cursor: 'pointer', marginBottom: 3,
+                          background: isSel ? 'var(--color-accent-bg)' : isDO ? 'var(--color-surface-alt)' : 'transparent',
+                          border: isSel ? '1.5px solid var(--color-accent)' : '1.5px solid transparent',
+                          borderTop: isDO ? '2px solid var(--color-accent)' : undefined,
+                          opacity: dragFrom === ri ? 0.4 : 1, transition: 'all .12s' }
+                      },
+                        h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
+                        h2('span', { style: { background: G_COLOR, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 5, flexShrink: 0, whiteSpace: 'nowrap' } }, 'G' + (ri + 1)),
+                        h2('div', { style: { flex: 1, minWidth: 0 } },
+                          h2('div', { style: { fontSize: 12, fontWeight: isSel ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isSel ? 'var(--color-accent)' : 'var(--color-text)' } }, it.name || 'Chưa đặt tên'),
+                          h2('div', { style: { fontSize: 10, color: 'var(--color-text-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, it.code || '—')
+                        )
+                      );
+                    })
+              ),
+              h2('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)', fontStyle: 'italic' } }, items.length + ' gói · Kéo để sắp xếp')
+            );
+
+            const rightPanel = h2('div', { style: { flex: 1, paddingLeft: 14, minWidth: 0 } },
+              sel ? h2('div', { key: sel.id },
+                h2('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid var(--color-border)' } },
+                  h2('div', { style: { flex: 1, minWidth: 0 } },
+                    h2('div', { style: { fontWeight: 700, fontSize: 14 } }, sel.name || 'Chưa đặt tên'),
+                    h2('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, sel.code || '—')
                   ),
-                  it.ctaMainOn && g2K(
-                    fldK('Text', h2(DS2.Input, { value: it.ctaMainText || '', onChange: e => self.upd(it.id, { ctaMainText: e.target.value }) }), true),
-                    fldK('Màu nút khi hover', ccColorField(it.ctaMainColor, v => self.upd(it.id, { ctaMainColor: v })), true)
+                  items.length > 1 && h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: selIdx }) }, 'Xóa')
+                ),
+                grpHdr('Thông tin hiển thị trên card'),
+                g2K(
+                  fldK('Giá cước', h2(DS2.Input, { value: sel.price || '', disabled: true, placeholder: 'Tự động theo gói' })),
+                  fldK('Tooltip ghi chú giá', h2(DS2.Input, { value: sel.priceTip || '', onChange: e => self.upd(sel.id, { priceTip: e.target.value }), placeholder: 'VD: Đã gồm VAT' }), false)
+                ),
+                (() => {
+                  const badges = cardBadges();
+                  const picked = badges.find(b => b.id === sel.tagBadgeId);
+                  const badgeOpts = badges.map(b => ({ value: b.id, label: h2('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 5, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '.4px', background: b.bgColor, color: b.textColor } }, b.name) }));
+                  return h2('div', { style: { padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 8, marginBottom: 10 } },
+                    h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: sel.tagOn ? 10 : 0 } },
+                      h2('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+                        h2(DS2.Switch, { size: 'sm', checked: sel.tagOn, onChange: v => self.upd(sel.id, { tagOn: v }) }),
+                        h2('span', { style: { fontSize: 12.5, fontWeight: 700 } }, 'Tag nổi bật ', h2('span', { style: { fontWeight: 400, color: 'var(--color-text-muted)', fontSize: 11 } }, '(gắn trên Banner/Card sản phẩm ngoài Web/App)'))
+                      ),
+                      sel.tagOn && h2('div', { style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--color-text-muted)' } }, 'Xem trước:',
+                        picked
+                          ? h2('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '5px 14px', borderRadius: 6, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.5px', background: picked.bgColor, color: picked.textColor } }, picked.name)
+                          : h2('span', { style: { display: 'inline-flex', alignItems: 'center', padding: '5px 14px', borderRadius: 6, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.5px', background: 'var(--color-surface-sunken)', color: 'var(--color-text-subtle)' } }, 'Chưa chọn Badge/Tag')
+                      )
+                    ),
+                    sel.tagOn && h2('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+                      badges.length
+                        ? fldK('Badge/Tag', h2(DS2.Select, { options: badgeOpts, value: sel.tagBadgeId || '', placeholder: 'Chọn Badge/Tag…', searchable: true, searchPlaceholder: 'Tìm Badge/Tag…', onChange: v => self.upd(sel.id, { tagBadgeId: v }) }), true)
+                        : h2('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: 10, borderRadius: 8, background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', fontSize: 12.5 } },
+                            h2(DS2.Icon, { name: 'alert-triangle-line', size: 14, style: { flexShrink: 0 } }),
+                            'Chưa có Badge/Tag nào thuộc phân loại "Card gói" đang hoạt động. Hãy tạo tại module Quản lý Badge/Tag.'
+                          ),
+                      h2('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)' } }, 'Tên hiển thị và màu sắc của Tag được quản lý tập trung tại module Quản lý Badge/Tag.')
+                    )
+                  );
+                })(),
+                grpHdr('Hình ảnh card'),
+                g2K(
+                  fldK('Ảnh Card — Desktop', h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { value: sel.imgDesktop || '', onChange: e => self.upd(sel.id, { imgDesktop: e.target.value }), placeholder: 'URL ảnh desktop...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')), true),
+                  fldK('Ảnh Card — Mobile', h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { value: sel.imgMobile || '', onChange: e => self.upd(sel.id, { imgMobile: e.target.value }), placeholder: 'URL ảnh mobile...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')), true)
+                ),
+                fldK('Nội dung gói bán', h2(DS2.Textarea, { rows: 3, value: sel.content || '', onChange: e => self.upd(sel.id, { content: e.target.value }), placeholder: 'Mô tả nội dung gói, mỗi dòng 1 ý...' }), true),
+                h2('div', { style: { padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: 8, marginBottom: 10 } },
+                  h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: sel.ctaMainOn ? 8 : 0 } },
+                    h2('span', { style: { fontSize: 12, fontWeight: 600 } }, 'CTA chính (luồng toàn trình)'),
+                    h2(DS2.Switch, { size: 'sm', checked: sel.ctaMainOn, onChange: v => self.upd(sel.id, { ctaMainOn: v }), label: sel.ctaMainOn ? 'Bật' : 'Tắt' })
+                  ),
+                  sel.ctaMainOn && g2K(
+                    fldK('Text', h2(DS2.Input, { value: sel.ctaMainText || '', onChange: e => self.upd(sel.id, { ctaMainText: e.target.value }) }), true),
+                    fldK('Màu nút khi hover', ccColorField(sel.ctaMainColor, v => self.upd(sel.id, { ctaMainColor: v })), true)
                   )
                 ),
                 h2('div', { style: { padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: 8 } },
-                  h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: it.ctaSubOn ? 8 : 0 } },
+                  h2('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: sel.ctaSubOn ? 8 : 0 } },
                     h2('span', { style: { fontSize: 12, fontWeight: 600 } }, 'CTA phụ'),
-                    h2(DS2.Switch, { size: 'sm', checked: it.ctaSubOn, onChange: v => self.upd(it.id, { ctaSubOn: v }), label: it.ctaSubOn ? 'Bật' : 'Tắt' })
+                    h2(DS2.Switch, { size: 'sm', checked: sel.ctaSubOn, onChange: v => self.upd(sel.id, { ctaSubOn: v }), label: sel.ctaSubOn ? 'Bật' : 'Tắt' })
                   ),
-                  it.ctaSubOn && g2K(
-                    fldK('Text', h2(DS2.Input, { value: it.ctaSubText || '', onChange: e => self.upd(it.id, { ctaSubText: e.target.value }) }), true),
-                    fldK('URL', h2(FptUrlInput, { value: it.ctaSubUrl || '', onChange: e => self.upd(it.id, { ctaSubUrl: e.target.value }) }), true)
+                  sel.ctaSubOn && g2K(
+                    fldK('Text', h2(DS2.Input, { value: sel.ctaSubText || '', onChange: e => self.upd(sel.id, { ctaSubText: e.target.value }) }), true),
+                    fldK('URL', h2(FptUrlInput, { value: sel.ctaSubUrl || '', onChange: e => self.upd(sel.id, { ctaSubUrl: e.target.value }) }), true)
                   )
                 )
-              )),
-              h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, code: '', name: '', price: '', priceTip: '', tagOn: false, content: '', ctaMainOn: true, ctaMainText: 'Mua ngay', ctaMainColor: '#f36523', ctaSubOn: true, ctaSubText: 'Xem chi tiết', ctaSubUrl: '' }], nextId: s.nextId + 1 })) }, 'Thêm Card gói dịch vụ'),
+              ) : h2('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 260, gap: 10, color: 'var(--color-text-subtle)' } },
+                  h2(DS2.Icon, { name: 'star-01-line', size: 32, color: 'var(--color-text-subtle)' }),
+                  h2('div', { style: { fontSize: 14, fontWeight: 600 } }, 'Chưa chọn gói'),
+                  h2('div', { style: { fontSize: 12, textAlign: 'center', lineHeight: 1.6 } }, 'Bấm vào gói bên trái để chỉnh sửa')
+                )
+            );
+
+            const addModal = h2(DS2.Modal, { open: addOpen, onClose: () => self.setState({ addOpen: false }), title: 'Gói hiển thị', description: 'Tích để thêm, bỏ tích để gỡ gói khỏi danh sách' },
+              h2('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+                h2(DS2.Input, { placeholder: 'Tìm gói theo tên hoặc mã...', value: addQ, onChange: e => self.setState({ addQ: e.target.value }), leadingIcon: 'search-medium-line', size: 'sm' }),
+                (() => {
+                  const selectable = filtModal;
+                  const allSel = selectable.length > 0 && selectable.every(s => addSel.has(s.code));
+                  return h2('div', { style: { display: 'flex', alignItems: 'center', paddingLeft: 2 } },
+                    h2(DS2.Checkbox, { label: 'Chọn tất cả', checked: allSel, onChange: v => { const ns = new Set(addSel); selectable.forEach(s => v ? ns.add(s.code) : ns.delete(s.code)); self.setState({ addSel: ns }); } }));
+                })(),
+                h2('div', { style: { maxHeight: 300, overflowY: 'auto', borderRadius: 8, border: '1px solid var(--color-border)' } },
+                  filtModal.length === 0
+                    ? h2('div', { style: { padding: 24, textAlign: 'center', fontSize: 12, color: 'var(--color-text-subtle)' } }, 'Không tìm thấy gói phù hợp')
+                    : filtModal.map(pkg => {
+                        const chk = addSel.has(pkg.code), already = existingCodes.has(pkg.code);
+                        return h2('div', { key: pkg.code, onClick: () => { const ns = new Set(addSel); chk ? ns.delete(pkg.code) : ns.add(pkg.code); self.setState({ addSel: ns }); },
+                          style: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderBottom: '1px solid var(--color-border-pale)', cursor: 'pointer', background: chk ? 'var(--color-accent-bg)' : already ? 'var(--color-surface-sunken)' : 'transparent', transition: 'background .1s' } },
+                          h2('div', { style: { width: 18, height: 18, borderRadius: 4, flexShrink: 0, border: '1.5px solid', borderColor: chk ? 'var(--color-accent)' : 'var(--color-border-strong)', background: chk ? 'var(--color-accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, chk && h2(DS2.Icon, { name: 'check-line', size: 11, color: '#fff' })),
+                          h2('div', { style: { flex: 1, minWidth: 0 } },
+                            h2('div', { style: { fontWeight: 700, fontSize: 13 } }, pkg.name),
+                            h2('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, pkg.code + ' · ' + pkg.price)
+                          )
+                        );
+                      })
+                ),
+                h2('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 } },
+                  h2('div', { style: { fontSize: 12, color: 'var(--color-text-subtle)' } }, addSel.size + ' gói được chọn'),
+                  h2('div', { style: { display: 'flex', gap: 8 } },
+                    h2(DS2.Button, { level: 'secondary', onClick: () => self.setState({ addOpen: false }) }, 'Hủy'),
+                    h2(DS2.Button, { level: 'primary', onClick: () => {
+                      const kept = items.filter(p => addSel.has(p.code));
+                      const toAdd = CC_PKGS.filter(p => addSel.has(p.code) && !existingCodes.has(p.code));
+                      const newItems = toAdd.map((p, i) => ({ id: self.state.nextId + i, code: p.code, name: p.name, price: p.price, priceTip: '', tagOn: false, tagBadgeId: '', imgDesktop: '', imgMobile: '', content: '', ctaMainOn: true, ctaMainText: 'Mua ngay', ctaMainColor: '#f36523', ctaSubOn: true, ctaSubText: 'Xem chi tiết', ctaSubUrl: '' }));
+                      const nc = [...kept, ...newItems];
+                      self.setState(s => ({ items: nc, nextId: s.nextId + newItems.length, selIdx: nc.length ? Math.min(selIdx < 0 ? 0 : selIdx, nc.length - 1) : -1, addOpen: false, addSel: new Set() }));
+                    } }, 'Lưu (' + addSel.size + ' gói)')
+                  )
+                )
+              )
+            );
+
+            return h2('div', null,
+              h2('div', { style: { display: 'flex', gap: 0 } }, leftPanel, rightPanel),
+              addModal,
               confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa card gói?', description: 'Card gói dịch vụ này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
                 h2('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => ({ items: s.items.filter((_, j) => j !== idx), confirmIdx: null })); } }, 'Xóa'),
+                  h2(DS2.Button, { level: 'primary', style: { background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }, onClick: () => { const idx = confirmIdx; self.setState(s => { const ni = s.items.filter((_, j) => j !== idx); return { items: ni, confirmIdx: null, selIdx: ni.length ? Math.min(idx, ni.length - 1) : -1 }; }); } }, 'Xóa'),
                   h2(DS2.Button, { level: 'tertiary', onClick: () => self.setState({ confirmIdx: null }) }, 'Hủy')
                 )
               )
@@ -15394,7 +15677,7 @@ class Component extends DCLogic {
           }
         }
         return [
-          fld('Tiêu đề hiển thị trên trang', h(DS.Input, { placeholder: 'VD: Trải nghiệm siêu tính năng' })),
+          fld('Tiêu đề hiển thị trên trang', h(DS.Input, { placeholder: 'VD: Combo siêu ưu đãi' })),
           fld('Mô tả phụ / Tagline', h(DS.Input, { placeholder: 'Mô tả ngắn...' }), false),
           divr('DANH SÁCH CARD GÓI DỊCH VỤ'),
           h(CcPackagesEd, { key: 'cc-packages-ed' })
@@ -15426,6 +15709,26 @@ class Component extends DCLogic {
             const DS2 = window.ZENKaizenDesignSystem_4069b4; const h2 = React.createElement;
             const lb = { fontSize: 12, fontWeight: 600, color: 'var(--color-text-subtle)', marginBottom: 4, display: 'block' };
             const fldG = (l, c, r) => h2('div', { style: { marginBottom: 10 } }, h2('label', { style: lb }, l, r && h2('span', { style: { color: 'var(--color-danger-text)', marginLeft: 2 } }, '*')), c);
+            const stepsBody = (tab) => {
+              const { steps } = tab;
+              return h2('div', { key: 'stepsbody-' + tab.id },
+                h2('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--color-text-subtle)', marginBottom: 10 } }, 'CÁC BƯỚC THỰC HIỆN'),
+                steps.map((st, si) => h2('div', { key: 'step' + st.id, style: { border: '1px solid var(--color-border)', borderRadius: 10, padding: 14, background: 'var(--color-surface-alt)', marginBottom: 10 } },
+                  h2('div', { key: 'stephdr', style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: '1px dashed var(--color-border)' } },
+                    h2('div', { style: { width: 26, height: 26, borderRadius: '50%', background: 'var(--color-accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12.5, flexShrink: 0 } }, String(si + 1)),
+                    h2('span', { style: { fontWeight: 700, fontSize: 13, color: 'var(--color-text)', flex: 1 } }, 'Bước ' + (si + 1)),
+                    steps.length > 1 && h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)' }, onClick: () => self.updTab(tab.id, { steps: steps.filter(x => x.id !== st.id) }) }, 'Xóa bước')
+                  ),
+                  fldG('Thumbnail', h2('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } },
+                    h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { placeholder: 'URL ảnh...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: () => openMediaPicker('≤200KB') }, 'Upload')),
+                    h2('div', { style: { fontSize: 11, color: 'var(--color-text-subtle)' } }, 'Dung lượng tối đa: ≤200KB')
+                  ), true),
+                  fldG('Tiêu đề', h2(DS2.Input, { value: st.title || '', onChange: e => self.updStep(tab.id, st.id, { title: e.target.value }) }), true),
+                  fldG('Mô tả chi tiết', h2(DS2.Textarea, { rows: 2, value: st.desc || '', onChange: e => self.updStep(tab.id, st.id, { desc: e.target.value }) }), true)
+                )),
+                h2(DS2.Button, { key: 'addstep', level: 'secondary', size: 'sm', style: { width: '100%', borderStyle: 'dashed' }, onClick: () => self.setState(s => { const nid = s.nextStepId; return { tabs: s.tabs.map(t => t.id === tab.id ? { ...t, steps: [...t.steps, { id: nid, title: '', desc: '' }] } : t), nextStepId: nid + 1 }; }) }, '+ Thêm bước')
+              );
+            };
             return h2('div', null,
               h2('div', { key: 'tabmode', style: { marginBottom: 14 } },
                 h2('label', { style: lb }, 'Kiểu hiển thị'),
@@ -15434,17 +15737,17 @@ class Component extends DCLogic {
                   h2(DS2.Radio, { name: 'cc-guide-tabmode', label: 'Không tab', checked: single, onChange: () => self.setState({ tabMode: 'single' }) })
                 )
               ),
-              tabs.map((tab, ti) => {
+              single ? stepsBody(tabs[0]) : tabs.map((tab, ti) => {
                 const { expanded, steps } = tab;
-                const isDragOver = !single && tabDragFrom >= 0 && tabDragFrom !== ti && tabDragOver === ti;
-                return h2('div', { key: tab.id, draggable: !single,
-                  onDragStart: () => { if (single) return; self.setState({ tabDragFrom: ti, tabDragOver: -1 }); },
-                  onDragOver: e => { if (single || tabDragFrom === ti) return; e.preventDefault(); self.setState({ tabDragOver: ti }); },
-                  onDrop: e => { if (single) return; e.preventDefault(); if (tabDragFrom < 0 || tabDragFrom === ti) return; const nt = [...tabs]; const [mv] = nt.splice(tabDragFrom, 1); nt.splice(ti, 0, mv); self.setState({ tabs: nt, tabDragFrom: -1, tabDragOver: -1 }); },
+                const isDragOver = tabDragFrom >= 0 && tabDragFrom !== ti && tabDragOver === ti;
+                return h2('div', { key: tab.id, draggable: true,
+                  onDragStart: () => self.setState({ tabDragFrom: ti, tabDragOver: -1 }),
+                  onDragOver: e => { if (tabDragFrom === ti) return; e.preventDefault(); self.setState({ tabDragOver: ti }); },
+                  onDrop: e => { e.preventDefault(); if (tabDragFrom < 0 || tabDragFrom === ti) return; const nt = [...tabs]; const [mv] = nt.splice(tabDragFrom, 1); nt.splice(ti, 0, mv); self.setState({ tabs: nt, tabDragFrom: -1, tabDragOver: -1 }); },
                   onDragEnd: () => self.setState({ tabDragFrom: -1, tabDragOver: -1 }),
                   style: { border: isDragOver ? '2px dashed var(--color-accent)' : expanded ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)', borderRadius: 12, marginBottom: 12, overflow: 'hidden', transition: 'border-color .15s', opacity: tabDragFrom === ti ? 0.45 : 1 } },
                   h2('div', { onClick: () => self.updTab(tab.id, { expanded: !expanded }), style: { background: expanded ? 'var(--color-accent-bg)' : 'var(--color-surface-alt)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' } },
-                    !single && h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
+                    h2(DS2.Icon, { name: 'dots-grid-line', size: 16, color: 'var(--color-text-subtle)', style: { cursor: 'grab', flexShrink: 0 } }),
                     h2(DS2.Icon, { name: expanded ? 'chevron-down-line' : 'chevron-right-01-line', size: 16, color: expanded ? 'var(--color-accent)' : 'var(--color-text-subtle)' }),
                     h2('span', { style: { fontWeight: 700, fontSize: 13, color: expanded ? 'var(--color-accent)' : 'var(--color-text)', flex: 1 } }, 'Tab: ' + tab.name),
                     h2('div', { style: { display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }, onClick: e => e.stopPropagation() },
@@ -15452,21 +15755,12 @@ class Component extends DCLogic {
                     )
                   ),
                   expanded && h2('div', { style: { padding: 14, display: 'flex', flexDirection: 'column', gap: 10 } },
-                    !single && fldG('Tên tab', h2(DS2.Input, { key: 'ccgtabname' + tab.id, defaultValue: tab.name, placeholder: 'Nhập tên tab...', onBlur: e => { const v = e.target.value.trim(); if (v) self.updTab(tab.id, { name: v }); } }), true),
-                    h2('div', { style: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--color-text-subtle)' } }, 'CÁC BƯỚC THỰC HIỆN'),
-                    steps.map((st, si) => stepBlk(si + 1,
-                      h2('div', { key: 'stephdr', style: { display: 'flex', justifyContent: 'flex-end', marginBottom: 6 } },
-                        steps.length > 1 && h2(DS2.Button, { level: 'tertiary', size: 'sm', leadingIcon: 'trash-line', style: { color: 'var(--color-danger-text)' }, onClick: () => self.updTab(tab.id, { steps: steps.filter(x => x.id !== st.id) }) }, 'Xóa bước')
-                      ),
-                      fldG('Ảnh minh họa bước', h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { placeholder: 'URL ảnh...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')), true),
-                      fldG('Tiêu đề bước', h2(DS2.Input, { value: st.title || '', onChange: e => self.updStep(tab.id, st.id, { title: e.target.value }) }), true),
-                      fldG('Mô tả chi tiết', h2(DS2.Textarea, { rows: 2, value: st.desc || '', onChange: e => self.updStep(tab.id, st.id, { desc: e.target.value }) }), true)
-                    )),
-                    h2(DS2.Button, { level: 'secondary', size: 'sm', style: { width: '100%', borderStyle: 'dashed' }, onClick: () => self.setState(s => { const nid = s.nextStepId; return { tabs: s.tabs.map(t => t.id === tab.id ? { ...t, steps: [...t.steps, { id: nid, title: '', desc: '' }] } : t), nextStepId: nid + 1 }; }) }, '+ Thêm bước')
+                    fldG('Tên tab', h2(DS2.Input, { key: 'ccgtabname' + tab.id, defaultValue: tab.name, placeholder: 'Nhập tên tab...', onBlur: e => { const v = e.target.value.trim(); if (v) self.updTab(tab.id, { name: v }); } }), true),
+                    stepsBody(tab)
                   )
                 );
               }),
-              !single && h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ tabs: [...s.tabs, { id: 'g' + s.nextTabId, name: 'Tab mới ' + (s.tabs.length + 1), expanded: true, steps: [1,2,3,4].map(n => ({ id: s.nextStepId + n, title: '', desc: '' })) }], nextTabId: s.nextTabId + 1, nextStepId: s.nextStepId + 4 })) }, '+ Thêm tab hướng dẫn')
+              !single && h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ tabs: [...s.tabs, { id: 'g' + s.nextTabId, name: 'Tab mới ' + (s.tabs.length + 1), expanded: true, steps: [1,2,3,4].map(n => ({ id: s.nextStepId + n, title: '', desc: '' })) }], nextTabId: s.nextTabId + 1, nextStepId: s.nextStepId + 4 })) }, 'Thêm tab hướng dẫn')
             );
           }
         }
@@ -15493,7 +15787,7 @@ class Component extends DCLogic {
                   items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
                 ),
                 fldG('Ảnh không gian đặt Camera', h2('div', { style: { display: 'flex', gap: 8 } }, h2(DS2.Input, { placeholder: 'URL ảnh...' }), h2(DS2.Button, { level: 'secondary', size: 'sm', leadingIcon: 'image-line', onClick: openMediaPicker }, 'Upload')), true),
-                fldG('URL điều hướng (tùy chọn)', h2(FptUrlInput, { value: it.url || '', onChange: e => self.upd(it.id, { url: e.target.value }) }), false)
+                fldG('URL điều hướng (tùy chọn)', h2(FptUrlInput, { value: it.url || '', onChange: e => self.upd(it.id, { url: e.target.value }), placeholder: '/thiet-bi-thong-minh/...' }), false)
               )),
               h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, url: '' }], nextId: s.nextId + 1 })) }, 'Thêm slide'),
               confirmIdx !== null && h2(DS2.Modal, { open: true, onClose: () => self.setState({ confirmIdx: null }), title: 'Xóa slide?', description: 'Slide này sẽ bị xóa khỏi danh sách. Hành động này không thể hoàn tác.' },
@@ -15507,7 +15801,7 @@ class Component extends DCLogic {
         }
         return [
           fld('Tiêu đề section', h(DS.Input, { placeholder: 'VD: Đặt đâu cũng hợp' })),
-          divr('DANH SÁCH SLIDE KHÔNG GIAN THỰC TẾ'),
+          divr('DANH SÁCH SLIDE'),
           h(CcGalleryEd, { key: 'cc-gallery-ed' })
         ];
       })(),
@@ -15642,7 +15936,7 @@ class Component extends DCLogic {
                     items.length > 1 && h2(DS2.IconButton, { icon: 'trash-line', label: 'Xóa', level: 'tertiary', size: 'sm', style: { color: 'var(--color-danger-text)' }, onClick: () => self.setState({ confirmIdx: i }) })
                   ),
                   fldM('Nội dung text', h2(DS2.Input, { value: it.text || '', onChange: e => self.upd(it.id, { text: e.target.value }), placeholder: 'VD: Mua Camera AI Play 4' }), true),
-                  fldM('URL điều hướng (tùy chọn)', h2(FptUrlInput, { value: it.url || '', onChange: e => self.upd(it.id, { url: e.target.value }) }), false)
+                  fldM('URL điều hướng (tùy chọn)', h2(FptUrlInput, { value: it.url || '', onChange: e => self.upd(it.id, { url: e.target.value }), placeholder: '/thiet-bi-thong-minh/...' }), false)
                 );
               }),
               h2(DS2.Button, { level: 'secondary', leadingIcon: 'plus-line', style: { width: '100%', borderStyle: 'dashed', marginTop: 4 }, onClick: () => self.setState(s => ({ items: [...s.items, { id: s.nextId, text: '', url: '' }], nextId: s.nextId + 1 })) }, 'Thêm cụm nội dung'),
@@ -15670,7 +15964,7 @@ class Component extends DCLogic {
           }
         }
         return [
-          divr('DANH SÁCH CỤM NỘI DUNG CHẠY NGANG (THÊM/XÓA/KÉO-THẢ SẮP XẾP)'),
+          divr('DANH SÁCH CỤM NỘI DUNG CHẠY NGANG'),
           h(CcMarqueeEd, { key: 'cc-marquee-ed' })
         ];
       })(),
