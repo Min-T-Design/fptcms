@@ -17671,7 +17671,7 @@ class Component extends DCLogic {
             this.field('Từ khoá', h(DS.Input, { placeholder: 'Từ khoá liên quan, phân cách bằng dấu phẩy' }))
           )
         }] }),
-        // 5. Hành vi & Gói dịch vụ — gộp 1 block, 2 khối xếp dọc: (a) ô Popup thu Leads mặc định (rộng 50% block), (b) picker gói dịch vụ trải full-width.
+        // 5. Hành vi & Gói dịch vụ — gộp 1 block, 2 khối xếp dọc: (a) ô Popup thu Leads mặc định, (b) picker gói dịch vụ — cả 2 cùng rộng 50% block để thẳng cột.
         // Không còn tiêu đề/mô tả phụ cho từng khối (user yêu cầu bỏ) — nhãn ô chọn và "DANH SÁCH SẢN PHẨM" của picker đã đủ nghĩa.
         section(5, 'message-chat-circle-line', 'Hành vi & Gói dịch vụ',
           // Rộng đúng 1 cột của lưới 2 cột (50% block, trừ nửa khoảng cách 14px) để thẳng hàng với các card trên
@@ -17679,7 +17679,7 @@ class Component extends DCLogic {
             this.field('Popup thu Leads mặc định', h(DS.Select, { options: popupOpts, defaultValue: r && r.defaultPopupId ? String(r.defaultPopupId) : '', placeholder: '— Không cấu hình —', searchable: true, searchPlaceholder: 'Tìm popup…' }))
           ),
           h('div', { style: { height: 1, background: 'var(--color-border)' } }),
-          this.renderNewsCatSkuPicker()
+          h('div', { style: { width: 'calc(50% - 7px)', minWidth: 260 } }, this.renderNewsCatSkuPicker())
         )
       ),
       () => { back(); this.toast('success', 'Đã lưu', 'Danh mục đã được lưu.'); },
